@@ -8,7 +8,8 @@
     "type-check": "turbo type-check",
     "db:generate": "pnpm --filter @rivaleye/api drizzle:generate",
     "db:migrate": "pnpm --filter @rivaleye/api drizzle:migrate",
-    "db:studio": "pnpm --filter @rivaleye/api drizzle:studio"
+    "db:studio": "pnpm --filter @rivaleye/api drizzle:studio",
+    "worker:dev": "pnpm --filter @rivaleye/worker dev"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

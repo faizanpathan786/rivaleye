@@ -219,7 +219,7 @@ pnpm --filter @rivaleye/api type-check
 
     Audit: `grep -L "auth:" src/controllers/*/handlers/*.ts` should return only `sign-in.ts`.
 
-10. **No background-job infra until MVP proves it needs one.** Report generation runs inline. If timeouts become real, file an issue and discuss before adding BullMQ/Trigger.dev/etc.
+10. **Api enqueues, never scrapes.** Long work (Reddit fetch, LLM clustering) runs in `@rivaleye/worker` via pg-boss. Handlers may only enqueue + read DB. If you find yourself importing `@rivaleye/scrapers` into a handler or service in this package, stop — it belongs in worker.
 11. **No raw SQL in handlers.** If Drizzle can't express it, write a service function with a clearly named query helper.
 
 ---
@@ -227,7 +227,7 @@ pnpm --filter @rivaleye/api type-check
 ## 13. Open questions / TODO
 
 - [ ] Wire better-auth Drizzle adapter once `users` table contract is final.
-- [ ] Add `services/report-generator/` — orchestrates Reddit fetch → LLM cluster → DB persist. Inline async for MVP.
+- [ ] Flesh out `services/report-generator.ts` — currently enqueues `scrape-platform` jobs fan-out; add `report_platform_jobs` row inserts so worker can fan-in.
 - [ ] Decide on shared error type / response envelope. Default for now: `{ data, error }`.
 - [ ] Add `bun test` for the first non-trivial service.
 - [ ] Stripe billing endpoints under `/v1/billing` when the paid offer goes live.

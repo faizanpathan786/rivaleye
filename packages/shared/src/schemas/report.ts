@@ -10,10 +10,24 @@ export const reportGoalSchema = z.enum([
 ]);
 export type ReportGoal = z.infer<typeof reportGoalSchema>;
 
+export const platformIdSchema = z.enum([
+  "reddit",
+  "g2",
+  "capterra",
+  "twitter",
+  "linkedin",
+  "producthunt",
+  "appstore",
+  "playstore",
+  "gmaps",
+]);
+export type PlatformId = z.infer<typeof platformIdSchema>;
+
 export const createReportInputSchema = z.object({
   category: z.string().min(1),
   competitors: z.array(z.string().min(1)).min(1),
   audience: z.string().optional(),
   goal: reportGoalSchema,
+  platforms: z.array(platformIdSchema).optional(),
 });
 export type CreateReportInput = z.infer<typeof createReportInputSchema>;

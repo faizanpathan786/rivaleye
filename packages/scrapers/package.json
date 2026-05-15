@@ -1,5 +1,5 @@
 {
-  "name": "@rivaleye/reddit-client",
+  "name": "@rivaleye/scrapers",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,11 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts"
   },
+  "dependencies": {
+    "@rivaleye/shared": "workspace:*"
+  },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@types/bun": "^1.1.14"
   }
 }

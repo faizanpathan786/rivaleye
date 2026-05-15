@@ -1,9 +1,17 @@
 import { Elysia, t } from "elysia";
+import { startReport } from "@/services/report-generator";
 
 export const createReport = new Elysia().post(
   "/",
   async ({ body }) => {
-    return { id: crypto.randomUUID(), status: "queued", input: body };
+    const reportId = crypto.randomUUID();
+    await startReport({
+      reportId,
+      category: body.category,
+      competitors: body.competitors,
+      platforms: body.platforms,
+    });
+    return { id: reportId, status: "queued" as const };
   },
   {
     body: t.Object({
@@ -18,6 +26,21 @@ export const createReport = new Elysia().post(
         t.Literal("find_user_pain"),
         t.Literal("compare_alternatives"),
       ]),
+      platforms: t.Optional(
+        t.Array(
+          t.Union([
+            t.Literal("reddit"),
+            t.Literal("g2"),
+            t.Literal("capterra"),
+            t.Literal("twitter"),
+            t.Literal("linkedin"),
+            t.Literal("producthunt"),
+            t.Literal("appstore"),
+            t.Literal("playstore"),
+            t.Literal("gmaps"),
+          ]),
+        ),
+      ),
     }),
   },
 );

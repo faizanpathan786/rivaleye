@@ -10,7 +10,7 @@ The RivalEye monorepo. RivalEye helps early-stage B2B SaaS founders find what us
 
 **One-liner:** Find what your competitor's users hate before you build.
 
-**MVP scope:** founder enters a competitor/category → backend pulls Reddit discussions → LLM clusters complaints → user gets a Competitor Pain Report (top pain points, feature gaps, pricing pain, switching signals, positioning angles, product opportunities).
+**MVP scope:** founder enters a competitor/category → workers pull discussions from multiple platforms in parallel (Reddit, G2, Capterra, Twitter/X, LinkedIn, Product Hunt, App Store, Play Store, Google Maps reviews) → LLM clusters complaints → user gets a Competitor Pain Report (top pain points, feature gaps, pricing pain, switching signals, positioning angles, product opportunities).
 
 See `docs/` for the full PRD (port from `archive/legacy-v1` if missing).
 
@@ -26,7 +26,8 @@ See `docs/` for the full PRD (port from `archive/legacy-v1` if missing).
 - **Migrations**: [Drizzle ORM](https://orm.drizzle.team/) — **non-negotiable**. All schema lives in `packages/api/src/db/`. Never modify DB schema by hand.
 - **Auth**: [better-auth](https://www.better-auth.com/) on the same Supabase Postgres. No Supabase Auth.
 - **Frontend**: Vite + React + TypeScript + Tailwind + shadcn/ui (Radix primitives). No Next.js, no MUI, no Minimals template.
-- **Background jobs**: **none** for MVP. Report generation runs inline in the request handler, streaming progress to the client. Add a job runner only when a real timeout problem appears.
+- **Background jobs**: [pg-boss](https://github.com/timgit/pg-boss) on the same Supabase Postgres. No Redis. Two queues: `scrape-platform` (fan-out, one per platform×competitor) and `generate-report` (fan-in after all scrapes finish).
+- **Scrapers**: per-platform implementations in `packages/scrapers/`. Hostile platforms (LinkedIn, G2, Capterra, Twitter, Gmaps) wrap 3rd-party providers (Apify, X API, Places API). DIY scrapers (Reddit, ProductHunt, AppStore, PlayStore) live fully in-repo.
 
 ---
 
@@ -43,28 +44,23 @@ rivaleye-v3/
   .gitignore
   docs/                      ← PRD, architecture notes (port from legacy as needed)
   packages/
-    api/                     ← Bun + Elysia + Drizzle + better-auth
-      CLAUDE.md              ← backend rules
+    api/                     ← Bun + Elysia + Drizzle + better-auth. HTTP only; enqueues jobs.
+      CLAUDE.md
       src/
       drizzle/               ← generated migrations
       drizzle.config.ts
-      package.json
-      tsconfig.json
-    web/                     ← Vite + React + Tailwind + shadcn
-      CLAUDE.md              ← frontend rules
+    worker/                  ← Bun process. Consumes pg-boss queues. Runs scrapers + LLM.
+      CLAUDE.md
       src/
-      package.json
-      tsconfig.json
-      vite.config.ts
-      tailwind.config.ts
-    shared/                  ← shared types, zod schemas, constants used by api+web
+    scrapers/                ← One Scraper interface, one impl per platform.
+      CLAUDE.md
       src/
-      package.json
-      tsconfig.json
-    reddit-client/           ← Reddit fetch + normalize (consumed by api)
+        reddit/ g2/ capterra/ twitter/ linkedin/ producthunt/ appstore/ playstore/ gmaps/
+    web/                     ← Vite + React + Tailwind + shadcn.
+      CLAUDE.md
       src/
-      package.json
-      tsconfig.json
+    shared/                  ← Zod schemas, types, constants. Used by api+worker+web.
+      src/
 ```
 
 **Adding a package**: create folder under `packages/`, add `package.json` with name `@rivaleye/<name>`, mirror an existing package's `tsconfig.json` extending `../../tsconfig.base.json`. Add to relevant `turbo.json` task list if it has new task names.
@@ -98,11 +94,15 @@ The previous implementation is preserved on the `archive/legacy-v1` branch and *
 | `CONNECTION_STRING` | api | Supabase Postgres connection string |
 | `BETTER_AUTH_SECRET` | api | better-auth signing secret |
 | `BETTER_AUTH_URL` | api | better-auth base URL (e.g. `http://localhost:6090`) |
-| `REDDIT_CLIENT_ID` | reddit-client | Reddit app id |
-| `REDDIT_CLIENT_SECRET` | reddit-client | Reddit app secret |
-| `REDDIT_USER_AGENT` | reddit-client | Reddit API user-agent string |
-| `ANTHROPIC_API_KEY` | api | Claude API key for clustering/insight LLM calls |
-| `OPENAI_API_KEY` | api | Fallback / embedding model key |
+| `REDDIT_CLIENT_ID` | worker (scrapers/reddit) | Reddit app id |
+| `REDDIT_CLIENT_SECRET` | worker (scrapers/reddit) | Reddit app secret |
+| `REDDIT_USER_AGENT` | worker (scrapers/reddit) | Reddit API user-agent |
+| `PRODUCTHUNT_TOKEN` | worker (scrapers/producthunt) | Product Hunt GraphQL API token |
+| `X_API_BEARER` | worker (scrapers/twitter) | X (Twitter) API bearer (Basic tier or higher) |
+| `APIFY_TOKEN` | worker (scrapers/g2, capterra, linkedin, gmaps) | Apify API token for hostile platforms |
+| `GOOGLE_PLACES_API_KEY` | worker (scrapers/gmaps) | Optional alternative to Apify for gmaps |
+| `ANTHROPIC_API_KEY` | worker | Claude API key for clustering/insight LLM calls |
+| `OPENAI_API_KEY` | worker | Fallback / embedding model key |
 | `VITE_API_URL` | web | Base URL of the api server |
 
 Always read from `process.env` / `import.meta.env`. Never hardcode. Never commit `.env*` files. Keep `.env.example` synced when adding new vars.
@@ -114,7 +114,8 @@ Always read from `process.env` / `import.meta.env`. Never hardcode. Never commit
 ```sh
 pnpm install                          # install all workspace deps
 pnpm dev                              # run all packages in dev (turbo)
-pnpm --filter @rivaleye/api dev       # backend only
+pnpm --filter @rivaleye/api dev       # api only
+pnpm --filter @rivaleye/worker dev    # worker only
 pnpm --filter @rivaleye/web dev       # frontend only
 pnpm db:generate                      # drizzle migration from schema diff
 pnpm db:migrate                       # apply pending migrations
@@ -150,7 +151,9 @@ pnpm lint                             # eslint across workspace
 7. **One lockfile.** No package-level `pnpm-lock.yaml`.
 8. **No Supabase client.** Talk to Postgres via Drizzle only. Supabase is just managed Postgres for us.
 9. **Permission-first** — before any new CRUD feature, define permission codes (e.g. `REPORTS_CREATE`, `REPORTS_VIEW`), seed them, and guard handlers with them. Never check role names in handlers.
-10. **No background-job infra until proven necessary.** MVP runs report generation inline. If a real timeout problem appears, file an issue first, then add infra.
+10. **Api never runs scrapers or LLM calls.** Api validates input + enqueues to pg-boss + reads report status/output. All long work happens in `@rivaleye/worker`. If you're tempted to call a scraper from an api handler, stop — enqueue a job.
+11. **`@rivaleye/scrapers` outputs `NormalizedPost` only.** No platform-specific fields leak past the scraper boundary. See `packages/scrapers/CLAUDE.md`.
+12. **Hostile platforms = buy, never DIY.** LinkedIn, G2, Capterra, Gmaps reviews are routed through 3rd-party providers (Apify et al.) inside the scraper class. No headless-browser farms in this repo.
 
 ---
 

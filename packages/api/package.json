@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@rivaleye/shared": "workspace:*",
-    "@rivaleye/reddit-client": "workspace:*",
+    "@rivaleye/scrapers": "workspace:*",
     "elysia": "^1.1.25",
     "@elysiajs/cors": "^1.1.1",
     "@elysiajs/swagger": "^1.1.6",
@@ -24,6 +24,7 @@
     "better-auth": "^1.1.0",
     "drizzle-orm": "^0.36.4",
     "postgres": "^3.4.5",
+    "pg-boss": "^10.1.5",
     "pino": "^9.5.0"
   },
   "devDependencies": {
