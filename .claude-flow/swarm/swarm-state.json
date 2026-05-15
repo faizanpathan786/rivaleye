@@ -1,0 +1,24 @@
+{
+  "swarms": {
+    "swarm-1778587425808-ryojyc": {
+      "swarmId": "swarm-1778587425808-ryojyc",
+      "topology": "hierarchical",
+      "maxAgents": 15,
+      "status": "running",
+      "agents": [],
+      "tasks": [],
+      "config": {
+        "topology": "hierarchical",
+        "maxAgents": 15,
+        "strategy": "specialized",
+        "communicationProtocol": "message-bus",
+        "autoScaling": true,
+        "consensusMechanism": "majority"
+      },
+      "createdAt": "2026-05-12T12:03:45.808Z",
+      "updatedAt": "2026-05-12T12:03:45.808Z",
+      "pid": 9505
+    }
+  },
+  "version": "3.0.0"
+}

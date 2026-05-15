@@ -1,0 +1,79 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{}' | jq -n '{systemMessage: \"[Ruflo] Initializing multi-agent memory coordination for RivalEye project...\"}'",
+            "statusMessage": "Initializing Ruflo memory store",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; echo \"$f\" | grep -E '\\.(ts|tsx|js|jsx|py)$' >/dev/null && echo \"{\\\"hookSpecificOutput\\\": {\\\"hookEventName\\\": \\\"PostToolUse\\\", \\\"additionalContext\\\": \\\"Code changed: $f - consider memory update for swarm coordination\\\"}}\" || true; } 2>/dev/null || true",
+            "statusMessage": "Updating memory for code changes",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{}' | jq -n '{systemMessage: \"[Ruflo] Task created - ready for swarm agent routing. Check task type for optimal agent selection.\"}'",
+            "statusMessage": "Routing task to agents",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "auto|manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{}' | jq -n '{systemMessage: \"[Ruflo] Memory consolidated. Swarm coordination state preserved.\"}'",
+            "statusMessage": "Consolidating Ruflo memory on context compaction",
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "autoMemoryEnabled": true,
+  "pluginConfigs": {
+    "ruflo@anthropic-tools": {
+      "options": {
+        "enable_memory_store": true,
+        "enable_swarm_coordination": true,
+        "memory_consolidation_on_compact": true
+      }
+    }
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_FLOW_V3_ENABLED": "true",
+    "CLAUDE_FLOW_HOOKS_ENABLED": "true"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx @claude-flow*)",
+      "Bash(npx claude-flow*)",
+      "Bash(node .claude/*)",
+      "mcp__claude-flow__:*"
+    ]
+  }
+}
