@@ -16,7 +16,8 @@
     "pg-boss": "^10.1.5",
     "drizzle-orm": "^0.36.4",
     "postgres": "^3.4.5",
-    "pino": "^9.5.0"
+    "pino": "^9.5.0",
+    "openai": "^4.77.0"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",
