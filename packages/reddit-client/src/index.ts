@@ -1,46 +1,36 @@
-import { RedditAuth } from "./auth.js";
-import { RedditHttpClient } from "./client.js";
-import { RateLimiter } from "./rate-limiter.js";
-import { searchPosts } from "./methods/search.js";
-import { getSubredditPosts, getSubredditInfo } from "./methods/subreddit.js";
-import { getPostComments } from "./methods/comments.js";
-import type { SearchOptions, SubredditPostOptions } from "./types.js";
-
-export class RedditClient {
-  private readonly httpClient: RedditHttpClient;
-  private readonly rateLimiter: RateLimiter;
-
-  constructor(config: {
-    clientId: string;
-    clientSecret: string;
-    userAgent: string;
-  }) {
-    const auth = new RedditAuth(config.clientId, config.clientSecret, config.userAgent);
-    this.rateLimiter = new RateLimiter();
-    this.httpClient = new RedditHttpClient(auth, config.userAgent, this.rateLimiter);
-  }
-
-  searchPosts(query: string, options?: SearchOptions) {
-    return searchPosts(this.httpClient, query, options);
-  }
-
-  getSubredditPosts(subreddit: string, options?: SubredditPostOptions) {
-    return getSubredditPosts(this.httpClient, subreddit, options);
-  }
-
-  getSubredditInfo(subreddit: string) {
-    return getSubredditInfo(this.httpClient, subreddit);
-  }
-
-  getPostComments(subreddit: string, postId: string, limit?: number) {
-    return getPostComments(this.httpClient, subreddit, postId, limit);
-  }
-
-  /** Start the rate limiter drain loop (call once at app startup) */
-  start(): NodeJS.Timeout {
-    return this.rateLimiter.startDrainLoop();
-  }
+export interface RedditClientConfig {
+  clientId: string;
+  clientSecret: string;
+  userAgent: string;
 }
 
-export type { SearchOptions, SubredditPostOptions };
-export type { NormalizedPost, NormalizedComment, NormalizedMention, SubredditInfo } from "./types.js";
+export interface RedditPost {
+  id: string;
+  subreddit: string;
+  title: string;
+  body: string;
+  url: string;
+  score: number;
+  numComments: number;
+  createdAt: Date;
+}
+
+export interface RedditComment {
+  id: string;
+  postId: string;
+  body: string;
+  score: number;
+  createdAt: Date;
+}
+
+export class RedditClient {
+  constructor(_config: RedditClientConfig) {}
+
+  async searchPosts(_query: string): Promise<RedditPost[]> {
+    throw new Error("not implemented — port from archive/legacy-v1");
+  }
+
+  async fetchComments(_postId: string): Promise<RedditComment[]> {
+    throw new Error("not implemented — port from archive/legacy-v1");
+  }
+}

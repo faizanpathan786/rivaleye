@@ -2,13 +2,13 @@
   "name": "rivaleye",
   "private": true,
   "scripts": {
-    "build": "turbo build",
     "dev": "turbo dev",
+    "build": "turbo build",
     "lint": "turbo lint",
     "type-check": "turbo type-check",
-    "db:migrate": "pnpm --filter @rivaleye/db migrate",
-    "db:generate": "pnpm --filter @rivaleye/db generate",
-    "db:studio": "pnpm --filter @rivaleye/db studio"
+    "db:generate": "pnpm --filter @rivaleye/api drizzle:generate",
+    "db:migrate": "pnpm --filter @rivaleye/api drizzle:migrate",
+    "db:studio": "pnpm --filter @rivaleye/api drizzle:studio"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

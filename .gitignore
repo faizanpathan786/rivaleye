@@ -1,38 +1,19 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+node_modules
+.pnpm-store
+.turbo
+dist
+build
+.next
+.vite
 
-# Build outputs
-dist/
-.next/
-out/
-build/
-
-# Environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Turbo
-.turbo/
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
 *.log
-npm-debug.log*
-pnpm-debug.log*
+.DS_Store
+.idea
+.vscode
 
-# TypeScript
-*.tsbuildinfo
-
-# Drizzle
-drizzle/
+coverage
+.cache

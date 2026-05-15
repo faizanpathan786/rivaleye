@@ -1,22 +1,16 @@
-import type { FastifyRequest, FastifyReply } from "fastify";
+import { Elysia } from "elysia";
 
-export async function requireAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  try {
-    await request.jwtVerify();
-  } catch {
-    return reply.status(401).send({ success: false, error: "Unauthorized", code: "UNAUTHORIZED" });
-  }
-}
-
-export interface JwtPayload {
-  userId: string;
-  workspaceId: string;
-  email: string;
-}
-
-declare module "@fastify/jwt" {
-  interface FastifyJWT {
-    payload: JwtPayload;
-    user: JwtPayload;
-  }
-}
+export const authPlugin = new Elysia({ name: "auth-plugin" })
+  .derive(async ({ headers }) => {
+    const authHeader = headers.authorization;
+    return { session: null as null, user: null as null, authHeader };
+  })
+  .macro(({ onBeforeHandle }) => ({
+    auth(opts: { permissions?: string[] } | true) {
+      onBeforeHandle(({ user }) => {
+        if (!user && opts !== true) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+      });
+    },
+  }));

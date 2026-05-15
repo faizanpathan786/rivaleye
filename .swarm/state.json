@@ -1,8 +1,0 @@
-{
-  "id": "swarm-1778587425808-ryojyc",
-  "topology": "hierarchical",
-  "maxAgents": 15,
-  "strategy": "development",
-  "initializedAt": "2026-05-12T12:03:45.808Z",
-  "status": "ready"
-}
