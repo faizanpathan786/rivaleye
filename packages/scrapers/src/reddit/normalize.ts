@@ -15,7 +15,7 @@ export function normalizePost(
 
   return {
     platform: "reddit",
-    externalId: post.id,
+    externalId: `reddit:${post.id}`,
     url: `https://www.reddit.com${post.permalink}`,
     author: post.author === "[deleted]" ? null : post.author,
     title: post.title || null,

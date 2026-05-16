@@ -8,6 +8,7 @@ import { buildDevToExtract } from "../prompts/platform/devto/extract";
 import { buildProductHuntExtract } from "../prompts/platform/producthunt/extract";
 import { buildMediumExtract } from "../prompts/platform/medium/extract";
 import { buildTrustpilotExtract } from "../prompts/platform/trustpilot/extract";
+import { buildRedditExtract } from "../prompts/platform/reddit/extract";
 
 export interface StageAInput {
   llm: OpenRouterClient;
@@ -108,6 +109,16 @@ function pickBuilder(p: PlatformId): Builder {
           reviews: posts.map((post) => ({
             id: post.externalId,
             rating: post.score ?? 0,
+            body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "reddit":
+      return ({ ctx, posts }) =>
+        buildRedditExtract({
+          ctx,
+          posts: posts.map((post) => ({
+            id: post.externalId,
+            score: post.score,
             body: `${post.title ?? ""}\n${post.body}`,
           })),
         });

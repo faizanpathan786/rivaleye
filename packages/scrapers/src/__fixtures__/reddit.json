@@ -1,0 +1,31 @@
+{
+  "posts": [
+    {
+      "id": "abc123",
+      "name": "t3_abc123",
+      "title": "Notion sync is broken again",
+      "selftext": "Body of post complaining about sync issues",
+      "author": "user1",
+      "subreddit": "Notion",
+      "url": "https://reddit.com/r/Notion/comments/abc123",
+      "permalink": "/r/Notion/comments/abc123",
+      "created_utc": 1715000000,
+      "score": 42,
+      "num_comments": 5,
+      "ups": 42,
+      "upvote_ratio": 0.9
+    }
+  ],
+  "comments": [
+    {
+      "id": "cmt1",
+      "name": "t1_cmt1",
+      "body": "same here, lost data",
+      "author": "user2",
+      "permalink": "/r/Notion/comments/abc123/comment/cmt1",
+      "created_utc": 1715000100,
+      "score": 5,
+      "parent_id": "t3_abc123"
+    }
+  ]
+}
