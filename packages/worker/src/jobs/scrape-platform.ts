@@ -1,4 +1,5 @@
 import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
+import type { LlmCallOptions } from "@rivaleye/shared";
 import { getScraper } from "@rivaleye/scrapers";
 import { mentions } from "../../../api/src/db/schema/mentions.js";
 import { reports } from "../../../api/src/db/schema/reports.js";
@@ -9,11 +10,13 @@ import {
 import { boss, QUEUES } from "../queue.js";
 import type { ScrapePlatformJob } from "../queue.js";
 import { db } from "../db.js";
+import { log } from "../logger.js";
 import { runStageAExtract } from "../pipeline/stage-a-extract.js";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize.js";
 import { and, eq } from "drizzle-orm";
 
 const CHUNK_SIZE = 500;
+const LLM_OPTS_AB: LlmCallOptions = { timeoutMs: 45_000, maxAttempts: 3 };
 
 let _llm: OpenRouterClient | null = null;
 
@@ -28,26 +31,22 @@ function getLlm(): OpenRouterClient {
 }
 
 export async function handleScrapePlatform(data: ScrapePlatformJob): Promise<void> {
-  console.log(
-    `[scrape] start reportId=${data.reportId} platform=${data.platform} competitor="${data.competitor}"`,
-  );
+  const { reportId, platform, competitor } = data;
 
-  await markRunning(data.reportId, data.platform);
-
-  let postCount = 0;
+  await log(reportId, "info", "scrape", platform, `start competitor="${competitor}"`);
+  await markRunning(reportId, platform);
 
   try {
-    const report = await loadReport(data.reportId);
+    const report = await loadReport(reportId);
 
-    const scraper = getScraper(data.platform);
+    const scraper = getScraper(platform);
     const posts = await scraper.fetch({
-      competitor: data.competitor,
+      competitor,
       category: data.category,
       keywords: data.keywords,
     });
 
-    postCount = posts.length;
-    console.log(`[scrape] fetched ${postCount} posts for ${data.platform}/${data.competitor}`);
+    await log(reportId, "info", "scrape", platform, `fetched posts`, { postCount: posts.length });
 
     for (let i = 0; i < posts.length; i += CHUNK_SIZE) {
       const chunk = posts.slice(i, i + CHUNK_SIZE);
@@ -55,7 +54,7 @@ export async function handleScrapePlatform(data: ScrapePlatformJob): Promise<voi
         .insert(mentions)
         .values(
           chunk.map((p) => ({
-            report_id: data.reportId,
+            report_id: reportId,
             platform: p.platform,
             external_id: p.externalId,
             url: p.url,
@@ -74,32 +73,32 @@ export async function handleScrapePlatform(data: ScrapePlatformJob): Promise<voi
     await db
       .update(reports)
       .set({ status: "running", updated_at: new Date() })
-      .where(eq(reports.id, data.reportId));
+      .where(eq(reports.id, reportId));
 
     if (posts.length > 0) {
       const llm = getLlm();
       const ctx = {
-        reportId: data.reportId,
-        competitor: data.competitor,
+        reportId,
+        competitor,
         category: data.category ?? "",
         audience: report.audience ?? null,
         goal: report.goal,
       };
 
-      const stageA = await runStageAExtract({ llm, ctx, platform: data.platform, posts });
-      console.log(
-        `[scrape] stage A done platform=${data.platform} tokens=${stageA.usage.promptTokens}+${stageA.usage.completionTokens}`,
-      );
-
-      const stageB = await runStageBSummarize({
-        llm,
-        ctx,
-        platform: data.platform,
-        extract: stageA.extract,
+      const stageA = await runStageAExtract({ llm, ctx, platform, posts }, LLM_OPTS_AB);
+      await log(reportId, "info", "A", platform, `stage A done`, {
+        promptTokens: stageA.usage.promptTokens,
+        completionTokens: stageA.usage.completionTokens,
       });
-      console.log(
-        `[scrape] stage B done platform=${data.platform} tokens=${stageB.usage.promptTokens}+${stageB.usage.completionTokens}`,
+
+      const stageB = await runStageBSummarize(
+        { llm, ctx, platform, extract: stageA.extract },
+        LLM_OPTS_AB,
       );
+      await log(reportId, "info", "B", platform, `stage B done`, {
+        promptTokens: stageB.usage.promptTokens,
+        completionTokens: stageB.usage.completionTokens,
+      });
 
       const totalPrompt = stageA.usage.promptTokens + stageB.usage.promptTokens;
       const totalCompletion = stageA.usage.completionTokens + stageB.usage.completionTokens;
@@ -107,8 +106,8 @@ export async function handleScrapePlatform(data: ScrapePlatformJob): Promise<voi
       await db
         .insert(report_platform_briefs)
         .values({
-          report_id: data.reportId,
-          platform: data.platform,
+          report_id: reportId,
+          platform,
           extract: stageA.extract as Record<string, unknown>,
           summary: stageB.brief as Record<string, unknown>,
           model_used: stageB.model,
@@ -118,11 +117,12 @@ export async function handleScrapePlatform(data: ScrapePlatformJob): Promise<voi
         .onConflictDoNothing();
     }
 
-    await markCompleted(data.reportId, data.platform);
-    await fanIn(data.reportId);
+    await markCompleted(reportId, platform);
+    await fanIn(reportId);
   } catch (err) {
-    await markFailed(data.reportId, data.platform, asMessage(err));
-    await fanIn(data.reportId);
+    await log(reportId, "error", "scrape", platform, `failed: ${asMessage(err)}`);
+    await markFailed(reportId, platform, asMessage(err));
+    await fanIn(reportId);
     throw err;
   }
 }
@@ -180,11 +180,11 @@ async function fanIn(reportId: string): Promise<void> {
 
   if (stillActive.length === 0) {
     await boss.send(QUEUES.generateReport, { reportId });
-    console.log(`[scrape] fan-in: enqueued generate-report for reportId=${reportId}`);
+    await log(reportId, "info", "scrape", null, `fan-in: enqueued generate-report`);
   } else {
-    console.log(
-      `[scrape] fan-in: ${stillActive.length} platform job(s) still active for reportId=${reportId}`,
-    );
+    await log(reportId, "info", "scrape", null, `fan-in: waiting`, {
+      stillActive: stillActive.length,
+    });
   }
 }
 

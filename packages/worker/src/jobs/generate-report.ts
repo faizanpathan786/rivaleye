@@ -2,11 +2,12 @@ import type { GenerateReportJob } from "../queue";
 import { db } from "../db";
 import { reports } from "../../../api/src/db/schema/reports.js";
 import { eq } from "drizzle-orm";
+import { log } from "../logger.js";
 import { runPipeline } from "../pipeline/run";
 
 export async function handleGenerateReport(data: GenerateReportJob): Promise<void> {
   const { reportId } = data;
-  console.log(`[generate] start reportId=${reportId}`);
+  await log(reportId, "info", null, null, `generate-report start`);
 
   try {
     await runPipeline(reportId);
@@ -16,11 +17,10 @@ export async function handleGenerateReport(data: GenerateReportJob): Promise<voi
       .set({ stage: "done", status: "completed", updated_at: new Date() })
       .where(eq(reports.id, reportId));
 
-    console.log(`[generate] done reportId=${reportId} status=completed`);
+    await log(reportId, "info", null, null, `generate-report done: status=completed`);
   } catch (err) {
-    console.error(`[generate] failed reportId=${reportId}`, err);
-
     const errorMsg = err instanceof Error ? err.message : "unknown_error";
+    await log(reportId, "error", null, null, `generate-report failed`, { error: errorMsg });
 
     await db
       .update(reports)
