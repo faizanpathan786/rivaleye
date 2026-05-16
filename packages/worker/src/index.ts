@@ -6,20 +6,17 @@ import { handleGenerateReport } from "./jobs/generate-report";
 async function main() {
   await boss.start();
 
-  await boss.work<ScrapePlatformJob>(
-    QUEUES.scrapePlatform,
-    { batchSize: 5 },
-    async (jobs) => {
-      const results = await Promise.allSettled(
-        jobs.map((job) => handleScrapePlatform(job.data)),
-      );
-      for (const result of results) {
-        if (result.status === "rejected") {
-          console.error("[worker] scrape-platform job failed in batch:", result.reason);
-        }
-      }
-    },
-  );
+  // 5 independent workers registered for the same queue — pg-boss v10 supports this.
+  // Each handles one job at a time; if the handler throws, only that job is retried.
+  for (let i = 0; i < 5; i++) {
+    await boss.work<ScrapePlatformJob>(
+      QUEUES.scrapePlatform,
+      { batchSize: 1 },
+      async (jobs) => {
+        await handleScrapePlatform(jobs[0]!.data);
+      },
+    );
+  }
 
   await boss.work<GenerateReportJob>(
     QUEUES.generateReport,

@@ -179,7 +179,8 @@ async function fanIn(reportId: string): Promise<void> {
   const stillActive = rows.filter((r) => r.status === "queued" || r.status === "running");
 
   if (stillActive.length === 0) {
-    await boss.send(QUEUES.generateReport, { reportId });
+    // singletonKey deduplicates concurrent fan-in calls for the same reportId.
+    await boss.send(QUEUES.generateReport, { reportId }, { singletonKey: reportId });
     await log(reportId, "info", "scrape", null, `fan-in: enqueued generate-report`);
   } else {
     await log(reportId, "info", "scrape", null, `fan-in: waiting`, {

@@ -330,6 +330,9 @@ export async function getLogs(id: string, owner_id: string, since?: string) {
   const owned = await assertReportOwned(id, owner_id);
   if (!owned) return null;
   const sinceDate = since ? new Date(since) : null;
+  if (sinceDate && Number.isNaN(sinceDate.getTime())) {
+    throw new Error("invalid 'since' timestamp");
+  }
   return db
     .select({
       id: report_logs.id,
