@@ -3,7 +3,7 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { controllers } from "./controllers";
 
-const port = Number(process.env.PORT ?? 6090);
+const port = Number(process.env.PORT ?? 3001);
 
 const app = new Elysia()
   .use(cors())

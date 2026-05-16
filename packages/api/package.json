@@ -14,18 +14,19 @@
     "drizzle:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@rivaleye/shared": "workspace:*",
-    "@rivaleye/scrapers": "workspace:*",
-    "elysia": "^1.1.25",
-    "@elysiajs/cors": "^1.1.1",
-    "@elysiajs/swagger": "^1.1.6",
-    "@elysiajs/jwt": "^1.1.1",
     "@bogeychan/elysia-logger": "^0.1.4",
+    "@elysiajs/cors": "^1.1.1",
+    "@elysiajs/jwt": "^1.1.1",
+    "@elysiajs/swagger": "^1.1.6",
+    "@openrouter/sdk": "^0.12.35",
+    "@rivaleye/scrapers": "workspace:*",
+    "@rivaleye/shared": "workspace:*",
     "better-auth": "^1.1.0",
     "drizzle-orm": "^0.36.4",
-    "postgres": "^3.4.5",
+    "elysia": "^1.1.25",
+    "pino": "^9.5.0",
     "pg-boss": "^10.1.5",
-    "pino": "^9.5.0"
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",

@@ -11,13 +11,14 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "@rivaleye/shared": "workspace:*",
     "@rivaleye/scrapers": "workspace:*",
-    "pg-boss": "^10.1.5",
+    "@rivaleye/shared": "workspace:*",
     "drizzle-orm": "^0.36.4",
-    "postgres": "^3.4.5",
+    "openai": "^4.77.0",
+    "pg-boss": "^10.1.5",
     "pino": "^9.5.0",
-    "openai": "^4.77.0"
+    "postgres": "^3.4.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",

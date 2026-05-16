@@ -1,0 +1,584 @@
+import { useEffect, useState, type CSSProperties } from "react";
+import { useNavigate } from "react-router-dom";
+import { Icon, type IconName } from "@/components/icons";
+import { MOCK_DATA } from "@/lib/mock/data";
+
+type RadarEvent = (typeof MOCK_DATA.radarEvents)[number];
+type Competitor = (typeof MOCK_DATA.competitors)[number];
+type Severity = "urgent" | "high" | "med" | "low";
+
+interface SeverityMeta {
+  color: string;
+  bg: string;
+  border: string;
+  label: string;
+}
+
+const SEVERITY: Record<Severity, SeverityMeta> = {
+  urgent: { color: "var(--neg)", bg: "rgba(220,38,38,0.08)", border: "rgba(220,38,38,0.25)", label: "URGENT" },
+  high: { color: "var(--warn)", bg: "rgba(217,119,6,0.08)", border: "rgba(217,119,6,0.25)", label: "HIGH" },
+  med: { color: "#6366f1", bg: "rgba(99,102,241,0.08)", border: "rgba(99,102,241,0.25)", label: "MED" },
+  low: { color: "var(--fg-muted)", bg: "var(--surface-2)", border: "var(--border-soft)", label: "LOW" },
+};
+
+const EVENT_TYPE_META: Record<string, { label: string; icon: IconName }> = {
+  "feature-leak": { label: "Feature leak", icon: "alert" },
+  "feature-launch": { label: "Feature launch", icon: "spark" },
+  "demo-video": { label: "Demo video", icon: "external" },
+  "pricing-change": { label: "Pricing change", icon: "trend-up" },
+  "exec-post": { label: "Exec post", icon: "user" },
+  "viral-complaint": { label: "Viral complaint", icon: "quote" },
+  launch: { label: "Public launch", icon: "spark" },
+  "review-spike": { label: "Review spike", icon: "trend-up" },
+  hire: { label: "Notable hire", icon: "user" },
+};
+
+function PlatformIcon({ id }: { id: string }) {
+  const initial = id.charAt(0).toUpperCase();
+  return (
+    <span
+      style={{
+        width: 16,
+        height: 16,
+        borderRadius: 4,
+        background: "var(--surface-2)",
+        border: "1px solid var(--border-soft)",
+        display: "inline-grid",
+        placeItems: "center",
+        fontFamily: "var(--font-mono)",
+        fontSize: 9,
+        fontWeight: 600,
+        color: "var(--fg-muted)",
+      }}
+    >
+      {initial}
+    </span>
+  );
+}
+
+export function RadarPage() {
+  const navigate = useNavigate();
+  const data = MOCK_DATA;
+
+  const [filterSev, setFilterSev] = useState<"all" | Severity>("all");
+  const [filterComp, setFilterComp] = useState<string>("all");
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 4000);
+    return () => clearInterval(id);
+  }, []);
+
+  let events: readonly RadarEvent[] = data.radarEvents;
+  if (filterSev !== "all") events = events.filter((e) => e.severity === filterSev);
+  if (filterComp !== "all") events = events.filter((e) => e.competitor === filterComp);
+
+  const competitors = data.competitors;
+  const urgentCount = data.radarEvents.filter((e) => e.severity === "urgent").length;
+  const highCount = data.radarEvents.filter((e) => e.severity === "high").length;
+  const activeMonitors = competitors.filter((c) => c.monitor.enabled).length;
+
+  const platformCounts = data.radarEvents.reduce<Record<string, number>>((a, ev) => {
+    a[ev.platform] = (a[ev.platform] || 0) + 1;
+    return a;
+  }, {});
+
+  return (
+    <div style={{ padding: "20px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+      {/* Hero */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <div className="re-eyebrow" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="re-dot re-dot-live pulse-dot" /> RADAR · LIVE
+          </div>
+          <h1 className="re-h1" style={{ marginTop: 8 }}>What your competitors are doing right now</h1>
+          <p className="text-fg-muted" style={{ marginTop: 6, maxWidth: 600, fontSize: 13, lineHeight: 1.55 }}>
+            We monitor LinkedIn, X, YouTube, Product Hunt, blogs, changelogs, Reddit, and G2 for every
+            tracked competitor. Anything they ship, leak, or stumble over — you see it first.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="re-btn">
+            <Icon name="settings" size={14} /> Alert rules
+          </button>
+          <button className="re-btn re-btn-accent" onClick={() => navigate("/competitors")}>
+            <Icon name="plus" size={14} /> Track competitor
+          </button>
+        </div>
+      </div>
+
+      {/* Stat strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+        <RadarStat label="Active monitors" value={activeMonitors} sub={`of ${competitors.length} competitors`} />
+        <RadarStat label="Events this week" value={data.radarEvents.length} sub="across all sources" trend="up" />
+        <RadarStat label="Urgent" value={urgentCount} tone="neg" sub="needs response today" />
+        <RadarStat label="High priority" value={highCount} tone="warn" sub="watch this week" />
+      </div>
+
+      {/* Live ribbon */}
+      <div
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border-soft)",
+          borderRadius: 8,
+          padding: "10px 14px",
+          marginBottom: 16,
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          fontSize: 12,
+          overflow: "hidden",
+        }}
+      >
+        <span className="re-dot re-dot-live pulse-dot" style={{ flexShrink: 0 }} />
+        <span className="font-mono-feat" style={{ color: "var(--fg)", flexShrink: 0 }}>LIVE</span>
+        <span className="font-mono-feat text-fg-faint" style={{ flexShrink: 0 }}>
+          last sweep {(tick * 4) % 60}s ago
+        </span>
+        <span style={{ width: 1, height: 12, background: "var(--border-soft)", flexShrink: 0 }} />
+        <span
+          className="text-fg-muted"
+          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
+          watching <b style={{ color: "var(--fg)" }}>{activeMonitors}</b> competitors across{" "}
+          <b style={{ color: "var(--fg)" }}>8</b> platforms — next sweep in {60 - ((tick * 4) % 60)}s
+        </span>
+        <button className="re-btn re-btn-ghost re-btn-sm" style={{ marginLeft: "auto", flexShrink: 0 }}>
+          <Icon name="spark" size={12} /> Sweep now
+        </button>
+      </div>
+
+      {/* Filter bar */}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>
+            SEVERITY
+          </span>
+          {(["all", "urgent", "high", "med", "low"] as const).map((k) => (
+            <button
+              key={k}
+              className={`re-chip ${filterSev === k ? "re-chip-solid" : ""}`}
+              style={{ cursor: "pointer", padding: "3px 10px" }}
+              onClick={() => setFilterSev(k)}
+            >
+              {k}
+            </button>
+          ))}
+        </div>
+        <div style={{ width: 1, height: 18, background: "var(--border-soft)" }} />
+        <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>
+            COMPETITOR
+          </span>
+          <button
+            className={`re-chip ${filterComp === "all" ? "re-chip-solid" : ""}`}
+            style={{ cursor: "pointer", padding: "3px 10px" }}
+            onClick={() => setFilterComp("all")}
+          >
+            all
+          </button>
+          {competitors
+            .filter((c) => c.monitor.enabled)
+            .slice(0, 5)
+            .map((c) => (
+              <button
+                key={c.id}
+                className={`re-chip ${filterComp === c.id ? "re-chip-solid" : ""}`}
+                style={{ cursor: "pointer", padding: "3px 10px" }}
+                onClick={() => setFilterComp(c.id === filterComp ? "all" : c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+            {events.length} events
+          </span>
+        </div>
+      </div>
+
+      {/* Timeline + rail */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
+        <div className="re-card" style={{ overflow: "hidden" }}>
+          {events.length === 0 && (
+            <div style={{ padding: 40, textAlign: "center", color: "var(--fg-muted)" }}>
+              No events match. Try clearing filters.
+            </div>
+          )}
+          {events.map((ev, i) => (
+            <RadarEventRow
+              key={ev.id}
+              event={ev}
+              competitor={competitors.find((c) => c.id === ev.competitor)}
+              first={i === 0}
+            />
+          ))}
+        </div>
+
+        {/* Right rail */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="re-card">
+            <div className="re-card-hd">
+              <h3>Alert digest</h3>
+              <span className="text-fg-faint" style={{ fontSize: 11 }}>today</span>
+            </div>
+            <div style={{ padding: 14 }}>
+              <p className="text-fg-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+                Two urgent moves today, both from <b style={{ color: "var(--fg)" }}>Linear</b>. A leaked
+                time-tracking feature and a quiet pricing change. Either could blunt our wedge —
+                recommend a fast internal sync.
+              </p>
+              <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                <button className="re-btn re-btn-sm">
+                  <Icon name="share" size={12} /> Slack team
+                </button>
+                <button
+                  className="re-btn re-btn-sm"
+                  style={{ background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}
+                >
+                  <Icon name="quote" size={12} /> Brief CEO
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="re-card">
+            <div className="re-card-hd">
+              <h3>By platform</h3>
+            </div>
+            <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              {Object.entries(platformCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([p, count]) => (
+                  <div key={p} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <PlatformIcon id={p} />
+                    <span style={{ flex: 1, fontSize: 12, textTransform: "capitalize" }}>{p}</span>
+                    <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
+                      {count}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <div className="re-card">
+            <div className="re-card-hd">
+              <h3>Recently active</h3>
+            </div>
+            <div style={{ padding: "8px 0" }}>
+              {competitors
+                .filter((c) => c.monitor.enabled)
+                .slice(0, 5)
+                .map((c) => (
+                  <div
+                    key={c.id}
+                    style={{
+                      padding: "8px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 5,
+                        background: c.color,
+                        color: "#fff",
+                        display: "grid",
+                        placeItems: "center",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {c.name[0]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500 }}>{c.name}</div>
+                      <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>
+                        {c.stats.lastActivity}
+                      </div>
+                    </div>
+                    <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
+                      {c.stats.alerts7d}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface RadarStatProps {
+  label: string;
+  value: number;
+  sub: string;
+  tone?: "neg" | "warn";
+  trend?: "up";
+}
+
+function RadarStat({ label, value, sub, tone, trend }: RadarStatProps) {
+  const color = tone === "neg" ? "var(--neg)" : tone === "warn" ? "var(--warn)" : "var(--fg)";
+  return (
+    <div className="re-card" style={{ padding: 14 }}>
+      <div className="re-eyebrow" style={{ fontSize: 10 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 4 }}>
+        <span
+          className="font-mono-feat tnum"
+          style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color }}
+        >
+          {value}
+        </span>
+        {trend === "up" && <Icon name="arrow-up" size={11} className="text-fg-faint" />}
+      </div>
+      <div className="text-fg-muted" style={{ fontSize: 11, marginTop: 2 }}>
+        {sub}
+      </div>
+    </div>
+  );
+}
+
+interface RadarEventRowProps {
+  event: RadarEvent;
+  competitor: Competitor | undefined;
+  first: boolean;
+}
+
+function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
+  const sev = SEVERITY[ev.severity as Severity] ?? SEVERITY.low;
+  const meta = EVENT_TYPE_META[ev.type] ?? { label: ev.type, icon: "spark" as IconName };
+  const [expanded, setExpanded] = useState<boolean>(ev.severity === "urgent" && first);
+
+  const baseBg = ev.severity === "urgent" ? "rgba(220,38,38,0.02)" : "transparent";
+
+  const rowStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "70px 28px 1fr 90px 18px",
+    gap: 14,
+    padding: "18px 20px",
+    borderTop: first ? 0 : "1px solid var(--border-soft)",
+    cursor: "pointer",
+    position: "relative",
+    background: baseBg,
+  };
+
+  const eventWithExtras = ev as RadarEvent & { who?: string; role?: string };
+
+  return (
+    <div
+      onClick={() => setExpanded(!expanded)}
+      style={rowStyle}
+      onMouseEnter={(e) => {
+        if (!expanded) e.currentTarget.style.background = "var(--surface-2)";
+      }}
+      onMouseLeave={(e) => {
+        if (!expanded) e.currentTarget.style.background = baseBg;
+      }}
+    >
+      {/* Severity + time */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+        <span
+          className="re-chip"
+          style={{
+            background: sev.bg,
+            color: sev.color,
+            borderColor: sev.border,
+            fontSize: 9,
+            padding: "2px 6px",
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+          }}
+        >
+          {sev.label}
+        </span>
+        <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>
+          {ev.detectedAt}
+        </span>
+      </div>
+
+      {/* Competitor logo */}
+      <div
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 6,
+          background: competitor?.color ?? "#666",
+          color: "#fff",
+          display: "grid",
+          placeItems: "center",
+          fontFamily: "var(--font-mono)",
+          fontSize: 13,
+          fontWeight: 600,
+        }}
+      >
+        {competitor?.name[0] ?? "?"}
+      </div>
+
+      {/* Main */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+          <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-muted)" }}>
+            {competitor?.name ?? "?"}
+          </span>
+          <span className="font-mono-feat text-fg-faint">·</span>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              fontSize: 11,
+              color: "var(--fg-muted)",
+            }}
+          >
+            <PlatformIcon id={ev.platform} />
+            <span style={{ textTransform: "capitalize" }}>{ev.platform}</span>
+          </span>
+          <span className="font-mono-feat text-fg-faint">·</span>
+          <span
+            className="re-chip"
+            style={{
+              fontSize: 10,
+              color: sev.color,
+              background: sev.bg,
+              borderColor: sev.border,
+              padding: "1px 8px",
+            }}
+          >
+            <Icon name={meta.icon} size={10} /> {meta.label}
+          </span>
+          {ev.confidence < 0.9 && (
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>
+              · {Math.round(ev.confidence * 100)}% confidence
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-0.005em" }}>
+          {ev.title}
+        </div>
+        {!expanded && (
+          <div
+            className="text-fg-muted"
+            style={{
+              fontSize: 12.5,
+              marginTop: 6,
+              lineHeight: 1.5,
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {ev.snippet}
+          </div>
+        )}
+        {expanded && (
+          <div className="fade-up" style={{ marginTop: 10 }}>
+            <div
+              style={{
+                padding: 12,
+                background: "var(--surface-2)",
+                borderRadius: 8,
+                borderLeft: `2px solid ${sev.color}`,
+                fontSize: 13,
+                lineHeight: 1.55,
+                color: "var(--fg)",
+              }}
+            >
+              {ev.snippet}
+              {eventWithExtras.who && (
+                <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 8 }}>
+                  — {eventWithExtras.who}
+                  {eventWithExtras.role ? ` · ${eventWithExtras.role}` : ""}
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                marginTop: 10,
+                padding: "10px 12px",
+                background:
+                  ev.severity === "urgent" ? "rgba(220,38,38,0.05)" : "var(--accent-soft)",
+                borderRadius: 8,
+                fontSize: 12.5,
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+              }}
+            >
+              <Icon name="spark" size={14} style={{ color: sev.color, marginTop: 2 }} />
+              <div>
+                <span
+                  className="font-mono-feat"
+                  style={{
+                    fontSize: 9,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: sev.color,
+                    fontWeight: 600,
+                  }}
+                >
+                  WHY IT MATTERS
+                </span>
+                <div style={{ fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{ev.impact}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+              <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
+                <Icon name="external" size={12} /> Open source
+              </button>
+              <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
+                <Icon name="share" size={12} /> Brief team
+              </button>
+              <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
+                <Icon name="check" size={12} /> Mark handled
+              </button>
+              <button
+                className="re-btn re-btn-ghost re-btn-sm"
+                onClick={(e) => e.stopPropagation()}
+                style={{ marginLeft: "auto" }}
+              >
+                Snooze
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Confidence */}
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
+        <span
+          className="font-mono-feat text-fg-faint"
+          style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em" }}
+        >
+          Conf
+        </span>
+        <span
+          className="font-mono-feat tnum"
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color:
+              ev.confidence > 0.9
+                ? "var(--pos)"
+                : ev.confidence > 0.75
+                ? "var(--warn)"
+                : "var(--fg-muted)",
+          }}
+        >
+          {Math.round(ev.confidence * 100)}%
+        </span>
+      </div>
+
+      {/* Chevron */}
+      <div style={{ display: "flex", alignItems: "center", color: "var(--fg-faint)" }}>
+        <Icon name={expanded ? "chev-down" : "chev-right"} size={14} />
+      </div>
+    </div>
+  );
+}

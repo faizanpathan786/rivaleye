@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:using-git-worktrees)",
+      "Skill(superpowers:using-git-worktrees:*)",
+      "Bash(git check-ignore *)",
+      "Bash(git worktree *)",
+      "Skill(superpowers:subagent-driven-development)"
+    ]
+  }
+}

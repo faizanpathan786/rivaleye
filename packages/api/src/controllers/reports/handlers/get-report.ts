@@ -1,19 +1,26 @@
 import { Elysia, t } from "elysia";
-import { db } from "@/db/client";
-import { reports } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { getReport as getReportService } from "@/services/reports.service";
 
 export const getReport = new Elysia().get(
   "/:id",
   async ({ params, status }) => {
-    const [row] = await db
-      .select()
-      .from(reports)
-      .where(eq(reports.id, params.id))
-      .limit(1);
+    const row = await getReportService(params.id);
 
     if (!row) return status(404, { message: "report not found" });
-    return row;
+
+    return {
+      id: row.id,
+      category: row.category,
+      competitors: row.competitors,
+      target_audience: row.audience,
+      founder_goal: row.goal,
+      stage: row.stage,
+      status: row.status,
+      error: row.error,
+      output: row.output,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
   },
   { params: t.Object({ id: t.String() }) },
 );

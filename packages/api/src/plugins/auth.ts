@@ -7,7 +7,7 @@ export const authPlugin = new Elysia({ name: "auth-plugin" })
   })
   .macro(({ onBeforeHandle }) => ({
     auth(opts: { permissions?: string[] } | true) {
-      onBeforeHandle(({ user }) => {
+      onBeforeHandle(({ user }: { user: null }) => {
         if (!user && opts !== true) {
           return new Response("Unauthorized", { status: 401 });
         }

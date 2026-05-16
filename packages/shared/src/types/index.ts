@@ -6,6 +6,7 @@ export interface PainCluster {
   evidence: string[];
 }
 
+/** @deprecated Use ReportOutput from schemas/report.ts instead */
 export interface PainReportOutput {
   summary: string;
   painClusters: PainCluster[];

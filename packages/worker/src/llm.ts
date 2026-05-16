@@ -13,7 +13,7 @@ export async function callLlm(
   userPrompt: string,
 ): Promise<string> {
   const response = await client.chat.completions.create({
-    model: "deepseek/deepseek-r1-0528:free",
+    model: "deepseek/deepseek-v3-0324:free",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },

@@ -6,6 +6,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { ReportOutput, PainReportOutput } from "@rivaleye/shared";
 import { users } from "./users";
 
 export const reportStatusEnum = pgEnum("report_status", [
@@ -24,17 +25,25 @@ export const reportGoalEnum = pgEnum("report_goal", [
   "compare_alternatives",
 ]);
 
+export const reportStageEnum = pgEnum("report_stage", [
+  "queued",
+  "scraping",
+  "clustering",
+  "done",
+  "failed",
+]);
+
 export const reports = pgTable("reports", {
   id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: uuid("owner_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  ownerId: uuid("owner_id").references(() => users.id, { onDelete: "cascade" }),
   category: text("category").notNull(),
   competitors: jsonb("competitors").$type<string[]>().notNull(),
   audience: text("audience"),
   goal: reportGoalEnum("goal").notNull(),
   status: reportStatusEnum("status").notNull().default("queued"),
-  output: jsonb("output").$type<Record<string, unknown> | null>().default(null),
+  stage: reportStageEnum("stage").notNull().default("queued"),
+  error: text("error"),
+  output: jsonb("output").$type<ReportOutput | PainReportOutput | null>().default(null),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -16,7 +16,7 @@ Read the root `CLAUDE.md` first. This file extends it with backend-specific rule
 - **JWT middleware** (when needed): `@elysiajs/jwt`.
 - **Logging**: pino via `@bogeychan/elysia-logger`.
 - **API docs**: Swagger via `@elysiajs/swagger` — auto-generated from Elysia route types.
-- **Dev port**: `6090`.
+- **Dev port**: `3001`.
 
 ---
 
@@ -158,7 +158,7 @@ Public signup may be allowed for the MVP (founder enters email, gets a report). 
 |---|---|
 | `CONNECTION_STRING` | Supabase Postgres URL |
 | `BETTER_AUTH_SECRET` | better-auth signing secret |
-| `BETTER_AUTH_URL` | better-auth base URL (`http://localhost:6090` in dev) |
+| `BETTER_AUTH_URL` | better-auth base URL (`http://localhost:3001` in dev) |
 | `ANTHROPIC_API_KEY` | Claude API key for LLM analysis |
 | `OPENAI_API_KEY` | Fallback / embedding model |
 | `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` / `REDDIT_USER_AGENT` | Reddit API access (consumed via `@rivaleye/reddit-client`) |
@@ -183,7 +183,7 @@ Always read from `process.env`. Never hardcode. Never commit `.env*`.
 Run from the repo root (recommended) or with `pnpm --filter @rivaleye/api`:
 
 ```sh
-pnpm --filter @rivaleye/api dev          # bun --watch src/server.ts on :6090
+pnpm --filter @rivaleye/api dev          # bun --watch src/server.ts on :3001
 pnpm db:generate                         # drizzle migration from schema diff
 pnpm db:migrate                          # apply pending migrations
 pnpm db:studio                           # Drizzle Studio
@@ -231,5 +231,6 @@ pnpm --filter @rivaleye/api type-check
 - [ ] Decide on shared error type / response envelope. Default for now: `{ data, error }`.
 - [ ] Add `bun test` for the first non-trivial service.
 - [ ] Stripe billing endpoints under `/v1/billing` when the paid offer goes live.
+- [ ] MVP exception: reports controller is unauthenticated (anonymous report creation). authPlugin is suspended for /v1/reports only. Re-apply when "save report to my account" ships.
 
 Update this section as decisions land.

@@ -4,20 +4,34 @@ import type { PlatformId } from "@rivaleye/scrapers";
 const connectionString = process.env.CONNECTION_STRING;
 if (!connectionString) throw new Error("CONNECTION_STRING is required");
 
-const boss = new PgBoss({ connectionString });
-let started = false;
+console.log(`[queue] connecting to ${connectionString.replace(/:\/\/.*@/, "://***@")}`);
 
-async function ensureStarted() {
-  if (!started) {
-    await boss.start();
-    started = true;
-  }
-}
+const boss = new PgBoss({ connectionString });
+
+boss.on("error", (err: unknown) => console.error("[queue] pg-boss error:", err));
 
 export const QUEUES = {
   scrapePlatform: "scrape-platform",
   generateReport: "generate-report",
 } as const;
+
+let startPromise: Promise<void> | null = null;
+
+async function ensureStarted() {
+  if (!startPromise) {
+    startPromise = (async () => {
+      await boss.start();
+      await boss.createQueue(QUEUES.scrapePlatform);
+      await boss.createQueue(QUEUES.generateReport);
+      console.log("[queue] pg-boss started, queues created");
+    })().catch((err) => {
+      console.error("[queue] pg-boss start failed:", err);
+      startPromise = null;
+      throw err;
+    });
+  }
+  await startPromise;
+}
 
 export interface ScrapePlatformJob {
   reportId: string;
@@ -29,10 +43,14 @@ export interface ScrapePlatformJob {
 
 export async function enqueueScrapePlatform(job: ScrapePlatformJob) {
   await ensureStarted();
-  return boss.send(QUEUES.scrapePlatform, job);
+  const id = await boss.send(QUEUES.scrapePlatform, job);
+  console.log(`[queue] sent scrape-platform job id=${id}`);
+  return id;
 }
 
 export async function enqueueGenerateReport(reportId: string) {
   await ensureStarted();
-  return boss.send(QUEUES.generateReport, { reportId });
+  const id = await boss.send(QUEUES.generateReport, { reportId });
+  console.log(`[queue] sent generate-report job id=${id}`);
+  return id;
 }

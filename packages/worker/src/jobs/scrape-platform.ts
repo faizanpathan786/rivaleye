@@ -9,12 +9,16 @@ import { eq } from "drizzle-orm";
 const CHUNK_SIZE = 500;
 
 export async function handleScrapePlatform(data: ScrapePlatformJob) {
+  console.log(`[scrape] start reportId=${data.reportId} platform=${data.platform} competitor="${data.competitor}"`);
+
   const scraper = getScraper(data.platform);
   const posts = await scraper.fetch({
     competitor: data.competitor,
     category: data.category,
     keywords: data.keywords,
   });
+
+  console.log(`[scrape] fetched ${posts.length} posts for ${data.platform}/${data.competitor}`);
 
   // Bulk-insert in chunks, skip conflicts (idempotent)
   for (let i = 0; i < posts.length; i += CHUNK_SIZE) {
@@ -39,6 +43,8 @@ export async function handleScrapePlatform(data: ScrapePlatformJob) {
       .onConflictDoNothing();
   }
 
+  console.log(`[scrape] inserted mentions, updating report status → running`);
+
   // Transition report to "running" if still queued
   await db
     .update(reports)
@@ -47,6 +53,7 @@ export async function handleScrapePlatform(data: ScrapePlatformJob) {
 
   // Fan-in: for MVP (Reddit only), enqueue generate-report immediately
   await boss.send(QUEUES.generateReport, { reportId: data.reportId });
+  console.log(`[scrape] enqueued generate-report for reportId=${data.reportId}`);
 
   return { count: posts.length };
 }
