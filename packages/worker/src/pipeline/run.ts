@@ -2,7 +2,10 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { reports } from "../../../api/src/db/schema/reports.js";
 import { mentions } from "../../../api/src/db/schema/mentions.js";
-import { report_platform_briefs } from "../../../api/src/db/schema/pipeline.js";
+import {
+  report_platform_briefs,
+  report_pipeline_checkpoints,
+} from "../../../api/src/db/schema/pipeline.js";
 import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
 import type { LlmCallOptions } from "@rivaleye/shared";
 import { log } from "../logger.js";
@@ -12,7 +15,17 @@ import { runStageERefine } from "./stage-e-refine";
 import { computePlatformStats, computeSubredditStats } from "./derive-stats";
 import { persistReport } from "./persist";
 import { PipelineError } from "./errors";
-import type { PipelineCtx, PlatformBrief, PlatformExtract } from "../prompts/shared";
+import type {
+  PipelineCtx,
+  PlatformBrief,
+  PlatformExtract,
+  MergedClusters,
+  SynthOutput,
+} from "../prompts/shared";
+
+const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 60_000, maxAttempts: 3 };
+const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 3 };
+const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 2 };
 
 let _llm: OpenRouterClient | null = null;
 
@@ -22,9 +35,27 @@ function getLlm(): OpenRouterClient {
   return _llm;
 }
 
-const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 60_000, maxAttempts: 3 };
-const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 3 };
-const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 2 };
+async function loadCheckpoints(reportId: string): Promise<Map<string, Record<string, unknown>>> {
+  const rows = await db
+    .select()
+    .from(report_pipeline_checkpoints)
+    .where(eq(report_pipeline_checkpoints.report_id, reportId));
+  return new Map(rows.map((r) => [r.stage, r.output]));
+}
+
+async function saveCheckpoint(
+  reportId: string,
+  stage: string,
+  output: Record<string, unknown>,
+): Promise<void> {
+  await db
+    .insert(report_pipeline_checkpoints)
+    .values({ report_id: reportId, stage: stage as "C" | "D" | "E", output, updated_at: new Date() })
+    .onConflictDoUpdate({
+      target: [report_pipeline_checkpoints.report_id, report_pipeline_checkpoints.stage],
+      set: { output, updated_at: new Date() },
+    });
+}
 
 export async function runPipeline(reportId: string): Promise<void> {
   const [report] = await db.select().from(reports).where(eq(reports.id, reportId)).limit(1);
@@ -60,10 +91,59 @@ export async function runPipeline(reportId: string): Promise<void> {
     .where(eq(reports.id, reportId));
 
   const llm = getLlm();
+  const checkpoints = await loadCheckpoints(reportId);
 
-  const { merged } = await runStageCMerge({ llm, ctx, briefs, extracts }, LLM_OPTS_C);
-  const { synth } = await runStageDSynth({ llm, ctx, merged }, LLM_OPTS_D);
-  const { refined, fellBackToDraft } = await runStageERefine({ llm, ctx, merged, draft: synth }, LLM_OPTS_E);
+  // Stage C
+  let merged: MergedClusters;
+  if (checkpoints.has("C")) {
+    await log(reportId, "info", "C", null, "skipping stage C (checkpoint found)");
+    merged = checkpoints.get("C") as unknown as MergedClusters;
+  } else {
+    await log(reportId, "info", "C", null, "running stage C: merge");
+    const resultC = await runStageCMerge({ llm, ctx, briefs, extracts }, LLM_OPTS_C);
+    await log(reportId, "info", "C", null, "stage C done", {
+      promptTokens: resultC.usage.promptTokens,
+      completionTokens: resultC.usage.completionTokens,
+    });
+    merged = resultC.merged;
+    await saveCheckpoint(reportId, "C", merged as unknown as Record<string, unknown>);
+  }
+
+  // Stage D
+  let synth: SynthOutput;
+  if (checkpoints.has("D")) {
+    await log(reportId, "info", "D", null, "skipping stage D (checkpoint found)");
+    synth = checkpoints.get("D") as unknown as SynthOutput;
+  } else {
+    await log(reportId, "info", "D", null, "running stage D: synth");
+    const resultD = await runStageDSynth({ llm, ctx, merged }, LLM_OPTS_D);
+    await log(reportId, "info", "D", null, "stage D done", {
+      promptTokens: resultD.usage.promptTokens,
+      completionTokens: resultD.usage.completionTokens,
+    });
+    synth = resultD.synth;
+    await saveCheckpoint(reportId, "D", synth as unknown as Record<string, unknown>);
+  }
+
+  // Stage E
+  let refined: SynthOutput;
+  if (checkpoints.has("E")) {
+    await log(reportId, "info", "E", null, "skipping stage E (checkpoint found)");
+    refined = checkpoints.get("E") as unknown as SynthOutput;
+  } else {
+    await log(reportId, "info", "E", null, "running stage E: refine");
+    const resultE = await runStageERefine({ llm, ctx, merged, draft: synth }, LLM_OPTS_E);
+    if (resultE.fellBackToDraft) {
+      await log(reportId, "warn", "E", null, "stage E fell back to draft output");
+    } else {
+      await log(reportId, "info", "E", null, "stage E done", {
+        promptTokens: resultE.usage.promptTokens,
+        completionTokens: resultE.usage.completionTokens,
+      });
+    }
+    refined = resultE.refined;
+    await saveCheckpoint(reportId, "E", refined as unknown as Record<string, unknown>);
+  }
 
   const mentionRows = await db
     .select({ platform: mentions.platform, raw: mentions.raw })
@@ -73,7 +153,11 @@ export async function runPipeline(reportId: string): Promise<void> {
   const platformStats = computePlatformStats(mentionRows);
   const subreddits = computeSubredditStats(mentionRows);
 
+  await log(reportId, "info", "persist", null, "persisting report to sub-tables");
   await persistReport({ reportId, synth: refined, platformStats, subreddits });
+  await log(reportId, "info", "persist", null, "persist done", {
+    fellBackToDraft: checkpoints.has("E") ? false : "computed",
+  });
 
-  await log(reportId, "info", null, null, "pipeline done", { fellBackToDraft });
+  await log(reportId, "info", null, null, "pipeline done");
 }
