@@ -4,3 +4,4 @@ export * from "./competitors";
 export * from "./mentions";
 export * from "./radar";
 export * from "./pipeline";
+export * from "./pipeline-events";
