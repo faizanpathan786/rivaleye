@@ -28,6 +28,8 @@ export type ReportRow = {
   pricing_pain_score: number | null;
   switching_net_signal: string | null;
   switching_reasons_out: string[];
+  partial: boolean;
+  failed_platforms: string[];
   created_at: string;
   updated_at: string;
 };

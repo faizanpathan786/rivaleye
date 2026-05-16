@@ -5,9 +5,17 @@ import type { ReportRow } from "@/api/reports";
 
 type Props = {
   report: ReportRow;
+  partial?: boolean;
+  failed_platforms?: string[];
+  onRetryFailed?: () => void;
 };
 
-export function ReportHeader({ report }: Props) {
+export function ReportHeader({
+  report,
+  partial,
+  failed_platforms,
+  onRetryFailed,
+}: Props) {
   const name =
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
   const domain = report.primary_competitor_domain;
@@ -17,6 +25,22 @@ export function ReportHeader({ report }: Props) {
 
   return (
     <div className="space-y-4 border-b border-border pb-6">
+      {partial && failed_platforms && failed_platforms.length > 0 && (
+        <div className="flex items-center gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200">
+          <span>
+            Partial report. Missing platforms:{" "}
+            <span className="font-medium">{failed_platforms.join(", ")}</span>.
+          </span>
+          {onRetryFailed && (
+            <button
+              onClick={onRetryFailed}
+              className="ml-2 underline underline-offset-2 hover:no-underline"
+            >
+              Retry failed platforms
+            </button>
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-baseline gap-3">
