@@ -1,5 +1,5 @@
 import type { NormalizedPost, PlatformId } from "@rivaleye/scrapers";
-import type { OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
 import type { PipelineCtx, PlatformExtract } from "../prompts/shared";
 import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
 import { buildPlayStoreExtract } from "../prompts/platform/playstore/extract";
@@ -23,14 +23,14 @@ export interface StageAOutput {
   model: string;
 }
 
-export async function runStageAExtract(input: StageAInput): Promise<StageAOutput> {
+export async function runStageAExtract(input: StageAInput, opts?: LlmCallOptions): Promise<StageAOutput> {
   const builder = pickBuilder(input.platform);
   const built = builder(input);
   const res = await input.llm.complete({
     system: built.system,
     user: built.user,
     schema: built.schema,
-  });
+  }, opts);
   return { extract: res.parsed as PlatformExtract, usage: res.usage, model: res.model };
 }
 

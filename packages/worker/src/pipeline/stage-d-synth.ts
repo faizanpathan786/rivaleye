@@ -1,4 +1,4 @@
-import type { OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
 import type { MergedClusters, PipelineCtx, SynthOutput } from "../prompts/shared";
 import { buildSynth } from "../prompts/cross/synth";
 import { PipelineError } from "./errors";
@@ -17,7 +17,7 @@ export interface StageDOutput {
 
 const MAX_TOKENS = 16000;
 
-export async function runStageDSynth(input: StageDInput): Promise<StageDOutput> {
+export async function runStageDSynth(input: StageDInput, opts?: LlmCallOptions): Promise<StageDOutput> {
   const built = buildSynth({ ctx: input.ctx, merged: input.merged });
   try {
     const res = await input.llm.complete({
@@ -25,7 +25,7 @@ export async function runStageDSynth(input: StageDInput): Promise<StageDOutput> 
       user: built.user,
       schema: built.schema,
       maxTokens: MAX_TOKENS,
-    });
+    }, opts);
     return { synth: res.parsed as SynthOutput, usage: res.usage, model: res.model };
   } catch (err) {
     throw new PipelineError("D", "synth failed", err);

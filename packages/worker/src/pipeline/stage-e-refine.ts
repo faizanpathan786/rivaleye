@@ -1,4 +1,4 @@
-import type { OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
 import type { MergedClusters, PipelineCtx, SynthOutput } from "../prompts/shared";
 import { buildRefine } from "../prompts/cross/refine";
 
@@ -23,7 +23,7 @@ function asMessage(err: unknown): string {
   return String(err);
 }
 
-export async function runStageERefine(input: StageEInput): Promise<StageEOutput> {
+export async function runStageERefine(input: StageEInput, opts?: LlmCallOptions): Promise<StageEOutput> {
   const built = buildRefine({ ctx: input.ctx, merged: input.merged, draft: input.draft });
   try {
     const res = await input.llm.complete({
@@ -31,7 +31,7 @@ export async function runStageERefine(input: StageEInput): Promise<StageEOutput>
       user: built.user,
       schema: built.schema,
       maxTokens: MAX_TOKENS,
-    });
+    }, opts);
     return {
       refined: res.parsed as SynthOutput,
       fellBackToDraft: false,
