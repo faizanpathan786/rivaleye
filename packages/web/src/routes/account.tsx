@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import {
   Select,
@@ -7,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useMeQuery } from "@/hooks/queries/use-me";
+import { authClient } from "@/lib/auth-client";
 
 type SectionKey =
   | "profile"
@@ -135,6 +138,17 @@ function Field({
 }
 
 function ProfileSection() {
+  const navigate = useNavigate();
+  const { data: me } = useMeQuery();
+  const name = me?.name ?? "";
+  const email = me?.email ?? "";
+  const initial = (name || email || "?").charAt(0).toUpperCase();
+
+  async function onSignOut() {
+    await authClient.signOut();
+    navigate("/signin", { replace: true });
+  }
+
   return (
     <FormCard title="Profile" sub="who you are in this workspace">
       <Field label="Avatar">
@@ -152,7 +166,7 @@ function ProfileSection() {
               fontWeight: 600,
             }}
           >
-            K
+            {initial}
           </div>
           <button className="re-btn re-btn-sm">Upload</button>
           <button className="re-btn re-btn-ghost re-btn-sm">Remove</button>
@@ -160,17 +174,29 @@ function ProfileSection() {
       </Field>
       <Field label="Name">
         <input
+          key={`name-${name}`}
           className="re-input"
-          defaultValue="Kira Mendez"
+          defaultValue={name}
           style={{ width: 280 }}
         />
       </Field>
       <Field label="Email">
         <input
+          key={`email-${email}`}
           className="re-input"
-          defaultValue="kira@stitchworks.io"
+          defaultValue={email}
           style={{ width: 280 }}
+          readOnly
         />
+      </Field>
+      <Field label="Session">
+        <button
+          type="button"
+          className="re-btn"
+          onClick={onSignOut}
+        >
+          Sign out
+        </button>
       </Field>
       <Field label="Role" hint="Used to scope what we surface in alerts">
         <Select defaultValue="pm">

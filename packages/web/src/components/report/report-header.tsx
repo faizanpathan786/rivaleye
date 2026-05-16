@@ -1,95 +1,99 @@
-import { toast } from "sonner";
-import { Copy, Download, Link as LinkIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "./status-badge";
-import { GOAL_LABELS } from "@/lib/goal-labels";
-import type { ReportRow } from "@/lib/api";
+import { formatRelative } from "@/lib/format";
+import type { ReportRow } from "@/api/reports";
 
 type Props = {
   report: ReportRow;
-  onCopyMarkdown?: () => string;
 };
 
-export function ReportHeader({ report, onCopyMarkdown }: Props) {
-  const competitor = report.competitors[0] ?? "Report";
-  const goalLabel = GOAL_LABELS[report.goal];
-
-  function handleCopyLink() {
-    navigator.clipboard
-      .writeText(window.location.href)
-      .then(() => {
-        toast.success("Link copied!");
-      })
-      .catch(() => {
-        toast.error("Could not copy link");
-      });
-  }
-
-  function handleCopyMarkdown() {
-    if (!onCopyMarkdown) return;
-    const md = onCopyMarkdown();
-    navigator.clipboard
-      .writeText(md)
-      .then(() => {
-        toast.success("Report copied as Markdown!");
-      })
-      .catch(() => {
-        toast.error("Could not copy to clipboard");
-      });
-  }
-
-  function handleDownload() {
-    if (!onCopyMarkdown) return;
-    const md = onCopyMarkdown();
-    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rivaleye-${competitor.toLowerCase().replace(/\s+/g, "-")}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+export function ReportHeader({ report }: Props) {
+  const name =
+    report.primary_competitor_name ?? report.competitors[0] ?? "Report";
+  const domain = report.primary_competitor_domain;
+  const sentiment = report.sentiment_overall;
+  const sentimentTrend = report.sentiment_trend;
+  const scanned = formatRelative(report.scanned_at);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 border-b border-border pb-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{competitor}</h1>
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+            {domain && (
+              <span className="font-mono text-sm text-muted-foreground">
+                {domain}
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             {report.category && (
               <Badge variant="secondary" className="font-mono text-xs">
                 {report.category}
               </Badge>
             )}
-            {goalLabel && (
+            {report.time_range && (
               <Badge variant="outline" className="text-xs">
-                {goalLabel}
+                {report.time_range}
               </Badge>
             )}
-            <StatusBadge status={report.status} />
-            <span className="font-mono text-xs text-muted-foreground">{report.id}</span>
+            <StatusBadge
+              status={
+                report.status as "queued" | "running" | "completed" | "failed"
+              }
+            />
+            <span className="font-mono text-xs text-muted-foreground">
+              scanned {scanned}
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleCopyLink}>
-            <LinkIcon className="mr-1 h-4 w-4" />
-            Copy link
-          </Button>
-          {onCopyMarkdown && (
-            <>
-              <Button variant="ghost" size="sm" onClick={handleCopyMarkdown}>
-                <Copy className="mr-1 h-4 w-4" />
-                Copy as Markdown
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleDownload}>
-                <Download className="mr-1 h-4 w-4" />
-                Download .md
-              </Button>
-            </>
-          )}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <Metric
+            label="Sources"
+            value={
+              report.total_sources != null
+                ? report.total_sources.toLocaleString()
+                : "—"
+            }
+          />
+          <Metric
+            label="Threads"
+            value={
+              report.total_threads != null
+                ? report.total_threads.toLocaleString()
+                : "—"
+            }
+          />
+          <Metric
+            label="Sentiment"
+            value={sentiment != null ? sentiment.toFixed(2) : "—"}
+            sub={sentimentTrend ?? undefined}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+function Metric({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="rounded-md border border-border bg-card px-3 py-2">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="font-mono text-lg font-medium tabular-nums">{value}</div>
+      {sub && (
+        <div className="font-mono text-[10px] text-muted-foreground">{sub}</div>
+      )}
     </div>
   );
 }

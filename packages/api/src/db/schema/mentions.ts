@@ -14,28 +14,28 @@ export const mentions = pgTable(
   "mentions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    reportId: uuid("report_id")
+    report_id: uuid("report_id")
       .notNull()
       .references(() => reports.id, { onDelete: "cascade" }),
     platform: text("platform").notNull(),
-    externalId: text("external_id").notNull(),
+    external_id: text("external_id").notNull(),
     url: text("url").notNull(),
     author: text("author"),
     title: text("title"),
     body: text("body").notNull(),
     score: integer("score"),
-    numComments: integer("num_comments"),
-    postedAt: timestamp("posted_at").notNull(),
+    num_comments: integer("num_comments"),
+    posted_at: timestamp("posted_at").notNull(),
     raw: jsonb("raw").$type<Record<string, unknown>>().notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
     unique("mentions_report_platform_external_uniq").on(
-      t.reportId,
+      t.report_id,
       t.platform,
-      t.externalId,
+      t.external_id,
     ),
-    index("mentions_report_id_idx").on(t.reportId),
+    index("mentions_report_id_idx").on(t.report_id),
   ],
 );
 

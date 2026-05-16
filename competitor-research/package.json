@@ -1,0 +1,20 @@
+{
+  "name": "competitor-research",
+  "version": "1.0.0",
+  "scripts": {
+    "appstore": "ts-node appstore.ts",
+    "playstore": "ts-node playstore.ts",
+    "hackernews": "ts-node hackernews.ts",
+    "producthunt": "ts-node producthunt.ts",
+    "trustpilot": "ts-node trustpilot.ts"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.6",
+    "google-play-scraper": "^9.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

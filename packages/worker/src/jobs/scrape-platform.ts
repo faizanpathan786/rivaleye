@@ -27,16 +27,16 @@ export async function handleScrapePlatform(data: ScrapePlatformJob) {
       .insert(mentions)
       .values(
         chunk.map((p) => ({
-          reportId: data.reportId,
+          report_id: data.reportId,
           platform: p.platform,
-          externalId: p.externalId,
+          external_id: p.externalId,
           url: p.url,
           author: p.author,
           title: p.title,
           body: p.body,
           score: p.score,
-          numComments: p.numComments,
-          postedAt: p.createdAt,
+          num_comments: p.numComments,
+          posted_at: p.createdAt,
           raw: p.raw as Record<string, unknown>,
         })),
       )
@@ -48,7 +48,7 @@ export async function handleScrapePlatform(data: ScrapePlatformJob) {
   // Transition report to "running" if still queued
   await db
     .update(reports)
-    .set({ status: "running", updatedAt: new Date() })
+    .set({ status: "running", updated_at: new Date() })
     .where(eq(reports.id, data.reportId));
 
   // Fan-in: for MVP (Reddit only), enqueue generate-report immediately

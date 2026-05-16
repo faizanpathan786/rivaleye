@@ -1,51 +1,56 @@
-import { pickAnswerHeroData } from "@/lib/report-output";
-import type { PainReportOutput } from "@rivaleye/shared";
+import type { ReportRow } from "@/api/reports";
 
-export function AnswerHero({ output }: { output: PainReportOutput }) {
-  const { topOpportunities, positioningAngle, wedge } = pickAnswerHeroData(output);
+export function AnswerHero({ report }: { report: ReportRow }) {
+  const summary = report.voice_summary;
+  const phrases = report.voice_phrases ?? [];
+  const wedge = report.switching_net_signal;
+  const pricing = report.pricing_blended;
 
-  if (!topOpportunities.length && !positioningAngle && !wedge) {
-    const fallback = output.painClusters?.[0]?.title;
-    if (!fallback) return null;
-    return (
-      <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-6">
-        <p className="text-sm font-mono text-muted-foreground">Top finding</p>
-        <p className="mt-1 text-lg font-medium">{fallback}</p>
-      </div>
-    );
+  if (!summary && !phrases.length && !wedge && !pricing) {
+    return null;
   }
 
   return (
-    <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-6 space-y-4">
-      {topOpportunities.length > 0 && (
+    <div className="space-y-4 rounded-lg border-l-4 border-primary bg-primary/5 p-6">
+      {summary && (
         <div>
-          <p className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-2">
-            Top 3 Opportunities
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            What users are saying
           </p>
-          <ol className="space-y-1">
-            {topOpportunities.map((opp, i) => (
-              <li key={i} className="flex gap-2 text-sm">
-                <span className="font-mono text-primary shrink-0">{i + 1}→</span>
-                <span>{opp}</span>
-              </li>
-            ))}
-          </ol>
+          <p className="text-sm leading-relaxed">{summary}</p>
         </div>
       )}
-      {positioningAngle && (
+      {phrases.length > 0 && (
         <div>
-          <p className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-1">
-            Strongest Positioning Angle
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Repeated phrases
           </p>
-          <p className="text-sm">{positioningAngle}</p>
+          <ul className="space-y-1">
+            {phrases.slice(0, 3).map((p, i) => (
+              <li key={i} className="flex gap-2 text-sm">
+                <span className="shrink-0 font-mono text-primary">
+                  {i + 1}→
+                </span>
+                <span className="italic">"{p}"</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       {wedge && (
         <div>
-          <p className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-1">
-            Best Wedge
+          <p className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Switching signal
           </p>
           <p className="text-sm">{wedge}</p>
+        </div>
+      )}
+      {pricing && (
+        <div>
+          <p className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            Pricing ask
+          </p>
+          <p className="text-sm font-mono">{pricing}</p>
         </div>
       )}
     </div>

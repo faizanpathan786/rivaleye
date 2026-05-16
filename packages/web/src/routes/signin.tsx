@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Icon } from "@/components/icons";
+import { authClient } from "@/lib/auth-client";
+import { CONFIG } from "@/global-config";
 
 type ProviderId = "google" | "github" | "sso";
 
@@ -52,10 +54,61 @@ const SAMPLE_ROWS: [string, number, number][] = [
 
 export function SignInPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("kira@stitchworks.io");
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") ?? CONFIG.auth.redirectPath;
+  const [email, setEmail] = useState("test@rivaleye.local");
+  const [password, setPassword] = useState("testpass1234");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [name, setName] = useState("Demo Founder");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [hoverProvider, setHoverProvider] = useState<ProviderId | null>(null);
 
-  const handleSignIn = () => navigate("/");
+  const handleSubmit = async () => {
+    setError(null);
+    if (!email || !password) {
+      setError("Email and password required.");
+      return;
+    }
+    if (mode === "signup" && !name) {
+      setError("Name required to sign up.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result =
+        mode === "signin"
+          ? await authClient.signIn.email({ email, password })
+          : await authClient.signUp.email({ email, password, name });
+      if (result.error) {
+        setError(result.error.message ?? "Authentication failed.");
+        setBusy(false);
+        return;
+      }
+      navigate(returnTo);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Authentication failed.");
+      setBusy(false);
+    }
+  };
+
+  const handleProvider = async (id: ProviderId) => {
+    if (id !== "google") {
+      setError(`${id.toUpperCase()} sign-in not yet configured.`);
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}${returnTo}`,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Google sign-in failed.");
+      setBusy(false);
+    }
+  };
 
   return (
     <div
@@ -229,9 +282,11 @@ export function SignInPage() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 340 }}>
-          <h2 className="re-h2">Sign in</h2>
+          <h2 className="re-h2">{mode === "signin" ? "Sign in" : "Create account"}</h2>
           <p className="text-fg-muted" style={{ marginTop: 6, fontSize: 13 }}>
-            Welcome back. We saved your last scans.
+            {mode === "signin"
+              ? "Welcome back. We saved your last scans."
+              : "Spin up your competitive intel workspace."}
           </p>
 
           <div
@@ -247,6 +302,7 @@ export function SignInPage() {
                 key={p.id}
                 type="button"
                 className="re-btn"
+                disabled={busy}
                 style={{
                   height: 38,
                   justifyContent: "center",
@@ -257,7 +313,7 @@ export function SignInPage() {
                 }}
                 onMouseEnter={() => setHoverProvider(p.id)}
                 onMouseLeave={() => setHoverProvider(null)}
-                onClick={handleSignIn}
+                onClick={() => handleProvider(p.id)}
               >
                 <ProviderIcon name={p.id} />
                 <span>{p.label}</span>
@@ -295,6 +351,31 @@ export function SignInPage() {
             />
           </div>
 
+          {mode === "signup" && (
+            <>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  color: "var(--fg-muted)",
+                  marginBottom: 6,
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                NAME
+              </label>
+              <input
+                type="text"
+                className="re-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ width: "100%", height: 38, marginBottom: 10 }}
+                placeholder="Jane Founder"
+                autoComplete="name"
+              />
+            </>
+          )}
+
           <label
             style={{
               display: "block",
@@ -313,19 +394,85 @@ export function SignInPage() {
             onChange={(e) => setEmail(e.target.value)}
             style={{ width: "100%", height: 38 }}
             placeholder="you@company.com"
+            autoComplete="email"
           />
+
+          <label
+            style={{
+              display: "block",
+              fontSize: 11,
+              color: "var(--fg-muted)",
+              margin: "10px 0 6px",
+              fontFamily: "var(--font-mono)",
+            }}
+          >
+            PASSWORD
+          </label>
+          <input
+            type="password"
+            className="re-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit();
+            }}
+            style={{ width: "100%", height: 38 }}
+            placeholder="••••••••"
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
+          />
+
+          {error && (
+            <div
+              style={{
+                marginTop: 10,
+                padding: "8px 10px",
+                fontSize: 12,
+                color: "var(--accent-danger, #c0392b)",
+                background: "var(--surface)",
+                border: "1px solid var(--border-soft)",
+                borderRadius: 6,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
           <button
             type="button"
             className="re-btn re-btn-primary"
-            onClick={handleSignIn}
+            onClick={handleSubmit}
+            disabled={busy}
             style={{
               width: "100%",
               height: 38,
               marginTop: 10,
               justifyContent: "center",
+              opacity: busy ? 0.6 : 1,
             }}
           >
-            Continue <Icon name="arrow-right" size={14} />
+            {busy ? "Working…" : mode === "signin" ? "Continue" : "Create account"}{" "}
+            <Icon name="arrow-right" size={14} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setMode(mode === "signin" ? "signup" : "signin");
+            }}
+            style={{
+              marginTop: 14,
+              fontSize: 12,
+              color: "var(--fg-muted)",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            {mode === "signin"
+              ? "No account? Create one →"
+              : "Already have an account? Sign in →"}
           </button>
 
           <p

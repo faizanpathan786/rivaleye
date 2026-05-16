@@ -1,7 +1,12 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
-import { MOCK_DATA } from "@/lib/mock/data";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
+import { useReportsQuery } from "@/hooks/queries/use-reports";
+import { formatRelative } from "@/lib/format";
+import type { ReportRow } from "@/api/reports";
+import type { RadarEvent, RadarSeverity } from "@/api/radar";
 
 type NavKey =
   | "dashboard"
@@ -26,13 +31,63 @@ const ROUTE_MAP: Record<NavKey, string> = {
 
 type Trend = "up" | "down";
 type Tone = "neg" | "warn" | "pos" | "default";
-type Severity = "urgent" | "high" | "med" | "low";
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const onNav = (key: NavKey) => navigate(ROUTE_MAP[key]);
 
-  const data = MOCK_DATA;
+  const dashboardQuery = useDashboardQuery();
+  const reportsQuery = useReportsQuery();
+
+  const isLoading = dashboardQuery.isLoading || reportsQuery.isLoading;
+  const error = dashboardQuery.error || reportsQuery.error;
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
+        <Skeleton style={{ height: 80, marginBottom: 20 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          <Skeleton style={{ height: 90 }} />
+          <Skeleton style={{ height: 90 }} />
+          <Skeleton style={{ height: 90 }} />
+          <Skeleton style={{ height: 90 }} />
+        </div>
+        <Skeleton style={{ height: 280, marginBottom: 20 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
+          <Skeleton style={{ height: 320 }} />
+          <Skeleton style={{ height: 320 }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
+        <div
+          className="re-card"
+          style={{
+            padding: 16,
+            color: "var(--neg)",
+            border: "1px solid var(--border-soft)",
+          }}
+        >
+          Failed to load dashboard. {error instanceof Error ? error.message : "Unknown error."}
+        </div>
+      </div>
+    );
+  }
+
+  const data = dashboardQuery.data;
+  const reports: ReportRow[] = data?.recent_reports ?? reportsQuery.data ?? [];
+  const radarEvents: RadarEvent[] = data?.recent_radar_events ?? [];
+  const stats = data?.stats;
+  const user = data?.user;
+
+  const sentimentValue =
+    stats?.avg_sentiment != null ? stats.avg_sentiment.toFixed(2) : "—";
+  const sentimentTone: Tone =
+    stats?.avg_sentiment != null && stats.avg_sentiment < -0.15 ? "neg" : "default";
 
   return (
     <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
@@ -40,9 +95,12 @@ export function DashboardPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
         <div>
           <div className="re-eyebrow">WORKSPACE / stitchworks</div>
-          <h1 className="re-h1" style={{ marginTop: 8 }}>Good morning, Kira.</h1>
+          <h1 className="re-h1" style={{ marginTop: 8 }}>
+            Good morning{user?.name ? `, ${user.name}` : ""}.
+          </h1>
           <p className="text-fg-muted" style={{ marginTop: 6, maxWidth: 600 }}>
-            6 competitors tracked · 39 scans this month · last sync 2 hours ago
+            {stats?.total_competitors ?? 0} competitors tracked · {stats?.total_reports ?? 0} reports ·{" "}
+            {stats?.total_radar_events ?? 0} radar events
           </p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -57,22 +115,44 @@ export function DashboardPage() {
 
       {/* Stat strip */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-        <StatTile label="Mentions analyzed" value="4,905" delta="+312 this week" trend="up" />
-        <StatTile label="Sentiment index" value="−0.27" delta="−0.04 this week" trend="down" tone="neg" />
-        <StatTile label="High-intent leads" value="58" delta="+12 this week" trend="up" tone="warn" />
-        <StatTile label="Switching mentions" value="412" delta="+58 to your category" trend="up" />
+        <StatTile
+          label="Competitors tracked"
+          value={String(stats?.total_competitors ?? 0)}
+          delta="active"
+          trend="up"
+        />
+        <StatTile
+          label="Sentiment index"
+          value={sentimentValue}
+          delta="avg across reports"
+          trend={sentimentTone === "neg" ? "down" : "up"}
+          tone={sentimentTone}
+        />
+        <StatTile
+          label="Urgent radar (7d)"
+          value={String(stats?.urgent_radar_events_7d ?? 0)}
+          delta="needs review"
+          trend="up"
+          tone="warn"
+        />
+        <StatTile
+          label="Reports generated"
+          value={String(stats?.total_reports ?? 0)}
+          delta="all-time"
+          trend="up"
+        />
       </div>
 
-      {/* Tracked competitors */}
+      {/* Recent reports */}
       <div className="re-card">
         <div className="re-card-hd">
-          <h3>Tracked competitors</h3>
+          <h3>Recent reports</h3>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button className="re-btn re-btn-ghost re-btn-sm">
               <Icon name="filter" size={14} /> Filter
             </button>
             <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-              {data.history.length} active
+              {reports.length} recent
             </span>
           </div>
         </div>
@@ -95,93 +175,103 @@ export function DashboardPage() {
           <span>Competitor</span>
           <span>Category</span>
           <span>Sentiment</span>
-          <span>Mentions</span>
-          <span>Trend (90d)</span>
+          <span>Sources</span>
+          <span>Stage</span>
           <span>Last run</span>
           <span />
         </div>
 
-        {data.history.map((h, i) => (
+        {reports.length === 0 ? (
           <div
-            key={h.id}
             style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
-              padding: "14px 16px",
-              borderBottom: i === data.history.length - 1 ? "0" : "1px solid var(--border-soft)",
-              alignItems: "center",
-              gap: 12,
-              cursor: h.id === "linear" ? "pointer" : "default",
-            }}
-            onClick={() => {
-              if (h.id === "linear") onNav("report");
-            }}
-            onMouseEnter={(e) => {
-              if (h.id === "linear") e.currentTarget.style.background = "var(--hover)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
+              padding: 24,
+              textAlign: "center",
+              color: "var(--fg-faint)",
+              fontSize: 13,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <CompetitorAvatar name={h.name} />
-              <div>
-                <div style={{ fontWeight: 500, fontSize: 13 }}>{h.name}</div>
-                <div className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
-                  {h.scans} scan{(h.scans as number) === 1 ? "" : "s"}
+            No reports yet.
+          </div>
+        ) : (
+          reports.map((r, i) => {
+            const name = r.primary_competitor_name ?? "Untitled";
+            const sentiment = r.sentiment_overall;
+            return (
+              <div
+                key={r.id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
+                  padding: "14px 16px",
+                  borderBottom: i === reports.length - 1 ? "0" : "1px solid var(--border-soft)",
+                  alignItems: "center",
+                  gap: 12,
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate(`/reports/${r.id}`)}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <CompetitorAvatar name={name} />
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
+                    <div className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
+                      {r.status}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-fg-muted" style={{ fontSize: 12 }}>
+                  {r.category}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    className="font-mono-feat tnum"
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color:
+                        sentiment == null
+                          ? "var(--fg-faint)"
+                          : sentiment < -0.3
+                          ? "var(--neg)"
+                          : sentiment < -0.15
+                          ? "var(--warn)"
+                          : "var(--fg-muted)",
+                    }}
+                  >
+                    {sentiment != null ? sentiment.toFixed(2) : "—"}
+                  </span>
+                  {sentiment != null && (
+                    <div className="re-meter neg" style={{ width: 36 }}>
+                      <i style={{ width: `${Math.abs(sentiment) * 100}%` }} />
+                    </div>
+                  )}
+                </div>
+                <div className="font-mono-feat tnum" style={{ fontSize: 13 }}>
+                  {(r.total_sources ?? 0).toLocaleString()}
+                </div>
+                <div>
+                  <MiniSpark seed={r.id} />
+                </div>
+                <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
+                  {formatRelative(r.created_at)}
+                </div>
+                <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                  <button
+                    className="re-btn re-btn-ghost re-btn-icon re-btn-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/reports/${r.id}`);
+                    }}
+                  >
+                    <Icon name="chev-right" size={14} />
+                  </button>
                 </div>
               </div>
-            </div>
-            <div className="text-fg-muted" style={{ fontSize: 12 }}>
-              {h.category}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span
-                className="font-mono-feat tnum"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color:
-                    h.pain < -0.3
-                      ? "var(--neg)"
-                      : h.pain < -0.15
-                      ? "var(--warn)"
-                      : "var(--fg-muted)",
-                }}
-              >
-                {h.pain.toFixed(2)}
-              </span>
-              <div className="re-meter neg" style={{ width: 36 }}>
-                <i style={{ width: `${Math.abs(h.pain) * 100}%` }} />
-              </div>
-            </div>
-            <div className="font-mono-feat tnum" style={{ fontSize: 13 }}>
-              {h.mentions.toLocaleString()}
-            </div>
-            <div>
-              <MiniSpark seed={h.id} />
-            </div>
-            <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-              {h.lastRun}
-            </div>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              {h.id === "linear" && (
-                <span className="re-chip re-chip-accent" style={{ fontSize: 10 }}>
-                  NEW
-                </span>
-              )}
-              <button
-                className="re-btn re-btn-ghost re-btn-icon re-btn-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (h.id === "linear") onNav("report");
-                }}
-              >
-                <Icon name="chev-right" size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
+            );
+          })
+        )}
       </div>
 
       {/* Two-column bottom */}
@@ -201,83 +291,96 @@ export function DashboardPage() {
             </div>
           </div>
           <div style={{ padding: "4px 0" }}>
-            {data.radarEvents.slice(0, 4).map((ev, i) => {
-              const comp = data.competitors.find((c) => c.id === ev.competitor);
-              const sev = ev.severity as Severity;
-              const sevColor =
-                sev === "urgent" ? "var(--neg)" : sev === "high" ? "var(--warn)" : "#6366f1";
-              const sevBg =
-                sev === "urgent"
-                  ? "rgba(220,38,38,0.08)"
-                  : sev === "high"
-                  ? "rgba(217,119,6,0.08)"
-                  : "rgba(99,102,241,0.08)";
-              return (
-                <div
-                  key={ev.id}
-                  onClick={() => onNav("radar")}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "60px 22px 1fr auto",
-                    padding: "14px 16px",
-                    borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
-                    gap: 12,
-                    alignItems: "center",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  <span
-                    className="re-chip"
-                    style={{
-                      background: sevBg,
-                      color: sevColor,
-                      borderColor: "transparent",
-                      fontSize: 9,
-                      padding: "2px 6px",
-                      fontWeight: 600,
-                      letterSpacing: "0.06em",
-                      justifySelf: "start",
-                    }}
-                  >
-                    {ev.severity.toUpperCase()}
-                  </span>
+            {radarEvents.length === 0 ? (
+              <div
+                style={{
+                  padding: 24,
+                  textAlign: "center",
+                  color: "var(--fg-faint)",
+                  fontSize: 13,
+                }}
+              >
+                No radar events.
+              </div>
+            ) : (
+              radarEvents.slice(0, 4).map((ev, i) => {
+                const sev: RadarSeverity = ev.severity;
+                const sevColor =
+                  sev === "urgent" ? "var(--neg)" : sev === "high" ? "var(--warn)" : "#6366f1";
+                const sevBg =
+                  sev === "urgent"
+                    ? "rgba(220,38,38,0.08)"
+                    : sev === "high"
+                    ? "rgba(217,119,6,0.08)"
+                    : "rgba(99,102,241,0.08)";
+                const compName = ev.competitor_name ?? "—";
+                return (
                   <div
+                    key={ev.id}
+                    onClick={() => onNav("radar")}
                     style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 5,
-                      background: comp?.color || "#666",
-                      color: "#fff",
                       display: "grid",
-                      placeItems: "center",
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 11,
-                      fontWeight: 600,
+                      gridTemplateColumns: "60px 22px 1fr auto",
+                      padding: "14px 16px",
+                      borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
+                      gap: 12,
+                      alignItems: "center",
+                      cursor: "pointer",
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    {comp?.name[0]}
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div
+                    <span
+                      className="re-chip"
                       style={{
-                        fontSize: 13,
-                        fontWeight: 500,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        background: sevBg,
+                        color: sevColor,
+                        borderColor: "transparent",
+                        fontSize: 9,
+                        padding: "2px 6px",
+                        fontWeight: 600,
+                        letterSpacing: "0.06em",
+                        justifySelf: "start",
                       }}
                     >
-                      {ev.title}
+                      {ev.severity.toUpperCase()}
+                    </span>
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 5,
+                        background: "#666",
+                        color: "#fff",
+                        display: "grid",
+                        placeItems: "center",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {compName[0]}
                     </div>
-                    <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                      {comp?.name} · {ev.platform} · {ev.detectedAt}
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {ev.title}
+                      </div>
+                      <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
+                        {compName} · {ev.platform} · {formatRelative(ev.detected_at)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 

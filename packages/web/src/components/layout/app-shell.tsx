@@ -1,6 +1,9 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
-import { MOCK_DATA } from "@/lib/mock/data";
+import { useMeQuery } from "@/hooks/queries/use-me";
+import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
+import { useReportsQuery } from "@/hooks/queries/use-reports";
+import type { ReportRow } from "@/api/reports";
 
 interface CrumbConfig {
   [path: string]: string[];
@@ -21,15 +24,47 @@ function deriveCrumbs(pathname: string): string[] {
   return CRUMB_MAP[pathname] ?? ["Stitchworks"];
 }
 
+function initialOf(value: string | null | undefined): string {
+  if (!value) return "?";
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed[0]!.toUpperCase() : "?";
+}
+
+function relativeTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "—";
+  const diff = Math.max(0, Date.now() - then);
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}d ago`;
+  const wk = Math.floor(day / 7);
+  if (wk < 5) return `${wk}w ago`;
+  const mo = Math.floor(day / 30);
+  return `${mo}mo ago`;
+}
+
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const crumbs = deriveCrumbs(location.pathname);
+  const meQuery = useMeQuery();
+  const userInitial = initialOf(meQuery.data?.name ?? meQuery.data?.email);
 
   return (
     <div className="app grid h-full" style={{ gridTemplateColumns: "212px 1fr", gridTemplateRows: "52px 1fr", position: "relative" }}>
       <div className="dot-grid-bg absolute inset-0 pointer-events-none" />
-      <TopBar crumbs={crumbs} onBrandClick={() => navigate("/")} onNewScan={() => navigate("/scan")} onAccount={() => navigate("/account")} />
+      <TopBar
+        crumbs={crumbs}
+        userInitial={userInitial}
+        onBrandClick={() => navigate("/")}
+        onNewScan={() => navigate("/scan")}
+        onAccount={() => navigate("/account")}
+      />
       <Sidebar />
       <main className="main relative z-[1] overflow-y-auto overflow-x-hidden bg-transparent">
         <Outlet />
@@ -40,12 +75,13 @@ export function AppShell() {
 
 interface TopBarProps {
   crumbs: string[];
+  userInitial: string;
   onBrandClick: () => void;
   onNewScan: () => void;
   onAccount: () => void;
 }
 
-function TopBar({ crumbs, onBrandClick, onNewScan, onAccount }: TopBarProps) {
+function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount }: TopBarProps) {
   return (
     <header
       className="topbar glass-blur relative z-[5] flex items-center gap-4 border-b border-soft px-4"
@@ -88,74 +124,115 @@ function TopBar({ crumbs, onBrandClick, onNewScan, onAccount }: TopBarProps) {
           <span
             className="grid place-items-center text-white font-semibold"
             style={{ width: 22, height: 22, borderRadius: 99, background: "linear-gradient(135deg,#ff5c1a,#ffb05a)", fontSize: 11 }}
-          >K</span>
+          >{userInitial}</span>
         </button>
       </div>
     </header>
   );
 }
 
-const NAV_ITEMS: Array<{ to: string; icon: Parameters<typeof Icon>[0]["name"]; label: string }> = [
+interface NavBadge {
+  count: number | null;
+  tone?: "default" | "alert";
+}
+
+const NAV_ITEMS: Array<{
+  to: string;
+  icon: Parameters<typeof Icon>[0]["name"];
+  label: string;
+  badgeKey?: "competitors" | "radar";
+}> = [
   { to: "/",            icon: "home",    label: "Overview" },
-  { to: "/radar",       icon: "spark",   label: "Radar" },
-  { to: "/competitors", icon: "user",    label: "Competitors" },
+  { to: "/radar",       icon: "spark",   label: "Radar", badgeKey: "radar" },
+  { to: "/competitors", icon: "user",    label: "Competitors", badgeKey: "competitors" },
   { to: "/scan",        icon: "scan",    label: "New scan" },
   { to: "/compare",     icon: "compare", label: "Compare" },
   { to: "/history",     icon: "history", label: "History" },
 ];
 
 function Sidebar() {
-  const history = MOCK_DATA.history;
+  const dashboardQuery = useDashboardQuery();
+  const reportsQuery = useReportsQuery();
+  const stats = dashboardQuery.data?.stats;
+
+  const badges: Record<"competitors" | "radar", NavBadge> = {
+    competitors: { count: stats?.total_competitors ?? null },
+    radar: { count: stats?.urgent_radar_events_7d ?? null, tone: "alert" },
+  };
+
+  const recent: ReportRow[] = (reportsQuery.data ?? []).slice(0, 5);
+
   return (
     <aside
       className="sidebar glass-blur flex flex-col gap-px overflow-y-auto border-r border-soft"
       style={{ background: "var(--glass)", padding: "10px 8px" }}
     >
-      {NAV_ITEMS.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.to === "/"}
-          className={({ isActive }) =>
-            `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${
-              isActive ? "sb-active" : "sb-idle"
-            }`
-          }
-          style={{ fontSize: 13 }}
-        >
-          <Icon name={item.icon} size={14} className="sb-icon flex-shrink-0" />
-          <span>{item.label}</span>
-        </NavLink>
-      ))}
+      {NAV_ITEMS.map((item) => {
+        const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === "/"}
+            className={({ isActive }) =>
+              `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${
+                isActive ? "sb-active" : "sb-idle"
+              }`
+            }
+            style={{ fontSize: 13 }}
+          >
+            <Icon name={item.icon} size={14} className="sb-icon flex-shrink-0" />
+            <span className="flex-1">{item.label}</span>
+            {badge && badge.count !== null && badge.count > 0 && (
+              <span
+                className="font-mono-feat"
+                style={{
+                  fontSize: 10,
+                  padding: "1px 6px",
+                  borderRadius: 99,
+                  background: badge.tone === "alert" ? "var(--accent-soft)" : "var(--surface-2)",
+                  color: badge.tone === "alert" ? "var(--accent)" : "var(--fg-muted)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                {badge.count}
+              </span>
+            )}
+          </NavLink>
+        );
+      })}
 
       <div className="font-mono-feat text-fg-faint uppercase" style={{ fontSize: 10, letterSpacing: "0.08em", padding: "10px 10px 4px" }}>
         Recent scans
       </div>
-      {history.slice(0, 5).map((h) => (
-        <NavLink
-          key={h.id}
-          to={`/reports/${h.id}`}
-          title={`${h.name} — ${h.lastRun}`}
-          className={({ isActive }) =>
-            `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${
-              isActive ? "sb-active" : "sb-idle"
-            }`
-          }
-          style={{ fontSize: 13 }}
-        >
-          <span
-            className="grid place-items-center font-mono-feat font-semibold flex-shrink-0 text-fg-muted"
-            style={{
-              width: 14, height: 14, borderRadius: 3,
-              background: "var(--surface-2)",
-              border: "1px solid var(--border-soft)",
-              fontSize: 9,
-            }}
-          >{h.name[0]}</span>
-          <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{h.name}</span>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>{h.lastRun}</span>
-        </NavLink>
-      ))}
+      {recent.map((r) => {
+        const label = r.primary_competitor_name ?? r.competitors[0] ?? r.category;
+        return (
+          <NavLink
+            key={r.id}
+            to={`/reports/${r.id}`}
+            title={`${label} — ${relativeTime(r.scanned_at ?? r.created_at)}`}
+            className={({ isActive }) =>
+              `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${
+                isActive ? "sb-active" : "sb-idle"
+              }`
+            }
+            style={{ fontSize: 13 }}
+          >
+            <span
+              className="grid place-items-center font-mono-feat font-semibold flex-shrink-0 text-fg-muted"
+              style={{
+                width: 14, height: 14, borderRadius: 3,
+                background: "var(--surface-2)",
+                border: "1px solid var(--border-soft)",
+                fontSize: 9,
+              }}
+            >{initialOf(label)}</span>
+            <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{label}</span>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>{relativeTime(r.scanned_at ?? r.created_at)}</span>
+          </NavLink>
+        );
+      })}
 
       <div className="mt-auto" style={{ padding: "12px 8px" }}>
         <div
@@ -172,10 +249,14 @@ function Sidebar() {
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>SCANS THIS MONTH</span>
           </div>
           <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-fg" style={{ fontSize: 16, fontWeight: 600 }}>39</span>
+            <span className="text-fg" style={{ fontSize: 16, fontWeight: 600 }}>
+              {reportsQuery.data ? reportsQuery.data.length : "—"}
+            </span>
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>/ 50</span>
           </div>
-          <div className="re-meter mt-1.5"><i style={{ width: "78%" }} /></div>
+          <div className="re-meter mt-1.5">
+            <i style={{ width: reportsQuery.data ? `${Math.min(100, (reportsQuery.data.length / 50) * 100)}%` : "0%" }} />
+          </div>
         </div>
       </div>
     </aside>

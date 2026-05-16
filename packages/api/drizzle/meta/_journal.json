@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1778879967965,
-      "tag": "0000_panoramic_shard",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1778881769931,
-      "tag": "0001_young_slipstream",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1778884453093,
-      "tag": "0002_cultured_doctor_doom",
+      "when": 1778893134212,
+      "tag": "0000_init",
       "breakpoints": true
     }
   ]

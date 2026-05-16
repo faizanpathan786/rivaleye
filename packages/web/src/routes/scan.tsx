@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
-import { MOCK_DATA } from "@/lib/mock/data";
+import { useCreateReportMutation } from "@/hooks/queries/use-reports";
+import type { ReportGoal } from "@rivaleye/shared";
 
-type NavTarget = "scan" | "report" | "dashboard" | "radar" | "competitors" | "compare" | "history" | "account" | "signin";
+type NavTarget = "scan" | "dashboard" | "radar" | "competitors" | "compare" | "history" | "account" | "signin";
 
 function navPath(t: NavTarget): string {
   switch (t) {
     case "scan":        return "/scan";
-    case "report":      return "/reports/linear";
     case "radar":       return "/radar";
     case "competitors": return "/competitors";
     case "compare":     return "/compare";
@@ -20,6 +20,9 @@ function navPath(t: NavTarget): string {
   }
 }
 
+// TODO(backend): platform selection isn't yet wired to a backend field on
+// reports — keep as a static suggestion list until the worker supports
+// per-platform fan-out config from the create payload.
 const PLATFORMS = [
   { id: "reddit",      name: "Reddit",       sub: "Threads, comments, subreddits" },
   { id: "g2",          name: "G2",           sub: "Detractor reviews & 1–3★ ratings" },
@@ -33,14 +36,17 @@ const PLATFORMS = [
 
 type PlatformId = (typeof PLATFORMS)[number]["id"];
 
-const GOALS = [
-  { id: "validate",    label: "Validate an idea",         hint: "Focus on pain intensity & market demand" },
-  { id: "weakness",    label: "Find competitor weakness", hint: "Where to attack · wedge angles" },
-  { id: "positioning", label: "Improve positioning",      hint: "Messaging angles · copy ideas" },
-  { id: "mvp",         label: "Decide MVP features",      hint: "Feature gaps · repeated requests" },
-  { id: "track",       label: "Track over time",          hint: "Sentiment, alerts, switching signals" },
-] as const;
+// Goal options mirror @rivaleye/shared reportGoalSchema enum values.
+const GOALS: { id: ReportGoal; label: string; hint: string }[] = [
+  { id: "validate_idea",       label: "Validate an idea",         hint: "Focus on pain intensity & market demand" },
+  { id: "find_weaknesses",     label: "Find competitor weakness", hint: "Where to attack · wedge angles" },
+  { id: "improve_positioning", label: "Improve positioning",      hint: "Messaging angles · copy ideas" },
+  { id: "decide_mvp_features", label: "Decide MVP features",      hint: "Feature gaps · repeated requests" },
+  { id: "find_user_pain",      label: "Find user pain",           hint: "Surface verbatim complaints" },
+];
 
+// TODO(backend): time range is not part of CreateReportPayload yet — kept
+// as a UI suggestion until the worker supports a time-window filter.
 const RANGES = [
   { v: "30d", l: "30 days" },
   { v: "90d", l: "90 days" },
@@ -48,6 +54,8 @@ const RANGES = [
   { v: "all", l: "All time" },
 ] as const;
 
+// TODO(backend): analysis depth is not part of CreateReportPayload — kept
+// as a UI suggestion until the worker supports tiered LLM passes.
 const DEPTHS = [
   { v: "fast",     l: "Fast",     d: "Sentiment + top complaints" },
   { v: "standard", l: "Standard", d: "+ feature gaps & switching" },
@@ -58,35 +66,46 @@ export function ScanPage() {
   const navigate = useNavigate();
   const onNav = (t: NavTarget) => navigate(navPath(t));
 
-  const competitors = MOCK_DATA.competitors;
-
-  const [name, setName] = useState("Linear");
-  const [pickedId, setPickedId] = useState<string | null>("linear");
-  const [category, setCategory] = useState("Project management");
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [audience, setAudience] = useState("");
   const [range, setRange] = useState<string>("90d");
   const [platforms, setPlatforms] = useState<Record<PlatformId, boolean>>({
     reddit: true, g2: true, linkedin: true, producthunt: true,
     twitter: true, youtube: false, appstore: false, hn: false,
   });
-  const [goal, setGoal] = useState<string>("weakness");
+  const [goal, setGoal] = useState<ReportGoal>("find_weaknesses");
   const [depth, setDepth] = useState<string>("standard");
-  const [scanning, setScanning] = useState(false);
 
-  const start = () => setScanning(true);
-
-  if (scanning) {
-    return (
-      <ScanRunning
-        competitor={name}
-        onDone={() => onNav("report")}
-        onCancel={() => setScanning(false)}
-      />
-    );
-  }
+  const { mutateAsync, isPending, error } = useCreateReportMutation();
 
   const selectedPlatformCount = Object.values(platforms).filter(Boolean).length;
   const goalLabel = GOALS.find((g) => g.id === goal)?.label.toLowerCase() ?? "";
   const rangeLabel = RANGES.find((r) => r.v === range)?.l ?? "";
+
+  const canSubmit =
+    !isPending &&
+    name.trim().length > 0 &&
+    category.trim().length > 0 &&
+    audience.trim().length > 0;
+
+  const start = async () => {
+    if (!canSubmit) return;
+    try {
+      const res = await mutateAsync({
+        category: category.trim(),
+        competitors: [name.trim()],
+        target_audience: audience.trim(),
+        founder_goal: goal,
+      });
+      navigate(`/reports/${res.id}`);
+    } catch {
+      // surfaced via `error` below
+    }
+  };
+
+  const errorMessage =
+    error instanceof Error ? error.message : error ? "Failed to start scan" : null;
 
   return (
     <div style={{ padding: "20px 28px 60px", maxWidth: 880, margin: "0 auto" }}>
@@ -99,73 +118,6 @@ export function ScanPage() {
       </p>
 
       <Step n={1} label="Competitor">
-        {competitors.length > 0 && (
-          <div style={{ marginBottom: 12 }}>
-            <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginBottom: 8 }}>
-              FROM YOUR TRACKED LIST
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
-              {competitors.slice(0, 8).map((c) => {
-                const on = pickedId === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => { setPickedId(c.id); setName(c.name); setCategory(c.category); }}
-                    className="re-btn"
-                    style={{
-                      justifyContent: "flex-start", height: 44, padding: "0 10px",
-                      background: on ? "var(--accent-soft)" : "var(--surface)",
-                      borderColor: on ? "var(--accent)" : "var(--border-strong)",
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{
-                      width: 24, height: 24, borderRadius: 5,
-                      background: c.color, color: "#fff",
-                      display: "grid", placeItems: "center",
-                      fontFamily: "Geist Mono, ui-monospace, monospace",
-                      fontSize: 12, fontWeight: 600, flexShrink: 0,
-                    }}>{c.name[0]}</div>
-                    <div style={{ textAlign: "left", minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {c.name}
-                      </div>
-                      <div className="font-mono-feat text-fg-faint" style={{
-                        fontSize: 10, overflow: "hidden",
-                        textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>
-                        {c.website}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => { /* add-competitor flow: TODO */ }}
-                className="re-btn"
-                style={{
-                  justifyContent: "center", height: 44,
-                  background: "var(--surface-2)",
-                  borderStyle: "dashed", borderColor: "var(--border-strong)",
-                  color: "var(--fg-muted)",
-                  gap: 6,
-                }}
-              >
-                <Icon name="plus" size={14} /> New competitor
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0" }}>
-          <hr style={{ flex: 1, border: 0, height: 1, background: "var(--border-soft)" }} />
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10, padding: "0 8px" }}>
-            OR SEARCH UNTRACKED
-          </span>
-          <hr style={{ flex: 1, border: 0, height: 1, background: "var(--border-soft)" }} />
-        </div>
-
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 10 }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -183,10 +135,9 @@ export function ScanPage() {
                 fontSize: 15, background: "transparent",
               }}
               value={name}
-              onChange={(e) => { setName(e.target.value); setPickedId(null); }}
-              placeholder="Competitor name or domain"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Competitor name or domain (e.g. Linear)"
             />
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>auto-suggesting…</span>
           </div>
           <input
             className="re-input"
@@ -198,7 +149,20 @@ export function ScanPage() {
         </div>
       </Step>
 
-      <Step n={2} label="What are you trying to learn?">
+      <Step n={2} label="Target audience">
+        <input
+          className="re-input"
+          style={{ height: 44, fontSize: 15, width: "100%" }}
+          value={audience}
+          onChange={(e) => setAudience(e.target.value)}
+          placeholder="Who are you building for? (e.g. early-stage B2B SaaS founders)"
+        />
+        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 8 }}>
+          Used to focus the LLM on pain points relevant to your audience.
+        </div>
+      </Step>
+
+      <Step n={3} label="What are you trying to learn?">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
           {GOALS.map((g) => {
             const active = goal === g.id;
@@ -230,7 +194,7 @@ export function ScanPage() {
         </div>
       </Step>
 
-      <Step n={3} label="Time range">
+      <Step n={4} label="Time range">
         <div style={{ display: "flex", gap: 8 }}>
           {RANGES.map((r) => (
             <button
@@ -245,7 +209,7 @@ export function ScanPage() {
         </div>
       </Step>
 
-      <Step n={4} label="Platforms to scan">
+      <Step n={5} label="Platforms to scan">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>
           {PLATFORMS.map((p) => {
             const on = platforms[p.id];
@@ -280,7 +244,7 @@ export function ScanPage() {
         </div>
       </Step>
 
-      <Step n={5} label="Analysis depth">
+      <Step n={6} label="Analysis depth">
         <div style={{ display: "flex", gap: 8 }}>
           {DEPTHS.map((d) => {
             const active = depth === d.v;
@@ -313,6 +277,23 @@ export function ScanPage() {
         </div>
       </Step>
 
+      {errorMessage && (
+        <div
+          role="alert"
+          style={{
+            marginTop: 20,
+            padding: "12px 16px",
+            background: "var(--neg-soft, var(--surface))",
+            border: "1px solid var(--neg, var(--border-strong))",
+            borderRadius: 8,
+            color: "var(--neg, var(--fg))",
+            fontSize: 13,
+          }}
+        >
+          {errorMessage}
+        </div>
+      )}
+
       <div style={{
         marginTop: 32,
         padding: "16px 20px",
@@ -326,13 +307,24 @@ export function ScanPage() {
         <div>
           <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>READY TO RUN</div>
           <div style={{ fontSize: 14, marginTop: 4 }}>
-            <b>{name}</b> · {goalLabel} · {rangeLabel} · {selectedPlatformCount} platforms · {depth}
+            <b>{name || "—"}</b> · {goalLabel} · {rangeLabel} · {selectedPlatformCount} platforms · {depth}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="re-btn" onClick={() => onNav("dashboard")}>Cancel</button>
-          <button className="re-btn re-btn-accent" onClick={start} style={{ height: 36 }}>
-            Run scan <Icon name="arrow-right" size={14} />
+          <button className="re-btn" onClick={() => onNav("dashboard")} disabled={isPending}>
+            Cancel
+          </button>
+          <button
+            className="re-btn re-btn-accent"
+            onClick={start}
+            disabled={!canSubmit}
+            style={{ height: 36 }}
+          >
+            {isPending ? (
+              <>Starting…</>
+            ) : (
+              <>Run scan <Icon name="arrow-right" size={14} /></>
+            )}
           </button>
         </div>
       </div>
@@ -355,248 +347,6 @@ function Step({ n, label, children }: { n: number; label: string; children: Reac
       </div>
       {children}
     </section>
-  );
-}
-
-interface ScanRunningProps {
-  competitor: string;
-  onDone: () => void;
-  onCancel: () => void;
-}
-
-interface ScanStep {
-  id: string;
-  label: string;
-  time: number;
-  sub?: string;
-}
-
-function ScanRunning({ competitor, onDone, onCancel }: ScanRunningProps) {
-  const STEPS: ScanStep[] = [
-    { id: "auth",    label: "Authenticating platform connectors",  time: 600 },
-    { id: "crawl",   label: "Crawling Reddit · G2 · LinkedIn · Product Hunt · X", time: 2400, sub: "412 threads · 287 reviews · 184 posts…" },
-    { id: "filter",  label: "Filtering for competitor mentions",   time: 1600 },
-    { id: "score",   label: "Scoring sentiment & intent",          time: 1500 },
-    { id: "cluster", label: "Clustering complaints",               time: 1800 },
-    { id: "extract", label: "Extracting verbatim quotes & leads",  time: 1200 },
-    { id: "angles",  label: "Generating positioning angles",       time: 1000 },
-    { id: "rank",    label: "Ranking insights",                    time: 900 },
-  ];
-  const totalTime = STEPS.reduce((a, b) => a + b.time, 0);
-
-  const [stepIdx, setStepIdx] = useState(0);
-  const [counts, setCounts] = useState({ threads: 0, comments: 0, quotes: 0, complaints: 0 });
-  const [done, setDone] = useState(false);
-  const [logLines, setLogLines] = useState<string[]>([]);
-  const logRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (done) {
-      const t = setTimeout(onDone, 800);
-      return () => clearTimeout(t);
-    }
-    if (stepIdx >= STEPS.length) {
-      setDone(true);
-      return;
-    }
-    const current = STEPS[stepIdx];
-    if (!current) {
-      setDone(true);
-      return;
-    }
-    const t = setTimeout(() => setStepIdx(stepIdx + 1), current.time);
-    return () => clearTimeout(t);
-  }, [stepIdx, done]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCounts((c) => ({
-        threads:   Math.min(412,  c.threads  + Math.round(Math.random() * 14 + 4)),
-        comments:  Math.min(8347, c.comments + Math.round(Math.random() * 110 + 30)),
-        quotes:    Math.min(186,  c.quotes   + Math.round(Math.random() * 3)),
-        complaints:Math.min(8,    c.complaints + (Math.random() < 0.06 ? 1 : 0)),
-      }));
-    }, 220);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const samples = [
-      "GET reddit.com/r/SaaS/search.json?q=linear&t=year → 200",
-      "→ matched 'Linear pricing' in r/SaaS",
-      "  sentiment(-0.72) on 412-char excerpt",
-      "GET g2.com/products/linear/reviews?stars=1-3 → 200",
-      "→ 287 detractor reviews parsed",
-      "GET linkedin.com/search/results/content?q=linear+pricing → 200",
-      "→ 184 founder/PM posts collected",
-      "GET producthunt.com/topics/project-management/alternatives → 200",
-      "→ 142 'alternative to Linear' threads found",
-      "GET x.com/search?q=leaving+linear&f=live → 200",
-      "cluster 'Pricing' → 187 mentions (Δ+34%)",
-      "cluster 'Time tracking' → 152 mentions",
-      "cluster 'Mobile' → 134 mentions",
-      "high-intent lead detected → u/founder_42 (signal 0.91)",
-      "deduping 47 cross-posts",
-      "generating positioning angles → 4 candidates",
-      "ranking insights by severity × frequency",
-      "rendering pain index → -0.34 (90d trend +0.08)",
-    ];
-    const id = setInterval(() => {
-      setLogLines((prev) => {
-        const pick = samples[Math.floor(Math.random() * samples.length)] ?? "";
-        const next = [...prev, pick];
-        return next.slice(-40);
-      });
-    }, 380);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [logLines]);
-
-  const progress = done ? 1 : Math.min(1, stepIdx / STEPS.length);
-
-  return (
-    <div style={{ padding: "20px 28px 48px", maxWidth: 1080, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div className="re-eyebrow">{done ? "SCAN COMPLETE" : "SCAN IN PROGRESS"}</div>
-          <h1 className="re-h1" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12 }}>
-            {competitor}
-            {!done && <span className="re-dot re-dot-live" />}
-          </h1>
-        </div>
-        <button className="re-btn" onClick={onCancel} disabled={done}>
-          <Icon name="x" size={14} /> Cancel
-        </button>
-      </div>
-
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12,
-        marginTop: 28,
-      }}>
-        <LiveCount label="Threads scanned"      v={counts.threads} />
-        <LiveCount label="Comments parsed"      v={counts.comments} />
-        <LiveCount label="Quotes extracted"     v={counts.quotes} />
-        <LiveCount label="Complaints clustered" v={counts.complaints} />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
-        <div className="re-card">
-          <div className="re-card-hd">
-            <h3>Pipeline</h3>
-            <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
-              {Math.round(progress * 100)}%
-            </span>
-          </div>
-          <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-            {STEPS.map((s, i) => {
-              const state = i < stepIdx ? "done" : i === stepIdx ? "active" : "pending";
-              return (
-                <div key={s.id} style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  opacity: state === "pending" ? 0.4 : 1,
-                  transition: "opacity 200ms ease",
-                }}>
-                  <span style={{
-                    width: 18, height: 18, borderRadius: 99,
-                    display: "grid", placeItems: "center",
-                    background: state === "done" ? "var(--pos)" : state === "active" ? "var(--accent-soft)" : "var(--surface-2)",
-                    color: state === "done" ? "#fff" : "var(--accent)",
-                    border: state === "active" ? "1px solid var(--accent)" : "0",
-                    flexShrink: 0,
-                  }}>
-                    {state === "done" ? (
-                      <Icon name="check" size={11} />
-                    ) : state === "active" ? (
-                      <span className="re-dot re-dot-live" style={{ width: 5, height: 5, background: "var(--accent)" }} />
-                    ) : null}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: state === "active" ? 500 : 400 }}>{s.label}</div>
-                    {s.sub && state === "active" && (
-                      <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 2 }}>
-                        {s.sub}
-                      </div>
-                    )}
-                  </div>
-                  {state === "active" && (
-                    <span className="font-mono-feat blink" style={{ fontSize: 11, color: "var(--accent)" }}>running</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="re-card" style={{ background: "var(--bg-sunken)" }}>
-          <div className="re-card-hd">
-            <h3 style={{ fontFamily: "Geist Mono, ui-monospace, monospace", fontSize: 12 }}>
-              <span style={{ color: "var(--fg-faint)" }}>$</span> rivaleye scan
-            </h3>
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>live log</span>
-          </div>
-          <div
-            ref={logRef}
-            style={{
-              padding: 14,
-              fontFamily: "Geist Mono, ui-monospace, monospace",
-              fontSize: 11.5,
-              lineHeight: 1.6,
-              height: 308,
-              overflowY: "auto",
-              color: "var(--fg-muted)",
-            }}
-          >
-            {logLines.map((l, i) => (
-              <div key={i} style={{ display: "flex", gap: 10 }}>
-                <span style={{ color: "var(--fg-faint)" }}>{String(i + 1).padStart(2, "0")}</span>
-                <span style={{
-                  flex: 1,
-                  color: l.startsWith("→") ? "var(--accent)" : l.startsWith("cluster") ? "var(--fg)" : "var(--fg-muted)",
-                }}>{l}</span>
-              </div>
-            ))}
-            {!done && (
-              <div style={{ display: "flex", gap: 10 }}>
-                <span style={{ color: "var(--fg-faint)" }}>{String(logLines.length + 1).padStart(2, "0")}</span>
-                <span className="blink">▍</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginTop: 18 }}>
-        <div className="re-meter" style={{ height: 6 }}>
-          <i style={{ width: `${progress * 100}%`, background: done ? "var(--pos)" : "var(--accent)" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
-            ~{Math.max(0, Math.round((1 - progress) * (totalTime / 1000)))}s remaining
-          </span>
-          {done && (
-            <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--pos)" }}>
-              ✓ scan complete — opening report
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LiveCount({ label, v }: { label: string; v: number }) {
-  return (
-    <div className="re-card" style={{ padding: 14 }}>
-      <div className="re-eyebrow" style={{ fontSize: 10 }}>{label}</div>
-      <div className="font-mono-feat tnum" style={{
-        fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginTop: 4,
-      }}>
-        {v.toLocaleString()}
-      </div>
-    </div>
   );
 }
 

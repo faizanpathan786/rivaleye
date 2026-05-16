@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { competitorFormSchema, type CompetitorFormValues } from "./competitor-form.schema";
-import { useCreateReport } from "@/hooks/queries/use-create-report";
+import { useCreateReportMutation } from "@/hooks/queries/use-reports";
 import { addReport } from "@/lib/local-history";
 import { GOAL_OPTIONS } from "@/lib/goal-labels";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,18 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    const m = (error as { message: unknown }).message;
+    if (typeof m === "string") return m;
+  }
+  return "Something went wrong. Please try again.";
+}
+
 export function CompetitorForm() {
   const navigate = useNavigate();
-  const { mutateAsync, isPending, error } = useCreateReport();
+  const { mutateAsync, isPending, error } = useCreateReportMutation();
 
   const form = useForm<CompetitorFormValues>({
     resolver: zodResolver(competitorFormSchema),
@@ -58,13 +67,11 @@ export function CompetitorForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {error && (
+        {error ? (
           <Alert variant="destructive">
-            <AlertDescription>
-              {error instanceof Error ? error.message : "Something went wrong. Please try again."}
-            </AlertDescription>
+            <AlertDescription>{errorMessage(error)}</AlertDescription>
           </Alert>
-        )}
+        ) : null}
 
         <FormField
           control={form.control}

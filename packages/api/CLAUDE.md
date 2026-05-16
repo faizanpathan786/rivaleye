@@ -93,8 +93,10 @@ Each route belongs to exactly one domain controller. Be generous — when in dou
 | `/authentication` | `authentication/` | sign-in, logout, session info |
 | `/authorization` | `authorization/` | `userPermissions` — what the current user can do. Nothing else. |
 | `/users` | `users/` | user records |
+| `/me` | `users/` | current user's own profile (read + update name/image) |
 | `/competitors` | `competitors/` | CRUD for saved competitors |
 | `/reports` | `reports/` | create, list, get, export pain reports |
+| `/dashboard` | `dashboard/` | aggregated stats for the dashboard view |
 | `/insights` | `insights/` | (future) cluster/gap/opportunity sub-resources of a report |
 | `/sources` | `sources/` | (future) ingestion source records (Reddit threads, etc.) |
 | `/billing` | `billing/` | (future) plan, invoices, Stripe webhooks |
@@ -226,11 +228,10 @@ pnpm --filter @rivaleye/api type-check
 
 ## 13. Open questions / TODO
 
-- [ ] Wire better-auth Drizzle adapter once `users` table contract is final.
+- [x] Wire better-auth Drizzle adapter once `users` table contract is final.
 - [ ] Flesh out `services/report-generator.ts` — currently enqueues `scrape-platform` jobs fan-out; add `report_platform_jobs` row inserts so worker can fan-in.
 - [ ] Decide on shared error type / response envelope. Default for now: `{ data, error }`.
 - [ ] Add `bun test` for the first non-trivial service.
 - [ ] Stripe billing endpoints under `/v1/billing` when the paid offer goes live.
-- [ ] MVP exception: reports controller is unauthenticated (anonymous report creation). authPlugin is suspended for /v1/reports only. Re-apply when "save report to my account" ships.
 
 Update this section as decisions land.

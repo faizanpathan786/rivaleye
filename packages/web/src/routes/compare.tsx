@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+// TODO(backend): compare endpoint when shipped — replace MOCK_DATA with real data.
 import { MOCK_DATA } from "@/lib/mock/data";
 import { Icon } from "@/components/icons";
 
@@ -287,6 +288,21 @@ export function ComparePage() {
 
   return (
     <div style={{ padding: "20px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+      <div
+        className="re-banner"
+        style={{
+          marginBottom: 16,
+          padding: "10px 14px",
+          background: "var(--surface-2)",
+          border: "1px solid var(--border-strong)",
+          borderRadius: 8,
+          color: "var(--fg-muted)",
+          fontSize: 12,
+          fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
+        }}
+      >
+        Demo data — backend not yet available
+      </div>
       <div className="re-eyebrow">COMPARE</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>
         Compare two competitors

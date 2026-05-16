@@ -160,7 +160,7 @@ pnpm --filter @rivaleye/web type-check
 ## 12. Open questions / TODO
 
 - [ ] Pick a state/store solution if anything beyond TanStack Query is needed (probably Zustand for small global UI state).
-- [ ] Wire `better-auth` client + protected routes.
+- [x] Wire `better-auth` client + protected routes.
 - [ ] Build the first real screen: Report Wizard (category → competitors → goal → generate).
 - [ ] Build the Pain Report view (sections from PRD §10).
 - [ ] Decide on charting lib if/when charts are needed. Default off — PRD says insights first, charts second.

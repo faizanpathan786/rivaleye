@@ -74,7 +74,7 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
   const rows = await db
     .select()
     .from(mentions)
-    .where(eq(mentions.reportId, reportId));
+    .where(eq(mentions.report_id, reportId));
 
   console.log(`[pipeline] reportId=${reportId} loaded ${rows.length} mentions`);
 
@@ -84,7 +84,7 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
   // 4. Update stage → clustering
   await db
     .update(reports)
-    .set({ stage: "clustering", updatedAt: new Date() })
+    .set({ stage: "clustering", updated_at: new Date() })
     .where(eq(reports.id, reportId));
 
   // 5. Build PipelineCtx
@@ -98,11 +98,11 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
   // 6. Stage 1 — cluster raw posts, build syntheticIdMap
   //    Pass mentions as posts; stage1 slices to 150 and assigns p001..p150 internally.
   const posts = rows.map((m) => ({
-    externalId: m.externalId,
+    externalId: m.external_id,
     title: m.title ?? "",
     body: m.body,
     score: m.score ?? 0,
-    createdAt: m.postedAt,
+    createdAt: m.posted_at,
   }));
 
   console.log(`[pipeline] stage1 start`);
@@ -117,10 +117,10 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
   //    against mentions[].externalId. So build a synthetic-keyed mentions array.
   const syntheticMentions = Array.from(stage1Output.syntheticIdMap.entries()).map(
     ([synId, realExternalId]) => {
-      const realMention = rows.find((r) => r.externalId === realExternalId);
+      const realMention = rows.find((r) => r.external_id === realExternalId);
       return {
         externalId: synId,
-        createdAt: realMention?.postedAt ?? new Date(),
+        createdAt: realMention?.posted_at ?? new Date(),
       };
     },
   );
@@ -164,7 +164,7 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
   const remapped = remapAllPostIds(internalOutput, stage1Output.syntheticIdMap);
 
   // 12. Validate evidence against real externalId set — throws EvidenceIntegrityError if >20% dropped
-  const realExternalIds = new Set(rows.map((m) => m.externalId));
+  const realExternalIds = new Set(rows.map((m) => m.external_id));
   const { output: validated, warnings: evidenceWarnings } = validateEvidence(
     remapped,
     realExternalIds,
@@ -186,7 +186,7 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
   }
 
   // 14. Build sources from real mention rows (post-remap IDs are real externalIds)
-  const mentionByExternalId = new Map(rows.map((m) => [m.externalId, m]));
+  const mentionByExternalId = new Map(rows.map((m) => [m.external_id, m]));
   const sources = Array.from(stage1Output.syntheticIdMap.values()).map((realId) => {
     const m = mentionByExternalId.get(realId);
     return {
@@ -194,8 +194,8 @@ export async function runInsightPipeline(reportId: string): Promise<ReportOutput
       url: m?.url,
       title: m?.title ?? undefined,
       score: m?.score ?? undefined,
-      created_utc: m?.postedAt
-        ? Math.floor(m.postedAt.getTime() / 1000)
+      created_utc: m?.posted_at
+        ? Math.floor(m.posted_at.getTime() / 1000)
         : undefined,
     };
   });

@@ -1,31 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Icon } from "@/components/icons";
-import { MOCK_DATA } from "@/lib/mock/data";
-
-type Competitor = {
-  id: string;
-  name: string;
-  website: string;
-  category: string;
-  color: string;
-  added: string;
-  priority: string;
-  tags: readonly string[] | string[];
-  socials: Record<string, string | undefined>;
-  monitor: {
-    enabled: boolean;
-    sensitivity: string;
-    watch: readonly string[] | string[];
-  };
-  stats: {
-    sentiment: number;
-    mentions: number;
-    alerts7d: number;
-    lastActivity: string;
-  };
-  notes?: string;
-};
+import {
+  useCompetitorsQuery,
+  useCreateCompetitorMutation,
+  useUpdateCompetitorMutation,
+  useDeleteCompetitorMutation,
+} from "@/hooks/queries/use-competitors";
+import type {
+  Competitor,
+  CreateCompetitorPayload,
+  UpdateCompetitorPayload,
+} from "@/api/competitors";
+import { formatRelative } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type FilterKey = "all" | "active" | "paused" | "primary";
 
@@ -58,6 +57,11 @@ const PLATFORM_LETTER: Record<string, string> = {
   reddit: "R",
   g2: "G2",
 };
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
 
 function PlatformChip({ id, dim }: { id: string; dim: boolean }) {
   return (
@@ -253,7 +257,13 @@ function CompetitorCard({
   onToggle: () => void;
   onScan: () => void;
 }) {
-  const socialKeys = Object.keys(c.socials || {});
+  const socials = c.socials ?? {};
+  const socialKeys = Object.keys(socials);
+  const watch = c.monitor_watch ?? [];
+  const tags = c.tags ?? [];
+  const color = c.color ?? pickColor(c.name);
+  const sentiment = c.stat_sentiment ?? 0;
+  const alerts = c.stat_alerts_7d ?? 0;
   return (
     <div
       className="re-card"
@@ -290,7 +300,7 @@ function CompetitorCard({
                 width: 36,
                 height: 36,
                 borderRadius: 8,
-                background: c.color,
+                background: color,
                 color: "#fff",
                 display: "grid",
                 placeItems: "center",
@@ -322,7 +332,7 @@ function CompetitorCard({
                   whiteSpace: "nowrap",
                 }}
               >
-                {c.website}
+                {c.website ?? ""}
               </div>
             </div>
           </div>
@@ -332,7 +342,7 @@ function CompetitorCard({
               onToggle();
             }}
           >
-            <MonitorToggle on={c.monitor.enabled} />
+            <MonitorToggle on={c.monitor_enabled} />
           </div>
         </div>
 
@@ -344,16 +354,18 @@ function CompetitorCard({
             flexWrap: "wrap",
           }}
         >
-          <span className="re-chip" style={{ fontSize: 10 }}>
-            {c.category}
-          </span>
+          {c.category && (
+            <span className="re-chip" style={{ fontSize: 10 }}>
+              {c.category}
+            </span>
+          )}
           <span
             className={`re-chip ${c.priority === "primary" ? "re-chip-accent" : ""}`}
             style={{ fontSize: 10 }}
           >
             {c.priority}
           </span>
-          {c.tags.slice(0, 2).map((t) => (
+          {tags.slice(0, 2).map((t) => (
             <span key={t} className="re-chip" style={{ fontSize: 10 }}>
               {t}
             </span>
@@ -379,14 +391,14 @@ function CompetitorCard({
       >
         <MicroStat
           label="Sentiment"
-          value={c.stats.sentiment.toFixed(2)}
+          value={sentiment.toFixed(2)}
           tone="neg"
         />
-        <MicroStat label="Mentions" value={c.stats.mentions.toLocaleString()} />
+        <MicroStat label="Mentions" value={(c.stat_mentions ?? 0).toLocaleString()} />
         <MicroStat
           label="Alerts 7d"
-          value={c.stats.alerts7d}
-          tone={c.stats.alerts7d > 5 ? "warn" : null}
+          value={alerts}
+          tone={alerts > 5 ? "warn" : null}
         />
       </div>
 
@@ -409,7 +421,7 @@ function CompetitorCard({
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {socialKeys.slice(0, 5).map((k) => {
             const watched =
-              c.monitor.watch.includes(k) || k === "linkedin" || k === "twitter";
+              watch.includes(k) || k === "linkedin" || k === "twitter";
             return <PlatformChip key={k} id={k} dim={!watched} />;
           })}
           {socialKeys.length > 5 && (
@@ -426,7 +438,7 @@ function CompetitorCard({
             className="font-mono-feat"
             style={{ fontSize: 10, color: "var(--fg-faint)" }}
           >
-            last activity {c.stats.lastActivity}
+            last activity {formatRelative(c.last_activity_at)}
           </span>
           <button
             className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
@@ -444,18 +456,51 @@ function CompetitorCard({
   );
 }
 
+type DrawerForm = {
+  name: string;
+  website: string;
+  category: string;
+  color: string;
+  priority: Competitor["priority"];
+  tags: string[];
+  socials: Record<string, string>;
+  monitor_enabled: boolean;
+  monitor_sensitivity: Competitor["monitor_sensitivity"];
+  monitor_watch: string[];
+  notes: string;
+};
+
+function toForm(c: Competitor): DrawerForm {
+  return {
+    name: c.name,
+    website: c.website ?? "",
+    category: c.category ?? "",
+    color: c.color ?? pickColor(c.name),
+    priority: c.priority,
+    tags: c.tags ?? [],
+    socials: c.socials ?? {},
+    monitor_enabled: c.monitor_enabled,
+    monitor_sensitivity: c.monitor_sensitivity,
+    monitor_watch: c.monitor_watch ?? [],
+    notes: c.notes ?? "",
+  };
+}
+
 function CompetitorDrawer({
   competitor,
   onSave,
   onDelete,
   onClose,
+  saving,
 }: {
   competitor: Competitor;
-  onSave: (c: Competitor) => void;
+  onSave: (patch: UpdateCompetitorPayload) => void;
   onDelete: () => void;
   onClose: () => void;
+  saving: boolean;
 }) {
-  const [c, setC] = useState<Competitor>(competitor);
+  const [c, setC] = useState<DrawerForm>(() => toForm(competitor));
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -465,20 +510,33 @@ function CompetitorDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const set = <K extends keyof Competitor>(k: K, v: Competitor[K]) =>
+  const set = <K extends keyof DrawerForm>(k: K, v: DrawerForm[K]) =>
     setC((p) => ({ ...p, [k]: v }));
   const setSocial = (k: string, v: string) =>
     setC((p) => ({ ...p, socials: { ...p.socials, [k]: v } }));
-  const setMonitor = <K extends keyof Competitor["monitor"]>(
-    k: K,
-    v: Competitor["monitor"][K],
-  ) => setC((p) => ({ ...p, monitor: { ...p.monitor, [k]: v } }));
   const toggleWatch = (id: string) => {
-    const list = c.monitor.watch as string[];
-    setMonitor(
-      "watch",
-      list.includes(id) ? list.filter((x) => x !== id) : [...list, id],
-    );
+    setC((p) => ({
+      ...p,
+      monitor_watch: p.monitor_watch.includes(id)
+        ? p.monitor_watch.filter((x) => x !== id)
+        : [...p.monitor_watch, id],
+    }));
+  };
+
+  const handleSave = () => {
+    onSave({
+      name: c.name,
+      website: c.website || null,
+      category: c.category || null,
+      color: c.color,
+      priority: c.priority,
+      tags: c.tags,
+      socials: c.socials,
+      monitor_enabled: c.monitor_enabled,
+      monitor_sensitivity: c.monitor_sensitivity,
+      monitor_watch: c.monitor_watch,
+      notes: c.notes || null,
+    });
   };
 
   return (
@@ -614,7 +672,7 @@ function CompetitorDrawer({
                       onClick={() =>
                         set(
                           "tags",
-                          (c.tags as string[]).filter((x) => x !== t),
+                          c.tags.filter((x) => x !== t),
                         )
                       }
                       style={{ cursor: "pointer", display: "inline-flex" }}
@@ -673,13 +731,13 @@ function CompetitorDrawer({
                 }}
               >
                 <Toggle
-                  value={c.monitor.enabled}
-                  onChange={(v) => setMonitor("enabled", v)}
+                  value={c.monitor_enabled}
+                  onChange={(v) => set("monitor_enabled", v)}
                 />
                 <span
                   style={{ fontSize: 12, color: "var(--fg-muted)" }}
                 >
-                  {c.monitor.enabled
+                  {c.monitor_enabled
                     ? "Radar is live · checking hourly"
                     : "Paused · no alerts will fire"}
                 </span>
@@ -687,15 +745,15 @@ function CompetitorDrawer({
             </Row>
             <Row label="Sensitivity">
               <div style={{ display: "flex", gap: 6 }}>
-                {(["low", "med", "high", "paranoid"] as const).map((s) => (
+                {(["low", "med", "high"] as const).map((s) => (
                   <button
                     key={s}
                     type="button"
                     className={`re-chip ${
-                      c.monitor.sensitivity === s ? "re-chip-solid" : ""
+                      c.monitor_sensitivity === s ? "re-chip-solid" : ""
                     }`}
                     style={{ cursor: "pointer", padding: "4px 12px" }}
-                    onClick={() => setMonitor("sensitivity", s)}
+                    onClick={() => set("monitor_sensitivity", s)}
                   >
                     {s}
                   </button>
@@ -722,7 +780,7 @@ function CompetitorDrawer({
                     ["changelog", "Pricing & docs"],
                   ] as const
                 ).map(([id, label]) => {
-                  const on = (c.monitor.watch as string[]).includes(id);
+                  const on = c.monitor_watch.includes(id);
                   return (
                     <button
                       key={id}
@@ -762,7 +820,7 @@ function CompetitorDrawer({
 
           <Section label="NOTES">
             <textarea
-              value={c.notes || ""}
+              value={c.notes}
               onChange={(e) => set("notes", e.target.value)}
               placeholder="Internal notes — what makes them a threat, what to watch for…"
               style={{
@@ -795,7 +853,7 @@ function CompetitorDrawer({
             type="button"
             className="re-btn"
             style={{ color: "var(--neg)", borderColor: "transparent" }}
-            onClick={onDelete}
+            onClick={() => setConfirmDelete(true)}
           >
             Delete competitor
           </button>
@@ -806,13 +864,39 @@ function CompetitorDrawer({
             <button
               type="button"
               className="re-btn re-btn-primary"
-              onClick={() => onSave(c)}
+              onClick={handleSave}
+              disabled={saving}
+              style={{ opacity: saving ? 0.6 : 1 }}
             >
-              Save changes
+              {saving ? "Saving…" : "Save changes"}
             </button>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {competitor.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the competitor and all monitoring data.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmDelete(false);
+                onDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -820,14 +904,17 @@ function CompetitorDrawer({
 function AddCompetitorModal({
   onSave,
   onClose,
+  saving,
 }: {
-  onSave: (c: Competitor) => void;
+  onSave: (payload: CreateCompetitorPayload) => void;
   onClose: () => void;
+  saving: boolean;
 }) {
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
   const [category, setCategory] = useState("Project management");
-  const [priority, setPriority] = useState("secondary");
+  const [priority, setPriority] =
+    useState<Competitor["priority"]>("secondary");
   const [linkedin, setLinkedin] = useState("");
   const [twitter, setTwitter] = useState("");
   const [enableMonitor, setEnableMonitor] = useState(true);
@@ -840,35 +927,24 @@ function AddCompetitorModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const canSave = name.trim().length > 0;
+  const canSave = name.trim().length > 0 && !saving;
   const submit = () => {
     if (!canSave) return;
-    const id =
-      name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "") || `c-${Date.now()}`;
-    const color = pickColor(name);
     const socials: Record<string, string> = {};
     if (linkedin) socials.linkedin = linkedin;
     if (twitter) socials.twitter = twitter;
     onSave({
-      id,
-      name,
-      website,
-      category,
+      name: name.trim(),
+      website: website || null,
+      category: category || null,
       priority,
-      color,
-      added: new Date().toISOString().slice(0, 10),
+      color: pickColor(name),
       tags: [],
       socials,
-      monitor: {
-        enabled: enableMonitor,
-        sensitivity: "med",
-        watch: ["linkedin", "twitter", "blog", "reddit"],
-      },
-      stats: { sentiment: 0, mentions: 0, alerts7d: 0, lastActivity: "—" },
-      notes: "",
+      monitor_enabled: enableMonitor,
+      monitor_sensitivity: "med",
+      monitor_watch: ["linkedin", "twitter", "blog", "reddit"],
+      notes: null,
     });
   };
 
@@ -1034,7 +1110,7 @@ function AddCompetitorModal({
             onClick={submit}
             style={{ opacity: canSave ? 1 : 0.5 }}
           >
-            Add competitor
+            {saving ? "Adding…" : "Add competitor"}
           </button>
         </div>
       </div>
@@ -1042,11 +1118,31 @@ function AddCompetitorModal({
   );
 }
 
+function CompetitorsSkeleton() {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+        gap: 12,
+      }}
+    >
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Skeleton key={i} style={{ height: 180 }} />
+      ))}
+    </div>
+  );
+}
+
 export function CompetitorsPage() {
   const navigate = useNavigate();
-  const [list, setList] = useState<Competitor[]>(
-    () => MOCK_DATA.competitors as unknown as Competitor[],
-  );
+  const { data, isLoading, isError, error, refetch } = useCompetitorsQuery();
+  const createMutation = useCreateCompetitorMutation();
+  const updateMutation = useUpdateCompetitorMutation();
+  const deleteMutation = useDeleteCompetitorMutation();
+
+  const list = useMemo(() => data ?? [], [data]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -1055,12 +1151,14 @@ export function CompetitorsPage() {
   const filtered = useMemo(
     () =>
       list.filter((c) => {
-        if (filter === "active" && !c.monitor.enabled) return false;
-        if (filter === "paused" && c.monitor.enabled) return false;
+        if (filter === "active" && !c.monitor_enabled) return false;
+        if (filter === "paused" && c.monitor_enabled) return false;
         if (filter === "primary" && c.priority !== "primary") return false;
         if (
           search &&
-          !(c.name.toLowerCase() + c.website).includes(search.toLowerCase())
+          !(c.name.toLowerCase() + (c.website ?? "")).includes(
+            search.toLowerCase(),
+          )
         )
           return false;
         return true;
@@ -1068,22 +1166,57 @@ export function CompetitorsPage() {
     [list, filter, search],
   );
 
-  const saveCompetitor = (updated: Competitor) => {
-    setList((prev) => {
-      const exists = prev.find((c) => c.id === updated.id);
-      if (exists) return prev.map((c) => (c.id === updated.id ? updated : c));
-      return [updated, ...prev];
-    });
-    setEditingId(null);
-    setShowAdd(false);
-  };
-
-  const deleteCompetitor = (id: string) => {
-    setList((prev) => prev.filter((c) => c.id !== id));
-    setEditingId(null);
-  };
-
   const editing = list.find((c) => c.id === editingId) ?? null;
+
+  const handleCreate = (payload: CreateCompetitorPayload) => {
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Competitor added");
+        setShowAdd(false);
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err, "Failed to add competitor"));
+      },
+    });
+  };
+
+  const handleUpdate = (id: string, patch: UpdateCompetitorPayload) => {
+    updateMutation.mutate(
+      { id, payload: patch },
+      {
+        onSuccess: () => {
+          toast.success("Competitor updated");
+          setEditingId(null);
+        },
+        onError: (err) => {
+          toast.error(getErrorMessage(err, "Failed to update competitor"));
+        },
+      },
+    );
+  };
+
+  const handleToggleMonitor = (c: Competitor) => {
+    updateMutation.mutate(
+      { id: c.id, payload: { monitor_enabled: !c.monitor_enabled } },
+      {
+        onError: (err) => {
+          toast.error(getErrorMessage(err, "Failed to toggle monitor"));
+        },
+      },
+    );
+  };
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Competitor deleted");
+        setEditingId(null);
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err, "Failed to delete competitor"));
+      },
+    });
+  };
 
   const onNav = (target: string) => {
     if (target === "report") navigate("/reports/linear");
@@ -1092,14 +1225,8 @@ export function CompetitorsPage() {
 
   const filters: ReadonlyArray<[FilterKey, string]> = [
     ["all", `All (${list.length})`],
-    [
-      "active",
-      `Active (${list.filter((c) => c.monitor.enabled).length})`,
-    ],
-    [
-      "paused",
-      `Paused (${list.filter((c) => !c.monitor.enabled).length})`,
-    ],
+    ["active", `Active (${list.filter((c) => c.monitor_enabled).length})`],
+    ["paused", `Paused (${list.filter((c) => !c.monitor_enabled).length})`],
     ["primary", "Primary"],
   ];
 
@@ -1208,67 +1335,108 @@ export function CompetitorsPage() {
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-          gap: 12,
-        }}
-      >
-        {filtered.map((c) => (
-          <CompetitorCard
-            key={c.id}
-            c={c}
-            onOpen={() => setEditingId(c.id)}
-            onToggle={() =>
-              saveCompetitor({
-                ...c,
-                monitor: { ...c.monitor, enabled: !c.monitor.enabled },
-              })
-            }
-            onScan={() =>
-              c.id === "linear" ? onNav("report") : onNav("scan")
-            }
-          />
-        ))}
-        {filtered.length === 0 && (
-          <div
-            className="re-card"
-            style={{
-              padding: 40,
-              textAlign: "center",
-              color: "var(--fg-muted)",
-              gridColumn: "1/-1",
-            }}
+      {isLoading ? (
+        <CompetitorsSkeleton />
+      ) : isError ? (
+        <div
+          className="re-card"
+          style={{
+            padding: 40,
+            textAlign: "center",
+            color: "var(--fg-muted)",
+          }}
+        >
+          <div style={{ marginBottom: 12 }}>
+            {getErrorMessage(error, "Failed to load competitors")}
+          </div>
+          <button
+            type="button"
+            className="re-btn re-btn-ghost re-btn-sm"
+            onClick={() => refetch()}
           >
-            No competitors match.{" "}
-            <button
-              type="button"
-              className="re-btn re-btn-ghost re-btn-sm"
-              onClick={() => {
-                setFilter("all");
-                setSearch("");
+            Retry
+          </button>
+        </div>
+      ) : list.length === 0 ? (
+        <div
+          className="re-card"
+          style={{
+            padding: 40,
+            textAlign: "center",
+            color: "var(--fg-muted)",
+          }}
+        >
+          <div style={{ marginBottom: 12, fontSize: 14 }}>
+            No competitors yet.
+          </div>
+          <button
+            type="button"
+            className="re-btn re-btn-accent re-btn-sm"
+            onClick={() => setShowAdd(true)}
+          >
+            <Icon name="plus" size={12} /> Add your first competitor
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {filtered.map((c) => (
+            <CompetitorCard
+              key={c.id}
+              c={c}
+              onOpen={() => setEditingId(c.id)}
+              onToggle={() => handleToggleMonitor(c)}
+              onScan={() =>
+                c.slug === "linear" ? onNav("report") : onNav("scan")
+              }
+            />
+          ))}
+          {filtered.length === 0 && (
+            <div
+              className="re-card"
+              style={{
+                padding: 40,
+                textAlign: "center",
+                color: "var(--fg-muted)",
+                gridColumn: "1/-1",
               }}
             >
-              clear filters
-            </button>
-          </div>
-        )}
-      </div>
+              No competitors match.{" "}
+              <button
+                type="button"
+                className="re-btn re-btn-ghost re-btn-sm"
+                onClick={() => {
+                  setFilter("all");
+                  setSearch("");
+                }}
+              >
+                clear filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {editing && (
         <CompetitorDrawer
           competitor={editing}
-          onSave={saveCompetitor}
-          onDelete={() => deleteCompetitor(editing.id)}
+          onSave={(patch) => handleUpdate(editing.id, patch)}
+          onDelete={() => handleDelete(editing.id)}
           onClose={() => setEditingId(null)}
+          saving={updateMutation.isPending || deleteMutation.isPending}
         />
       )}
 
       {showAdd && (
         <AddCompetitorModal
-          onSave={saveCompetitor}
+          onSave={handleCreate}
           onClose={() => setShowAdd(false)}
+          saving={createMutation.isPending}
         />
       )}
     </div>

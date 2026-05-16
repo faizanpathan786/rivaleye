@@ -1,10 +1,12 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon, type IconName } from "@/components/icons";
-import { MOCK_DATA } from "@/lib/mock/data";
+import { useRadarEventsQuery } from "@/hooks/queries/use-radar";
+import { useCompetitorsQuery } from "@/hooks/queries/use-competitors";
+import type { RadarEvent, RadarSeverity } from "@/api/radar";
+import type { Competitor } from "@/api/competitors";
+import { formatRelative } from "@/lib/format";
 
-type RadarEvent = (typeof MOCK_DATA.radarEvents)[number];
-type Competitor = (typeof MOCK_DATA.competitors)[number];
 type Severity = "urgent" | "high" | "med" | "low";
 
 interface SeverityMeta {
@@ -58,7 +60,6 @@ function PlatformIcon({ id }: { id: string }) {
 
 export function RadarPage() {
   const navigate = useNavigate();
-  const data = MOCK_DATA;
 
   const [filterSev, setFilterSev] = useState<"all" | Severity>("all");
   const [filterComp, setFilterComp] = useState<string>("all");
@@ -69,19 +70,33 @@ export function RadarPage() {
     return () => clearInterval(id);
   }, []);
 
-  let events: readonly RadarEvent[] = data.radarEvents;
-  if (filterSev !== "all") events = events.filter((e) => e.severity === filterSev);
-  if (filterComp !== "all") events = events.filter((e) => e.competitor === filterComp);
+  const competitorsQuery = useCompetitorsQuery();
+  const eventsQuery = useRadarEventsQuery({
+    ...(filterSev !== "all" ? { severity: filterSev as RadarSeverity } : {}),
+    ...(filterComp !== "all" ? { competitor_id: filterComp } : {}),
+  });
 
-  const competitors = data.competitors;
-  const urgentCount = data.radarEvents.filter((e) => e.severity === "urgent").length;
-  const highCount = data.radarEvents.filter((e) => e.severity === "high").length;
-  const activeMonitors = competitors.filter((c) => c.monitor.enabled).length;
+  const competitors = competitorsQuery.data ?? [];
+  const competitorById = useMemo(() => {
+    const map = new Map<string, Competitor>();
+    for (const c of competitors) map.set(c.id, c);
+    return map;
+  }, [competitors]);
 
-  const platformCounts = data.radarEvents.reduce<Record<string, number>>((a, ev) => {
+  const allEvents = eventsQuery.data ?? [];
+  const events = allEvents;
+
+  const urgentCount = allEvents.filter((e) => e.severity === "urgent").length;
+  const highCount = allEvents.filter((e) => e.severity === "high").length;
+  const activeMonitors = competitors.filter((c) => c.monitor_enabled).length;
+
+  const platformCounts = allEvents.reduce<Record<string, number>>((a, ev) => {
     a[ev.platform] = (a[ev.platform] || 0) + 1;
     return a;
   }, {});
+
+  const isLoading = eventsQuery.isLoading || competitorsQuery.isLoading;
+  const error = eventsQuery.error ?? competitorsQuery.error;
 
   return (
     <div style={{ padding: "20px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
@@ -110,7 +125,7 @@ export function RadarPage() {
       {/* Stat strip */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
         <RadarStat label="Active monitors" value={activeMonitors} sub={`of ${competitors.length} competitors`} />
-        <RadarStat label="Events this week" value={data.radarEvents.length} sub="across all sources" trend="up" />
+        <RadarStat label="Events this week" value={allEvents.length} sub="across all sources" trend="up" />
         <RadarStat label="Urgent" value={urgentCount} tone="neg" sub="needs response today" />
         <RadarStat label="High priority" value={highCount} tone="warn" sub="watch this week" />
       </div>
@@ -178,7 +193,7 @@ export function RadarPage() {
             all
           </button>
           {competitors
-            .filter((c) => c.monitor.enabled)
+            .filter((c) => c.monitor_enabled)
             .slice(0, 5)
             .map((c) => (
               <button
@@ -201,16 +216,45 @@ export function RadarPage() {
       {/* Timeline + rail */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
         <div className="re-card" style={{ overflow: "hidden" }}>
-          {events.length === 0 && (
+          {isLoading && (
+            <div style={{ padding: 0 }}>
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "18px 20px",
+                    borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
+                    display: "flex",
+                    gap: 14,
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ width: 70, height: 32, background: "var(--surface-2)", borderRadius: 4 }} />
+                  <div style={{ width: 28, height: 28, background: "var(--surface-2)", borderRadius: 6 }} />
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ height: 10, width: "30%", background: "var(--surface-2)", borderRadius: 4 }} />
+                    <div style={{ height: 14, width: "70%", background: "var(--surface-2)", borderRadius: 4 }} />
+                    <div style={{ height: 10, width: "50%", background: "var(--surface-2)", borderRadius: 4 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {!isLoading && error && (
+            <div style={{ padding: 40, textAlign: "center", color: "var(--neg)" }}>
+              Failed to load events. {error instanceof Error ? error.message : "Please try again."}
+            </div>
+          )}
+          {!isLoading && !error && events.length === 0 && (
             <div style={{ padding: 40, textAlign: "center", color: "var(--fg-muted)" }}>
               No events match. Try clearing filters.
             </div>
           )}
-          {events.map((ev, i) => (
+          {!isLoading && !error && events.map((ev, i) => (
             <RadarEventRow
               key={ev.id}
               event={ev}
-              competitor={competitors.find((c) => c.id === ev.competitor)}
+              competitor={competitorById.get(ev.competitor_id)}
               first={i === 0}
             />
           ))}
@@ -268,7 +312,7 @@ export function RadarPage() {
             </div>
             <div style={{ padding: "8px 0" }}>
               {competitors
-                .filter((c) => c.monitor.enabled)
+                .filter((c) => c.monitor_enabled)
                 .slice(0, 5)
                 .map((c) => (
                   <div
@@ -285,7 +329,7 @@ export function RadarPage() {
                         width: 22,
                         height: 22,
                         borderRadius: 5,
-                        background: c.color,
+                        background: c.color ?? "#666",
                         color: "#fff",
                         display: "grid",
                         placeItems: "center",
@@ -299,11 +343,11 @@ export function RadarPage() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 500 }}>{c.name}</div>
                       <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>
-                        {c.stats.lastActivity}
+                        {formatRelative(c.last_activity_at)}
                       </div>
                     </div>
                     <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
-                      {c.stats.alerts7d}
+                      {c.stat_alerts_7d}
                     </span>
                   </div>
                 ))}
@@ -368,8 +412,6 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
     background: baseBg,
   };
 
-  const eventWithExtras = ev as RadarEvent & { who?: string; role?: string };
-
   return (
     <div
       onClick={() => setExpanded(!expanded)}
@@ -398,7 +440,7 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
           {sev.label}
         </span>
         <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>
-          {ev.detectedAt}
+          {formatRelative(ev.detected_at)}
         </span>
       </div>
 
@@ -461,7 +503,7 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
         <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4, letterSpacing: "-0.005em" }}>
           {ev.title}
         </div>
-        {!expanded && (
+        {!expanded && ev.snippet && (
           <div
             className="text-fg-muted"
             style={{
@@ -491,43 +533,45 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
               }}
             >
               {ev.snippet}
-              {eventWithExtras.who && (
+              {ev.who && (
                 <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 8 }}>
-                  — {eventWithExtras.who}
-                  {eventWithExtras.role ? ` · ${eventWithExtras.role}` : ""}
+                  — {ev.who}
+                  {ev.role ? ` · ${ev.role}` : ""}
                 </div>
               )}
             </div>
-            <div
-              style={{
-                marginTop: 10,
-                padding: "10px 12px",
-                background:
-                  ev.severity === "urgent" ? "rgba(220,38,38,0.05)" : "var(--accent-soft)",
-                borderRadius: 8,
-                fontSize: 12.5,
-                display: "flex",
-                gap: 10,
-                alignItems: "flex-start",
-              }}
-            >
-              <Icon name="spark" size={14} style={{ color: sev.color, marginTop: 2 }} />
-              <div>
-                <span
-                  className="font-mono-feat"
-                  style={{
-                    fontSize: 9,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: sev.color,
-                    fontWeight: 600,
-                  }}
-                >
-                  WHY IT MATTERS
-                </span>
-                <div style={{ fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{ev.impact}</div>
+            {ev.impact && (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "10px 12px",
+                  background:
+                    ev.severity === "urgent" ? "rgba(220,38,38,0.05)" : "var(--accent-soft)",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                }}
+              >
+                <Icon name="spark" size={14} style={{ color: sev.color, marginTop: 2 }} />
+                <div>
+                  <span
+                    className="font-mono-feat"
+                    style={{
+                      fontSize: 9,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: sev.color,
+                      fontWeight: 600,
+                    }}
+                  >
+                    WHY IT MATTERS
+                  </span>
+                  <div style={{ fontSize: 13, marginTop: 4, lineHeight: 1.5 }}>{ev.impact}</div>
+                </div>
               </div>
-            </div>
+            )}
             <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
               <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
                 <Icon name="external" size={12} /> Open source
