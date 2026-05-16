@@ -8,7 +8,6 @@ export const platformIdSchema = z.enum([
   "producthunt",
   "devto",
   "medium",
-  "trustpilot",
 ]);
 
 export const switchingDirectionSchema = z.enum(["inbound", "outbound"]);

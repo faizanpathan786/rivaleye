@@ -16,7 +16,6 @@ export const PLATFORM_LABELS: Record<string, string> = {
   hackernews: "Hacker News",
   devto: "DEV.to",
   medium: "Medium",
-  trustpilot: "Trustpilot",
 };
 
 export interface PlatformStatRow {

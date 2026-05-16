@@ -7,7 +7,6 @@ import { buildHackerNewsSummarize } from "../prompts/platform/hackernews/summari
 import { buildDevToSummarize } from "../prompts/platform/devto/summarize";
 import { buildProductHuntSummarize } from "../prompts/platform/producthunt/summarize";
 import { buildMediumSummarize } from "../prompts/platform/medium/summarize";
-import { buildTrustpilotSummarize } from "../prompts/platform/trustpilot/summarize";
 import { buildRedditSummarize } from "../prompts/platform/reddit/summarize";
 
 export interface StageBInput {
@@ -57,8 +56,6 @@ function pickBuilder(p: PlatformId): SummarizeBuilder {
       return buildProductHuntSummarize;
     case "medium":
       return buildMediumSummarize;
-    case "trustpilot":
-      return buildTrustpilotSummarize;
     case "reddit":
       return buildRedditSummarize;
     default:

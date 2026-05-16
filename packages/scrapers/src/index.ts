@@ -11,7 +11,6 @@ export { GoogleMapsScraper } from "./gmaps";
 export { HackerNewsScraper } from "./hackernews";
 export { DevToScraper } from "./devto";
 export { MediumScraper } from "./medium";
-export { TrustpilotScraper } from "./trustpilot";
 import type { Scraper, PlatformId } from "./types";
 import { RedditScraper } from "./reddit";
 import { G2Scraper } from "./g2";
@@ -25,7 +24,6 @@ import { GoogleMapsScraper } from "./gmaps";
 import { HackerNewsScraper } from "./hackernews";
 import { DevToScraper } from "./devto";
 import { MediumScraper } from "./medium";
-import { TrustpilotScraper } from "./trustpilot";
 
 export function getScraper(platform: PlatformId): Scraper {
   switch (platform) {
@@ -53,8 +51,6 @@ export function getScraper(platform: PlatformId): Scraper {
       return new DevToScraper();
     case "medium":
       return new MediumScraper();
-    case "trustpilot":
-      return new TrustpilotScraper();
   }
 }
 
@@ -66,5 +62,4 @@ export const ALL_PLATFORMS: PlatformId[] = [
   "producthunt",
   "devto",
   "medium",
-  "trustpilot",
 ];

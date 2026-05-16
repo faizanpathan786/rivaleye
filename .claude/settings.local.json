@@ -5,7 +5,10 @@
       "Skill(superpowers:using-git-worktrees:*)",
       "Bash(git check-ignore *)",
       "Bash(git worktree *)",
-      "Skill(superpowers:subagent-driven-development)"
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:finishing-a-development-branch)"
     ]
   }
 }
