@@ -97,7 +97,7 @@ export function useReportProgressQuery(id: string | undefined) {
     queryFn: () => getReportProgress(id as string),
     enabled: !!id,
     refetchInterval: (q) => {
-      const status = q.state.data?.status;
+      const status = q.state.data?.report.status;
       if (status && TERMINAL_STATUSES.has(status)) return false;
       return 2000;
     },

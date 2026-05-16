@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { PlatformIcon } from "./platform-icon";
+import { retryPlatform } from "@/api/reports";
 import type {
-  ReportPlatformJob,
   ReportProgress,
+  ReportProgressEvent,
+  ReportProgressPlatform,
   ReportRow,
 } from "@/api/reports";
 
@@ -26,11 +29,11 @@ const PLATFORM_LABELS: Record<string, string> = {
   medium: "Medium",
 };
 
-const PIPELINE_STEPS: { id: string; label: string; matches: string[] }[] = [
-  { id: "queued", label: "Queued in pipeline", matches: ["queued"] },
-  { id: "scraping", label: "Scraping platforms", matches: ["scraping"] },
-  { id: "clustering", label: "Clustering cross-platform complaints", matches: ["clustering"] },
-  { id: "done", label: "Report ready", matches: ["done", "completed"] },
+const PIPELINE_STEPS: { id: string; label: string }[] = [
+  { id: "queued", label: "Queued in pipeline" },
+  { id: "scraping", label: "Scraping platforms" },
+  { id: "clustering", label: "Clustering cross-platform complaints" },
+  { id: "done", label: "Report ready" },
 ];
 
 function platformLabel(p: string): string {
@@ -41,49 +44,22 @@ function fmtNum(n: number): string {
   return n.toLocaleString();
 }
 
-function buildLogLines(
-  jobs: ReportPlatformJob[],
-  stage: string,
-  status: string,
-  startedAt: string,
-): string[] {
-  const lines: string[] = [];
-  const t0 = new Date(startedAt).getTime();
-  const stamp = (d: Date | null) => {
-    if (!d) return "00:00";
-    const ms = d.getTime() - t0;
-    const s = Math.max(0, Math.floor(ms / 1000));
-    return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  };
+function eventColor(ev: ReportProgressEvent): string {
+  if (ev.event === "failed") return "var(--destructive)";
+  if (ev.event === "completed") return "var(--pos, #22c55e)";
+  if (ev.event === "retrying") return "var(--warning, #f59e0b)";
+  return "var(--accent)";
+}
 
-  lines.push(`[boot] pipeline initialised for report`);
-  lines.push(`[boot] enqueued ${jobs.length} platform scrape jobs`);
-
-  for (const j of jobs) {
-    const label = platformLabel(j.platform);
-    if (j.started_at) {
-      lines.push(`[${stamp(new Date(j.started_at))}] scrape:${j.platform} → running`);
-      lines.push(`        ${label} extractor + summariser dispatched`);
-    }
-    if (j.status === "completed" && j.completed_at) {
-      lines.push(`[${stamp(new Date(j.completed_at))}] scrape:${j.platform} → completed`);
-    }
-    if (j.status === "failed") {
-      lines.push(`[${stamp(new Date(j.completed_at ?? j.started_at ?? startedAt))}] scrape:${j.platform} → FAILED`);
-      if (j.error) lines.push(`        err: ${j.error}`);
-    }
-  }
-
-  if (stage === "clustering") {
-    lines.push(`[stage] merging per-platform briefs → cross-platform clusters`);
-  }
-  if (status === "completed") {
-    lines.push(`[done] report persisted → opening`);
-  }
-  if (status === "failed") {
-    lines.push(`[fail] pipeline halted`);
-  }
-  return lines;
+function eventLine(ev: ReportProgressEvent): string {
+  const when = new Date(ev.created_at).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const platform = ev.platform ? `${ev.platform}:` : "";
+  const dur = ev.duration_ms != null ? ` (${ev.duration_ms}ms)` : "";
+  return `[${when}] ${platform}${ev.stage} → ${ev.event}${dur}`;
 }
 
 function StepRow({
@@ -174,39 +150,52 @@ export function ReportInProgress({
   progress: ReportProgress | undefined;
 }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
   const name =
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
-  const jobs = progress?.jobs ?? [];
-  const counts = progress?.counts ?? {
-    queued: 0,
-    running: 0,
-    completed: 0,
-    failed: 0,
-  };
+
+  const platforms = progress?.platforms ?? [];
+  const events = progress?.events ?? [];
   const metrics = progress?.metrics ?? {
-    threads: 0,
+    mentions: 0,
     comments: 0,
     quotes: 0,
     complaints: 0,
   };
+
   const stage = report.stage ?? "queued";
-  const status = report.status ?? "queued";
+  const status = progress?.report.status ?? report.status ?? "queued";
   const done = status === "completed";
   const failed = status === "failed";
 
-  const activePlatforms = jobs.filter((j) => j.status === "running");
+  const counts = useMemo(() => {
+    return platforms.reduce(
+      (acc, p) => {
+        acc[p.status] = (acc[p.status] ?? 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+  }, [platforms]);
+
+  const activePlatforms = platforms.filter((p) => p.status === "running");
   const activeSub =
     activePlatforms.length > 0
-      ? activePlatforms.map((j) => platformLabel(j.platform)).join(" · ")
-      : `${counts.completed}/${jobs.length} platforms complete`;
+      ? activePlatforms.map((p) => platformLabel(p.platform)).join(" · ")
+      : `${counts["completed"] ?? 0}/${platforms.length} platforms complete`;
 
   const stepStates = useMemo(() => {
-    const finishedScrape = jobs.length > 0 && counts.completed + counts.failed >= jobs.length;
+    const completedCount = counts["completed"] ?? 0;
+    const failedCount = counts["failed"] ?? 0;
+    const finishedScrape =
+      platforms.length > 0 &&
+      completedCount + failedCount >= platforms.length;
     return PIPELINE_STEPS.map((step) => {
       let state: "done" | "active" | "pending" = "pending";
       if (step.id === "queued") {
         state =
-          jobs.length > 0 || stage !== "queued"
+          platforms.length > 0 || stage !== "queued"
             ? "done"
             : status === "queued"
               ? "active"
@@ -214,7 +203,7 @@ export function ReportInProgress({
       } else if (step.id === "scraping") {
         state = finishedScrape
           ? "done"
-          : counts.running > 0 || counts.queued > 0
+          : (counts["running"] ?? 0) > 0 || (counts["queued"] ?? 0) > 0
             ? "active"
             : "pending";
       } else if (step.id === "clustering") {
@@ -229,7 +218,7 @@ export function ReportInProgress({
       }
       return { ...step, state };
     });
-  }, [jobs, counts, stage, status, done, failed]);
+  }, [platforms, counts, stage, status, done, failed]);
 
   const totalSteps = PIPELINE_STEPS.length;
   const doneSteps = stepStates.filter((s) => s.state === "done").length;
@@ -238,14 +227,10 @@ export function ReportInProgress({
     ? 1
     : Math.min(1, (doneSteps + (activeIdx >= 0 ? 0.5 : 0)) / totalSteps);
 
-  const logLines = useMemo(
-    () => buildLogLines(jobs, stage, status, report.created_at),
-    [jobs, stage, status, report.created_at],
-  );
   const logRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [logLines]);
+  }, [events]);
 
   useEffect(() => {
     if (!done) return;
@@ -257,6 +242,15 @@ export function ReportInProgress({
     0,
     Math.floor((Date.now() - new Date(report.created_at).getTime()) / 1000),
   );
+
+  const retryMutation = useMutation<void, unknown, string>({
+    mutationFn: (platform) => retryPlatform(report.id, platform),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: ["report-progress", report.id],
+      });
+    },
+  });
 
   return (
     <div style={{ padding: "20px 28px 48px", maxWidth: 1080, margin: "0 auto" }}>
@@ -289,7 +283,7 @@ export function ReportInProgress({
       </div>
 
       <div className="mt-7 grid grid-cols-4 gap-3">
-        <LiveCount label="Threads scanned" v={metrics.threads} />
+        <LiveCount label="Mentions found" v={metrics.mentions} />
         <LiveCount label="Comments parsed" v={metrics.comments} />
         <LiveCount label="Quotes extracted" v={metrics.quotes} />
         <LiveCount label="Complaints clustered" v={metrics.complaints} />
@@ -328,12 +322,22 @@ export function ReportInProgress({
               Per-platform
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              {jobs.length === 0 ? (
+              {platforms.length === 0 ? (
                 <div className="col-span-2 text-[12px] text-fg-faint">
                   Waiting for jobs…
                 </div>
               ) : (
-                jobs.map((j) => <PlatformPill key={j.platform} job={j} />)
+                platforms.map((p) => (
+                  <PlatformPill
+                    key={p.platform}
+                    platform={p}
+                    onRetry={() => retryMutation.mutate(p.platform)}
+                    retrying={
+                      retryMutation.isPending &&
+                      retryMutation.variables === p.platform
+                    }
+                  />
+                ))
               )}
             </div>
           </div>
@@ -367,33 +371,27 @@ export function ReportInProgress({
               color: "var(--fg-muted)",
             }}
           >
-            {logLines.map((l, i) => (
-              <div key={i} className="flex gap-2.5">
-                <span style={{ color: "var(--fg-faint)" }}>
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span
-                  className="flex-1"
-                  style={{
-                    color: l.includes("FAILED")
-                      ? "var(--destructive)"
-                      : l.startsWith("[done]")
-                        ? "var(--pos, #22c55e)"
-                        : l.startsWith("[stage]") || l.includes("→ completed")
-                          ? "var(--fg)"
-                          : l.includes("→ running")
-                            ? "var(--accent)"
-                            : "var(--fg-muted)",
-                  }}
-                >
-                  {l}
-                </span>
-              </div>
-            ))}
+            {events.length === 0 ? (
+              <div className="text-fg-faint">Waiting for events…</div>
+            ) : (
+              events.map((ev, i) => (
+                <div key={i} className="flex gap-2.5">
+                  <span style={{ color: "var(--fg-faint)" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    className="flex-1"
+                    style={{ color: eventColor(ev) }}
+                  >
+                    {eventLine(ev)}
+                  </span>
+                </div>
+              ))
+            )}
             {!done && !failed && (
               <div className="flex gap-2.5">
                 <span style={{ color: "var(--fg-faint)" }}>
-                  {String(logLines.length + 1).padStart(2, "0")}
+                  {String(events.length + 1).padStart(2, "0")}
                 </span>
                 <span className="animate-pulse">▍</span>
               </div>
@@ -440,13 +438,21 @@ export function ReportInProgress({
   );
 }
 
-function PlatformPill({ job }: { job: ReportPlatformJob }) {
+function PlatformPill({
+  platform,
+  onRetry,
+  retrying,
+}: {
+  platform: ReportProgressPlatform;
+  onRetry: () => void;
+  retrying: boolean;
+}) {
   const tone =
-    job.status === "completed"
+    platform.status === "completed"
       ? "var(--pos, #22c55e)"
-      : job.status === "running"
+      : platform.status === "running"
         ? "var(--accent)"
-        : job.status === "failed"
+        : platform.status === "failed"
           ? "var(--destructive)"
           : "var(--fg-faint)";
   return (
@@ -456,25 +462,40 @@ function PlatformPill({ job }: { job: ReportPlatformJob }) {
         borderColor: "var(--border-soft)",
         background: "var(--bg, transparent)",
       }}
-      title={job.error ?? job.status}
+      title={platform.last_error ?? platform.status}
     >
       <span style={{ color: tone }}>
-        <PlatformIcon id={job.platform} active size={14} />
+        <PlatformIcon id={platform.platform} active size={14} />
       </span>
       <span className="text-[11.5px] truncate flex-1">
-        {platformLabel(job.platform)}
+        {platformLabel(platform.platform)}
       </span>
-      {job.status === "running" && (
+      {platform.status === "running" && (
         <span
           className="block animate-pulse rounded-full"
           style={{ width: 5, height: 5, background: tone }}
         />
       )}
-      {job.status === "completed" && (
+      {platform.status === "completed" && (
         <Icon name="check" size={10} className="text-fg-faint" />
       )}
-      {job.status === "failed" && (
-        <Icon name="x" size={10} className="text-destructive" />
+      {platform.status === "failed" && (
+        <button
+          className="flex items-center gap-1 rounded px-1 py-0.5 text-[10px] transition-opacity hover:opacity-80 disabled:opacity-40"
+          style={{
+            color: "var(--destructive)",
+            background: "color-mix(in srgb, var(--destructive) 12%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--destructive) 30%, transparent)",
+          }}
+          onClick={onRetry}
+          disabled={retrying}
+          title="Retry this platform"
+        >
+          <svg width={9} height={9} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 8a6 6 0 1 0 1.8-4.3M2 3v3h3"/>
+          </svg>
+          {retrying ? "…" : "retry"}
+        </button>
       )}
     </div>
   );

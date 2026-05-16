@@ -352,3 +352,10 @@ export async function getThread(
   );
   return unwrap(res);
 }
+
+export async function retryPlatform(
+  reportId: string,
+  platform: string,
+): Promise<void> {
+  await axios.post(endpoints.reports.retryPlatform(reportId), { platform });
+}
