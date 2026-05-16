@@ -49,6 +49,7 @@ export const endpoints = {
   reports: {
     list: "/v1/reports",
     detail: (id: string) => `/v1/reports/${id}`,
+    progress: (id: string) => `/v1/reports/${id}/progress`,
     complaints: (id: string) => `/v1/reports/${id}/complaints`,
     featureGaps: (id: string) => `/v1/reports/${id}/feature-gaps`,
     pricing: (id: string) => `/v1/reports/${id}/pricing`,

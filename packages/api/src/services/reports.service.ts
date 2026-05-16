@@ -19,8 +19,9 @@ import {
   type Report,
 } from "@/db/schema/reports";
 import { report_platform_jobs } from "@/db/schema/pipeline";
+import { mentions } from "@/db/schema/mentions";
 import { enqueueScrapePlatform } from "@/libs/queue";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
@@ -113,6 +114,54 @@ export async function createReport(
 
 export async function getReport(id: string, owner_id: string) {
   return assertReportOwned(id, owner_id);
+}
+
+export async function getProgress(id: string, owner_id: string) {
+  const owned = await assertReportOwned(id, owner_id);
+  if (!owned) return null;
+  const jobs = await db
+    .select({
+      platform: report_platform_jobs.platform,
+      status: report_platform_jobs.status,
+      error: report_platform_jobs.error,
+      started_at: report_platform_jobs.started_at,
+      completed_at: report_platform_jobs.completed_at,
+    })
+    .from(report_platform_jobs)
+    .where(eq(report_platform_jobs.report_id, id))
+    .orderBy(asc(report_platform_jobs.platform));
+
+  const counts = jobs.reduce(
+    (acc, j) => {
+      acc[j.status] = (acc[j.status] ?? 0) + 1;
+      return acc;
+    },
+    { queued: 0, running: 0, completed: 0, failed: 0 } as Record<string, number>,
+  );
+
+  const [mentionCount, complaintCount, quoteCount, commentSum] = await Promise.all([
+    db.select({ v: sql<number>`count(*)::int` }).from(mentions).where(eq(mentions.report_id, id)),
+    db.select({ v: sql<number>`count(*)::int` }).from(report_complaints).where(eq(report_complaints.report_id, id)),
+    db.select({ v: sql<number>`count(*)::int` }).from(report_quotes).where(eq(report_quotes.report_id, id)),
+    db.select({ v: sql<number>`coalesce(sum(num_comments), 0)::int` }).from(mentions).where(eq(mentions.report_id, id)),
+  ]);
+
+  return {
+    id: owned.id,
+    status: owned.status,
+    stage: owned.stage,
+    error: owned.error,
+    created_at: owned.created_at,
+    jobs,
+    counts,
+    total: jobs.length,
+    metrics: {
+      threads: Number(mentionCount[0]?.v ?? 0),
+      comments: Number(commentSum[0]?.v ?? 0),
+      quotes: Number(quoteCount[0]?.v ?? 0),
+      complaints: Number(complaintCount[0]?.v ?? 0),
+    },
+  };
 }
 
 export async function getComplaints(id: string, owner_id: string) {

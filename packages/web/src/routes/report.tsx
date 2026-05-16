@@ -10,6 +10,7 @@ import {
   useReportPlatformsQuery,
   useReportPositioningQuery,
   useReportPricingQuery,
+  useReportProgressQuery,
   useReportQuery,
   useReportQuotesQuery,
   useReportSentimentSeriesQuery,
@@ -18,6 +19,7 @@ import {
 } from "@/hooks/queries/use-reports";
 import { formatRelative } from "@/lib/format";
 import { ReportErrorBoundary } from "@/components/report/report-error-boundary";
+import { ReportInProgress } from "@/components/report/report-in-progress";
 import { ReportSkeleton } from "@/components/report/report-skeleton";
 import { ThreadModal } from "@/components/report/thread-modal";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -42,6 +44,7 @@ export function ReportPage() {
   const { id } = useParams<{ id: string }>();
   const reportId = id ?? "";
   const query = useReportQuery(reportId);
+  const progressQuery = useReportProgressQuery(reportId);
 
   if (query.isLoading || !query.data) {
     return (
@@ -61,6 +64,12 @@ export function ReportPage() {
           </AlertDescription>
         </Alert>
       </div>
+    );
+  }
+
+  if (query.data.status !== "completed") {
+    return (
+      <ReportInProgress report={query.data} progress={progressQuery.data} />
     );
   }
 

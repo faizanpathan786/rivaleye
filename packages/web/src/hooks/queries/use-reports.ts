@@ -13,6 +13,7 @@ import {
   getPricing,
   getQuotes,
   getReport,
+  getReportProgress,
   getSentimentSeries,
   getSubreddits,
   getSwitching,
@@ -32,6 +33,7 @@ import type {
   PlatformStat,
   Positioning,
   PricingResponse,
+  ReportProgress,
   QuoteRow,
   ReportRow,
   Subreddit,
@@ -87,6 +89,19 @@ export function useReportQuery(id: string | undefined) {
   }, [query.failureCount]);
 
   return query;
+}
+
+export function useReportProgressQuery(id: string | undefined) {
+  return useQuery<ReportProgress>({
+    queryKey: reportsKeys.section(id, "progress"),
+    queryFn: () => getReportProgress(id as string),
+    enabled: !!id,
+    refetchInterval: (q) => {
+      const status = q.state.data?.status;
+      if (status && TERMINAL_STATUSES.has(status)) return false;
+      return 2000;
+    },
+  });
 }
 
 export function useCreateReportMutation() {

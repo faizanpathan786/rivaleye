@@ -181,6 +181,35 @@ export type ThreadDetail = ThreadRow & {
   }>;
 };
 
+export type ReportJobStatus = "queued" | "running" | "completed" | "failed";
+
+export type ReportPlatformJob = {
+  platform: string;
+  status: ReportJobStatus;
+  error: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+};
+
+export type ReportProgressMetrics = {
+  threads: number;
+  comments: number;
+  quotes: number;
+  complaints: number;
+};
+
+export type ReportProgress = {
+  id: string;
+  status: string;
+  stage: string;
+  error: string | null;
+  created_at: string;
+  jobs: ReportPlatformJob[];
+  counts: Record<ReportJobStatus, number>;
+  total: number;
+  metrics: ReportProgressMetrics;
+};
+
 export type CreateReportPayload = {
   category: string;
   competitors: string[];
@@ -198,6 +227,13 @@ export async function listReports(): Promise<ReportRow[]> {
 export async function getReport(id: string): Promise<ReportRow> {
   const res = await axios.get<ApiSuccess<ReportRow>>(
     endpoints.reports.detail(id),
+  );
+  return unwrap(res);
+}
+
+export async function getReportProgress(id: string): Promise<ReportProgress> {
+  const res = await axios.get<ApiSuccess<ReportProgress>>(
+    endpoints.reports.progress(id),
   );
   return unwrap(res);
 }

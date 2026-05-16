@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { listReportsHandler } from "./handlers/listReports";
 import { createReportHandler } from "./handlers/createReport";
 import { getReportHandler } from "./handlers/getReport";
+import { getProgressHandler } from "./handlers/getProgress";
 import { getComplaintsHandler } from "./handlers/getComplaints";
 import { getFeatureGapsHandler } from "./handlers/getFeatureGaps";
 import { getPricingHandler } from "./handlers/getPricing";
@@ -24,6 +25,7 @@ export const reportsController = new Elysia({
 })
   .use(listReportsHandler)
   .use(createReportHandler)
+  .use(getProgressHandler)
   .use(getReportHandler)
   .use(getComplaintsHandler)
   .use(getFeatureGapsHandler)
