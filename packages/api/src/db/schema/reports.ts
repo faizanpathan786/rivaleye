@@ -16,6 +16,7 @@ export const report_status_enum = pgEnum("report_status", [
   "running",
   "completed",
   "failed",
+  "cancelled",
 ]);
 
 export const report_goal_enum = pgEnum("report_goal", [
@@ -33,6 +34,7 @@ export const report_stage_enum = pgEnum("report_stage", [
   "clustering",
   "done",
   "failed",
+  "cancelled",
 ]);
 
 export const reports = pgTable("reports", {
