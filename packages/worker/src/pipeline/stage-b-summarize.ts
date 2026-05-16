@@ -2,6 +2,7 @@ import type { PlatformId } from "@rivaleye/scrapers";
 import type { OpenRouterClient } from "@rivaleye/shared";
 import type { PipelineCtx, PlatformBrief, PlatformExtract } from "../prompts/shared";
 import { buildAppStoreSummarize } from "../prompts/platform/appstore/summarize";
+import { buildPlayStoreSummarize } from "../prompts/platform/playstore/summarize";
 
 export interface StageBInput {
   llm: OpenRouterClient;
@@ -40,6 +41,8 @@ function pickBuilder(p: PlatformId): SummarizeBuilder {
   switch (p) {
     case "appstore":
       return buildAppStoreSummarize;
+    case "playstore":
+      return buildPlayStoreSummarize;
     default:
       throw new Error(`Stage B: no summarize builder for platform "${p}" yet`);
   }

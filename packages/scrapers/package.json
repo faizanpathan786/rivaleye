@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@rivaleye/shared": "workspace:*",
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "google-play-scraper": "^10.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

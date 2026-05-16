@@ -2,6 +2,7 @@ import type { NormalizedPost, PlatformId } from "@rivaleye/scrapers";
 import type { OpenRouterClient } from "@rivaleye/shared";
 import type { PipelineCtx, PlatformExtract } from "../prompts/shared";
 import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
+import { buildPlayStoreExtract } from "../prompts/platform/playstore/extract";
 
 export interface StageAInput {
   llm: OpenRouterClient;
@@ -43,6 +44,16 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             rating: post.score ?? 0,
             body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "playstore":
+      return ({ ctx, posts }) =>
+        buildPlayStoreExtract({
+          ctx,
+          reviews: posts.map((post) => ({
+            id: post.externalId,
+            rating: post.score ?? 0,
+            body: post.body,
           })),
         });
     default:
