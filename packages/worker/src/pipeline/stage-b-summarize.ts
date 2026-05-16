@@ -5,6 +5,9 @@ import { buildAppStoreSummarize } from "../prompts/platform/appstore/summarize";
 import { buildPlayStoreSummarize } from "../prompts/platform/playstore/summarize";
 import { buildHackerNewsSummarize } from "../prompts/platform/hackernews/summarize";
 import { buildDevToSummarize } from "../prompts/platform/devto/summarize";
+import { buildProductHuntSummarize } from "../prompts/platform/producthunt/summarize";
+import { buildMediumSummarize } from "../prompts/platform/medium/summarize";
+import { buildTrustpilotSummarize } from "../prompts/platform/trustpilot/summarize";
 
 export interface StageBInput {
   llm: OpenRouterClient;
@@ -49,6 +52,12 @@ function pickBuilder(p: PlatformId): SummarizeBuilder {
       return buildHackerNewsSummarize;
     case "devto":
       return buildDevToSummarize;
+    case "producthunt":
+      return buildProductHuntSummarize;
+    case "medium":
+      return buildMediumSummarize;
+    case "trustpilot":
+      return buildTrustpilotSummarize;
     default:
       throw new Error(`Stage B: no summarize builder for platform "${p}" yet`);
   }

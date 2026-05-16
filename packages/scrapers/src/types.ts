@@ -9,7 +9,9 @@ export type PlatformId =
   | "playstore"
   | "gmaps"
   | "hackernews"
-  | "devto";
+  | "devto"
+  | "medium"
+  | "trustpilot";
 
 export interface NormalizedPost {
   platform: PlatformId;

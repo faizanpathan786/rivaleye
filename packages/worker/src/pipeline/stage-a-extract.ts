@@ -5,6 +5,9 @@ import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
 import { buildPlayStoreExtract } from "../prompts/platform/playstore/extract";
 import { buildHackerNewsExtract } from "../prompts/platform/hackernews/extract";
 import { buildDevToExtract } from "../prompts/platform/devto/extract";
+import { buildProductHuntExtract } from "../prompts/platform/producthunt/extract";
+import { buildMediumExtract } from "../prompts/platform/medium/extract";
+import { buildTrustpilotExtract } from "../prompts/platform/trustpilot/extract";
 
 export interface StageAInput {
   llm: OpenRouterClient;
@@ -75,6 +78,36 @@ function pickBuilder(p: PlatformId): Builder {
           posts: posts.map((post) => ({
             id: post.externalId,
             score: post.score,
+            body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "producthunt":
+      return ({ ctx, posts }) =>
+        buildProductHuntExtract({
+          ctx,
+          reviews: posts.map((post) => ({
+            id: post.externalId,
+            rating: post.score ?? 0,
+            body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "medium":
+      return ({ ctx, posts }) =>
+        buildMediumExtract({
+          ctx,
+          reviews: posts.map((post) => ({
+            id: post.externalId,
+            rating: post.score ?? 0,
+            body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "trustpilot":
+      return ({ ctx, posts }) =>
+        buildTrustpilotExtract({
+          ctx,
+          reviews: posts.map((post) => ({
+            id: post.externalId,
+            rating: post.score ?? 0,
             body: `${post.title ?? ""}\n${post.body}`,
           })),
         });

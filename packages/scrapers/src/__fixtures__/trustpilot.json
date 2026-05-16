@@ -1,0 +1,71 @@
+{
+  "business": {
+    "id": "abc123",
+    "displayName": "Notion",
+    "websiteUrl": "https://notion.so",
+    "trustScore": 4.2,
+    "stars": 4,
+    "numberOfReviews": {
+      "total": 850,
+      "usedForTrustScoreCalculation": 830,
+      "oneStar": 40,
+      "twoStars": 20,
+      "threeStars": 60,
+      "fourStars": 200,
+      "fiveStars": 530
+    },
+    "status": "active",
+    "claimed": true,
+    "categories": [{ "categoryId": "productivity_software", "displayName": "Productivity Software" }],
+    "profileUrl": "https://www.trustpilot.com/review/notion.so",
+    "logoUrl": null,
+    "country": "US",
+    "name": { "identifying": "notion.so" }
+  },
+  "reviews": [
+    {
+      "id": "rev001",
+      "stars": 5,
+      "title": "Best all-in-one workspace",
+      "text": "I've been using Notion for 2 years and it has completely replaced my need for separate note-taking, task management, and wiki tools.",
+      "language": "en",
+      "createdAt": "2026-05-01T10:00:00Z",
+      "updatedAt": "2026-05-01T10:00:00Z",
+      "experiencedAt": "2026-04-30T10:00:00Z",
+      "verificationLevel": "verified",
+      "isVerified": true,
+      "consumer": {
+        "displayName": "Alice Johnson",
+        "numberOfReviews": 12,
+        "countryCode": "US"
+      },
+      "reviewReply": null,
+      "companyReply": null,
+      "labels": [],
+      "source": "Organic",
+      "referralEmail": null
+    },
+    {
+      "id": "rev002",
+      "stars": 2,
+      "title": "Slow on mobile, sync issues",
+      "text": "The desktop app is fine but the mobile experience is painfully slow. Syncing between devices takes forever and sometimes I lose edits.",
+      "language": "en",
+      "createdAt": "2026-05-03T14:30:00Z",
+      "updatedAt": "2026-05-03T14:30:00Z",
+      "experiencedAt": "2026-05-02T14:30:00Z",
+      "verificationLevel": "unverified",
+      "isVerified": false,
+      "consumer": {
+        "displayName": "Bob Smith",
+        "numberOfReviews": 5,
+        "countryCode": "GB"
+      },
+      "reviewReply": null,
+      "companyReply": null,
+      "labels": [],
+      "source": "Organic",
+      "referralEmail": null
+    }
+  ]
+}
