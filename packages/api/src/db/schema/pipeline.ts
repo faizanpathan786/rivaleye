@@ -9,6 +9,14 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+
+export const report_platform_stage_enum = pgEnum("report_platform_stage", [
+  "scrape",
+  "stage_a",
+  "stage_b",
+  "done",
+  "failed",
+]);
 import { reports } from "./reports";
 
 export const report_platform_job_status_enum = pgEnum("report_platform_job_status", [
@@ -28,6 +36,10 @@ export const report_platform_jobs = pgTable(
     platform: text("platform").notNull(),
     status: report_platform_job_status_enum("status").notNull().default("queued"),
     error: text("error"),
+    stage: report_platform_stage_enum("stage").notNull().default("scrape"),
+    attempt_count: integer("attempt_count").notNull().default(0),
+    last_error: text("last_error"),
+    last_event_at: timestamp("last_event_at"),
     started_at: timestamp("started_at"),
     completed_at: timestamp("completed_at"),
     created_at: timestamp("created_at").notNull().defaultNow(),

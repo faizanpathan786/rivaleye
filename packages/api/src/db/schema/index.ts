@@ -5,3 +5,4 @@ export * from "./mentions";
 export * from "./radar";
 export * from "./pipeline";
 export * from "./logs";
+export * from "./pipeline-events";

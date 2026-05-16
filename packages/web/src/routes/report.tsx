@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import {
   useReportActionsQuery,
@@ -17,6 +18,7 @@ import {
   useReportSwitchingQuery,
   useReportVoiceQuery,
 } from "@/hooks/queries/use-reports";
+import { retryPlatform } from "@/api/reports";
 import { formatRelative } from "@/lib/format";
 import { ReportErrorBoundary } from "@/components/report/report-error-boundary";
 import { ReportInProgress } from "@/components/report/report-in-progress";
@@ -101,6 +103,14 @@ function PainReport({
 }) {
   const [tab, setTab] = useState<TabKey>("overview");
   const [openThread, setOpenThread] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const onRetryFailed = async () => {
+    for (const p of report.failed_platforms ?? []) {
+      await retryPlatform(report.id, p);
+    }
+    queryClient.invalidateQueries({ queryKey: ["report", report.id] });
+  };
 
   const complaints = useReportComplaintsQuery(reportId).data ?? [];
   const voice = useReportVoiceQuery(reportId).data;
@@ -130,7 +140,17 @@ function PainReport({
 
   return (
     <div>
-      <ReportHeader report={report} platformsCount={platforms.length} />
+      <ReportHeader
+        report={report}
+        platformsCount={platforms.length}
+        partial={report.partial}
+        failed_platforms={report.failed_platforms}
+        onRetryFailed={
+          report.partial && report.failed_platforms.length > 0
+            ? onRetryFailed
+            : undefined
+        }
+      />
 
       <div
         className="sticky top-0 z-[4] flex flex-wrap items-center gap-2.5 border-b px-7 py-2"
@@ -214,9 +234,15 @@ function PainReport({
 function ReportHeader({
   report,
   platformsCount,
+  partial,
+  failed_platforms,
+  onRetryFailed,
 }: {
   report: ReportRow;
   platformsCount: number;
+  partial?: boolean;
+  failed_platforms?: string[];
+  onRetryFailed?: () => void;
 }) {
   const name =
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
@@ -229,6 +255,22 @@ function ReportHeader({
       className="px-7 pb-3 pt-5"
       style={{ borderBottom: "1px solid var(--border-soft)" }}
     >
+      {partial && failed_platforms && failed_platforms.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200">
+          <span>
+            Partial report. Missing platforms:{" "}
+            <span className="font-medium">{failed_platforms.join(", ")}</span>.
+          </span>
+          {onRetryFailed && (
+            <button
+              onClick={onRetryFailed}
+              className="ml-2 underline underline-offset-2 hover:no-underline"
+            >
+              Retry failed platforms
+            </button>
+          )}
+        </div>
+      )}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <div

@@ -20,10 +20,12 @@ import {
 } from "@/db/schema/reports";
 import { report_platform_jobs } from "@/db/schema/pipeline";
 import { report_logs } from "@/db/schema/logs";
+import { pipeline_events } from "@/db/schema/pipeline-events";
 import { mentions } from "@/db/schema/mentions";
-import { enqueueScrapePlatform } from "@/libs/queue";
-import { and, asc, eq, gt, sql } from "drizzle-orm";
+import { inngest } from "@/libs/inngest";
+import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
 import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
+import type { EnabledPlatformId } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
 
@@ -98,16 +100,17 @@ export async function createReport(
     })),
   );
 
-  await Promise.all(
-    ENABLED_PLATFORMS.map((platform) =>
-      enqueueScrapePlatform({
+  await inngest.send(
+    ENABLED_PLATFORMS.map((platform) => ({
+      name: "scrape.fetch" as const,
+      data: {
         reportId: row.id,
         platform,
         competitor,
         category: input.category,
         keywords,
-      }),
-    ),
+      },
+    })),
   );
 
   return { id: row.id };
@@ -120,44 +123,60 @@ export async function getReport(id: string, owner_id: string) {
 export async function getProgress(id: string, owner_id: string) {
   const owned = await assertReportOwned(id, owner_id);
   if (!owned) return null;
-  const jobs = await db
-    .select({
-      platform: report_platform_jobs.platform,
-      status: report_platform_jobs.status,
-      error: report_platform_jobs.error,
-      started_at: report_platform_jobs.started_at,
-      completed_at: report_platform_jobs.completed_at,
-    })
-    .from(report_platform_jobs)
-    .where(eq(report_platform_jobs.report_id, id))
-    .orderBy(asc(report_platform_jobs.platform));
 
-  const counts = jobs.reduce(
-    (acc, j) => {
-      acc[j.status] = (acc[j.status] ?? 0) + 1;
-      return acc;
-    },
-    { queued: 0, running: 0, completed: 0, failed: 0 } as Record<string, number>,
-  );
-
-  const [mentionCount, complaintCount, quoteCount, commentSum] = await Promise.all([
-    db.select({ v: sql<number>`count(*)::int` }).from(mentions).where(eq(mentions.report_id, id)),
-    db.select({ v: sql<number>`count(*)::int` }).from(report_complaints).where(eq(report_complaints.report_id, id)),
-    db.select({ v: sql<number>`count(*)::int` }).from(report_quotes).where(eq(report_quotes.report_id, id)),
-    db.select({ v: sql<number>`coalesce(sum(num_comments), 0)::int` }).from(mentions).where(eq(mentions.report_id, id)),
-  ]);
+  const [platformRows, events, mentionCount, complaintCount, quoteCount, commentSum] =
+    await Promise.all([
+      db
+        .select({
+          platform: report_platform_jobs.platform,
+          status: report_platform_jobs.status,
+          stage: report_platform_jobs.stage,
+          attempt_count: report_platform_jobs.attempt_count,
+          last_error: report_platform_jobs.last_error,
+          last_event_at: report_platform_jobs.last_event_at,
+        })
+        .from(report_platform_jobs)
+        .where(eq(report_platform_jobs.report_id, id))
+        .orderBy(asc(report_platform_jobs.platform)),
+      db
+        .select({
+          stage: pipeline_events.stage,
+          event: pipeline_events.event,
+          platform: pipeline_events.platform,
+          attempt: pipeline_events.attempt,
+          duration_ms: pipeline_events.duration_ms,
+          created_at: pipeline_events.created_at,
+        })
+        .from(pipeline_events)
+        .where(eq(pipeline_events.report_id, id))
+        .orderBy(desc(pipeline_events.created_at))
+        .limit(20),
+      db.select({ v: sql<number>`count(*)::int` }).from(mentions).where(eq(mentions.report_id, id)),
+      db
+        .select({ v: sql<number>`count(*)::int` })
+        .from(report_complaints)
+        .where(eq(report_complaints.report_id, id)),
+      db
+        .select({ v: sql<number>`count(*)::int` })
+        .from(report_quotes)
+        .where(eq(report_quotes.report_id, id)),
+      db
+        .select({ v: sql<number>`coalesce(sum(num_comments), 0)::int` })
+        .from(mentions)
+        .where(eq(mentions.report_id, id)),
+    ]);
 
   return {
-    id: owned.id,
-    status: owned.status,
-    stage: owned.stage,
-    error: owned.error,
-    created_at: owned.created_at,
-    jobs,
-    counts,
-    total: jobs.length,
+    report: {
+      id: owned.id,
+      status: owned.status,
+      partial: owned.partial,
+      failed_platforms: owned.failed_platforms,
+    },
+    platforms: platformRows,
+    events,
     metrics: {
-      threads: Number(mentionCount[0]?.v ?? 0),
+      mentions: Number(mentionCount[0]?.v ?? 0),
       comments: Number(commentSum[0]?.v ?? 0),
       quotes: Number(quoteCount[0]?.v ?? 0),
       complaints: Number(complaintCount[0]?.v ?? 0),
@@ -368,4 +387,69 @@ export async function getThread(id: string, owner_id: string, thread_id: string)
     .where(eq(report_thread_messages.thread_id, thread_id))
     .orderBy(asc(report_thread_messages.sort_order));
   return { thread, messages };
+}
+
+export async function retryPlatform(
+  owner_id: string,
+  reportId: string,
+  platform: EnabledPlatformId,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const report = await assertReportOwned(reportId, owner_id);
+  if (!report) return { ok: false, reason: "not_found" };
+
+  const [job] = await db
+    .select()
+    .from(report_platform_jobs)
+    .where(
+      and(
+        eq(report_platform_jobs.report_id, reportId),
+        eq(report_platform_jobs.platform, platform),
+      ),
+    )
+    .limit(1);
+  if (!job) return { ok: false, reason: "platform_not_in_report" };
+  if (job.status === "running") return { ok: false, reason: "already_running" };
+
+  await db
+    .update(report_platform_jobs)
+    .set({
+      status: "queued",
+      stage: "scrape",
+      attempt_count: 0,
+      last_error: null,
+      started_at: null,
+      completed_at: null,
+    })
+    .where(
+      and(
+        eq(report_platform_jobs.report_id, reportId),
+        eq(report_platform_jobs.platform, platform),
+      ),
+    );
+
+  await inngest.send({
+    name: "scrape.fetch",
+    data: {
+      reportId,
+      platform,
+      competitor: report.competitors[0] ?? "",
+      category: report.category,
+      keywords: [],
+    },
+  });
+
+  return { ok: true };
+}
+
+export async function cancelReport(
+  owner_id: string,
+  reportId: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const report = await assertReportOwned(reportId, owner_id);
+  if (!report) return { ok: false, reason: "not_found" };
+  await db
+    .update(reports)
+    .set({ status: "cancelled", stage: "cancelled", updated_at: new Date() })
+    .where(eq(reports.id, reportId));
+  return { ok: true };
 }

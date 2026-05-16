@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   jsonb,
   pgEnum,
@@ -15,6 +16,7 @@ export const report_status_enum = pgEnum("report_status", [
   "running",
   "completed",
   "failed",
+  "cancelled",
 ]);
 
 export const report_goal_enum = pgEnum("report_goal", [
@@ -32,6 +34,7 @@ export const report_stage_enum = pgEnum("report_stage", [
   "clustering",
   "done",
   "failed",
+  "cancelled",
 ]);
 
 export const reports = pgTable("reports", {
@@ -63,6 +66,9 @@ export const reports = pgTable("reports", {
   pricing_pain_score: real("pricing_pain_score"),
   switching_net_signal: text("switching_net_signal"),
   switching_reasons_out: jsonb("switching_reasons_out").$type<string[]>().default([]),
+
+  partial: boolean("partial").notNull().default(false),
+  failed_platforms: text("failed_platforms").array().notNull().default([]),
 
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),

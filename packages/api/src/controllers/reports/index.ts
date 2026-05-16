@@ -19,6 +19,8 @@ import { getSentimentSeriesHandler } from "./handlers/getSentimentSeries";
 import { getThreadsHandler } from "./handlers/getThreads";
 import { getThreadHandler } from "./handlers/getThread";
 import { getLogsHandler } from "./handlers/getLogs";
+import { retryPlatformHandler } from "./handlers/retryPlatform";
+import { cancelHandler } from "./handlers/cancel";
 
 export const reportsController = new Elysia({
   prefix: "/reports",
@@ -43,4 +45,6 @@ export const reportsController = new Elysia({
   .use(getSentimentSeriesHandler)
   .use(getThreadsHandler)
   .use(getThreadHandler)
-  .use(getLogsHandler);
+  .use(getLogsHandler)
+  .use(retryPlatformHandler)
+  .use(cancelHandler);

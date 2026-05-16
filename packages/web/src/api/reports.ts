@@ -28,6 +28,8 @@ export type ReportRow = {
   pricing_pain_score: number | null;
   switching_net_signal: string | null;
   switching_reasons_out: string[];
+  partial: boolean;
+  failed_platforms: string[];
   created_at: string;
   updated_at: string;
 };
@@ -181,33 +183,34 @@ export type ThreadDetail = ThreadRow & {
   }>;
 };
 
-export type ReportJobStatus = "queued" | "running" | "completed" | "failed";
-
-export type ReportPlatformJob = {
+export type ReportProgressPlatform = {
   platform: string;
-  status: ReportJobStatus;
-  error: string | null;
-  started_at: string | null;
-  completed_at: string | null;
+  status: "queued" | "running" | "completed" | "failed";
+  stage: "scrape" | "stage_a" | "stage_b" | "done" | "failed";
+  attempt_count: number;
+  last_error: string | null;
+  last_event_at: string | null;
 };
 
-export type ReportProgressMetrics = {
-  threads: number;
-  comments: number;
-  quotes: number;
-  complaints: number;
+export type ReportProgressEvent = {
+  stage: string;
+  event: "started" | "completed" | "failed" | "retrying";
+  platform: string | null;
+  attempt: number;
+  duration_ms: number | null;
+  created_at: string;
 };
 
 export type ReportProgress = {
-  id: string;
-  status: string;
-  stage: string;
-  error: string | null;
-  created_at: string;
-  jobs: ReportPlatformJob[];
-  counts: Record<ReportJobStatus, number>;
-  total: number;
-  metrics: ReportProgressMetrics;
+  report: {
+    id: string;
+    status: string;
+    partial: boolean;
+    failed_platforms: string[];
+  };
+  platforms: ReportProgressPlatform[];
+  events: ReportProgressEvent[];
+  metrics: { mentions: number; complaints: number; quotes: number; comments: number };
 };
 
 export type CreateReportPayload = {
@@ -350,4 +353,11 @@ export async function getThread(
     endpoints.reports.thread(id, threadId),
   );
   return unwrap(res);
+}
+
+export async function retryPlatform(
+  reportId: string,
+  platform: string,
+): Promise<void> {
+  await axios.post(endpoints.reports.retryPlatform(reportId), { platform });
 }
