@@ -18,6 +18,7 @@ import { getSubredditsHandler } from "./handlers/getSubreddits";
 import { getSentimentSeriesHandler } from "./handlers/getSentimentSeries";
 import { getThreadsHandler } from "./handlers/getThreads";
 import { getThreadHandler } from "./handlers/getThread";
+import { getLogsHandler } from "./handlers/getLogs";
 
 export const reportsController = new Elysia({
   prefix: "/reports",
@@ -41,4 +42,5 @@ export const reportsController = new Elysia({
   .use(getSubredditsHandler)
   .use(getSentimentSeriesHandler)
   .use(getThreadsHandler)
-  .use(getThreadHandler);
+  .use(getThreadHandler)
+  .use(getLogsHandler);

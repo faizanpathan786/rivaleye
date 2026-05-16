@@ -19,9 +19,10 @@ import {
   type Report,
 } from "@/db/schema/reports";
 import { report_platform_jobs } from "@/db/schema/pipeline";
+import { report_logs } from "@/db/schema/logs";
 import { mentions } from "@/db/schema/mentions";
 import { enqueueScrapePlatform } from "@/libs/queue";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
@@ -323,6 +324,29 @@ export async function getThreads(id: string, owner_id: string) {
     .from(report_threads)
     .where(eq(report_threads.report_id, id))
     .orderBy(asc(report_threads.sort_order));
+}
+
+export async function getLogs(id: string, owner_id: string, since?: string) {
+  const owned = await assertReportOwned(id, owner_id);
+  if (!owned) return null;
+  const sinceDate = since ? new Date(since) : null;
+  return db
+    .select({
+      id: report_logs.id,
+      level: report_logs.level,
+      stage: report_logs.stage,
+      platform: report_logs.platform,
+      message: report_logs.message,
+      meta: report_logs.meta,
+      created_at: report_logs.created_at,
+    })
+    .from(report_logs)
+    .where(
+      sinceDate
+        ? and(eq(report_logs.report_id, id), gt(report_logs.created_at, sinceDate))
+        : eq(report_logs.report_id, id),
+    )
+    .orderBy(asc(report_logs.created_at));
 }
 
 export async function getThread(id: string, owner_id: string, thread_id: string) {
