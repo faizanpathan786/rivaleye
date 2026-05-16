@@ -1,7 +1,7 @@
 import { index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { reports } from "./reports";
 
-export const log_level_enum = pgEnum("log_level", ["info", "warn", "error"]);
+export const report_log_level_enum = pgEnum("log_level", ["info", "warn", "error"]);
 
 export const report_logs = pgTable(
   "report_logs",
@@ -10,7 +10,7 @@ export const report_logs = pgTable(
     report_id: uuid("report_id")
       .notNull()
       .references(() => reports.id, { onDelete: "cascade" }),
-    level: log_level_enum("level").notNull(),
+    level: report_log_level_enum("level").notNull(),
     stage: text("stage"),
     platform: text("platform"),
     message: text("message").notNull(),
