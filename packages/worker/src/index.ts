@@ -10,7 +10,14 @@ async function main() {
     QUEUES.scrapePlatform,
     { batchSize: 5 },
     async (jobs) => {
-      await Promise.allSettled(jobs.map((job) => handleScrapePlatform(job.data)));
+      const results = await Promise.allSettled(
+        jobs.map((job) => handleScrapePlatform(job.data)),
+      );
+      for (const result of results) {
+        if (result.status === "rejected") {
+          console.error("[worker] scrape-platform job failed in batch:", result.reason);
+        }
+      }
     },
   );
 
