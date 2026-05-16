@@ -84,9 +84,6 @@ importers:
 
   packages/scrapers:
     dependencies:
-      '@rivaleye/shared':
-        specifier: workspace:*
-        version: link:../shared
       axios:
         specifier: ^1.7.9
         version: 1.16.1
