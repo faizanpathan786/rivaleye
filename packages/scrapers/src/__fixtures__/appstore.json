@@ -1,0 +1,2989 @@
+{
+  "search": {
+    "resultCount": 2,
+    "results": [
+      {
+        "artistViewUrl": "https://apps.apple.com/us/developer/notion-labs-incorporated/id1232780280?uo=4",
+        "artworkUrl60": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/d3/97/80/d3978062-afdf-a09c-208f-514118cc8577/AppIconProd-0-0-1x_U007epad-0-0-0-1-0-0-P3-85-220.png/60x60bb.jpg",
+        "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/d3/97/80/d3978062-afdf-a09c-208f-514118cc8577/AppIconProd-0-0-1x_U007epad-0-0-0-1-0-0-P3-85-220.png/100x100bb.jpg",
+        "isGameCenterEnabled": false,
+        "features": [
+          "iosUniversal"
+        ],
+        "advisories": [],
+        "kind": "software",
+        "screenshotUrls": [],
+        "ipadScreenshotUrls": [
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/33/b0/de/33b0de42-c861-9b03-7466-6b4a884a6f39/1_IPAD_13.png/576x768bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/5c/9e/a1/5c9ea1b8-3f53-40eb-e794-391339ae1f53/2_IPAD_13.png/576x768bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/67/f3/74/67f37463-d7ae-caab-72fe-fde0721270fb/3_IPAD_13.png/576x768bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/86/3d/32/863d32db-a5e9-985c-c23a-ba9adab1fd74/4_IPAD_13.png/576x768bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/48/54/57/485457ad-1f1f-fbce-d945-51df2e7af35e/5_IPAD_13.png/576x768bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/7b/f1/54/7bf15476-ef75-6fea-189e-2387987cc682/6_IPAD_13.png/576x768bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/20/f6/f9/20f6f906-6a67-cf6e-d226-451edea0e218/7_IPAD_13.png/576x768bb.png"
+        ],
+        "appletvScreenshotUrls": [],
+        "artworkUrl512": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/d3/97/80/d3978062-afdf-a09c-208f-514118cc8577/AppIconProd-0-0-1x_U007epad-0-0-0-1-0-0-P3-85-220.png/512x512bb.jpg",
+        "supportedDevices": [
+          "iPhone5s-iPhone5s",
+          "iPadAir-iPadAir",
+          "iPadAirCellular-iPadAirCellular",
+          "iPadMiniRetina-iPadMiniRetina",
+          "iPadMiniRetinaCellular-iPadMiniRetinaCellular",
+          "iPhone6-iPhone6",
+          "iPhone6Plus-iPhone6Plus",
+          "iPadAir2-iPadAir2",
+          "iPadAir2Cellular-iPadAir2Cellular",
+          "iPadMini3-iPadMini3",
+          "iPadMini3Cellular-iPadMini3Cellular",
+          "iPodTouchSixthGen-iPodTouchSixthGen",
+          "iPhone6s-iPhone6s",
+          "iPhone6sPlus-iPhone6sPlus",
+          "iPadMini4-iPadMini4",
+          "iPadMini4Cellular-iPadMini4Cellular",
+          "iPadPro-iPadPro",
+          "iPadProCellular-iPadProCellular",
+          "iPadPro97-iPadPro97",
+          "iPadPro97Cellular-iPadPro97Cellular",
+          "iPhoneSE-iPhoneSE",
+          "iPhone7-iPhone7",
+          "iPhone7Plus-iPhone7Plus",
+          "iPad611-iPad611",
+          "iPad612-iPad612",
+          "iPad71-iPad71",
+          "iPad72-iPad72",
+          "iPad73-iPad73",
+          "iPad74-iPad74",
+          "iPhone8-iPhone8",
+          "iPhone8Plus-iPhone8Plus",
+          "iPhoneX-iPhoneX",
+          "iPad75-iPad75",
+          "iPad76-iPad76",
+          "iPhoneXS-iPhoneXS",
+          "iPhoneXSMax-iPhoneXSMax",
+          "iPhoneXR-iPhoneXR",
+          "iPad812-iPad812",
+          "iPad834-iPad834",
+          "iPad856-iPad856",
+          "iPad878-iPad878",
+          "iPadMini5-iPadMini5",
+          "iPadMini5Cellular-iPadMini5Cellular",
+          "iPadAir3-iPadAir3",
+          "iPadAir3Cellular-iPadAir3Cellular",
+          "iPodTouchSeventhGen-iPodTouchSeventhGen",
+          "iPhone11-iPhone11",
+          "iPhone11Pro-iPhone11Pro",
+          "iPadSeventhGen-iPadSeventhGen",
+          "iPadSeventhGenCellular-iPadSeventhGenCellular",
+          "iPhone11ProMax-iPhone11ProMax",
+          "iPhoneSESecondGen-iPhoneSESecondGen",
+          "iPadProSecondGen-iPadProSecondGen",
+          "iPadProSecondGenCellular-iPadProSecondGenCellular",
+          "iPadProFourthGen-iPadProFourthGen",
+          "iPadProFourthGenCellular-iPadProFourthGenCellular",
+          "iPhone12Mini-iPhone12Mini",
+          "iPhone12-iPhone12",
+          "iPhone12Pro-iPhone12Pro",
+          "iPhone12ProMax-iPhone12ProMax",
+          "iPadAir4-iPadAir4",
+          "iPadAir4Cellular-iPadAir4Cellular",
+          "iPadEighthGen-iPadEighthGen",
+          "iPadEighthGenCellular-iPadEighthGenCellular",
+          "iPadProThirdGen-iPadProThirdGen",
+          "iPadProThirdGenCellular-iPadProThirdGenCellular",
+          "iPadProFifthGen-iPadProFifthGen",
+          "iPadProFifthGenCellular-iPadProFifthGenCellular",
+          "iPhone13Pro-iPhone13Pro",
+          "iPhone13ProMax-iPhone13ProMax",
+          "iPhone13Mini-iPhone13Mini",
+          "iPhone13-iPhone13",
+          "iPadMiniSixthGen-iPadMiniSixthGen",
+          "iPadMiniSixthGenCellular-iPadMiniSixthGenCellular",
+          "iPadNinthGen-iPadNinthGen",
+          "iPadNinthGenCellular-iPadNinthGenCellular",
+          "iPhoneSEThirdGen-iPhoneSEThirdGen",
+          "iPadAirFifthGen-iPadAirFifthGen",
+          "iPadAirFifthGenCellular-iPadAirFifthGenCellular",
+          "iPhone14-iPhone14",
+          "iPhone14Plus-iPhone14Plus",
+          "iPhone14Pro-iPhone14Pro",
+          "iPhone14ProMax-iPhone14ProMax",
+          "iPadTenthGen-iPadTenthGen",
+          "iPadTenthGenCellular-iPadTenthGenCellular",
+          "iPadPro11FourthGen-iPadPro11FourthGen",
+          "iPadPro11FourthGenCellular-iPadPro11FourthGenCellular",
+          "iPadProSixthGen-iPadProSixthGen",
+          "iPadProSixthGenCellular-iPadProSixthGenCellular",
+          "iPhone15-iPhone15",
+          "iPhone15Plus-iPhone15Plus",
+          "iPhone15Pro-iPhone15Pro",
+          "iPhone15ProMax-iPhone15ProMax",
+          "iPadAir11M2-iPadAir11M2",
+          "iPadAir11M2Cellular-iPadAir11M2Cellular",
+          "iPadAir13M2-iPadAir13M2",
+          "iPadAir13M2Cellular-iPadAir13M2Cellular",
+          "iPadPro11M4-iPadPro11M4",
+          "iPadPro11M4Cellular-iPadPro11M4Cellular",
+          "iPadPro13M4-iPadPro13M4",
+          "iPadPro13M4Cellular-iPadPro13M4Cellular",
+          "iPhone16-iPhone16",
+          "iPhone16Plus-iPhone16Plus",
+          "iPhone16Pro-iPhone16Pro",
+          "iPhone16ProMax-iPhone16ProMax",
+          "iPadMiniA17Pro-iPadMiniA17Pro",
+          "iPadMiniA17ProCellular-iPadMiniA17ProCellular",
+          "iPhone16e-iPhone16e",
+          "iPadA16-iPadA16",
+          "iPadA16Cellular-iPadA16Cellular",
+          "iPadAir11M3-iPadAir11M3",
+          "iPadAir11M3Cellular-iPadAir11M3Cellular",
+          "iPadAir13M3-iPadAir13M3",
+          "iPadAir13M3Cellular-iPadAir13M3Cellular",
+          "iPhone17Pro-iPhone17Pro",
+          "iPhone17ProMax-iPhone17ProMax",
+          "iPhone17-iPhone17",
+          "iPhoneAir-iPhoneAir",
+          "iPadPro11M5-iPadPro11M5",
+          "iPadPro11M5Cellular-iPadPro11M5Cellular",
+          "iPadPro13M5-iPadPro13M5",
+          "iPadPro13M5Cellular-iPadPro13M5Cellular",
+          "iPhone17e-iPhone17e",
+          "iPadAir11M4-iPadAir11M4",
+          "iPadAir11M4Cellular-iPadAir11M4Cellular",
+          "iPadAir13M4-iPadAir13M4",
+          "iPadAir13M4Cellular-iPadAir13M4Cellular"
+        ],
+        "trackCensoredName": "Notion: Notes, Tasks, AI",
+        "trackViewUrl": "https://apps.apple.com/us/app/notion-notes-tasks-ai/id1232780281?uo=4",
+        "contentAdvisoryRating": "4+",
+        "averageUserRating": 4.77902,
+        "artistName": "Notion Labs, Incorporated",
+        "bundleId": "notion.id",
+        "releaseDate": "2017-09-14T19:07:31Z",
+        "genreIds": [
+          "6007",
+          "6000"
+        ],
+        "primaryGenreName": "Productivity",
+        "primaryGenreId": 6007,
+        "sellerName": "Notion Labs, Incorporated",
+        "isVppDeviceBasedLicensingEnabled": true,
+        "releaseNotes": "Bug fixes and performance improvements.",
+        "version": "1.7.304",
+        "wrapperType": "software",
+        "currency": "USD",
+        "description": "Notion is an AI-powered all-in-one workspace that helps individuals and teams write notes, manage tasks, organize projects, and collaborate in one place. Whether you\u2019re tracking personal to-do lists, writing and organizing class notes, or managing projects with a team, Notion helps users plan work, stay organized, and achieve goals.\n\n\"AI's everything app\" \u2014 Forbes\n\nNotion is a productivity app where you can write, plan, and organize your notes, projects, tasks and more. Ask Notion AI about project updates, upcoming tasks, and suggestions for a more streamlined workflow.\n\nSimplify writing notes, project and task management, and collaboration. Whether for personal, student or professional use, Notion scales to meet your individual needs with customization tools for everyone.\n\nNEW features:\n\u2022 AI Meeting Notes: Perfect meeting memory. Your notetaker catches every detail and delivers actionable summaries, right where you work.\n\u2022 Maps View: Turn databases into interactive maps. Use the new Place property to pin restaurants, trips, offices, clients, and more.\n\nFREE FOR PERSONAL USE\nIndividuals manage day-to-day tasks, notes, and personal organization.\n\u2022 Create as many notes, docs, and content as you want.\n\u2022 Use one of thousands of templates to get started.\n\nFREE TO TRY WITH YOUR TEAM\nTeams run on Notion every day, from next-generation startups to established enterprises.\n\u2022 Import Google Docs, PDFs, and other content types easily to get started\n\u2022 Write and organize meeting notes, or transcribe with AI.\n\u2022 Collaboration and team work at your fingertips, in one connected workspace.\n\u2022 Connect tools like Figma, Slack, and GitHub to Notion.\n\nFREE FOR STUDENTS\nStudents organize notes, assignments, and study plans in one place.\n\u2022 Your study planner, class notes, to do lists and more, your way. Loved by millions of students worldwide.\n\u2022 Get organized for your best school year yet with beautiful, customizable templates created by students, for students.\n\nNOTES & DOCS\nCommunication is made efficient with Notion's flexible building blocks.\n\u2022 Create docs with beautiful templates, images, to-dos, and 50+ more content types.\n\u2022 Meeting notes, projects, design systems, pitch decks, and more.\n\u2022 Find exactly what you need using Search with powerful filters to find content across your workspace.\n\nTASKS & PROJECTS\nCatch all details big and small in any workflow.\n\u2022 Workflow manager: Create your own priority labels, status tags, and automations to choose the exact info you want to track.\n\u2022 Capture every detail in a table. Break projects into manageable tasks to get the work done.\n\nAI\nOne tool that does it all - search, generate, analyze, and chat - right inside Notion.\n\u2022 Create notes. Transcribe meeting notes with AI.\n\u2022 Turn databases into interactive maps. Use the new Place property to pin restaurants, trips, offices, clients, and more.\n\u2022 Write better. Use Notion AI to help write and brainstorm.\n\u2022 Get answers. Ask Notion AI questions about all your content and get answers in seconds.\n\u2022 Autofill tables. Notion AI turns overwhelming data into clear, actionable information  \u2014 automatically.\n\nSYNCS WITH BROWSER, MAC, AND WINDOWS APPS.\n\u2022 Pick up on mobile where you left off on desktop.\n\nMORE PRODUCTIVITY. FEWER TOOLS.\n\u2022 Track to-dos, write notes, create docs, and manage projects in one connected workspace.\n\nTHINK IT. MAKE IT.",
+        "minimumOsVersion": "17.0",
+        "userRatingCountForCurrentVersion": 83782,
+        "averageUserRatingForCurrentVersion": 4.77902,
+        "sellerUrl": "https://www.notion.so",
+        "languageCodesISO2A": [
+          "AR",
+          "DA",
+          "NL",
+          "EN",
+          "FI",
+          "FR",
+          "DE",
+          "HE",
+          "ID",
+          "IT",
+          "JA",
+          "KO",
+          "NB",
+          "PT",
+          "ZH",
+          "ES",
+          "SV",
+          "TH",
+          "ZH",
+          "VI"
+        ],
+        "fileSizeBytes": "472944640",
+        "formattedPrice": "Free",
+        "trackContentRating": "4+",
+        "trackId": 1232780281,
+        "trackName": "Notion: Notes, Tasks, AI",
+        "currentVersionReleaseDate": "2026-05-12T23:09:11Z",
+        "price": 0.0,
+        "genres": [
+          "Productivity",
+          "Business"
+        ],
+        "artistId": 1232780280,
+        "userRatingCount": 83782
+      },
+      {
+        "artistViewUrl": "https://apps.apple.com/us/developer/notion-labs-incorporated/id1232780280?uo=4",
+        "artworkUrl60": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/92/77/ff/9277ff1e-d480-dd77-ddd3-ed29aeff71d6/notion-calendar-0-0-1x_U007ephone-0-1-P3-85-220.png/60x60bb.jpg",
+        "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/92/77/ff/9277ff1e-d480-dd77-ddd3-ed29aeff71d6/notion-calendar-0-0-1x_U007ephone-0-1-P3-85-220.png/100x100bb.jpg",
+        "isGameCenterEnabled": false,
+        "features": [],
+        "advisories": [],
+        "kind": "software",
+        "screenshotUrls": [
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource126/v4/49/67/38/49673809-5722-9f8e-aeff-ee24efc5f883/77b32e48-e8a4-4c12-bef3-6e1f2ebf7944_1.png/392x696bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource116/v4/aa/ee/9d/aaee9dac-7da8-4b4e-c203-bdf5c316fc83/b77a7bc8-3ac7-4081-b4db-d8837af29ac8_2.png/392x696bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource126/v4/96/14/5b/96145b33-5bf2-ac9d-bf92-011f9f3b19fd/779886b2-76bd-4c56-b8a9-9ccdc5e17d56_3.png/392x696bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource126/v4/86/12/cb/8612cbaa-b9dc-4e6f-5bf9-b4d272e4fc1b/0ca9ef9e-8645-44e3-a6e9-edbebbfe3d4e_4.png/392x696bb.png",
+          "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource126/v4/bf/78/de/bf78ded1-e970-1d6e-791e-f7b99e06eba4/96abb491-e917-4acd-8f55-f10fd4a3cec2_5.png/392x696bb.png"
+        ],
+        "ipadScreenshotUrls": [],
+        "appletvScreenshotUrls": [],
+        "artworkUrl512": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/92/77/ff/9277ff1e-d480-dd77-ddd3-ed29aeff71d6/notion-calendar-0-0-1x_U007ephone-0-1-P3-85-220.png/512x512bb.jpg",
+        "supportedDevices": [
+          "iPhone5s-iPhone5s",
+          "iPadAir-iPadAir",
+          "iPadAirCellular-iPadAirCellular",
+          "iPadMiniRetina-iPadMiniRetina",
+          "iPadMiniRetinaCellular-iPadMiniRetinaCellular",
+          "iPhone6-iPhone6",
+          "iPhone6Plus-iPhone6Plus",
+          "iPadAir2-iPadAir2",
+          "iPadAir2Cellular-iPadAir2Cellular",
+          "iPadMini3-iPadMini3",
+          "iPadMini3Cellular-iPadMini3Cellular",
+          "iPodTouchSixthGen-iPodTouchSixthGen",
+          "iPhone6s-iPhone6s",
+          "iPhone6sPlus-iPhone6sPlus",
+          "iPadMini4-iPadMini4",
+          "iPadMini4Cellular-iPadMini4Cellular",
+          "iPadPro-iPadPro",
+          "iPadProCellular-iPadProCellular",
+          "iPadPro97-iPadPro97",
+          "iPadPro97Cellular-iPadPro97Cellular",
+          "iPhoneSE-iPhoneSE",
+          "iPhone7-iPhone7",
+          "iPhone7Plus-iPhone7Plus",
+          "iPad611-iPad611",
+          "iPad612-iPad612",
+          "iPad71-iPad71",
+          "iPad72-iPad72",
+          "iPad73-iPad73",
+          "iPad74-iPad74",
+          "iPhone8-iPhone8",
+          "iPhone8Plus-iPhone8Plus",
+          "iPhoneX-iPhoneX",
+          "iPad75-iPad75",
+          "iPad76-iPad76",
+          "iPhoneXS-iPhoneXS",
+          "iPhoneXSMax-iPhoneXSMax",
+          "iPhoneXR-iPhoneXR",
+          "iPad812-iPad812",
+          "iPad834-iPad834",
+          "iPad856-iPad856",
+          "iPad878-iPad878",
+          "iPadMini5-iPadMini5",
+          "iPadMini5Cellular-iPadMini5Cellular",
+          "iPadAir3-iPadAir3",
+          "iPadAir3Cellular-iPadAir3Cellular",
+          "iPodTouchSeventhGen-iPodTouchSeventhGen",
+          "iPhone11-iPhone11",
+          "iPhone11Pro-iPhone11Pro",
+          "iPadSeventhGen-iPadSeventhGen",
+          "iPadSeventhGenCellular-iPadSeventhGenCellular",
+          "iPhone11ProMax-iPhone11ProMax",
+          "iPhoneSESecondGen-iPhoneSESecondGen",
+          "iPadProSecondGen-iPadProSecondGen",
+          "iPadProSecondGenCellular-iPadProSecondGenCellular",
+          "iPadProFourthGen-iPadProFourthGen",
+          "iPadProFourthGenCellular-iPadProFourthGenCellular",
+          "iPhone12Mini-iPhone12Mini",
+          "iPhone12-iPhone12",
+          "iPhone12Pro-iPhone12Pro",
+          "iPhone12ProMax-iPhone12ProMax",
+          "iPadAir4-iPadAir4",
+          "iPadAir4Cellular-iPadAir4Cellular",
+          "iPadEighthGen-iPadEighthGen",
+          "iPadEighthGenCellular-iPadEighthGenCellular",
+          "iPadProThirdGen-iPadProThirdGen",
+          "iPadProThirdGenCellular-iPadProThirdGenCellular",
+          "iPadProFifthGen-iPadProFifthGen",
+          "iPadProFifthGenCellular-iPadProFifthGenCellular",
+          "iPhone13Pro-iPhone13Pro",
+          "iPhone13ProMax-iPhone13ProMax",
+          "iPhone13Mini-iPhone13Mini",
+          "iPhone13-iPhone13",
+          "iPadMiniSixthGen-iPadMiniSixthGen",
+          "iPadMiniSixthGenCellular-iPadMiniSixthGenCellular",
+          "iPadNinthGen-iPadNinthGen",
+          "iPadNinthGenCellular-iPadNinthGenCellular",
+          "iPhoneSEThirdGen-iPhoneSEThirdGen",
+          "iPadAirFifthGen-iPadAirFifthGen",
+          "iPadAirFifthGenCellular-iPadAirFifthGenCellular",
+          "iPhone14-iPhone14",
+          "iPhone14Plus-iPhone14Plus",
+          "iPhone14Pro-iPhone14Pro",
+          "iPhone14ProMax-iPhone14ProMax",
+          "iPadTenthGen-iPadTenthGen",
+          "iPadTenthGenCellular-iPadTenthGenCellular",
+          "iPadPro11FourthGen-iPadPro11FourthGen",
+          "iPadPro11FourthGenCellular-iPadPro11FourthGenCellular",
+          "iPadProSixthGen-iPadProSixthGen",
+          "iPadProSixthGenCellular-iPadProSixthGenCellular",
+          "iPhone15-iPhone15",
+          "iPhone15Plus-iPhone15Plus",
+          "iPhone15Pro-iPhone15Pro",
+          "iPhone15ProMax-iPhone15ProMax",
+          "iPadAir11M2-iPadAir11M2",
+          "iPadAir11M2Cellular-iPadAir11M2Cellular",
+          "iPadAir13M2-iPadAir13M2",
+          "iPadAir13M2Cellular-iPadAir13M2Cellular",
+          "iPadPro11M4-iPadPro11M4",
+          "iPadPro11M4Cellular-iPadPro11M4Cellular",
+          "iPadPro13M4-iPadPro13M4",
+          "iPadPro13M4Cellular-iPadPro13M4Cellular",
+          "iPhone16-iPhone16",
+          "iPhone16Plus-iPhone16Plus",
+          "iPhone16Pro-iPhone16Pro",
+          "iPhone16ProMax-iPhone16ProMax",
+          "iPadMiniA17Pro-iPadMiniA17Pro",
+          "iPadMiniA17ProCellular-iPadMiniA17ProCellular",
+          "iPhone16e-iPhone16e",
+          "iPadA16-iPadA16",
+          "iPadA16Cellular-iPadA16Cellular",
+          "iPadAir11M3-iPadAir11M3",
+          "iPadAir11M3Cellular-iPadAir11M3Cellular",
+          "iPadAir13M3-iPadAir13M3",
+          "iPadAir13M3Cellular-iPadAir13M3Cellular",
+          "iPhone17Pro-iPhone17Pro",
+          "iPhone17ProMax-iPhone17ProMax",
+          "iPhone17-iPhone17",
+          "iPhoneAir-iPhoneAir",
+          "iPadPro11M5-iPadPro11M5",
+          "iPadPro11M5Cellular-iPadPro11M5Cellular",
+          "iPadPro13M5-iPadPro13M5",
+          "iPadPro13M5Cellular-iPadPro13M5Cellular",
+          "iPhone17e-iPhone17e",
+          "iPadAir11M4-iPadAir11M4",
+          "iPadAir11M4Cellular-iPadAir11M4Cellular",
+          "iPadAir13M4-iPadAir13M4",
+          "iPadAir13M4Cellular-iPadAir13M4Cellular"
+        ],
+        "trackCensoredName": "Notion Calendar",
+        "trackViewUrl": "https://apps.apple.com/us/app/notion-calendar/id1607562761?uo=4",
+        "contentAdvisoryRating": "4+",
+        "averageUserRating": 4.75126,
+        "artistName": "Notion Labs, Incorporated",
+        "bundleId": "com.cron.calendar",
+        "releaseDate": "2022-12-15T08:00:00Z",
+        "genreIds": [
+          "6007"
+        ],
+        "primaryGenreName": "Productivity",
+        "primaryGenreId": 6007,
+        "sellerName": "Notion Labs, Incorporated",
+        "isVppDeviceBasedLicensingEnabled": true,
+        "releaseNotes": "Bug fixes and performance improvements",
+        "version": "1.89.0",
+        "wrapperType": "software",
+        "currency": "USD",
+        "description": "Notion Calendar lets you schedule meetings and control your time like never before. It deeply integrates with Google Calendar accounts so that all your events are synced.\n\nAlong with speed, beauty, and light/dark modes, Notion Calendar includes powerful features:\n\n- CONNECTED TO NOTION\u00a0\u2014 add Notion docs, projects, and timelines.\n- MULTIPLE TIME ZONES \u2014 pull the time zone column to the right to \u201ctravel to any city\u201d and add more time zones.\n- ALL IN ONE PLACE\u00a0\u2014 see one unified view across multiple calendars and auto-sync events between them.\n- WIDGETS \u2014 select from 6 Home Screen Widgets featuring rich previews of upcoming events, month overviews, quick-add event buttons, and more! The Lock Screen Widget lets you see what\u2019s coming at a glance when picking up your phone.\n- AVAILABLE IN 12 LANGUAGES \u2014\u00a0Japanese, Korean, French, German, Spanish, Portuguese, Danish, Dutch, Finnish, Norwegian, and Swedish.\n\nIt\u2019s time.",
+        "minimumOsVersion": "15.0",
+        "userRatingCountForCurrentVersion": 6573,
+        "averageUserRatingForCurrentVersion": 4.75126,
+        "sellerUrl": "https://www.notion.so/calendar",
+        "languageCodesISO2A": [
+          "DA",
+          "NL",
+          "EN",
+          "FI",
+          "FR",
+          "DE",
+          "ID",
+          "IT",
+          "JA",
+          "KO",
+          "NB",
+          "PT",
+          "ZH",
+          "ES",
+          "SV",
+          "TH",
+          "ZH",
+          "VI"
+        ],
+        "fileSizeBytes": "40853504",
+        "formattedPrice": "Free",
+        "trackContentRating": "4+",
+        "trackId": 1607562761,
+        "trackName": "Notion Calendar",
+        "currentVersionReleaseDate": "2026-05-14T23:34:11Z",
+        "price": 0.0,
+        "genres": [
+          "Productivity"
+        ],
+        "artistId": 1232780280,
+        "userRatingCount": 6573
+      }
+    ]
+  },
+  "reviews": {
+    "feed": {
+      "author": {
+        "name": {
+          "label": "iTunes Store"
+        },
+        "uri": {
+          "label": "http://www.apple.com/itunes/"
+        }
+      },
+      "entry": [
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id11119725"
+            },
+            "name": {
+              "label": "Internadrian"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-14T09:25:20-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.304"
+          },
+          "id": {
+            "label": "14064084945"
+          },
+          "title": {
+            "label": "Lagging bad"
+          },
+          "content": {
+            "label": "This is lagging so bad",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1007664959"
+            },
+            "name": {
+              "label": "Redhead12341234"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-14T06:37:02-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.304"
+          },
+          "id": {
+            "label": "14063547057"
+          },
+          "title": {
+            "label": "Amazing!  Except for all the freaking bugs!"
+          },
+          "content": {
+            "label": "I\u2019ve used Notion for around 3-4 years. I have TONS of material lovingly crafted and ordered thanks to this app. Yet the app has become more and more buggy, slow, and hard to engage with. I\u2019m angry because of what it should be and isn\u2019t!!!  All because of issues that other apps on my phone are not sharing, ie, they must be native. \n\nPlease please fix things guys!  You\u2019re an amazing platform that is being dragged through the cesspool of performance issues!",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1410559262"
+            },
+            "name": {
+              "label": "hapmoniym"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-13T20:38:03-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.304"
+          },
+          "id": {
+            "label": "14062139942"
+          },
+          "title": {
+            "label": "please fix the bug"
+          },
+          "content": {
+            "label": "The current version of notion becomes abnormally stuck under the ios 26 system, especially when typing the keyboard and choosing text content, which seriously affects the basic functions. In addition, in the keyboard pop-up mode, sometimes a large part of the text will suddenly be blocked. I hope these bugs can be fixed quickly, otherwise I have to consider migration.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id417768721"
+            },
+            "name": {
+              "label": "Denver generalist"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-13T09:59:52-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.304"
+          },
+          "id": {
+            "label": "14060541415"
+          },
+          "title": {
+            "label": "Favorite app"
+          },
+          "content": {
+            "label": "Seems there\u2019s a lot I can do with this app, I hope to develop with the platform one of these days, so much potential",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id30561651"
+            },
+            "name": {
+              "label": "Gbuitnotf"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-13T00:26:22-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.304"
+          },
+          "id": {
+            "label": "14058974765"
+          },
+          "title": {
+            "label": "STOP PESTERING ME!"
+          },
+          "content": {
+            "label": "PLEASE ON YOUR DESKTOP APP STOP BOTHERING ME WITH NEW UPDATES CONSTANTLY!!! JUST LEAVE ME  TF ALONE!!!!!",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id33102018"
+            },
+            "name": {
+              "label": "Pablo in Chicago"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-12T17:10:54-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.304"
+          },
+          "id": {
+            "label": "14058039875"
+          },
+          "title": {
+            "label": "Pablo"
+          },
+          "content": {
+            "label": "This is changing my life in ways I never imagined.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id493905298"
+            },
+            "name": {
+              "label": "Jpthabarber"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-11T22:24:27-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14055104088"
+          },
+          "title": {
+            "label": "Must Have"
+          },
+          "content": {
+            "label": "I have used this daily, weekly and monthly.  It\u2019s a must have if you are into digital organization.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id21621559"
+            },
+            "name": {
+              "label": "Clarandreia"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-11T00:29:05-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14051736729"
+          },
+          "title": {
+            "label": "Helpful for school"
+          },
+          "content": {
+            "label": "This is an amazing app! It helps a lot with school, easy to create templates",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1563760672"
+            },
+            "name": {
+              "label": "Ackmachine"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-10T15:02:37-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14050535070"
+          },
+          "title": {
+            "label": "Function is top notch"
+          },
+          "content": {
+            "label": "I want to be able to compile my thoughts/ideas in a document form but they\u2019re so multilayered that I need things like drop downs and pages within pages to categorize them to my liking. So far, Notion is the only thing that\u2019s finally granted me that!  Would recommend for any kind of project or even just journaling/noting down regular thoughts. It\u2019s formatting options are great.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id157505278"
+            },
+            "name": {
+              "label": "BattleBoston"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-10T07:44:35-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14049225553"
+          },
+          "title": {
+            "label": "Unlock Your Creative Flow"
+          },
+          "content": {
+            "label": "If you write -> get notion.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id937369999"
+            },
+            "name": {
+              "label": "abir2526"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-08T20:58:12-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14043842223"
+          },
+          "title": {
+            "label": "Love it"
+          },
+          "content": {
+            "label": "Love this app. It is changing my life",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id390434867"
+            },
+            "name": {
+              "label": "lizms2"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-08T20:24:08-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14043770216"
+          },
+          "title": {
+            "label": "Obsessed"
+          },
+          "content": {
+            "label": "I use this app daily to organize my life. Notion for lyfe",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1828197931"
+            },
+            "name": {
+              "label": "reciprocitea"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-08T15:55:15-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14043139103"
+          },
+          "title": {
+            "label": "Strange and difficult to use."
+          },
+          "content": {
+            "label": "Clunky UI, unintuitive. Keeps duplicating my documents? Apparently includes \u201ctemplates\u201d, but after trying to find them, had to give up when they were nowhere to be found. I tried to ask the in-app AI about \u201ctemplates\u201d and it directed me to a sidebar that doesn\u2019t exist.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "1"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "1"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1545746955"
+            },
+            "name": {
+              "label": "Kiwi owl"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-08T15:06:27-07:00"
+          },
+          "im:rating": {
+            "label": "4"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14043023413"
+          },
+          "title": {
+            "label": "Nice but extra ideas"
+          },
+          "content": {
+            "label": "There should be other templates customizable like background color change and it should be more visually appealing, that people could customize. But really neat and nice overall!",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id117389045"
+            },
+            "name": {
+              "label": "Four roses"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-08T09:49:22-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14042183041"
+          },
+          "title": {
+            "label": "The iPad App is basically view-only"
+          },
+          "content": {
+            "label": "I will start by saying I love Notion. I use it to organize both my work and personal lives. For work, I primarily access Notion using my desktop computer. However, for my personal life, my main device is an iPad Pro with Magic Keyboard. The Notion app on iPad lacks so many features (calendar, etc) or glitches (moves the screen down when trying to type, so you cannot see the text as you type it) as to make it almost impossible to edit or create pages on an iPad. It is essentially a view-only system for existing content. Extremely disappointing given how much success I have had using Notion in my professional life - I was hoping to replicate that in my personal life, but that would involve the iPad app working\u2026",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "1"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "1"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id608527966"
+            },
+            "name": {
+              "label": "Effective so far"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-07T18:29:52-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14039928742"
+          },
+          "title": {
+            "label": "Won\u2019t load anything"
+          },
+          "content": {
+            "label": "Doesn\u2019t work at all",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id348688893"
+            },
+            "name": {
+              "label": "Jsmith9704"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-07T16:48:33-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14039693612"
+          },
+          "title": {
+            "label": "Finally found a system that works with my brain"
+          },
+          "content": {
+            "label": "I\u2019ve tried a lot of productivity and organization apps over the years, but Notion is the first one that actually feels flexible enough to grow with how I think instead of forcing me into someone else\u2019s system.\n\nI originally started using it for notes and organization, but it quickly became a place where I could connect ideas, workflows, AI concepts, healthcare operations, and long-term planning in a way that feels natural and visual.\n\nWhat I appreciate most is that it works for both structured thinking and creative thinking at the same time. I can build detailed workflow maps one minute and brainstorm future ideas the next without switching platforms.\n\nAs someone working in healthcare operations and AI workflow design, I also love how adaptable it is for building living systems instead of static documents.\n\nIt genuinely helped me feel more organized, focused, and excited about my ideas again.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1126359884"
+            },
+            "name": {
+              "label": "Jem\ud83d\ude1c\ud83d\ude0e"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-07T15:12:40-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14039474014"
+          },
+          "title": {
+            "label": "Bad"
+          },
+          "content": {
+            "label": "This app is so hard to use. It wont let me use my apple pencil and i cant update it to work",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1919304789"
+            },
+            "name": {
+              "label": "1ittle_evi1"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-07T12:19:16-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14039051616"
+          },
+          "title": {
+            "label": "\u0417\u0430\u0432\u0435\u0434\u043e\u043c\u043e \u0444\u0438\u0433\u043d\u044f"
+          },
+          "content": {
+            "label": "\u0418\u0434\u0435\u044f \u043d\u0435 \u043f\u043b\u043e\u0445\u0430\u044f \u043e\u0431\u044a\u0435\u0434\u0435\u043d\u0438\u0442\u044c \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0438\u0438\u0448\u0435\u043a \u0432 \u043e\u0434\u043d\u0443. \u041d\u043e \u0447\u0442\u043e \u0431 \u0447\u0430\u0442 gpt \u043d\u0430 \u0441\u0442\u043e\u043b\u044c\u043a\u043e \u0431\u044b\u043b \u0442\u0443\u043f\u044b\u043c \u044f \u043d\u0435 \u0432\u0438\u0434\u0435\u043b\u0430. \u041c\u043e\u0435 \u043f\u043e\u0447\u0442\u0435\u043d\u0438\u0435 \u0432\u044b \u0432\u0437\u044f\u043b\u0438 \u0432\u0441\u0435 \u043f\u043b\u043e\u0445\u043e\u0435 \u0438\u0437 \u0447\u0430\u0442\u0430 gpt \u0438 \u0437\u0430\u043f\u0438\u0445\u043d\u0443\u043b\u0438 \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435. \n\u042d\u0442\u043e \u044f \u0435\u0449\u0435 \u0434\u043e \u043a\u043b\u0430\u0443\u0434\u0430 \u043d\u0435 \u0434\u043e\u0431\u0440\u0430\u043b\u0430\u0441\u044c",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id39785521"
+            },
+            "name": {
+              "label": "RevJackDaniel_KY"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-07T03:09:53-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14037479418"
+          },
+          "title": {
+            "label": "Easy Mode Button Please"
+          },
+          "content": {
+            "label": "First time I downloaded your app I deleted it after half a day.  Then I downloaded it again when we integrated it with our overall flow.  \nIt is overwhelming.  \n\nI am not a power user (like,I guess your target audience) but could you just make an easy mode that strips down all the enormous amount of options and features and tweaks.  Just a way to add a simple todo list like tasks or Apple reminders; add notes (pages) in a simple way.   \n\nLater maybe newb users like me would switch off easy mode and use the whole thing.  But dang it would be nice for when you have are just switching over to get started.   I downloaded a 3rd party app just to have a normal todo list.  \nAnd yes. I know you have a long list of how to learn to use your system check boxes.  But sheesh, hard to carve out time in the middle of a normal work week.  \n\nJust a suggestion from us more simple folk.  Ha!   \n\nOh and a quick note/todo add widget would be nice. \n\nThank you for your time.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1478233795"
+            },
+            "name": {
+              "label": "Aryslopez"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-06T20:25:03-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14036682526"
+          },
+          "title": {
+            "label": "Sitio donde pones toda tu documentaci\u00f3n"
+          },
+          "content": {
+            "label": "Les env\u00edo Ema rese\u00f1\u00e9 de 5 \u2b50\ufe0f\u2b50\ufe0f\u2b50\ufe0f\u2b50\ufe0f\u2b50\ufe0f esto est\u00e1 fant\u00e1stico",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id957254662"
+            },
+            "name": {
+              "label": "caro126484"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-05T14:09:57-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.303"
+          },
+          "id": {
+            "label": "14032241411"
+          },
+          "title": {
+            "label": "Not working properly"
+          },
+          "content": {
+            "label": "Doesn\u2019t work when typing I can\u2019t type anything with the page moving cause me to not be able to see what it is that I\u2019m writing I didn\u2019t have a problem before this is new I updated the app including the device I\u2019m using nothing made it better",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1031466201"
+            },
+            "name": {
+              "label": "bucketassrabbit"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-05T09:56:33-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14031558404"
+          },
+          "title": {
+            "label": "Pages don\u2019t open 90% of the time when clicked"
+          },
+          "content": {
+            "label": "I paid for the higher plan and this happens 90% of the time. You either have to wait, click back and forth, relaunch a bunch of times for it to maybe work. Incredibly frustrating.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id31940459"
+            },
+            "name": {
+              "label": "josephs2877"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-05T02:43:38-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14030341484"
+          },
+          "title": {
+            "label": "Laggy and buggy iOS"
+          },
+          "content": {
+            "label": "Bugs reported years ago with split screen on iOS not fixed. Laggy on iPhone",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "1"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "1"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id620015338"
+            },
+            "name": {
+              "label": "Liza Berber"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-04T07:29:49-07:00"
+          },
+          "im:rating": {
+            "label": "4"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14027574632"
+          },
+          "title": {
+            "label": "Everything is super, but mobile version\u2026"
+          },
+          "content": {
+            "label": "I really love Notion and have been using it for several years. But please, developers, do something about the mobile version.\n\nEvery time I spend a while inside a note working with text, after about 10\u201315 minutes, Notion stops responding to taps, doesn\u2019t allow editing, and I have to close the app and reopen it.\n\nThis reduces productivity and is very inconvenient. I don\u2019t experience this issue in other apps where I work with text, so the problem isn\u2019t my iPhone.\n\nThank you!",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "1"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "1"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id160124708"
+            },
+            "name": {
+              "label": "wahpiang"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-04T04:40:33-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14027073414"
+          },
+          "title": {
+            "label": "Used to be great"
+          },
+          "content": {
+            "label": "Notion used to be great because they innovated, listened to customers and actually developed useful tools. Now, each month brings new changes that are nothing more than money grubbing attempts while longstanding issues with usability of the mobile app, stability of the content, etc remain unfixed. \n\nWhile customer support is fast, it\u2019s likely a bot coz they don\u2019t seem to understand the issue and mostly just kicks it to \u201cengineering\u201d without any workarounds or understanding. \n\nWorst thing is: you prepay for the subscription and even if you don\u2019t like it, it doesn\u2019t work, you can\u2019t get a refund not even a partial.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id451267611"
+            },
+            "name": {
+              "label": "vessel creations"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-02T21:03:08-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14022429120"
+          },
+          "title": {
+            "label": "The Best"
+          },
+          "content": {
+            "label": "See Title",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1359512535"
+            },
+            "name": {
+              "label": "ldraney"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-02T14:01:07-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14021446111"
+          },
+          "title": {
+            "label": "optimized for production"
+          },
+          "content": {
+            "label": "i loved obsidian but notion is clearly built with personal scalability in mind where obsidian struggles with syncing local to cloud - an issue I've never experienced with notion.  its truly the expansion of myself that i expect to grow with me my whole life.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1191595724"
+            },
+            "name": {
+              "label": "RomoSlowMo"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-02T08:05:15-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14020404528"
+          },
+          "title": {
+            "label": "Notion"
+          },
+          "content": {
+            "label": "LOVE IT!",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id21636274"
+            },
+            "name": {
+              "label": "Xynic"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-05-01T23:56:09-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14019109225"
+          },
+          "title": {
+            "label": "Deleted"
+          },
+          "content": {
+            "label": "I tried to just create a simple set of notes with 4 tabs just to keep it simple and learn on, once I went to the page I wanted to copy from my notes template disappeared, I tried to google what happened and even tried to search for the title I created, but is was gone.. If the app can\u2019t hold 1 simple note, it\u2019s going to be more of a hassle to use it than I want to deal with.. I\u2019ll just move back to my iPhone notes, at least I know where things are.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id26215068"
+            },
+            "name": {
+              "label": "e2santana"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-30T19:10:37-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14014782319"
+          },
+          "title": {
+            "label": "Love it so much."
+          },
+          "content": {
+            "label": "Just love it so much. That\u2019s all.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1254567819"
+            },
+            "name": {
+              "label": "A26493"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-30T14:59:49-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14014180101"
+          },
+          "title": {
+            "label": "Waste"
+          },
+          "content": {
+            "label": "Complete waste of memory. Janky UI, icons that don\u2019t work when you click them, and overall a frustrating, and annoying waste of time and energy. I wish I could rate it no stars. Do better.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id430710378"
+            },
+            "name": {
+              "label": "Kenji71234"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-30T12:35:11-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14013823691"
+          },
+          "title": {
+            "label": "Good app."
+          },
+          "content": {
+            "label": "I like this app.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id656748745"
+            },
+            "name": {
+              "label": "manuhanu"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-30T05:52:14-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14012646087"
+          },
+          "title": {
+            "label": "Slow"
+          },
+          "content": {
+            "label": "Slow on computer",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1916720620"
+            },
+            "name": {
+              "label": "\u5ddd\u5f15"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-30T02:10:08-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14012083388"
+          },
+          "title": {
+            "label": "\u7528\u8d77\u6765\u4e0d\u9519"
+          },
+          "content": {
+            "label": "\u771f\u7684\u5f88\u597d\u7528",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1736253942"
+            },
+            "name": {
+              "label": "Alice Gerherdt"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-28T15:19:50-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14007233839"
+          },
+          "title": {
+            "label": "I love"
+          },
+          "content": {
+            "label": "This app is so helpful omg Im in love",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1429022421"
+            },
+            "name": {
+              "label": "Architects or"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-28T15:10:50-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.302"
+          },
+          "id": {
+            "label": "14007213967"
+          },
+          "title": {
+            "label": "\u0414\u0430\u0439\u0442\u0435 \u0420\u0443\u0441\u0441\u043a\u0438\u0439 \u044f\u0437\u044b\u043a!!!"
+          },
+          "content": {
+            "label": "\u0415\u0441\u043b\u0438 \u0432\u044b \u0445\u043e\u0442\u0438\u0442\u0435 \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u0430\u0442\u044c \u043c\u043d\u043e\u0433\u043e \u0434\u0435\u043d\u0435\u0433 - \u0434\u0430\u0431\u0430\u0432\u044c\u0442\u0435 \u0420\u0443\u0441\u0441\u043a\u0438\u0439 \u044f\u0437\u044b\u043a \u0438 \u0441\u0434\u0435\u043b\u0430\u0439\u0442\u0435 \u043f\u043e\u043a\u0443\u043f\u043a\u0443 \u0440\u0430\u0437\u043e\u0432\u0443\u044e \u043d\u0430 \u0432\u0441\u0435 \u0432\u0440\u0435\u043c\u044f.\n\u0414\u0430\u0439\u0442\u0435 \u0420\u0443\u0441\u0441\u043a\u0438\u043c \u0445\u043e\u0440\u043e\u0448\u0438\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u0438 \u0431\u0443\u0434\u0435\u0442 \u0432\u0430\u043c \u0441\u0447\u0430\u0441\u0442\u044c\u0435",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id468795941"
+            },
+            "name": {
+              "label": "walnut_kale"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-27T23:05:03-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "14004821701"
+          },
+          "title": {
+            "label": "It charges you without permission."
+          },
+          "content": {
+            "label": "It automatically switches you to a plan that pays and charges you without permission for years. Truly toxic and can\u2019t get a support for refund. Really toxic app.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1335108001"
+            },
+            "name": {
+              "label": "leakars"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-27T09:57:17-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "14003027354"
+          },
+          "title": {
+            "label": "Stop ai"
+          },
+          "content": {
+            "label": "Bruh get ai out of this app genuinely gets in the way and its bad for the environment and job market boo \ud83d\udc4e\ud83d\udc4e\ud83d\udc4e",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "1"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "2"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1714417211"
+            },
+            "name": {
+              "label": "Borbarak"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-27T08:55:08-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "14002849634"
+          },
+          "title": {
+            "label": "Maybe stop vibe coding until you have better verification process"
+          },
+          "content": {
+            "label": "Incredibly buggy: back button within page doesn\u2019t work, links inside views don\u2019t open correctly, finicky UX when moving sections.\n\nHard to believe an established app like this works so bad",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id220523875"
+            },
+            "name": {
+              "label": "Podcrowell"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-26T14:04:57-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "14000288578"
+          },
+          "title": {
+            "label": "Very buggy and hard to use on my iPhone"
+          },
+          "content": {
+            "label": "Frequent page refreshes and inability to type, as well as lag, started plagueing my mobile version on iPhone 13 Pro Max. It's a shame as I organize my second brain on Notion, but it's becoming unworkable and I'm moving to another platform.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1915537163"
+            },
+            "name": {
+              "label": "Kerly.777"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-26T09:15:01-07:00"
+          },
+          "im:rating": {
+            "label": "5"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13999491850"
+          },
+          "title": {
+            "label": "."
+          },
+          "content": {
+            "label": "Es muy buena aplicaci\u00f3n 100 x recomendada :)",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id101984087"
+            },
+            "name": {
+              "label": "MG1671"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-25T20:16:54-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13997591186"
+          },
+          "title": {
+            "label": "Wish it didn\u2019t have AI"
+          },
+          "content": {
+            "label": "Had to delete because of the AI. Obviously AI is not only terrible for the environment (uses so much water without recycling it) and contributes to cognitive decline (our brains need to stretch and work doing even \u201csimple\u201d things to build and maintain key neural pathways), it\u2019s also a massive security risk AND the generative aspect of it straight up just doesn\u2019t work, like you end up typing like four or five prompts in and faffing about refining the result that it would have taken less time just to write whatever you were trying to make the AI write. As much as I hate AI, I really really loved Notion and I would have kept it if they\u2019d have some option for toggling off the AI features. They\u2019re just really obtrusive and obnoxious for how useless/harmful they are, like I don\u2019t want an AI assistant helping me write and stealing my content. But rather than remove or add an off-switch, the developers just kept cramming more AI slop in there, so I\u2019ve had to delete it. It\u2019s such a crying shame. I recalled loved Notion. I\u2019d come back in a heartbeat if they ditched the AI slop.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "2"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "2"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1483541690"
+            },
+            "name": {
+              "label": "writtenbyskz"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-25T19:32:58-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13997492983"
+          },
+          "title": {
+            "label": "Bug fixes"
+          },
+          "content": {
+            "label": "I have to close the app like every minute because it gets stuck or freeze, I can only edit a few things before it fails , it\u2019s so annoying \ud83d\ude2d",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "2"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "2"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id85597824"
+            },
+            "name": {
+              "label": "Kp5609"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-25T18:27:35-07:00"
+          },
+          "im:rating": {
+            "label": "1"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13997341324"
+          },
+          "title": {
+            "label": "Useless if you plan on using voice to text"
+          },
+          "content": {
+            "label": "The voice to text functionality of the app continually degrades overtime. It simply cannot function for taking notes in this method as it will do a terrible job at detecting the proper words, that is if you get to keep the words after you are done with your prompt. You will literally see the words be removed when you are finished right in front of your eyes. \n\nThis is nothing new, and has been common for a little over two years, and I have simply stopped using Notion on my devices because it may be a powerful tool, but for brainstorming it is completely useless when trying to use voice to text.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id964509921"
+            },
+            "name": {
+              "label": "ShestudiesBible"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-25T08:01:59-07:00"
+          },
+          "im:rating": {
+            "label": "4"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13995725494"
+          },
+          "title": {
+            "label": "I love this app but\u2026"
+          },
+          "content": {
+            "label": "I love this app! I use it everyday but it freezes and I have to exit out and exit back in and even had to delete it to get back into it. I have updated software so I\u2019m not sure what\u2019s the deal. It does this on both my iPhone and iPad. But overall great app just needs to fix whatever bug that is",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id143457860"
+            },
+            "name": {
+              "label": "JCLReviewer"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-24T14:49:19-07:00"
+          },
+          "im:rating": {
+            "label": "4"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13993275766"
+          },
+          "title": {
+            "label": "Design getting worse"
+          },
+          "content": {
+            "label": "I love using Desktop Notion, BUT in the past year (2025-26) the design changes are awful, clunky, and unnecessary. Organization has been its primary issue and you\u2019re making it worse. The line spacing to copy ChatGPT is ineffective and a bad choice. Who\u2019s Head of Design here?",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id1887336803"
+            },
+            "name": {
+              "label": "Destiny discover"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-23T16:29:03-07:00"
+          },
+          "im:rating": {
+            "label": "3"
+          },
+          "im:version": {
+            "label": "1.7.301"
+          },
+          "id": {
+            "label": "13990115589"
+          },
+          "title": {
+            "label": "Why"
+          },
+          "content": {
+            "label": "Every time I try to write something and Ask the ai to help me it just starts lagging again and it\u2019s gets annoying I would give it a five star rating it\u2019s an amazing app but why I also checked it\u2019s not my device lagging \ud83d\ude1e",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id472845510"
+            },
+            "name": {
+              "label": "Pshu123"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-23T07:23:20-07:00"
+          },
+          "im:rating": {
+            "label": "3"
+          },
+          "im:version": {
+            "label": "1.7.300"
+          },
+          "id": {
+            "label": "13988716645"
+          },
+          "title": {
+            "label": "Problems with touch controls"
+          },
+          "content": {
+            "label": "The app gets stuck, making it impossible to exit a screen",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "1"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "1"
+          }
+        },
+        {
+          "author": {
+            "uri": {
+              "label": "https://itunes.apple.com/us/reviews/id152795231"
+            },
+            "name": {
+              "label": "Mjay89"
+            },
+            "label": ""
+          },
+          "updated": {
+            "label": "2026-04-23T04:50:00-07:00"
+          },
+          "im:rating": {
+            "label": "2"
+          },
+          "im:version": {
+            "label": "1.7.300"
+          },
+          "id": {
+            "label": "13988267868"
+          },
+          "title": {
+            "label": "Most bugs of any app I have"
+          },
+          "content": {
+            "label": "Used to love this app and told so many people about how great it is. Now it is circling the drain. Both the mobile app and my desktop app are constantly glitching, freezing, and crashing. The \u201cContinue writing\u201d AI feature was gold, but now it only makes an appearance in my app every blue moon. Looking for alternatives because I can\u2019t keep paying for something this glitchy.",
+            "attributes": {
+              "type": "text"
+            }
+          },
+          "link": {
+            "attributes": {
+              "rel": "related",
+              "href": "https://itunes.apple.com/us/review?id=1232780281&type=Purple%20Software"
+            }
+          },
+          "im:voteSum": {
+            "label": "0"
+          },
+          "im:contentType": {
+            "attributes": {
+              "term": "Application",
+              "label": "Application"
+            }
+          },
+          "im:voteCount": {
+            "label": "0"
+          }
+        }
+      ],
+      "updated": {
+        "label": "2026-05-15T19:30:13-07:00"
+      },
+      "rights": {
+        "label": "Copyright 2008 Apple Inc."
+      },
+      "title": {
+        "label": "iTunes Store: Customer Reviews"
+      },
+      "icon": {
+        "label": "http://itunes.apple.com/favicon.ico"
+      },
+      "link": [
+        {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://music.apple.com/WebObjects/MZStore.woa/wa/viewGrouping?cc=us&id=1"
+          }
+        },
+        {
+          "attributes": {
+            "rel": "self",
+            "href": "https://itunes.apple.com/rss/customerreviews/page=1/id=1232780281/sortBy=mostRecent/json?l=en&cc=us"
+          }
+        },
+        {
+          "attributes": {
+            "rel": "first",
+            "href": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1232780281/sortby=mostrecent/xml?l=en&urlDesc=/customerreviews/page=1/id=1232780281/sortBy=mostRecent/json"
+          }
+        },
+        {
+          "attributes": {
+            "rel": "last",
+            "href": "https://itunes.apple.com/us/rss/customerreviews/page=10/id=1232780281/sortby=mostrecent/xml?l=en&urlDesc=/customerreviews/page=1/id=1232780281/sortBy=mostRecent/json"
+          }
+        },
+        {
+          "attributes": {
+            "rel": "previous",
+            "href": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1232780281/sortby=mostrecent/xml?l=en&urlDesc=/customerreviews/page=1/id=1232780281/sortBy=mostRecent/json"
+          }
+        },
+        {
+          "attributes": {
+            "rel": "next",
+            "href": "https://itunes.apple.com/us/rss/customerreviews/page=2/id=1232780281/sortby=mostrecent/xml?l=en&urlDesc=/customerreviews/page=1/id=1232780281/sortBy=mostRecent/json"
+          }
+        }
+      ],
+      "id": {
+        "label": "https://itunes.apple.com/rss/customerreviews/page=1/id=1232780281/sortBy=mostRecent/json?l=en&cc=us"
+      }
+    }
+  }
+}

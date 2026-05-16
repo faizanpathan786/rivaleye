@@ -53,8 +53,8 @@ export class RedditScraper implements Scraper {
         raw = await searchPosts(term, this.config, {
           limit: Math.min(MAX_POSTS_PER_TERM, MAX_TOTAL_POSTS - posts.length),
         });
-      } catch (_err) {
-        // Skip this term on transient error; don't abort the whole run
+      } catch (err) {
+        console.warn(`[reddit] searchPosts skipped for term="${term}" competitor="${query.competitor}":`, err);
         continue;
       }
 
@@ -65,8 +65,8 @@ export class RedditScraper implements Scraper {
         let comments: RawRedditComment[] = [];
         try {
           comments = await getComments(rawPost.id, this.config, MAX_COMMENTS_PER_POST);
-        } catch (_err) {
-          // Comments optional — post still valuable without them
+        } catch (err) {
+          console.warn(`[reddit] getComments skipped for postId="${rawPost.id}" subreddit="${rawPost.subreddit}":`, err);
         }
 
         posts.push(normalizePost(rawPost, comments));

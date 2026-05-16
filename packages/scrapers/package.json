@@ -10,8 +10,9 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "@rivaleye/shared": "workspace:*",
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "fast-xml-parser": "^4.5.0",
+    "google-play-scraper": "^10.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

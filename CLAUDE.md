@@ -103,6 +103,9 @@ The previous implementation is preserved on the `archive/legacy-v1` branch and *
 | `GOOGLE_PLACES_API_KEY` | worker (scrapers/gmaps) | Optional alternative to Apify for gmaps |
 | `ANTHROPIC_API_KEY` | worker | Claude API key for clustering/insight LLM calls |
 | `OPENAI_API_KEY` | worker | Fallback / embedding model key |
+| `OPENROUTER_API_KEY` | api + worker (shared/llm) | OpenRouter API key for LLM calls |
+| `OPENROUTER_MODEL` | api + worker (shared/llm) | OpenRouter model slug, defaults to `deepseek/deepseek-chat` |
+| `TRUSTPILOT_API_KEY` | worker (scrapers/trustpilot) | Trustpilot API key |
 | `VITE_API_URL` | web | Base URL of the api server |
 
 Always read from `process.env` / `import.meta.env`. Never hardcode. Never commit `.env*` files. Keep `.env.example` synced when adding new vars.

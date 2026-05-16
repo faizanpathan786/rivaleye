@@ -1,0 +1,65 @@
+{
+  "apps": [
+    {
+      "metadata": {
+        "title": "Spotify: Music and Podcasts",
+        "appId": "com.spotify.music",
+        "url": "https://play.google.com/store/apps/details?id=com.spotify.music&hl=en&gl=us",
+        "developer": "Spotify AB",
+        "score": 4.3371506,
+        "ratings": 35560149,
+        "genre": "Music & Audio"
+      },
+      "reviews": [
+        {
+          "id": "47203283-3034-4ca8-bf28-88ecd90aca2d",
+          "userName": "Aadi Singh",
+          "userImage": "https://play-lh.googleusercontent.com/a-/ALV-UjUnvdsrFSY0l5gYHygxre0fPbKXiXCWeq-Uj9dr7rWQwheOXGCX4w",
+          "date": "2026-05-14T18:43:15.360Z",
+          "score": 5,
+          "scoreText": "5",
+          "url": "https://play.google.com/store/apps/details?id=com.spotify.music&reviewId=47203283-3034-4ca8-bf28-88ecd90aca2d",
+          "title": null,
+          "text": "Give DJ X more tokens, more Trained Parameters, make it listen to all the songs available on Spotify globally, DJ X is the future of music listening.",
+          "replyDate": null,
+          "replyText": null,
+          "version": "9.1.44.2120",
+          "thumbsUp": 1,
+          "criterias": []
+        },
+        {
+          "id": "ac81cdee-a176-4d80-a149-1afb3cd70281",
+          "userName": "Hoi Ala",
+          "userImage": "https://play-lh.googleusercontent.com/a-/ALV-UjVp5hEKIvaDp5Gp6vag6bygZ-bPlBuyOqoJLusCgE_XuBtHFRE",
+          "date": "2026-05-14T14:15:40.881Z",
+          "score": 4,
+          "scoreText": "4",
+          "url": "https://play.google.com/store/apps/details?id=com.spotify.music&reviewId=ac81cdee-a176-4d80-a149-1afb3cd70281",
+          "title": null,
+          "text": "so before it didn't work but i reinstalled it and it works now, would give 5 stars if not for the amount of ads!",
+          "replyDate": null,
+          "replyText": null,
+          "version": null,
+          "thumbsUp": 2,
+          "criterias": []
+        },
+        {
+          "id": "32f63ee3-0ce3-46da-a245-a1412a057904",
+          "userName": "Samar Karnik",
+          "userImage": "https://play-lh.googleusercontent.com/a-/ALV-UjVGMp004lbU5B3uz4T8JlsV546GwRT0Zg-YN0A_xqvK9WLUb-oy4A",
+          "date": "2026-05-14T13:26:49.279Z",
+          "score": 1,
+          "scoreText": "1",
+          "url": "https://play.google.com/store/apps/details?id=com.spotify.music&reviewId=32f63ee3-0ce3-46da-a245-a1412a057904",
+          "title": null,
+          "text": "I bought plan for premium payment was done amount is debited but premium plan wasn't activated and neither did I get cashback.",
+          "replyDate": null,
+          "replyText": null,
+          "version": "9.1.44.2120",
+          "thumbsUp": 1,
+          "criterias": []
+        }
+      ]
+    }
+  ]
+}
