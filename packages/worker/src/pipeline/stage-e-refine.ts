@@ -1,6 +1,7 @@
 import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
 import type { MergedClusters, PipelineCtx, SynthOutput } from "../prompts/shared";
 import { buildRefine } from "../prompts/cross/refine";
+import { log } from "../logger.js";
 
 const MAX_TOKENS = 16000;
 
@@ -39,7 +40,9 @@ export async function runStageERefine(input: StageEInput, opts?: LlmCallOptions)
       model: res.model,
     };
   } catch (err) {
-    console.warn(`Stage E refine failed, falling back to draft: ${asMessage(err)}`);
+    await log(input.ctx.reportId, "warn", "E", null, "stage E refine failed, falling back to draft", {
+      error: asMessage(err),
+    });
     return {
       refined: input.draft,
       fellBackToDraft: true,

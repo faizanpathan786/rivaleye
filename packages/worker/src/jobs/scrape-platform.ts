@@ -120,7 +120,7 @@ export async function handleScrapePlatform(data: ScrapePlatformJob): Promise<voi
     await markCompleted(reportId, platform);
     await fanIn(reportId);
   } catch (err) {
-    await log(reportId, "error", "scrape", platform, `failed: ${asMessage(err)}`);
+    await log(reportId, "error", "scrape", platform, "scrape failed", { error: asMessage(err) });
     await markFailed(reportId, platform, asMessage(err));
     await fanIn(reportId);
     throw err;
