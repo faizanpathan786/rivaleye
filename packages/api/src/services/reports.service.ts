@@ -20,7 +20,7 @@ import {
 } from "@/db/schema/reports";
 import { report_platform_jobs } from "@/db/schema/pipeline";
 import { mentions } from "@/db/schema/mentions";
-import { enqueueScrapePlatform } from "@/libs/queue";
+import { inngest } from "@/libs/inngest";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
@@ -97,16 +97,17 @@ export async function createReport(
     })),
   );
 
-  await Promise.all(
-    ENABLED_PLATFORMS.map((platform) =>
-      enqueueScrapePlatform({
+  await inngest.send(
+    ENABLED_PLATFORMS.map((platform) => ({
+      name: "scrape.fetch" as const,
+      data: {
         reportId: row.id,
         platform,
         competitor,
         category: input.category,
         keywords,
-      }),
-    ),
+      },
+    })),
   );
 
   return { id: row.id };
