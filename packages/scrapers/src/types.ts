@@ -1,6 +1,5 @@
 export type PlatformId =
   | "reddit"
-  | "g2"
   | "capterra"
   | "twitter"
   | "linkedin"
@@ -9,8 +8,7 @@ export type PlatformId =
   | "playstore"
   | "gmaps"
   | "hackernews"
-  | "devto"
-  | "medium";
+  | "devto";
 
 export interface NormalizedPost {
   platform: PlatformId;

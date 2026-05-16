@@ -6,7 +6,6 @@ import { buildPlayStoreExtract } from "../prompts/platform/playstore/extract";
 import { buildHackerNewsExtract } from "../prompts/platform/hackernews/extract";
 import { buildDevToExtract } from "../prompts/platform/devto/extract";
 import { buildProductHuntExtract } from "../prompts/platform/producthunt/extract";
-import { buildMediumExtract } from "../prompts/platform/medium/extract";
 import { buildRedditExtract } from "../prompts/platform/reddit/extract";
 
 export interface StageAInput {
@@ -84,16 +83,6 @@ function pickBuilder(p: PlatformId): Builder {
     case "producthunt":
       return ({ ctx, posts }) =>
         buildProductHuntExtract({
-          ctx,
-          reviews: posts.map((post) => ({
-            id: post.externalId,
-            rating: post.score ?? 0,
-            body: `${post.title ?? ""}\n${post.body}`,
-          })),
-        });
-    case "medium":
-      return ({ ctx, posts }) =>
-        buildMediumExtract({
           ctx,
           reviews: posts.map((post) => ({
             id: post.externalId,

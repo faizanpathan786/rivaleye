@@ -7,7 +7,6 @@ export const platformIdSchema = z.enum([
   "hackernews",
   "producthunt",
   "devto",
-  "medium",
 ]);
 
 export const switchingDirectionSchema = z.enum(["inbound", "outbound"]);
