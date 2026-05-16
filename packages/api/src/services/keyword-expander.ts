@@ -14,13 +14,20 @@ const keywordsSchema = z.object({
 export interface KeywordInput {
   competitor: string;
   category: string;
+  audience: string | null;
+  goal: string;
 }
 
 export async function expandKeywords(
   llm: OpenRouterClient,
   input: KeywordInput,
 ): Promise<string[]> {
-  const user = `competitor: ${input.competitor}\ncategory: ${input.category}`;
+  const user = `Competitor: ${input.competitor}
+Category: ${input.category}
+Audience: ${input.audience ?? "unspecified"}
+Founder goal: ${input.goal}
+
+Return the JSON now.`;
   const res = await llm.complete({ system: SYSTEM_PROMPT, user, schema: keywordsSchema });
   return res.parsed.keywords;
 }

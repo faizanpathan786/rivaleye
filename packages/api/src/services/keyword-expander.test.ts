@@ -23,6 +23,8 @@ describe("expandKeywords", () => {
     const result = await expandKeywords(mockLlm, {
       competitor: "Notion",
       category: "project management software",
+      audience: "founders",
+      goal: "find_user_pain",
     });
     expect(result).toEqual(mockKeywords);
   });
@@ -37,5 +39,7 @@ describe("expandKeywords", () => {
     expect(req.system.length).toBeGreaterThan(0);
     expect(typeof req.user).toBe("string");
     expect(req.user).toContain("Notion");
+    expect(req.user).toContain("founders");
+    expect(req.user).toContain("find_user_pain");
   });
 });
