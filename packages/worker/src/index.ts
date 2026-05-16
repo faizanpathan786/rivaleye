@@ -10,7 +10,7 @@ async function main() {
     QUEUES.scrapePlatform,
     { batchSize: 5 },
     async (jobs) => {
-      for (const job of jobs) await handleScrapePlatform(job.data);
+      await Promise.allSettled(jobs.map((job) => handleScrapePlatform(job.data)));
     },
   );
 

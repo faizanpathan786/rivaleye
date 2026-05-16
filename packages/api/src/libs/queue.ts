@@ -43,14 +43,22 @@ export interface ScrapePlatformJob {
 
 export async function enqueueScrapePlatform(job: ScrapePlatformJob) {
   await ensureStarted();
-  const id = await boss.send(QUEUES.scrapePlatform, job);
+  const id = await boss.send(QUEUES.scrapePlatform, job, {
+    retryLimit: 3,
+    retryDelay: 30,
+    expireInSeconds: 600,
+  });
   console.log(`[queue] sent scrape-platform job id=${id}`);
   return id;
 }
 
 export async function enqueueGenerateReport(reportId: string) {
   await ensureStarted();
-  const id = await boss.send(QUEUES.generateReport, { reportId });
+  const id = await boss.send(QUEUES.generateReport, { reportId }, {
+    retryLimit: 2,
+    retryDelay: 60,
+    expireInSeconds: 1800,
+  });
   console.log(`[queue] sent generate-report job id=${id}`);
   return id;
 }
