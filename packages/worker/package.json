@@ -8,7 +8,9 @@
     "start": "bun src/index.ts",
     "build": "bun build src/index.ts --target=bun --outdir=dist",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "test": "bun test --env-file=../../.env src/__tests__/",
+    "test:e2e": "bun test --env-file=../../.env src/__tests__/e2e-pipeline.test.ts --timeout 60000"
   },
   "dependencies": {
     "@rivaleye/scrapers": "workspace:*",
