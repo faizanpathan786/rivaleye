@@ -11,6 +11,8 @@ export const platformIdSchema = z.enum([
   "trustpilot",
 ]);
 
+export const switchingDirectionSchema = z.enum(["inbound", "outbound"]);
+
 export const platformExtractSchema = z.object({
   complaints: z.array(
     z.object({
@@ -27,7 +29,7 @@ export const platformExtractSchema = z.object({
   ),
   switching_signals: z.array(
     z.object({
-      direction: z.enum(["inbound", "outbound"]),
+      direction: switchingDirectionSchema,
       competitor: z.string().min(1),
       evidence_ids: z.array(z.string()).default([]),
     }),
@@ -55,7 +57,7 @@ export const platformBriefSchema = z.object({
     negative: z.number().min(0).max(1),
   }),
   most_quoted_competitors: z.array(z.string()),
-  evidence_coverage: z.number().int().nonnegative(),
+  evidence_coverage: z.number().min(0).max(1),
 });
 
 export const mergedClustersSchema = z.object({
@@ -88,7 +90,7 @@ export const mergedClustersSchema = z.object({
   ),
   switching_clusters: z.array(
     z.object({
-      direction: z.enum(["inbound", "outbound"]),
+      direction: switchingDirectionSchema,
       competitor: z.string(),
       count: z.number().int().nonnegative(),
       share: z.number().min(0).max(1),
@@ -108,9 +110,9 @@ export const mergedClustersSchema = z.object({
   ),
 });
 
-const sentimentTrendEnum = z.enum(["up", "down", "flat"]);
-const effortEnum = z.enum(["low", "med", "high"]);
-const payoffEnum = z.enum(["low", "med", "high"]);
+export const sentimentTrendEnum = z.enum(["up", "down", "flat"]);
+export const effortEnum = z.enum(["low", "med", "high"]);
+export const payoffEnum = z.enum(["low", "med", "high"]);
 
 export const synthOutputSchema = z.object({
   complaints: z.array(
@@ -141,7 +143,7 @@ export const synthOutputSchema = z.object({
   ),
   switching: z.array(
     z.object({
-      direction: z.enum(["inbound", "outbound"]),
+      direction: switchingDirectionSchema,
       competitor_name: z.string(),
       count: z.number().int().nonnegative(),
       share: z.number().min(0).max(1),
