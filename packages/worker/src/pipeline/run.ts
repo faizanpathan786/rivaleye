@@ -6,6 +6,7 @@ import {
   report_platform_briefs,
   report_pipeline_checkpoints,
 } from "../../../api/src/db/schema/pipeline.js";
+import type { PipelineCheckpointStage } from "../../../api/src/db/schema/pipeline.js";
 import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
 import type { LlmCallOptions } from "@rivaleye/shared";
 import { log } from "../logger.js";
@@ -45,12 +46,12 @@ async function loadCheckpoints(reportId: string): Promise<Map<string, Record<str
 
 async function saveCheckpoint(
   reportId: string,
-  stage: string,
+  stage: PipelineCheckpointStage,
   output: Record<string, unknown>,
 ): Promise<void> {
   await db
     .insert(report_pipeline_checkpoints)
-    .values({ report_id: reportId, stage: stage as "C" | "D" | "E", output, updated_at: new Date() })
+    .values({ report_id: reportId, stage, output, updated_at: new Date() })
     .onConflictDoUpdate({
       target: [report_pipeline_checkpoints.report_id, report_pipeline_checkpoints.stage],
       set: { output, updated_at: new Date() },
@@ -127,6 +128,7 @@ export async function runPipeline(reportId: string): Promise<void> {
 
   // Stage E
   let refined: SynthOutput;
+  let fellBackToDraft = false;
   if (checkpoints.has("E")) {
     await log(reportId, "info", "E", null, "skipping stage E (checkpoint found)");
     refined = checkpoints.get("E") as unknown as SynthOutput;
@@ -142,6 +144,7 @@ export async function runPipeline(reportId: string): Promise<void> {
       });
     }
     refined = resultE.refined;
+    fellBackToDraft = resultE.fellBackToDraft;
     await saveCheckpoint(reportId, "E", refined as unknown as Record<string, unknown>);
   }
 
@@ -156,7 +159,7 @@ export async function runPipeline(reportId: string): Promise<void> {
   await log(reportId, "info", "persist", null, "persisting report to sub-tables");
   await persistReport({ reportId, synth: refined, platformStats, subreddits });
   await log(reportId, "info", "persist", null, "persist done", {
-    fellBackToDraft: checkpoints.has("E") ? false : "computed",
+    fellBackToDraft,
   });
 
   await log(reportId, "info", null, null, "pipeline done");
