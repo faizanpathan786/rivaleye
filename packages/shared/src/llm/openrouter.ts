@@ -8,6 +8,11 @@ export interface LlmRequest<TSchema extends ZodSchema | undefined = undefined> {
   maxTokens?: number;
 }
 
+export interface LlmCallOptions {
+  timeoutMs?: number;
+  maxAttempts?: number;
+}
+
 export interface LlmResponse<T> {
   parsed: T;
   raw: string;
@@ -36,6 +41,29 @@ const DEFAULT_BASE = "https://openrouter.ai/api/v1";
 const RETRY_SUFFIX =
   "\n\nReturn ONLY a single valid JSON object that matches the schema. No prose, no markdown fence.";
 
+function isTransient(err: unknown): boolean {
+  if (err instanceof LlmHttpError) {
+    return err.status === 429 || err.status >= 500;
+  }
+  if (err instanceof Error) {
+    return (
+      err.name === "AbortError" ||
+      err.name === "TimeoutError" ||
+      err.message.includes("ECONNRESET") ||
+      err.message.includes("fetch failed")
+    );
+  }
+  return false;
+}
+
+function backoffMs(attempt: number): number {
+  return Math.min(2 ** attempt * 1000, 30_000);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class OpenRouterClient {
   private readonly apiKey: string;
   private readonly model: string;
@@ -53,10 +81,16 @@ export class OpenRouterClient {
     this.baseUrl = opts.baseUrl ?? DEFAULT_BASE;
   }
 
-  async complete<T>(req: LlmRequest<ZodSchema<T>>): Promise<LlmResponse<T>>;
-  async complete(req: LlmRequest): Promise<LlmResponse<string>>;
-  async complete<T>(req: LlmRequest<ZodSchema<T> | undefined>): Promise<LlmResponse<T | string>> {
-    const raw = await this.callWithRetry(req.system, req.user, req.maxTokens);
+  async complete<T>(
+    req: LlmRequest<ZodSchema<T>>,
+    opts?: LlmCallOptions,
+  ): Promise<LlmResponse<T>>;
+  async complete(req: LlmRequest, opts?: LlmCallOptions): Promise<LlmResponse<string>>;
+  async complete<T>(
+    req: LlmRequest<ZodSchema<T> | undefined>,
+    opts?: LlmCallOptions,
+  ): Promise<LlmResponse<T | string>> {
+    const raw = await this.callWithRetry(req.system, req.user, req.maxTokens, opts);
     if (!req.schema) {
       return { parsed: raw.content, raw: raw.content, usage: raw.usage, model: this.model };
     }
@@ -72,19 +106,35 @@ export class OpenRouterClient {
     system: string,
     user: string,
     maxTokens?: number,
+    opts?: LlmCallOptions,
   ): Promise<{ content: string; usage: { promptTokens: number; completionTokens: number } }> {
-    const first = await this.callOnce(system, user, maxTokens);
-    if (this.looksLikeJson(first.content)) return first;
-    const second = await this.callOnce(system, user + RETRY_SUFFIX, maxTokens);
-    if (this.looksLikeJson(second.content)) return second;
-    throw new LlmJsonParseError(second.content);
+    const maxAttempts = opts?.maxAttempts ?? 3;
+    const timeoutMs = opts?.timeoutMs;
+    let lastErr: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const first = await this.callOnce(system, user, maxTokens, timeoutMs);
+        if (this.looksLikeJson(first.content)) return first;
+        const second = await this.callOnce(system, user + RETRY_SUFFIX, maxTokens, timeoutMs);
+        if (this.looksLikeJson(second.content)) return second;
+        throw new LlmJsonParseError(second.content);
+      } catch (err) {
+        lastErr = err;
+        if (!isTransient(err)) throw err;
+        if (attempt < maxAttempts) await sleep(backoffMs(attempt));
+      }
+    }
+    throw lastErr;
   }
 
   private async callOnce(
     system: string,
     user: string,
     maxTokens?: number,
+    timeoutMs?: number,
   ): Promise<{ content: string; usage: { promptTokens: number; completionTokens: number } }> {
+    const signal = timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined;
     const res = await this.fetcher(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -100,6 +150,7 @@ export class OpenRouterClient {
         ],
         ...(maxTokens ? { max_tokens: maxTokens } : {}),
       }),
+      signal,
     });
     if (!res.ok) {
       throw new LlmHttpError(res.status, await res.text());
