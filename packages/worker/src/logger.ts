@@ -30,10 +30,10 @@ export async function log(
     await db.insert(report_logs).values({
       report_id: reportId,
       level,
-      stage: stage ?? undefined,
-      platform: platform ?? undefined,
+      stage: stage,
+      platform: platform,
       message,
-      meta: meta ?? undefined,
+      meta: meta,
     });
   } catch (err) {
     console.error("[logger] failed to persist log entry:", err);
