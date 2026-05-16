@@ -1,9 +1,11 @@
+CREATE TYPE "public"."pipeline_checkpoint_stage" AS ENUM('C', 'D', 'E');--> statement-breakpoint
 CREATE TYPE "public"."log_level" AS ENUM('info', 'warn', 'error');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "report_pipeline_checkpoints" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"report_id" uuid NOT NULL,
-	"stage" text NOT NULL,
+	"stage" "pipeline_checkpoint_stage" NOT NULL,
 	"output" jsonb NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "report_pipeline_checkpoints_report_stage_uniq" UNIQUE("report_id","stage")
 );

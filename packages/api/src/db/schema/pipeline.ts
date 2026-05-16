@@ -64,6 +64,14 @@ export type NewReportPlatformJob = typeof report_platform_jobs.$inferInsert;
 export type ReportPlatformBrief = typeof report_platform_briefs.$inferSelect;
 export type NewReportPlatformBrief = typeof report_platform_briefs.$inferInsert;
 
+export const pipeline_checkpoint_stage_enum = pgEnum("pipeline_checkpoint_stage", [
+  "C",
+  "D",
+  "E",
+]);
+
+export type PipelineCheckpointStage = typeof pipeline_checkpoint_stage_enum.enumValues[number];
+
 export const report_pipeline_checkpoints = pgTable(
   "report_pipeline_checkpoints",
   {
@@ -71,8 +79,9 @@ export const report_pipeline_checkpoints = pgTable(
     report_id: uuid("report_id")
       .notNull()
       .references(() => reports.id, { onDelete: "cascade" }),
-    stage: text("stage").notNull(),
+    stage: pipeline_checkpoint_stage_enum("stage").notNull(),
     output: jsonb("output").$type<Record<string, unknown>>().notNull(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
     created_at: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [

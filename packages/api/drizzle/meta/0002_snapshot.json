@@ -1,5 +1,5 @@
 {
-  "id": "75c4da65-0b74-4770-aae0-b4438a6f0fb6",
+  "id": "7f2281ec-5d21-47a5-9c54-e9c90a2a7753",
   "prevId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "version": "7",
   "dialect": "postgresql",
@@ -2127,7 +2127,8 @@
         },
         "stage": {
           "name": "stage",
-          "type": "text",
+          "type": "pipeline_checkpoint_stage",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -2136,6 +2137,13 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "created_at": {
           "name": "created_at",
@@ -2616,6 +2624,15 @@
         "med",
         "high",
         "urgent"
+      ]
+    },
+    "public.pipeline_checkpoint_stage": {
+      "name": "pipeline_checkpoint_stage",
+      "schema": "public",
+      "values": [
+        "C",
+        "D",
+        "E"
       ]
     },
     "public.report_platform_job_status": {
