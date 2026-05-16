@@ -27,6 +27,49 @@ export const getProgressHandler = new Elysia()
     {
       auth: {},
       params: t.Object({ id: t.String() }),
+      response: {
+        200: t.Object({
+          data: t.Object({
+            report: t.Object({
+              id: t.String(),
+              status: t.String(),
+              partial: t.Boolean(),
+              failed_platforms: t.Array(t.String()),
+            }),
+            platforms: t.Array(
+              t.Object({
+                platform: t.String(),
+                status: t.String(),
+                stage: t.String(),
+                attempt_count: t.Number(),
+                last_error: t.Nullable(t.String()),
+                last_event_at: t.Nullable(t.Date()),
+              }),
+            ),
+            events: t.Array(
+              t.Object({
+                stage: t.String(),
+                event: t.String(),
+                platform: t.Nullable(t.String()),
+                attempt: t.Number(),
+                duration_ms: t.Nullable(t.Number()),
+                created_at: t.Date(),
+              }),
+            ),
+            metrics: t.Object({
+              mentions: t.Number(),
+              complaints: t.Number(),
+              quotes: t.Number(),
+              comments: t.Number(),
+            }),
+          }),
+        }),
+        404: t.Object({ message: t.String(), error: t.String() }),
+        400: t.Object({
+          message: t.String(),
+          error: t.String(),
+        }),
+      },
       detail: { tags: [Tags.REPORTS], summary: "Get report pipeline progress" },
     },
   );
