@@ -24,7 +24,7 @@ export async function runStageAExtract(input: StageAInput): Promise<StageAOutput
     user: built.user,
     schema: built.schema,
   });
-  return { extract: res.parsed, usage: res.usage, model: res.model };
+  return { extract: res.parsed as PlatformExtract, usage: res.usage, model: res.model };
 }
 
 type Builder = (input: StageAInput) => {
