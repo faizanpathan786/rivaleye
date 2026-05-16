@@ -18,9 +18,21 @@ import {
   report_thread_messages,
   type Report,
 } from "@/db/schema/reports";
+import { report_platform_jobs } from "@/db/schema/pipeline";
 import { enqueueScrapePlatform } from "@/libs/queue";
 import { and, asc, eq } from "drizzle-orm";
+import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
+import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
+
+let _llm: OpenRouterClient | null = null;
+
+function getLlm(): OpenRouterClient {
+  if (!_llm) {
+    _llm = new OpenRouterClient({ apiKey: readOpenRouterApiKey(), model: LLM_MODEL });
+  }
+  return _llm;
+}
 
 async function assertReportOwned(id: string, owner_id: string): Promise<Report | null> {
   const rows = await db.select().from(reports).where(eq(reports.id, id)).limit(1);
@@ -67,12 +79,34 @@ export async function createReport(
 
   if (!row) throw new Error("Failed to insert report");
 
-  await enqueueScrapePlatform({
-    reportId: row.id,
-    platform: "reddit",
-    competitor: input.competitors[0] ?? input.category,
+  const competitor = input.competitors[0] ?? input.category;
+
+  const keywords = await expandKeywords(getLlm(), {
+    competitor,
     category: input.category,
+    audience: input.target_audience,
+    goal: input.founder_goal,
   });
+
+  await db.insert(report_platform_jobs).values(
+    ENABLED_PLATFORMS.map((platform) => ({
+      report_id: row.id,
+      platform,
+      status: "queued" as const,
+    })),
+  );
+
+  await Promise.all(
+    ENABLED_PLATFORMS.map((platform) =>
+      enqueueScrapePlatform({
+        reportId: row.id,
+        platform,
+        competitor,
+        category: input.category,
+        keywords,
+      }),
+    ),
+  );
 
   return { id: row.id };
 }

@@ -1,5 +1,5 @@
 import PgBoss from "pg-boss";
-import type { PlatformId } from "@rivaleye/scrapers";
+import type { EnabledPlatformId } from "@rivaleye/shared";
 
 const connectionString = process.env.CONNECTION_STRING;
 if (!connectionString) throw new Error("CONNECTION_STRING is required");
@@ -35,7 +35,7 @@ async function ensureStarted() {
 
 export interface ScrapePlatformJob {
   reportId: string;
-  platform: PlatformId;
+  platform: EnabledPlatformId;
   competitor: string;
   category?: string;
   keywords?: string[];
