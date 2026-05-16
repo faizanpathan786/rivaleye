@@ -3,6 +3,8 @@ import type { OpenRouterClient } from "@rivaleye/shared";
 import type { PipelineCtx, PlatformExtract } from "../prompts/shared";
 import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
 import { buildPlayStoreExtract } from "../prompts/platform/playstore/extract";
+import { buildHackerNewsExtract } from "../prompts/platform/hackernews/extract";
+import { buildDevToExtract } from "../prompts/platform/devto/extract";
 
 export interface StageAInput {
   llm: OpenRouterClient;
@@ -54,6 +56,26 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             rating: post.score ?? 0,
             body: post.body,
+          })),
+        });
+    case "hackernews":
+      return ({ ctx, posts }) =>
+        buildHackerNewsExtract({
+          ctx,
+          posts: posts.map((post) => ({
+            id: post.externalId,
+            score: post.score,
+            body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "devto":
+      return ({ ctx, posts }) =>
+        buildDevToExtract({
+          ctx,
+          posts: posts.map((post) => ({
+            id: post.externalId,
+            score: post.score,
+            body: `${post.title ?? ""}\n${post.body}`,
           })),
         });
     default:

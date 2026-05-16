@@ -7,7 +7,9 @@ export type PlatformId =
   | "producthunt"
   | "appstore"
   | "playstore"
-  | "gmaps";
+  | "gmaps"
+  | "hackernews"
+  | "devto";
 
 export interface NormalizedPost {
   platform: PlatformId;

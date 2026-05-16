@@ -1,0 +1,77 @@
+{
+  "recentStories": [
+    {
+      "_tags": [
+        "story",
+        "author_1vuio0pswjnm7",
+        "story_48154979"
+      ],
+      "author": "1vuio0pswjnm7",
+      "created_at": "2026-05-15T22:53:13Z",
+      "created_at_i": 1778885593,
+      "num_comments": 0,
+      "objectID": "48154979",
+      "points": 1,
+      "story_id": 48154979,
+      "title": "OpenAI faces lawsuit claiming chatbot gave advice that led to fatal overdose",
+      "updated_at": "2026-05-15T22:54:30Z",
+      "url": "https://www.reuters.com/legal/litigation/openai-faces-lawsuit-california-court-claiming-chatbot-gave-advice-that-led-2026-05-12/"
+    },
+    {
+      "_tags": [
+        "story",
+        "author_bookofjoe",
+        "story_48153953"
+      ],
+      "author": "bookofjoe",
+      "children": [
+        48153956
+      ],
+      "created_at": "2026-05-15T21:14:23Z",
+      "created_at_i": 1778879663,
+      "num_comments": 1,
+      "objectID": "48153953",
+      "points": 2,
+      "story_id": 48153953,
+      "title": "China Sought Access to Anthropic's Newest A.I. The Answer Was No.",
+      "updated_at": "2026-05-15T22:27:00Z",
+      "url": "https://www.nytimes.com/2026/05/12/us/politics/china-ai-anthropic-openai-mythos-chatgpt.html"
+    }
+  ],
+  "recentComments": [
+    {
+      "_tags": [
+        "comment",
+        "author_pdimitar",
+        "story_48148391"
+      ],
+      "author": "pdimitar",
+      "comment_text": "&gt; <i>1.) What do you have to be doing, daily, weekly, to be happy?</i><p>Be more in nature. I am in a tight metropolitan area and I hate my immediate surroundings. I&#x27;ve seen our multiple parks many times and I am not impressed. I&#x27;d prefer go hiking but my health condition is making me tired after a grocery shopping. Mind you, that <i>is</i> fixable but work is strangling me to the point of me not wanting to work out.<p>Also, just getting to one of those parks is an adventure; minimum 45 minutes. Not enough time or motivation for that. And that ruins a lot of stuff downstream in the graph of dependencies, sadly.<p>Also: be much more free. My work is demanding. Very demanding. A startup finally starting to make <i>some</i> money (far from the burn rate). CEO signing with new customers and not asking if we even can accommodate such a demand.<p>Work-wise I&#x27;d prefer to coast somewhere, cynically speaking, but more accurately: have more autonomy and time &amp; space to show my talents. Have breathing room, if you will. Now I have nearly zero. Not like zero _zero_, but nearly.<p>&gt; <i>1a.) What do you have to NOT be doing, daily, weekly, to be happy?</i><p>I don&#x27;t want to care whether my CEO is going to make money. If I wanted to sign up as a cofounder (or start my own business) then I would. Normally I wouldn&#x27;t mind but it&#x27;s just too much work in this job.<p>Though on the other hand, I am getting priceless experience on what non-technical people value and generally finally started understanding that the techie&#x27;s perspective is cripplingly limiting -- so I welcome the lessons. I just wish they were 1-2 a week, not 10+.<p>&gt; <i>2.) Do you prefer to remain an individual contributor, for one reason or another? Said another way: are you the right fit to seriously look at the path to management or consulting roles?</i><p>I have been a contractor, consultant (somewhat), architect, educator, and IC (most of the time). I do fairly OK on reconciling differences and digging for the root causes of conflicts and misunderstandings (as I think I am proving with my recent replies where I try hard to ask people where do they see Rust zealots so we can at least argue from equal POVs, I get downvoted for me trying to be open-minded and then more or less trolled here and there). I am pretty good at compromising and changing my mind when faced with new info, as I think every science-profession-like professional must be.<p>&quot;Strong opinions, weakly held&quot; describes me fairly okay; though most of my opinions are not so strong either.<p>Management I don&#x27;t care about. I am entering middle age and I need less calls during which I have to pretend to subscribe to the company&#x27;s cult. No thanks. Only if I have generous equity and a guaranteed 9 months of severance upon being let go will I care enough. I am physically and psychologically <i>extremely</i> tired of all the circus and posturing. You want me to help you achieve success in your business? I WOULD LOVE TO! I take big enjoyment in turning business requirements into code; educates me every time I do it, in a way that I love and want to keep experiencing.<p>My problems however are crunches (i.e. soul-crushing fast speeds) and again, company cults. Just keep me the hell away from all parroting HR sessions please.<p>This is NOT to be mistaken with &quot;typical introvert programmer hates meetings&quot;. Nothing of the sort. I am one of the first to exchange 5 Slack messages with you and if I don&#x27;t see alignment I&#x27;ll ask your permission for us to jump on a call. I love overcoming obstacles and don&#x27;t hide in the corner. I just hate cults. Meaningful difference but many people conflate the two for some reason.<p>So TL;DR I&#x27;d prefer to be an IC simply because many other roles I&#x27;ve tried (the most trendy one: &quot;product engineer&quot;) are masked N roles for 1 wage really, and even though I honestly don&#x27;t care who in the org feels they scored some huge points by tricking an engineer into doing multiple roles, I still don&#x27;t want to overwork myself -- and these roles kind of come with that implicit expectation. If my schedules and work regime are satisfying for me, it&#x27;s all good for me and I&#x27;ll not care if the CEO giggles thinking he &quot;tricked&quot; me to do the job of 4 people.<p>...But I do want to be left in peace to do my work. And my work =&#x2F;= meetings. Meetings are a vehicle through which we (a) align with business &#x2F; customers and (b) make sure we will write <i>the right code</i>. Managers have meetings as their main output. I am 100% against that in my life and career.<p>Mind you, I&#x27;ve been a team lead 3 times over the course of a 24-year career. All the devs that I was managing loved me and that by itself was a hugely rewarding experience, especially when multiple of them jumped in my defense when executives started criticizing KPIs that I was not ever informed about, but... that by itself can&#x27;t compensate for the fact that I spent my days dreaming of being able to solve problems with code again while sighing deeply and opening the 7th spreadsheet barely into the 3rd hour of my workday. Never again.<p>I can and I do many adjacent-to-code activities in my current job. I don&#x27;t mind it. I even enjoy the occasional pulls away from my IDE and Claude. But I would mind it if those other activities started taking &gt;20% of my working hours, for example.<p>Hope that paints a well-explained picture.<p>&gt; <i>3.) You mentioned your bubble - a few times. Are you willing to move? Otherwise shake that bubble up?</i><p>I am more than ready to GTFO from my country; we just got a full majority government with strong suspicions of strong Russian alignment (Bulgaria) and I am not keen on finding out how would that look in 4, or even 2, years. It&#x27;s not only that though, I just hate the place already.<p>And also being an Eastern European, we are a target of extremely toxic companies for one reason or another. Guess we are known for soldiering on and never defending ourselves which I am very ashamed to admit: I was that stereotype for a _long_ time.<p>However, again: health. Even just moving all my and my wife&#x27;s items from one location to another would put me into bed for 3-4 days only lying and reading books to recover. But also again: this is remediable, but not while being in my current job; too demanding, leaves no air in the room for almost nothing else. I need nature, I need my meditation, yoga, lifting and biking. I have not done almost none of those in 7 months and I am starting to feel it very acutely.<p>Before you say it: I manage my time and focus fairly well (recovering from ADHD-seeming symptoms all on my own with zero medication, and I never intend to get any) but I just don&#x27;t have enough energetic hours in the day to outpace the hard demands of a startup. I manage to do a few good 2-3h 100% focused sessions of work and only hop on HN while I wait for a long Claude research and&#x2F;or scoping&#x2F;planning discussions.<p>I want to change my bubble but that requires me to make peace with what a frakkin nerd I was most of my life and took my programmer work position for granted and now I am 46 with zero contacts and shortening my lifespan in a company where I love everyone but still have to grind my arse off just not to fall _too much_ behind (progress? actual progress and outpacing the requirements? forget about it).<p>I would love to move to, I don&#x27;t know, probably France or the USA. However, what I am _not_ willing to do is work in an office. I am a fairly serious guy who knows how to manage his time and energy and I don&#x27;t need anyone looking over my shoulder; that would make me quit on the 2nd day. Trust culture or bust. I can prove myself in less than a month. If that&#x27;s not good enough for a company then I don&#x27;t need them. We all have boundaries. That&#x27;s mine.<p>&gt; <i>But, I am finally sleeping well.</i><p>Same, for the last 6-7 months, first time in 8-9 years (health ruined almost to the point of a premature death). I very, very gradually recover, I&#x27;d say 0.1% a week. I can feel the difference from half a year ago but not from one month ago. Aiming to accelerate that but for that to happen I need to overcome despair and depression; not easy when your body betrays you and injects you with the desperation chemicals every day.<p>One final time: but to alleviate that, I need less work load! I need to know and see that if I concentrate I can do my work for the day in 2-3h and use the rest to invest in health, physical and mental. I know many view that as cheating and slacking but I&#x27;d vehemently disagree. I have worked a long time to build discipline and a plethora of skills to become much more productive than many. I am a heavy hitter.<p>Watched The Matrix, all 3 parts? If so, here&#x27;s an analogy for you: if you remember the final fight, when Neo &quot;died&quot; shortly after, and even though he was fumbling and was visibly disoriented, he _still_ managed to hit Smith with strength enough to have him break through multiple layers of concrete.<p>If you pardon the dramatic expression: well, this is how I feel and conduct myself at work now. If you give me a good target, I&#x27;ll demolish it with precision and strength even if I am half-dead. But make me do 50 quick weak strikes and I&#x27;ll die on the spot.<p>(Or, as people say: &quot;You don&#x27;t pay me $500 because your task only took me one hour. You pay me for all the years I needed to become so good that I _can_ do your job in one hour.&quot; -- or something of the sort, don&#x27;t remember concretely.)<p>Hope that helps. No idea why I even confessed as much but I still know enough to trust my intuition. So, full disclosure. Do with it as you please.<p>:)",
+      "created_at": "2026-05-15T22:52:06Z",
+      "created_at_i": 1778885526,
+      "objectID": "48154970",
+      "parent_id": 48154561,
+      "story_id": 48148391,
+      "story_title": "We are retiring our bug bounty program",
+      "story_url": "https://turso.tech/blog/the-wonders-of-ai",
+      "updated_at": "2026-05-15T22:54:30Z"
+    },
+    {
+      "_tags": [
+        "comment",
+        "author_thrownthatway",
+        "story_48148460"
+      ],
+      "author": "thrownthatway",
+      "comment_text": "I tend to agree.<p>But how does that prevent one from receiving and opening a malicious message?",
+      "created_at": "2026-05-15T22:48:46Z",
+      "created_at_i": 1778885326,
+      "objectID": "48154949",
+      "parent_id": 48153949,
+      "story_id": 48148460,
+      "story_title": "A 0-click exploit chain for the Pixel 10",
+      "story_url": "https://projectzero.google/2026/05/pixel-10-exploit.html",
+      "updated_at": "2026-05-15T22:54:30Z"
+    }
+  ]
+}
