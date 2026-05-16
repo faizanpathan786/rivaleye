@@ -9,9 +9,11 @@ Never serves HTTP. Never imported by `@rivaleye/api`. Api enqueues; worker consu
 ## 1. Stack
 
 - **Runtime**: Bun.
-- **Queue**: [pg-boss](https://github.com/timgit/pg-boss) on Supabase Postgres. No Redis.
-- **DB**: same Drizzle client as api (via shared schema). Worker reads + writes mentions, updates report status.
+- **Queue**: [Inngest](https://www.inngest.com/) (self-hosted dev server locally via `npx inngest-cli@latest dev`). No Redis, no pg-boss.
+- **Process model**: three independent Bun processes — `scrape`, `llm`, `synth` — each serving its own Inngest endpoint.
+- **DB**: same Drizzle client as api (via shared schema). Worker reads + writes mentions, briefs, jobs, events.
 - **Scrapers**: `@rivaleye/scrapers` — `getScraper(platformId)`.
+- **Logging**: pino, JSON to stdout.
 
 ---
 
@@ -33,14 +35,16 @@ packages/worker/
 
 ## 3. Job model
 
-Two queue types:
+Inngest events (defined in `@rivaleye/shared/inngest-events`):
 
-| Queue | Trigger | Work |
-|---|---|---|
-| `scrape-platform` | api enqueues N per report (one per platform) | Run one scraper, persist posts, mark sub-job done. |
-| `generate-report` | enqueued after all `scrape-platform` jobs for the report complete | Load all posts, LLM cluster, write `reports.output`, set status. |
+| Event           | Worker        | Concurrency               | Next                                |
+|-----------------|---------------|---------------------------|-------------------------------------|
+| `scrape.fetch`  | worker-scrape | 8 global, 1 per (rid,plat) | sends `llm.stage-a`                |
+| `llm.stage-a`   | worker-llm    | 4 global                  | sends `llm.stage-b`                 |
+| `llm.stage-b`   | worker-llm    | 4 global                  | fan-in check → may send `synth.run` |
+| `synth.run`     | worker-synth  | 1 per `reportId`          | marks report complete               |
 
-Fan-in pattern: track per-report scrape completion via `report_platform_jobs` table (status enum). When all `completed`, enqueue `generate-report`.
+Fan-in uses `pg_advisory_xact_lock(hashtext(reportId))` to guarantee single enqueue.
 
 ---
 
