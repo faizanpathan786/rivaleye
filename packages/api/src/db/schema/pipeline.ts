@@ -63,3 +63,23 @@ export type ReportPlatformJob = typeof report_platform_jobs.$inferSelect;
 export type NewReportPlatformJob = typeof report_platform_jobs.$inferInsert;
 export type ReportPlatformBrief = typeof report_platform_briefs.$inferSelect;
 export type NewReportPlatformBrief = typeof report_platform_briefs.$inferInsert;
+
+export const report_pipeline_checkpoints = pgTable(
+  "report_pipeline_checkpoints",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    report_id: uuid("report_id")
+      .notNull()
+      .references(() => reports.id, { onDelete: "cascade" }),
+    stage: text("stage").notNull(),
+    output: jsonb("output").$type<Record<string, unknown>>().notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    unique("report_pipeline_checkpoints_report_stage_uniq").on(t.report_id, t.stage),
+    index("report_pipeline_checkpoints_report_id_idx").on(t.report_id),
+  ],
+);
+
+export type ReportPipelineCheckpoint = typeof report_pipeline_checkpoints.$inferSelect;
+export type NewReportPipelineCheckpoint = typeof report_pipeline_checkpoints.$inferInsert;
