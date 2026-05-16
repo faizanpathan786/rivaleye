@@ -1,0 +1,51 @@
+import type { NormalizedPost, PlatformId } from "@rivaleye/scrapers";
+import type { OpenRouterClient } from "@rivaleye/shared";
+import type { PipelineCtx, PlatformExtract } from "../prompts/shared";
+import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
+
+export interface StageAInput {
+  llm: OpenRouterClient;
+  ctx: PipelineCtx;
+  platform: PlatformId;
+  posts: NormalizedPost[];
+}
+
+export interface StageAOutput {
+  extract: PlatformExtract;
+  usage: { promptTokens: number; completionTokens: number };
+  model: string;
+}
+
+export async function runStageAExtract(input: StageAInput): Promise<StageAOutput> {
+  const builder = pickBuilder(input.platform);
+  const built = builder(input);
+  const res = await input.llm.complete({
+    system: built.system,
+    user: built.user,
+    schema: built.schema,
+  });
+  return { extract: res.parsed, usage: res.usage, model: res.model };
+}
+
+type Builder = (input: StageAInput) => {
+  system: string;
+  user: string;
+  schema: typeof import("../prompts/shared").platformExtractSchema;
+};
+
+function pickBuilder(p: PlatformId): Builder {
+  switch (p) {
+    case "appstore":
+      return ({ ctx, posts }) =>
+        buildAppStoreExtract({
+          ctx,
+          reviews: posts.map((post) => ({
+            id: post.externalId,
+            rating: post.score ?? 0,
+            body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    default:
+      throw new Error(`Stage A: no extract builder for platform "${p}" yet`);
+  }
+}
