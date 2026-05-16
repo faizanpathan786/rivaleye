@@ -90,7 +90,7 @@ export class OpenRouterClient {
     req: LlmRequest<ZodSchema<T> | undefined>,
     opts?: LlmCallOptions,
   ): Promise<LlmResponse<T | string>> {
-    const raw = await this.callWithRetry(req.system, req.user, req.maxTokens, opts);
+    const raw = await this.callWithRetry(req.system, req.user, req.maxTokens, opts, !!req.schema);
     if (!req.schema) {
       return { parsed: raw.content, raw: raw.content, usage: raw.usage, model: this.model };
     }
@@ -107,6 +107,7 @@ export class OpenRouterClient {
     user: string,
     maxTokens?: number,
     opts?: LlmCallOptions,
+    hasSchema?: boolean,
   ): Promise<{ content: string; usage: { promptTokens: number; completionTokens: number } }> {
     const maxAttempts = opts?.maxAttempts ?? 3;
     const timeoutMs = opts?.timeoutMs;
@@ -115,7 +116,7 @@ export class OpenRouterClient {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const first = await this.callOnce(system, user, maxTokens, timeoutMs);
-        if (this.looksLikeJson(first.content)) return first;
+        if (!hasSchema || this.looksLikeJson(first.content)) return first;
         const second = await this.callOnce(system, user + RETRY_SUFFIX, maxTokens, timeoutMs);
         if (this.looksLikeJson(second.content)) return second;
         throw new LlmJsonParseError(second.content);
