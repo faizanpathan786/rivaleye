@@ -60,15 +60,10 @@ export function getScraper(platform: PlatformId): Scraper {
 
 export const ALL_PLATFORMS: PlatformId[] = [
   "reddit",
-  "g2",
-  "capterra",
-  "twitter",
-  "linkedin",
-  "producthunt",
   "appstore",
   "playstore",
-  "gmaps",
   "hackernews",
+  "producthunt",
   "devto",
   "medium",
   "trustpilot",
