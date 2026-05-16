@@ -2,23 +2,25 @@ import type { NormalizedPost } from "../types";
 import type { RawAppStoreApp, RawAppStoreReview, RawAppStoreReviewsFeed } from "./client";
 
 export function normalizeAppStorePayload(
-  apps: unknown[],
-  reviewsByAppId: Record<string, unknown>,
+  apps: RawAppStoreApp[],
+  reviewsByAppId: Record<string, RawAppStoreReviewsFeed>,
 ): NormalizedPost[] {
   const out: NormalizedPost[] = [];
   for (const app of apps) {
-    const a = app as RawAppStoreApp;
-    const feed = (reviewsByAppId[String(a.trackId)] ?? reviewsByAppId["app"]) as RawAppStoreReviewsFeed | undefined;
+    const feed = reviewsByAppId[String(app.trackId)];
     const entries = (feed?.feed?.entry ?? []).filter(
       (e): e is RawAppStoreReview => !!e?.["im:rating"],
     );
-    out.push(...entries.map((r) => normalizeReview(a, r)));
+    out.push(...entries.map((r) => normalizeReview(app, r)));
   }
   return out;
 }
 
 function normalizeReview(app: RawAppStoreApp, r: RawAppStoreReview): NormalizedPost {
-  const rating = parseInt(r["im:rating"].label, 10);
+  const rawRating = parseInt(r["im:rating"].label, 10);
+  const rating = Number.isNaN(rawRating) ? 0 : rawRating;
+  const rawDate = new Date(r.updated.label);
+  const createdAt = Number.isNaN(rawDate.getTime()) ? new Date() : rawDate;
   const title = r.title.label;
   const content = r.content.label;
   return {
@@ -30,7 +32,7 @@ function normalizeReview(app: RawAppStoreApp, r: RawAppStoreReview): NormalizedP
     body: `${title}\n\n${content}\n\n— ${rating}/5 on ${app.trackName} v${r["im:version"]?.label ?? app.version}`,
     score: rating,
     numComments: null,
-    createdAt: new Date(r.updated.label),
+    createdAt,
     raw: { app, review: r },
   };
 }

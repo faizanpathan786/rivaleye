@@ -53,7 +53,8 @@ export async function fetchReviews(
   for (let page = 1; page <= pages; page++) {
     const url = `https://itunes.apple.com/rss/customerreviews/page=${page}/id=${appId}/sortBy=mostRecent/json?l=en&cc=${country}`;
     const res = await fetch(url);
-    if (!res.ok) break;
+    if (res.status === 404) break;
+    if (!res.ok) throw new ScraperError("appstore", `reviews HTTP ${res.status} (page ${page})`);
     const data = (await res.json()) as RawAppStoreReviewsFeed;
     const entries = data.feed?.entry ?? [];
     const reviewEntries = entries.filter((e) => !!e["im:rating"]);
