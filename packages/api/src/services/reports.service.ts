@@ -71,13 +71,18 @@ export async function createReport(
   const engine = getPipelineEngine();
   const competitor = input.competitors[0] ?? input.category;
 
-  // Expand keywords BEFORE any DB writes (safe to fail)
-  const keywords = await expandKeywords(getLlm(), {
-    competitor,
-    category: input.category,
-    audience: input.target_audience,
-    goal: input.founder_goal,
-  });
+  // Expand keywords BEFORE any DB writes — non-fatal, fall back to competitor name
+  let keywords: string[];
+  try {
+    keywords = await expandKeywords(getLlm(), {
+      competitor,
+      category: input.category,
+      audience: input.target_audience,
+      goal: input.founder_goal,
+    });
+  } catch {
+    keywords = [competitor];
+  }
 
   // Transaction: report + jobs atomic
   const row = await db.transaction(async (tx) => {

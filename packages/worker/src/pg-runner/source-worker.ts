@@ -290,11 +290,14 @@ async function runStageAExtractionStep(
     goal: reportRow.goal,
   };
 
+  // Cap to 50 posts — free-tier LLMs return empty content on large contexts
+  const postsForLlm = posts.slice(0, 50);
+
   const result = await runStageAExtract({
     llm: getLlm(),
     ctx,
     platform: platform as any,
-    posts,
+    posts: postsForLlm,
   });
 
   log.info(
@@ -361,7 +364,7 @@ async function runStageBSummarizationStep(reportId: string, platform: string): P
     llm: getLlm(),
     ctx,
     platform: platform as any,
-    posts,
+    posts: posts.slice(0, 50),
   });
 
   // Run Stage B summarization

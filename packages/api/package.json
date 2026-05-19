@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/server.ts",
-    "start": "bun src/server.ts",
+    "dev": "bun --watch --env-file=../../.env src/server.ts",
+    "start": "bun --env-file=../../.env src/server.ts",
     "build": "bun build src/server.ts --target=bun --outdir=dist",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
