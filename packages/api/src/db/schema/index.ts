@@ -6,3 +6,10 @@ export * from "./radar";
 export * from "./pipeline";
 export * from "./logs";
 export * from "./pipeline-events";
+
+// Type exports from pipeline enums for cross-package use
+export type {
+  SourceJobStatus,
+  SynthesisJobStatus,
+  ReportPlatformStage
+} from "./pipeline";

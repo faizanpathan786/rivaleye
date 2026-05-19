@@ -28,6 +28,7 @@ import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } 
 import type { EnabledPlatformId } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
+import { getPipelineEngine } from "@/config/engine";
 
 let _llm: OpenRouterClient | null = null;
 
@@ -67,24 +68,10 @@ export async function createReport(
   owner_id: string,
   input: CreateReportInput,
 ): Promise<{ id: string }> {
-  const [row] = await db
-    .insert(reports)
-    .values({
-      owner_id,
-      category: input.category,
-      competitors: input.competitors,
-      audience: input.target_audience,
-      goal: input.founder_goal,
-      status: "queued",
-      stage: "queued",
-      primary_competitor_name: input.competitors[0] ?? null,
-    })
-    .returning({ id: reports.id });
-
-  if (!row) throw new Error("Failed to insert report");
-
+  const engine = getPipelineEngine();
   const competitor = input.competitors[0] ?? input.category;
 
+  // Expand keywords BEFORE any DB writes (safe to fail)
   const keywords = await expandKeywords(getLlm(), {
     competitor,
     category: input.category,
@@ -92,26 +79,57 @@ export async function createReport(
     goal: input.founder_goal,
   });
 
-  await db.insert(report_platform_jobs).values(
-    ENABLED_PLATFORMS.map((platform) => ({
-      report_id: row.id,
-      platform,
-      status: "queued" as const,
-    })),
-  );
-
-  await inngest.send(
-    ENABLED_PLATFORMS.map((platform) => ({
-      name: "scrape.fetch" as const,
-      data: {
-        reportId: row.id,
-        platform,
-        competitor,
+  // Transaction: report + jobs atomic
+  const row = await db.transaction(async (tx) => {
+    const [reportRow] = await tx
+      .insert(reports)
+      .values({
+        owner_id,
         category: input.category,
-        keywords,
-      },
-    })),
-  );
+        competitors: input.competitors,
+        audience: input.target_audience,
+        goal: input.founder_goal,
+        status: "queued",
+        stage: "queued",
+        primary_competitor_name: competitor,
+      })
+      .returning({ id: reports.id });
+
+    if (!reportRow) throw new Error("Failed to insert report");
+
+    if (engine === "postgres") {
+      // Phase 1: Only Reddit for MVP
+      await tx.insert(report_platform_jobs).values({
+        report_id: reportRow.id,
+        platform: "reddit",
+        status: "queued",
+      });
+    } else if (engine === "inngest") {
+      // Keep existing behavior: all platforms via Inngest
+      await tx.insert(report_platform_jobs).values(
+        ENABLED_PLATFORMS.map((platform) => ({
+          report_id: reportRow.id,
+          platform,
+          status: "queued" as const,
+        })),
+      );
+
+      await inngest.send(
+        ENABLED_PLATFORMS.map((platform) => ({
+          name: "scrape.fetch" as const,
+          data: {
+            reportId: reportRow.id,
+            platform,
+            competitor,
+            category: input.category,
+            keywords,
+          },
+        })),
+      );
+    }
+
+    return reportRow;
+  });
 
   return { id: row.id };
 }
@@ -394,6 +412,7 @@ export async function retryPlatform(
   reportId: string,
   platform: EnabledPlatformId,
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const engine = getPipelineEngine();
   const report = await assertReportOwned(reportId, owner_id);
   if (!report) return { ok: false, reason: "not_found" };
 
@@ -427,16 +446,19 @@ export async function retryPlatform(
       ),
     );
 
-  await inngest.send({
-    name: "scrape.fetch",
-    data: {
-      reportId,
-      platform,
-      competitor: report.competitors[0] ?? "",
-      category: report.category,
-      keywords: [],
-    },
-  });
+  if (engine === "inngest") {
+    await inngest.send({
+      name: "scrape.fetch",
+      data: {
+        reportId,
+        platform,
+        competitor: report.competitors[0] ?? "",
+        category: report.category,
+        keywords: [],
+      },
+    });
+  }
+  // postgres mode: job is queued in DB; worker will claim it
 
   return { ok: true };
 }

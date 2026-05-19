@@ -36,6 +36,20 @@
       "when": 1747421500000,
       "tag": "0004_cancelled_enum_values",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779194430260,
+      "tag": "0005_whole_bruce_banner",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779194604205,
+      "tag": "0006_tranquil_nick_fury",
+      "breakpoints": true
     }
   ]
 }

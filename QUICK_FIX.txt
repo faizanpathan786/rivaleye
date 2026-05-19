@@ -1,0 +1,270 @@
+================================================================================
+                    RIVALEYE: JOBS STUCK FIX - QUICK REFERENCE
+================================================================================
+
+PROBLEM: Reports stuck at "queued" status, workers never process jobs
+
+ROOT CAUSE: Missing INNGEST_EVENT_KEY in .env file
+
+SOLUTION: Add one environment variable
+
+================================================================================
+                              THE Fix (3 Steps)
+================================================================================
+
+Step 1: Start Inngest Dev Server (Terminal 1)
+────────────────────────────────────────────
+$ npx inngest-cli@latest dev
+
+↓ This starts Inngest on http://localhost:8288
+
+
+Step 2: Get Event Key & Update .env
+────────────────────────────────────
+Visit: http://localhost:8288
+Copy the event key shown in UI
+
+Edit: /Users/apple/Desktop/rivaleye-v3/.env
+
+Add this line:
+  INNGEST_EVENT_KEY=sk-xxxxxxxxxxxx  (paste your key)
+
+
+Step 3: Verify the Fix
+──────────────────────
+$ CONNECTION_STRING='...' bun test packages/api/src/__tests__/debug-inngest-integration.test.ts
+
+Expected output:
+  ✓ INNGEST_EVENT_KEY is set: YES
+  ✓ inngest.send() succeeded
+  ✓ Inngest Send Results: Succeeded: 6/6
+
+================================================================================
+                         FULL WORKING SETUP (Terminals)
+================================================================================
+
+Terminal 1: Inngest Dev Server
+────────────────────────────
+$ npx inngest-cli@latest dev
+
+
+Terminal 2: Worker - Scrape
+────────────────────────────
+$ pnpm --filter @rivaleye/worker dev scrape
+
+
+Terminal 3: Worker - LLM
+────────────────────────────
+$ pnpm --filter @rivaleye/worker dev llm
+
+
+Terminal 4: Worker - Synth
+────────────────────────────
+$ pnpm --filter @rivaleye/worker dev synth
+
+
+Terminal 5: API Server
+────────────────────────────
+$ pnpm --filter @rivaleye/api dev
+
+
+Terminal 6: Frontend
+────────────────────────────
+$ pnpm --filter @rivaleye/web dev
+
+
+Now:
+  - Open http://localhost:5173
+  - Create a report
+  - Watch status: queued → running → completed
+
+================================================================================
+                             What Gets Stuck
+================================================================================
+
+Without INNGEST_EVENT_KEY:
+
+  Report Created:  ✓ (in database)
+  Jobs Created:    ✓ (in database)
+  Events Sent:     ✗ (FAILS - 401 Unauthorized)
+  Workers Process: ✗ (never receive signal)
+  Report Progress: ✗ (stuck at "queued")
+  Frontend Shows:  ⏳ Infinite loading
+
+================================================================================
+                          How To Verify It's Fixed
+================================================================================
+
+1. Check .env file
+   $ grep INNGEST_EVENT_KEY .env
+   ✓ Should show: INNGEST_EVENT_KEY=sk-xxx...
+
+2. Check Inngest dev server
+   $ curl http://localhost:8288
+   ✓ Should respond with 200
+
+3. Run debug test
+   $ bun test packages/api/src/__tests__/debug-inngest-integration.test.ts
+   ✓ Should see: "Inngest Send Results: Succeeded: 6/6"
+
+4. Create a report
+   $ Open http://localhost:5173
+   ✓ Status should change from "queued" to "running" within 10 seconds
+
+================================================================================
+                          Test Files For Debugging
+================================================================================
+
+Test 1: Database & API Layer (always passes)
+  $ CONNECTION_STRING='...' bun test packages/api/src/__tests__/e2e-competitor-report-lifecycle.test.ts
+  ✓ 8/8 pass
+  ✓ Proves: API, DB, competitor/report creation all work
+
+Test 2: Inngest Integration (fails without INNGEST_EVENT_KEY)
+  $ CONNECTION_STRING='...' bun test packages/api/src/__tests__/debug-inngest-integration.test.ts
+  ✗ Shows exact error: 401 Event key not found
+  ✓ Confirms: This is the problem
+
+================================================================================
+                            Documents Created
+================================================================================
+
+E2E_DEBUG_REPORT.md
+  ├─ Comprehensive findings from tests
+  ├─ Complete lifecycle explanation
+  ├─ Test results and root cause analysis
+  └─ Debugging commands
+
+INNGEST_FAILURE_TRACE.md
+  ├─ Exact point of failure
+  ├─ Error stack trace
+  ├─ Step-by-step breakdown
+  └─ Database state visualization
+
+FIX_SUMMARY.md
+  ├─ Problem in 10 seconds
+  ├─ Test results overview
+  ├─ Critical issue explanation
+  ├─ Configuration checklist
+  └─ Diagnostic guide
+
+QUICK_FIX.txt
+  └─ This file - quick reference
+
+================================================================================
+                             The Error Message
+================================================================================
+
+Currently, when you create a report without INNGEST_EVENT_KEY:
+
+  HTTP Response:
+    {
+      "status": 400,
+      "message": "Failed to create report",
+      "error": "Inngest API Error: 401 Event key not found"
+    }
+
+This error means:
+  - inngest.send() tried to authenticate
+  - Inngest API couldn't find the event key
+  - Request was rejected with 401 Unauthorized
+  - Error bubbled up to API handler
+  - API returned 400 to user
+
+================================================================================
+                        Why This Happened
+================================================================================
+
+The system was built to use Inngest for queueing jobs to workers.
+
+Inngest requires:
+  1. INNGEST_EVENT_KEY in environment
+  2. Inngest server running (localhost:8288 for dev)
+
+Without these, `inngest.send()` fails immediately.
+
+The rest of the system (database, API logic, workers) is all correct.
+It just needs this one piece to work.
+
+================================================================================
+                           Platform Jobs Status
+================================================================================
+
+BEFORE (without INNGEST_EVENT_KEY):
+
+  report_platform_jobs table:
+  ┌─────────┬─────────────────┬──────────┬───────┐
+  │ platform│ report_id       │ status   │ stage │
+  ├─────────┼─────────────────┼──────────┼───────┤
+  │ reddit  │ abc-123-def     │ queued   │ scrape│  ← Stuck here
+  │ appstore│ abc-123-def     │ queued   │ scrape│  ← Stuck here
+  │ playstore
+  │ hackernews
+  │ producthunt
+  │ devto
+  └─────────┴─────────────────┴──────────┴───────┘
+
+AFTER (with INNGEST_EVENT_KEY + workers running):
+
+  As events process:
+  │ reddit  │ abc-123-def     │ completed│ done  │  ← Progressed!
+  │ appstore│ abc-123-def     │ running  │stage_a│  ← Currently processing
+  │ playstore
+  │ ...
+
+================================================================================
+                            Troubleshooting
+================================================================================
+
+Problem: Still getting 401 error
+  → Check .env file has INNGEST_EVENT_KEY set
+  → Check key format: should start with "sk-"
+  → Run: echo $INNGEST_EVENT_KEY (should print key, not empty)
+
+Problem: Test shows "INNGEST_EVENT_KEY is set: NO"
+  → Key is in .env but environment variable not loaded
+  → Restart terminal (source .env automatically in some shells)
+  → Or explicitly: export $(cat .env | xargs)
+
+Problem: Can't connect to localhost:8288
+  → Run: npx inngest-cli@latest dev
+  → Check no other process using port 8288
+
+Problem: Workers connected but jobs still stuck
+  → Check worker logs for errors
+  → Verify worker handlers exist: packages/worker/src/scrape/fetch.ts
+  → Check database schema matches workers' expectations
+
+================================================================================
+                              Success Indicators
+================================================================================
+
+✓ INNGEST_EVENT_KEY set in .env
+✓ Inngest dev server running (localhost:8288)
+✓ All 3 workers running (scrape, llm, synth)
+✓ API server running
+✓ Frontend running
+✓ Create a report
+✓ Status changes to "running" within 10 seconds
+✓ Frontend shows platform progress updates
+✓ Report becomes "completed" after 5-15 minutes
+✓ Full report displays with all insights
+
+================================================================================
+                            Need More Help?
+================================================================================
+
+Read these in order:
+  1. FIX_SUMMARY.md - Understand the problem
+  2. E2E_DEBUG_REPORT.md - See test results and findings
+  3. INNGEST_FAILURE_TRACE.md - Understand the failure point
+
+Run tests:
+  $ bun test packages/api/src/__tests__/e2e-competitor-report-lifecycle.test.ts
+  $ bun test packages/api/src/__tests__/debug-inngest-integration.test.ts
+
+Check code:
+  $ packages/api/src/services/reports.service.ts (line 103)
+  $ packages/api/src/libs/inngest.ts (configuration)
+
+================================================================================

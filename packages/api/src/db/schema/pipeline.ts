@@ -9,13 +9,20 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const report_platform_stage_enum = pgEnum("report_platform_stage", [
+  "queued",
   "scrape",
   "stage_a",
   "stage_b",
   "done",
   "failed",
+  "fetching",
+  "storing_mentions",
+  "extracting",
+  "summarizing",
+  "completed",
 ]);
 import { reports } from "./reports";
 
@@ -42,11 +49,54 @@ export const report_platform_jobs = pgTable(
     last_event_at: timestamp("last_event_at"),
     started_at: timestamp("started_at"),
     completed_at: timestamp("completed_at"),
+    run_after: timestamp("run_after").notNull().defaultNow(),
+    locked_at: timestamp("locked_at"),
+    locked_by: text("locked_by"),
+    max_attempts: integer("max_attempts").notNull().default(3),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
     created_at: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
     unique("report_platform_jobs_report_platform_uniq").on(t.report_id, t.platform),
     index("report_platform_jobs_report_id_idx").on(t.report_id),
+    index("report_platform_jobs_status_run_after_idx").on(t.status, t.run_after, t.created_at).where(sql`status = 'queued'`),
+    index("report_platform_jobs_report_id_status_idx").on(t.report_id, t.status),
+    index("report_platform_jobs_locked_at_idx").on(t.locked_at).where(sql`status = 'running'`),
+  ],
+);
+
+export const synthesis_job_status_enum = pgEnum("synthesis_job_status", [
+  "queued",
+  "running",
+  "completed",
+  "failed",
+  "cancelled",
+]);
+
+export const synthesis_jobs = pgTable(
+  "synthesis_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    report_id: uuid("report_id")
+      .notNull()
+      .references(() => reports.id, { onDelete: "cascade" }),
+    status: synthesis_job_status_enum("status").notNull().default("queued"),
+    attempt_count: integer("attempt_count").notNull().default(0),
+    max_attempts: integer("max_attempts").notNull().default(2),
+    run_after: timestamp("run_after").notNull().defaultNow(),
+    locked_at: timestamp("locked_at"),
+    locked_by: text("locked_by"),
+    started_at: timestamp("started_at"),
+    completed_at: timestamp("completed_at"),
+    last_error: text("last_error"),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    unique("synthesis_jobs_report_id_uniq").on(t.report_id),
+    index("synthesis_jobs_status_run_after_idx").on(t.status, t.run_after, t.created_at),
+    index("synthesis_jobs_report_id_idx").on(t.report_id),
+    index("synthesis_jobs_locked_at_idx").on(t.locked_at).where(sql`status = 'running'`),
   ],
 );
 
@@ -73,6 +123,8 @@ export const report_platform_briefs = pgTable(
 
 export type ReportPlatformJob = typeof report_platform_jobs.$inferSelect;
 export type NewReportPlatformJob = typeof report_platform_jobs.$inferInsert;
+export type SynthesisJob = typeof synthesis_jobs.$inferSelect;
+export type NewSynthesisJob = typeof synthesis_jobs.$inferInsert;
 export type ReportPlatformBrief = typeof report_platform_briefs.$inferSelect;
 export type NewReportPlatformBrief = typeof report_platform_briefs.$inferInsert;
 
@@ -104,3 +156,8 @@ export const report_pipeline_checkpoints = pgTable(
 
 export type ReportPipelineCheckpoint = typeof report_pipeline_checkpoints.$inferSelect;
 export type NewReportPipelineCheckpoint = typeof report_pipeline_checkpoints.$inferInsert;
+
+// Infer TypeScript types from enums for type safety across packages
+export type SourceJobStatus = typeof report_platform_job_status_enum.enumValues[number];
+export type SynthesisJobStatus = typeof synthesis_job_status_enum.enumValues[number];
+export type ReportPlatformStage = typeof report_platform_stage_enum.enumValues[number];
