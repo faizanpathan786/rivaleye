@@ -5,25 +5,25 @@
  * - Same job is never claimed twice
  * - Multiple workers claim different jobs atomically
  * - FOR UPDATE SKIP LOCKED prevents race conditions
+ *
+ * Each test gets its own isolated report so claims don't interfere.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { eq } from "drizzle-orm";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "bun:test";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { users } from "../../../api/src/db/schema/users.js";
 import { reports } from "../../../api/src/db/schema/reports.js";
 import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
-import { ENABLED_PLATFORMS } from "@rivaleye/shared";
 import { claimSourceJob, claimSynthesisJob } from "../pg-runner/claim";
 
 let testUserId: string;
-let testReportId: string;
+// Each test creates its own report to keep the global queue clean
+let currentReportId: string;
 
 describe("PG Runner: Concurrent Job Claiming", () => {
   beforeAll(async () => {
-    console.log("\n=== Setup: Creating test user and report ===");
-
-    // Create test user
+    console.log("\n=== Setup: Creating test user ===");
     const [user] = await db
       .insert(users)
       .values({
@@ -40,25 +40,33 @@ describe("PG Runner: Concurrent Job Claiming", () => {
     if (!user) throw new Error("Failed to create test user");
     testUserId = user.id;
     console.log(`✓ Test user created: ${testUserId}`);
+  });
 
-    // Create test report
+  beforeEach(async () => {
+    // Each test gets a fresh report so claims don't cross test boundaries
     const [report] = await db
       .insert(reports)
       .values({
         owner_id: testUserId,
         category: "Job Claiming Test",
-        competitors: ["Test1", "Test2"],
+        competitors: ["Test"],
         audience: "Test",
         goal: "find_user_pain",
         status: "queued",
         stage: "queued",
-        primary_competitor_name: "Test1",
+        primary_competitor_name: "Test",
       })
       .returning({ id: reports.id });
 
     if (!report) throw new Error("Failed to create test report");
-    testReportId = report.id;
-    console.log(`✓ Test report created: ${testReportId}`);
+    currentReportId = report.id;
+  });
+
+  afterEach(async () => {
+    // Cascade delete removes jobs and synthesis_jobs via FK
+    if (currentReportId) {
+      await db.delete(reports).where(eq(reports.id, currentReportId));
+    }
   });
 
   afterAll(async () => {
@@ -72,22 +80,19 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("source job: claims next queued job and transitions to running", async () => {
     console.log("\n--- Test: Source job claiming ===");
 
-    // Create jobs
-    const platform = ENABLED_PLATFORMS[0] ?? "reddit";
-    await db.insert(report_platform_jobs).values({
-      report_id: testReportId,
-      platform,
-      status: "queued",
-      stage: "scrape",
-      attempt_count: 0,
-    });
+    const [job] = await db
+      .insert(report_platform_jobs)
+      .values({ report_id: currentReportId, platform: "reddit" })
+      .returning({ id: report_platform_jobs.id });
 
-    // Claim the job within a transaction
+    if (!job) throw new Error("Failed to create test job");
+
     const claimedJob = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-1:12345:abc123"),
     );
 
     expect(claimedJob).toBeDefined();
+    expect(claimedJob?.id).toBe(job.id);
     expect(claimedJob?.status).toBe("running");
     expect(claimedJob?.locked_by).toBe("worker-1:12345:abc123");
     expect(claimedJob?.attempt_count).toBe(1);
@@ -102,16 +107,9 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("source job: same job cannot be claimed twice", async () => {
     console.log("\n--- Test: Duplicate claiming prevention ===");
 
-    // Create a job
     const [job] = await db
       .insert(report_platform_jobs)
-      .values({
-        report_id: testReportId,
-        platform: ENABLED_PLATFORMS[1] ?? "g2",
-        status: "queued",
-        stage: "scrape",
-        attempt_count: 0,
-      })
+      .values({ report_id: currentReportId, platform: "reddit" })
       .returning({ id: report_platform_jobs.id });
 
     if (!job) throw new Error("Failed to create test job");
@@ -124,37 +122,26 @@ describe("PG Runner: Concurrent Job Claiming", () => {
     expect(firstClaim?.id).toBe(job.id);
     console.log(`✓ Worker-1 claimed job: ${job.id}`);
 
-    // Second worker attempts to claim - should get a different job (or null)
+    // Second worker attempts to claim - only 1 job in queue, should get null
     const secondClaim = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-2:67890:def456"),
     );
 
-    // Should NOT be the same job
-    if (secondClaim) {
-      expect(secondClaim.id).not.toBe(job.id);
-      console.log(`✓ Worker-2 claimed different job: ${secondClaim.id}`);
-    } else {
-      console.log(`✓ Worker-2 got no job (all available jobs already claimed)`);
-    }
+    expect(secondClaim).toBeNull();
+    console.log(`✓ Worker-2 got no job (already claimed)`);
   });
 
   it("source job: multiple workers claim different jobs atomically", async () => {
     console.log("\n--- Test: Multiple workers claiming different jobs ===");
 
-    // Create 3 jobs
-    const platforms = ENABLED_PLATFORMS.slice(0, 3);
+    // Create 3 jobs with distinct platforms
+    const platforms = ["reddit", "producthunt", "appstore"];
     const jobIds: string[] = [];
 
     for (const platform of platforms) {
       const [job] = await db
         .insert(report_platform_jobs)
-        .values({
-          report_id: testReportId,
-          platform,
-          status: "queued",
-          stage: "scrape",
-          attempt_count: 0,
-        })
+        .values({ report_id: currentReportId, platform })
         .returning({ id: report_platform_jobs.id });
 
       if (job) jobIds.push(job.id);
@@ -173,12 +160,17 @@ describe("PG Runner: Concurrent Job Claiming", () => {
 
     console.log(`✓ Claimed ${claimedIds.length} jobs across 3 workers`);
 
-    // Verify no duplicates
+    // All claims should be from our 3 jobs
+    for (const id of claimedIds) {
+      expect(jobIds).toContain(id);
+    }
+
+    // No duplicates
     const uniqueIds = new Set(claimedIds);
     expect(uniqueIds.size).toBe(claimedIds.length);
     console.log(`✓ All claimed job IDs are unique`);
 
-    // Verify each claimed by different worker
+    // Each worker got a different job
     const claimedByWorker = claims.filter((c) => c !== null).map((c) => c!.locked_by);
     const uniqueWorkers = new Set(claimedByWorker);
     expect(uniqueWorkers.size).toBe(claimedByWorker.length);
@@ -188,25 +180,16 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("source job: respects run_after timestamp for job scheduling", async () => {
     console.log("\n--- Test: run_after scheduling ===");
 
-    const now = new Date();
-    const future = new Date(now.getTime() + 60000); // 1 minute in future
+    const future = new Date(Date.now() + 60000); // 1 minute in future
 
-    // Create a job with run_after in the future
     const [futureJob] = await db
       .insert(report_platform_jobs)
-      .values({
-        report_id: testReportId,
-        platform: ENABLED_PLATFORMS[2] ?? "capterra",
-        status: "queued",
-        stage: "scrape",
-        attempt_count: 0,
-        run_after: future,
-      })
+      .values({ report_id: currentReportId, platform: "reddit", run_after: future })
       .returning({ id: report_platform_jobs.id });
 
     if (!futureJob) throw new Error("Failed to create future job");
 
-    // Try to claim - should return null (job not yet eligible)
+    // Only this job exists in queue — run_after is future, so should return null
     const claim = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-future:123:xyz"),
     );
@@ -214,18 +197,16 @@ describe("PG Runner: Concurrent Job Claiming", () => {
     expect(claim).toBeNull();
     console.log(`✓ Future job was not claimed (run_after in future)`);
 
-    // Update job's run_after to now (or past)
+    // Update run_after to the past
     await db
       .update(report_platform_jobs)
-      .set({ run_after: new Date(now.getTime() - 1000) })
+      .set({ run_after: new Date(Date.now() - 1000) })
       .where(eq(report_platform_jobs.id, futureJob.id));
 
-    // Now try to claim - should succeed
     const updatedClaim = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-future:123:xyz"),
     );
 
-    expect(updatedClaim).toBeDefined();
     expect(updatedClaim?.id).toBe(futureJob.id);
     console.log(`✓ Job claimed after run_after timestamp passed`);
   });
@@ -233,24 +214,17 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("synthesis job: claims and transitions correctly", async () => {
     console.log("\n--- Test: Synthesis job claiming ===");
 
-    // Create a synthesis job
     const [synthJob] = await db
       .insert(synthesis_jobs)
-      .values({
-        report_id: testReportId,
-        status: "queued",
-        attempt_count: 0,
-      })
+      .values({ report_id: currentReportId })
       .returning({ id: synthesis_jobs.id });
 
     if (!synthJob) throw new Error("Failed to create synthesis job");
 
-    // Claim it
     const claimedSynthJob = await db.transaction(async (tx) =>
       claimSynthesisJob(tx as any, "synth-worker:456:def"),
     );
 
-    expect(claimedSynthJob).toBeDefined();
     expect(claimedSynthJob?.id).toBe(synthJob.id);
     expect(claimedSynthJob?.status).toBe("running");
     expect(claimedSynthJob?.locked_by).toBe("synth-worker:456:def");
@@ -262,14 +236,11 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("synthesis job: only one synthesis job per report", async () => {
     console.log("\n--- Test: Synthesis job uniqueness per report ===");
 
-    // Try to create a second synthesis job for same report
+    await db.insert(synthesis_jobs).values({ report_id: currentReportId });
+
     let caught = false;
     try {
-      await db.insert(synthesis_jobs).values({
-        report_id: testReportId,
-        status: "queued",
-        attempt_count: 0,
-      });
+      await db.insert(synthesis_jobs).values({ report_id: currentReportId });
     } catch (e) {
       caught = true;
       const err = e as { message?: string };
@@ -285,21 +256,13 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("source job: FOR UPDATE SKIP LOCKED prevents race conditions", async () => {
     console.log("\n--- Test: FOR UPDATE SKIP LOCKED behavior ===");
 
-    // Create multiple jobs
     const jobCount = 5;
     const createdJobs = [];
 
     for (let i = 0; i < jobCount; i++) {
-      const platform = `test-platform-${i}`;
       const [job] = await db
         .insert(report_platform_jobs)
-        .values({
-          report_id: testReportId,
-          platform,
-          status: "queued",
-          stage: "scrape",
-          attempt_count: 0,
-        })
+        .values({ report_id: currentReportId, platform: `test-platform-${i}` })
         .returning({ id: report_platform_jobs.id });
 
       if (job) createdJobs.push(job);
@@ -307,7 +270,7 @@ describe("PG Runner: Concurrent Job Claiming", () => {
 
     console.log(`✓ Created ${createdJobs.length} test jobs`);
 
-    // Simulate 10 workers trying to claim jobs simultaneously
+    // 10 workers try to claim simultaneously — only 5 jobs exist
     const claimAttempts = await Promise.all(
       Array.from({ length: 10 }).map((_, i) =>
         db.transaction(async (tx) =>
@@ -316,14 +279,13 @@ describe("PG Runner: Concurrent Job Claiming", () => {
       ),
     );
 
-    const successfulClaims = claimAttempts.filter((claim) => claim !== null);
+    const successfulClaims = claimAttempts.filter((c) => c !== null);
     console.log(`✓ ${successfulClaims.length} workers claimed jobs`);
-    console.log(`  Available jobs: ${createdJobs.length}`);
 
-    // Should claim at most as many as we created
+    // Can't claim more jobs than exist
     expect(successfulClaims.length).toBeLessThanOrEqual(createdJobs.length);
 
-    // All claimed jobs should be unique
+    // No duplicate claims
     const claimedIds = successfulClaims.map((c) => c!.id);
     const uniqueClaimedIds = new Set(claimedIds);
     expect(uniqueClaimedIds.size).toBe(claimedIds.length);
@@ -333,21 +295,13 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("source job: increments attempt_count on each claim", async () => {
     console.log("\n--- Test: Attempt count increment ===");
 
-    // Create a job
     const [job] = await db
       .insert(report_platform_jobs)
-      .values({
-        report_id: testReportId,
-        platform: "attempt-test-platform",
-        status: "queued",
-        stage: "scrape",
-        attempt_count: 0,
-      })
+      .values({ report_id: currentReportId, platform: "reddit" })
       .returning({ id: report_platform_jobs.id });
 
     if (!job) throw new Error("Failed to create test job");
 
-    // First claim
     const claim1 = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-attempt-1:111:aaa"),
     );
@@ -355,13 +309,12 @@ describe("PG Runner: Concurrent Job Claiming", () => {
     expect(claim1?.attempt_count).toBe(1);
     console.log(`✓ First claim: attempt_count = 1`);
 
-    // Mark as queued again (simulating a failure and re-queue)
+    // Re-queue it (simulating a failure and retry)
     await db
       .update(report_platform_jobs)
       .set({ status: "queued", locked_at: null, locked_by: null })
       .where(eq(report_platform_jobs.id, job.id));
 
-    // Second claim
     const claim2 = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-attempt-2:222:bbb"),
     );
@@ -373,23 +326,7 @@ describe("PG Runner: Concurrent Job Claiming", () => {
   it("returns null when no jobs available", async () => {
     console.log("\n--- Test: Empty job queue handling ===");
 
-    // Create a report with no jobs
-    const [emptyReport] = await db
-      .insert(reports)
-      .values({
-        owner_id: testUserId,
-        category: "Empty Report",
-        competitors: ["Test"],
-        audience: "Test",
-        goal: "find_user_pain",
-        status: "queued",
-        stage: "queued",
-      })
-      .returning({ id: reports.id });
-
-    if (!emptyReport) throw new Error("Failed to create empty report");
-
-    // Try to claim from empty queue
+    // No jobs created for this report — queue is empty
     const claim = await db.transaction(async (tx) =>
       claimSourceJob(tx as any, "worker-empty:999:zzz"),
     );

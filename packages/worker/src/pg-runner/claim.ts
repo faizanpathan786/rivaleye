@@ -42,7 +42,7 @@ export async function claimSourceJob(
   // - If already locked by another transaction, skip to the next row (skipLocked: true)
   // - Return at most 1 row
   const selectedRows = await tx
-    .selectDistinct()
+    .select()
     .from(report_platform_jobs)
     .where(
       and(
@@ -125,7 +125,7 @@ export async function claimSynthesisJob(
 ): Promise<SynthesisJobRow | null> {
   // SELECT the next queued synthesis job with row lock
   const selectedRows = await tx
-    .selectDistinct()
+    .select()
     .from(synthesis_jobs)
     .where(
       and(
