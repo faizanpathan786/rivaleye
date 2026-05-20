@@ -137,10 +137,11 @@ export async function processSynthesisJob(
     log.info(
       {
         reportId: job.report_id,
-        completedCount: completedPlatforms.length,
-        failedCount: failedPlatforms.length,
+        completedPlatforms,
+        failedPlatforms,
+        totalPlatforms: sourceJobs.length,
       },
-      `Running synthesis pipeline (${completedPlatforms.length} completed platforms, ${failedPlatforms.length} failed)`
+      `Fan-in ready: running synthesis (${completedPlatforms.length}/${sourceJobs.length} platforms succeeded)`
     );
 
     await runPipeline(job.report_id);
@@ -194,8 +195,10 @@ export async function processSynthesisJob(
     const errorMsg = err instanceof Error ? err.message : String(err);
     const durationMs = Date.now() - startedAt;
 
+    const cause = err instanceof Error ? (err.cause instanceof Error ? err.cause.message : String(err.cause ?? "")) : "";
+    const fullError = cause ? `${errorMsg}: ${cause}` : errorMsg;
     log.error(
-      { jobId: job.id, reportId: job.report_id, error: errorMsg, durationMs },
+      { jobId: job.id, reportId: job.report_id, error: errorMsg, cause, durationMs },
       "Synthesis job failed"
     );
 
@@ -206,7 +209,7 @@ export async function processSynthesisJob(
       event: "failed",
       attempt: job.attempt_count,
       durationMs,
-      error: errorMsg,
+      error: fullError,
     });
 
     // Determine if we should retry or fail permanently
@@ -232,7 +235,7 @@ export async function processSynthesisJob(
           run_after: new Date(Date.now() + backoffMs),
           locked_at: null,
           locked_by: null,
-          last_error: errorMsg,
+          last_error: fullError,
           updated_at: new Date(),
         })
         .where(eq(synthesis_jobs.id, job.id));
@@ -254,7 +257,7 @@ export async function processSynthesisJob(
           status: "failed",
           locked_at: null,
           locked_by: null,
-          last_error: errorMsg,
+          last_error: fullError,
           completed_at: new Date(),
           updated_at: new Date(),
         })
@@ -266,7 +269,7 @@ export async function processSynthesisJob(
         .set({
           status: "failed",
           stage: "failed",
-          error: errorMsg,
+          error: fullError,
           updated_at: new Date(),
         })
         .where(eq(reports.id, job.report_id));

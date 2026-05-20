@@ -153,7 +153,7 @@ export const synthOutputSchema = z.object({
       sub: z.string().nullable(),
       when_label: z.string().nullable(),
       score: z.number().int(),
-      sentiment: z.number().nullable(),
+      sentiment: z.number().nullable().catch(null),
       text: z.string(),
     }),
   ),
