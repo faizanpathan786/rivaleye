@@ -436,6 +436,7 @@ function OverviewTab({
   return (
     <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
       <div className="flex flex-col gap-4">
+        <ExecutiveBriefCard brief={report.executive_brief ?? null} />
         <SummaryCard report={report} complaints={complaints} />
         <ComplaintsCard
           complaints={complaints.slice(0, 5)}
@@ -455,6 +456,20 @@ function OverviewTab({
           <FeatureGapsCard featureGaps={featureGaps.slice(0, 6)} />
         )}
       </div>
+    </div>
+  );
+}
+
+function ExecutiveBriefCard({ brief }: { brief: string | null }) {
+  if (!brief) return null;
+  return (
+    <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--accent)", borderWidth: 1.5 }}>
+      <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+        Intelligence Brief
+      </div>
+      <p className="text-sm leading-relaxed" style={{ color: "var(--fg)" }}>
+        {brief}
+      </p>
     </div>
   );
 }
@@ -588,6 +603,11 @@ function ComplaintsCard({
                     {cp.tag && (
                       <span className={`re-tag ${tagClass(cp.tag)}`}>
                         {cp.tag}
+                      </span>
+                    )}
+                    {cp.mentions > 0 && (
+                      <span className="text-[10px] rounded px-1.5 py-0.5 font-medium" style={{ background: "var(--surface-raised)", color: "var(--fg-muted)" }}>
+                        {cp.mentions} {cp.mentions === 1 ? "mention" : "mentions"}
                       </span>
                     )}
                   </div>
