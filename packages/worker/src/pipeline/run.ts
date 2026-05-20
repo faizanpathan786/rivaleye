@@ -100,11 +100,14 @@ export async function runPipeline(reportId: string): Promise<void> {
     await log(reportId, "info", "C", null, "skipping stage C (checkpoint found)");
     merged = checkpoints.get("C") as unknown as MergedClusters;
   } else {
-    await log(reportId, "info", "C", null, "running stage C: merge");
+    await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: extracts.length });
     const resultC = await runStageCMerge({ llm, ctx, briefs, extracts }, LLM_OPTS_C);
     await log(reportId, "info", "C", null, "stage C done", {
       promptTokens: resultC.usage.promptTokens,
       completionTokens: resultC.usage.completionTokens,
+      complaintClusters: resultC.merged.complaint_clusters.length,
+      featureClusters: resultC.merged.feature_clusters.length,
+      pricingClusters: resultC.merged.pricing_clusters.length,
     });
     merged = resultC.merged;
     await saveCheckpoint(reportId, "C", merged as unknown as Record<string, unknown>);
@@ -116,11 +119,17 @@ export async function runPipeline(reportId: string): Promise<void> {
     await log(reportId, "info", "D", null, "skipping stage D (checkpoint found)");
     synth = checkpoints.get("D") as unknown as SynthOutput;
   } else {
-    await log(reportId, "info", "D", null, "running stage D: synth");
-    const resultD = await runStageDSynth({ llm, ctx, merged }, LLM_OPTS_D);
+    await log(reportId, "info", "D", null, "running stage D: synth", {
+      complaintClusters: merged.complaint_clusters.length,
+      featureClusters: merged.feature_clusters.length,
+    });
+    const resultD = await runStageDSynth({ llm, ctx, merged, briefs, extracts }, LLM_OPTS_D);
     await log(reportId, "info", "D", null, "stage D done", {
       promptTokens: resultD.usage.promptTokens,
       completionTokens: resultD.usage.completionTokens,
+      complaints: resultD.synth.complaints?.length ?? 0,
+      opportunities: resultD.synth.opportunities?.length ?? 0,
+      actions: resultD.synth.actions?.length ?? 0,
     });
     synth = resultD.synth;
     await saveCheckpoint(reportId, "D", synth as unknown as Record<string, unknown>);
@@ -133,7 +142,10 @@ export async function runPipeline(reportId: string): Promise<void> {
     await log(reportId, "info", "E", null, "skipping stage E (checkpoint found)");
     refined = checkpoints.get("E") as unknown as SynthOutput;
   } else {
-    await log(reportId, "info", "E", null, "running stage E: refine");
+    await log(reportId, "info", "E", null, "running stage E: refine", {
+      complaints: synth.complaints?.length ?? 0,
+      opportunities: synth.opportunities?.length ?? 0,
+    });
     const resultE = await runStageERefine({ llm, ctx, merged, draft: synth }, LLM_OPTS_E);
     if (resultE.fellBackToDraft) {
       await log(reportId, "warn", "E", null, "stage E fell back to draft output");
