@@ -23,6 +23,7 @@ export type ReportRow = {
   sentiment_negative: number | null;
   sentiment_trend: string | null;
   voice_summary: string | null;
+  executive_brief: string | null;
   voice_phrases: string[];
   pricing_blended: string | null;
   pricing_pain_score: number | null;

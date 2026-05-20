@@ -61,6 +61,7 @@ export const reports = pgTable("reports", {
   sentiment_trend: text("sentiment_trend"),
   sentiment_series: jsonb("sentiment_series").$type<number[]>().default([]),
   voice_summary: text("voice_summary"),
+  executive_brief: text("executive_brief"),
   voice_phrases: jsonb("voice_phrases").$type<string[]>().default([]),
   pricing_blended: text("pricing_blended"),
   pricing_pain_score: real("pricing_pain_score"),

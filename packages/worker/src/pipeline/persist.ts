@@ -240,6 +240,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
           sentiment_negative: meta.sentiment_negative,
           sentiment_trend: meta.sentiment_trend,
           voice_summary: meta.voice_summary,
+          executive_brief: synth.executive_brief || null,
           voice_phrases: meta.voice_phrases,
           pricing_blended: meta.pricing_blended,
           pricing_pain_score: meta.pricing_pain_score,
