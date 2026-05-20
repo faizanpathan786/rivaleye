@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { runStageAExtract } from "./stage-a-extract";
+import { buildRedditExtract } from "../prompts/platform/reddit/extract";
 import type { OpenRouterClient } from "@rivaleye/shared";
 
 describe("runStageAExtract (appstore)", () => {
@@ -49,5 +50,23 @@ describe("runStageAExtract (appstore)", () => {
     });
     expect(result.extract.complaints.length).toBe(1);
     expect(result.usage.promptTokens).toBe(10);
+  });
+});
+
+describe("buildRedditExtract", () => {
+  it("system prompt rejects where-can-I-find-X as feature gaps", () => {
+    const result = buildRedditExtract({
+      ctx: { reportId: "r1", competitor: "Twilio", category: "Messaging", audience: null, goal: "find pain" },
+      posts: [],
+    });
+    expect(result.system).toContain("genuine product capability");
+  });
+
+  it("system prompt requires verbatim notable_quotes under 150 chars", () => {
+    const result = buildRedditExtract({
+      ctx: { reportId: "r1", competitor: "Twilio", category: "Messaging", audience: null, goal: "find pain" },
+      posts: [],
+    });
+    expect(result.system).toContain("150");
   });
 });
