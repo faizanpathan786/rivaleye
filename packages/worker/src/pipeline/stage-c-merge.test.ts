@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, test } from "bun:test";
 import { runStageCMerge } from "./stage-c-merge";
+import { buildMerge } from "../prompts/cross/merge";
 import type { OpenRouterClient } from "@rivaleye/shared";
 
 describe("runStageCMerge", () => {
@@ -36,5 +37,39 @@ describe("runStageCMerge", () => {
     expect(res.merged.complaint_clusters).toEqual([]);
     expect(res.usage.promptTokens).toBe(30);
     expect(res.model).toBe("test-model");
+  });
+});
+
+describe("buildMerge", () => {
+  test("system prompt requires all evidence_ids to be included", () => {
+    const result = buildMerge({
+      ctx: {
+        reportId: "r1",
+        competitor: "Twilio",
+        category: "Messaging",
+        audience: null,
+        goal: "find pain",
+      },
+      briefs: [],
+      extracts: [],
+    });
+    expect(result.system).toContain("evidence_ids");
+    expect(result.system).toContain("do not truncate");
+  });
+
+  test("system prompt includes both complaint and feature evidence_ids rules", () => {
+    const result = buildMerge({
+      ctx: {
+        reportId: "r1",
+        competitor: "Twilio",
+        category: "Messaging",
+        audience: null,
+        goal: "find pain",
+      },
+      briefs: [],
+      extracts: [],
+    });
+    expect(result.system).toContain("complaint_clusters[].evidence_ids");
+    expect(result.system).toContain("feature_clusters[].evidence_ids");
   });
 });
