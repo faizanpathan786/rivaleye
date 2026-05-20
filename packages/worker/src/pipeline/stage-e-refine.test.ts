@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { runStageERefine } from "./stage-e-refine";
+import { buildRefine } from "../prompts/cross/refine";
 import type { OpenRouterClient } from "@rivaleye/shared";
 import type { MergedClusters, PipelineCtx, SynthOutput } from "../prompts/shared";
 
@@ -102,5 +103,62 @@ describe("runStageERefine", () => {
     expect(result.fellBackToDraft).toBe(true);
     expect(result.refined).toEqual(draft);
     expect(result.model).toBe("(stage-e-fallback)");
+  });
+});
+
+describe("buildRefine prompt", () => {
+  it("system prompt lists executive_brief as required field", () => {
+    const result = buildRefine({
+      ctx,
+      merged,
+      draft,
+    });
+    expect(result.system).toContain("executive_brief");
+  });
+
+  it("system prompt requires at least 2 positioning angles", () => {
+    const result = buildRefine({
+      ctx,
+      merged,
+      draft,
+    });
+    expect(result.system).toContain("positioning");
+    expect(result.system).toContain("at least 2");
+  });
+
+  it("system prompt lists all required keys in final instruction", () => {
+    const result = buildRefine({
+      ctx,
+      merged,
+      draft,
+    });
+    const requiredKeys = [
+      "complaints",
+      "feature_gaps",
+      "pricing_tiers",
+      "pricing_quotes",
+      "switching",
+      "quotes",
+      "voice_words",
+      "positioning",
+      "actions",
+      "leads",
+      "opportunities",
+      "threads",
+      "report_meta",
+      "executive_brief",
+    ];
+    for (const key of requiredKeys) {
+      expect(result.system).toContain(key);
+    }
+  });
+
+  it("system prompt forbids omitting any key", () => {
+    const result = buildRefine({
+      ctx,
+      merged,
+      draft,
+    });
+    expect(result.system).toContain("Never omit any key");
   });
 });
