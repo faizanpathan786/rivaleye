@@ -5,6 +5,7 @@ export interface MentionLike {
 
 export const PLATFORM_LABELS: Record<string, string> = {
   reddit: "Reddit",
+  g2: "G2",
   capterra: "Capterra",
   twitter: "Twitter / X",
   linkedin: "LinkedIn",

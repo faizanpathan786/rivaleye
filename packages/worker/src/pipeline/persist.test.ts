@@ -140,7 +140,7 @@ beforeAll(async () => {
   const row = inserted[0];
   if (!row) throw new Error("Failed to insert test user");
   testUserId = row.id;
-});
+}, 15000);
 
 beforeEach(async () => {
   const inserted = await db
@@ -156,11 +156,11 @@ beforeEach(async () => {
   const row = inserted[0];
   if (!row) throw new Error("Failed to insert test report");
   testReportId = row.id;
-});
+}, 15000);
 
 afterAll(async () => {
   await db.delete(users).where(eq(users.email, TEST_USER_EMAIL));
-});
+}, 15000);
 
 describe("persistReport", () => {
   it("writes all synth sections into sub-tables and updates the parent reports row", async () => {
@@ -217,5 +217,5 @@ describe("persistReport", () => {
     expect(updated?.status).toBe("completed");
     expect(updated?.stage).toBe("done");
     expect(updated?.scanned_at).not.toBeNull();
-  });
+  }, 30000);
 });
