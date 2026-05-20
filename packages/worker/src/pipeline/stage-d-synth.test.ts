@@ -31,6 +31,7 @@ function emptySynth(): SynthOutput {
       switching_net_signal: null,
       switching_reasons_out: [],
     },
+    executive_brief: "Test brief for empty synth.",
   };
 }
 
@@ -73,6 +74,7 @@ function baseSynth(): SynthOutput {
       switching_net_signal: null,
       switching_reasons_out: [],
     },
+    executive_brief: "Test brief for base synth.",
   };
 }
 

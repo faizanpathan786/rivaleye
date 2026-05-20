@@ -254,6 +254,7 @@ const SYNTH_FIXTURE: SynthOutput = {
     switching_net_signal: "Negative — users are actively leaving for CompetitorB due to speed",
     switching_reasons_out: ["performance", "pricing"],
   },
+  executive_brief: "CompetitorA's performance on large datasets is the dominant pain — teams cite unacceptable load times as the primary exit reason. Solo developers and data-heavy teams are worst hit because the Pro tier is priced for enterprise. The switching market is fragmented with CompetitorB as the most cited destination.",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

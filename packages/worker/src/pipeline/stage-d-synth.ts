@@ -66,7 +66,7 @@ export function enrichSynthOutput(
 }
 
 export async function runStageDSynth(input: StageDInput, opts?: LlmCallOptions): Promise<StageDOutput> {
-  const built = buildSynth({ ctx: input.ctx, merged: input.merged });
+  const built = buildSynth({ ctx: input.ctx, merged: input.merged, extracts: input.extracts });
   try {
     const res = await input.llm.complete({
       system: built.system,

@@ -58,6 +58,7 @@ const draft: SynthOutput = {
     switching_net_signal: null,
     switching_reasons_out: [],
   },
+  executive_brief: "Sync issues are the dominant pain — founders describe daily breakage with no clear workaround. Teams building on Notion are worst hit because there is no reliable offline fallback. The switching window is open with no clear alternative.",
 };
 
 describe("runStageERefine", () => {

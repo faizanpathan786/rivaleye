@@ -234,6 +234,7 @@ export const synthOutputSchema = z.object({
     switching_net_signal: z.string().nullable(),
     switching_reasons_out: z.array(z.string()),
   }),
+  executive_brief: z.string().min(1),
 });
 
 export type PlatformExtract = z.infer<typeof platformExtractSchema>;

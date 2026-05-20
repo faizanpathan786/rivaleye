@@ -121,6 +121,7 @@ const SYNTH_FIXTURE: SynthOutput = {
     switching_net_signal: "Mostly outbound churn to cheaper alternatives.",
     switching_reasons_out: ["pricing", "crashes"],
   },
+  executive_brief: "Crashes on export and pricing pain are the dominant complaints — enterprise teams are worst hit. Stability-first positioning can steal users from Notion. The switching market is fragmented with no clear winner yet.",
 };
 
 let testUserId: string;
