@@ -9,6 +9,7 @@ import { normalizePost } from "./normalize";
 const log = pino({ name: "reddit-scraper" });
 
 const SEARCH_TEMPLATES = [
+  (name: string) => name,
   (name: string) => `${name} complaints`,
   (name: string) => `${name} alternatives`,
   (name: string) => `${name} vs`,
