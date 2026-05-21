@@ -26,7 +26,7 @@ import type {
 
 const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 3 };
 const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 3 };
-const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 2 };
+const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 240_000, maxAttempts: 2 };
 
 let _llm: OpenRouterClient | null = null;
 
