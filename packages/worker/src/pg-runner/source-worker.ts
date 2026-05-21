@@ -23,7 +23,7 @@ import { report_platform_jobs, report_platform_briefs } from "../../../api/src/d
 import { emit } from "../events/emit";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
-import { fanInCheck } from "../llm/fan-in";
+import { fanInCheck } from "./fan-in";
 import type { SourceJobRow } from "./types";
 import type { PlatformExtract } from "../prompts/shared";
 
@@ -112,6 +112,7 @@ export async function processSourceJob(
         .update(report_platform_jobs)
         .set({
           status: "completed",
+          stage: "completed",
           completed_at: new Date(),
           locked_at: null,
           locked_by: null,
@@ -127,7 +128,7 @@ export async function processSourceJob(
         durationMs,
         metadata: { posts_count: 0 },
       });
-      await fanInCheck(job.report_id, "fan-in");
+      await fanInCheck(job.report_id);
       return;
     }
 
@@ -167,7 +168,7 @@ export async function processSourceJob(
 
     // Step 9: Check fan-in (may trigger synthesis job creation)
     log.info({ reportId: job.report_id }, "Checking fan-in for synthesis job");
-    await fanInCheck(job.report_id, "fan-in");
+    await fanInCheck(job.report_id);
 
     log.info({ jobId: job.id, reportId: job.report_id }, "Source job completed successfully");
   } catch (err) {
@@ -231,7 +232,7 @@ export async function processSourceJob(
         .where(eq(report_platform_jobs.id, job.id));
 
       // Still call fan-in in case other sources succeeded (partial report)
-      await fanInCheck(job.report_id, "fan-in");
+      await fanInCheck(job.report_id);
     }
 
     // Re-throw so caller knows job failed
