@@ -103,12 +103,13 @@ export async function createReport(
     if (!reportRow) throw new Error("Failed to insert report");
 
     if (engine === "postgres") {
-      // Phase 1: Only Reddit for MVP
-      await tx.insert(report_platform_jobs).values({
-        report_id: reportRow.id,
-        platform: "reddit",
-        status: "queued",
-      });
+      await tx.insert(report_platform_jobs).values(
+        ENABLED_PLATFORMS.map((platform) => ({
+          report_id: reportRow.id,
+          platform,
+          status: "queued" as const,
+        })),
+      );
     } else if (engine === "inngest") {
       // Keep existing behavior: all platforms via Inngest
       await tx.insert(report_platform_jobs).values(
