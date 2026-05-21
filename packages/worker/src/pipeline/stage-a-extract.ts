@@ -7,6 +7,7 @@ import { buildHackerNewsExtract } from "../prompts/platform/hackernews/extract";
 import { buildDevToExtract } from "../prompts/platform/devto/extract";
 import { buildProductHuntExtract } from "../prompts/platform/producthunt/extract";
 import { buildRedditExtract } from "../prompts/platform/reddit/extract";
+import { buildWebsiteExtract } from "../prompts/platform/website/extract";
 
 export interface StageAInput {
   llm: OpenRouterClient;
@@ -98,6 +99,16 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             score: post.score,
             body: `${post.title ?? ""}\n${post.body}`,
+          })),
+        });
+    case "website":
+      return ({ ctx, posts }) =>
+        buildWebsiteExtract({
+          ctx,
+          pages: posts.map((post) => ({
+            id: post.externalId,
+            url: post.url,
+            body: post.body,
           })),
         });
     default:

@@ -7,6 +7,7 @@ import { buildHackerNewsSummarize } from "../prompts/platform/hackernews/summari
 import { buildDevToSummarize } from "../prompts/platform/devto/summarize";
 import { buildProductHuntSummarize } from "../prompts/platform/producthunt/summarize";
 import { buildRedditSummarize } from "../prompts/platform/reddit/summarize";
+import { buildWebsiteSummarize } from "../prompts/platform/website/summarize";
 
 export interface StageBInput {
   llm: OpenRouterClient;
@@ -55,6 +56,8 @@ function pickBuilder(p: PlatformId): SummarizeBuilder {
       return buildProductHuntSummarize;
     case "reddit":
       return buildRedditSummarize;
+    case "website":
+      return buildWebsiteSummarize;
     default:
       throw new Error(`Stage B: no summarize builder for platform "${p}" yet`);
   }
