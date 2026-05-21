@@ -1,0 +1,35 @@
+---
+import { EmailForm } from "./EmailForm.tsx";
+---
+
+<section id="top" class="relative overflow-hidden">
+  <div
+    class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-[radial-gradient(60%_60%_at_50%_0%,var(--color-accent-soft),transparent)]"
+  >
+  </div>
+  <div class="mx-auto max-w-3xl px-6 pb-20 pt-24 text-center sm:pt-32">
+    <span
+      class="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted"
+    >
+      <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+      Competitor intelligence for B2B SaaS founders
+    </span>
+    <h1
+      class="mt-6 text-balance text-4xl font-bold tracking-tight sm:text-6xl"
+    >
+      Find what your competitor's users
+      <span class="text-accent"> hate</span> before you build.
+    </h1>
+    <p class="mx-auto mt-6 max-w-xl text-balance text-lg text-muted">
+      RivalEye pulls real complaints from across the web and uses AI to turn
+      them into a Competitor Pain Report — pain points, feature gaps, and
+      positioning angles you can act on.
+    </p>
+    <div class="mt-8 flex justify-center">
+      <EmailForm client:load variant="hero" />
+    </div>
+    <p class="mt-3 text-xs text-muted">
+      No credit card. Be first in line for the private beta.
+    </p>
+  </div>
+</section>
