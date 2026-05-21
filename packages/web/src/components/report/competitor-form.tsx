@@ -1,8 +1,13 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { competitorFormSchema, type CompetitorFormValues } from "./competitor-form.schema";
+import {
+  competitorFormSchema,
+  type CompetitorFormValues,
+  PLATFORM_IDS,
+  PLATFORM_LABELS,
+} from "./competitor-form.schema";
 import { useCreateReportMutation } from "@/hooks/queries/use-reports";
 import { addReport } from "@/lib/local-history";
 import { GOAL_OPTIONS } from "@/lib/goal-labels";
@@ -45,9 +50,24 @@ export function CompetitorForm() {
       category: "",
       audience: "",
       goal: "find_user_pain",
+      selected_platforms: [],
       website_url: "",
     },
   });
+
+  const selectedPlatforms = useWatch({ control: form.control, name: "selected_platforms" });
+  const websiteSelected = selectedPlatforms.includes("website");
+
+  function togglePlatform(platformId: (typeof PLATFORM_IDS)[number]) {
+    const current = form.getValues("selected_platforms");
+    const next = current.includes(platformId)
+      ? current.filter((p) => p !== platformId)
+      : [...current, platformId];
+    form.setValue("selected_platforms", next, { shouldValidate: true });
+    if (!next.includes("website")) {
+      form.setValue("website_url", "", { shouldValidate: false });
+    }
+  }
 
   async function onSubmit(values: CompetitorFormValues) {
     const result = await mutateAsync({
@@ -55,6 +75,7 @@ export function CompetitorForm() {
       competitors: [values.competitor],
       target_audience: values.audience ?? values.category,
       founder_goal: values.goal,
+      selected_platforms: values.selected_platforms,
       website_url: values.website_url || undefined,
     });
     addReport({
@@ -128,6 +149,53 @@ export function CompetitorForm() {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="selected_platforms"
+          render={() => (
+            <FormItem>
+              <FormLabel>Platforms to scan</FormLabel>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {PLATFORM_IDS.map((id) => {
+                  const active = selectedPlatforms.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => togglePlatform(id)}
+                      className={[
+                        "rounded-full border px-3 py-1 text-sm transition-colors",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
+                      ].join(" ")}
+                    >
+                      {PLATFORM_LABELS[id]}
+                    </button>
+                  );
+                })}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {websiteSelected && (
+          <FormField
+            control={form.control}
+            name="website_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Competitor website URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://linear.app" type="url" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <details className="group">
           <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
             Optional details
@@ -141,26 +209,6 @@ export function CompetitorForm() {
                   <FormLabel>Target audience</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. sales teams, solo founders" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="website_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Competitor website URL{" "}
-                    <span className="text-muted-foreground text-xs font-normal">(optional)</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://linear.app"
-                      type="url"
-                      {...field}
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

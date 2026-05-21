@@ -92,11 +92,13 @@ export function ScanPage() {
   const start = async () => {
     if (!canSubmit) return;
     try {
+      const activePlatforms = PLATFORMS.filter((p) => p.live && platforms[p.id]).map((p) => p.id);
       const res = await mutateAsync({
         category: category.trim(),
         competitors: [name.trim()],
         target_audience: audience.trim(),
         founder_goal: goal,
+        selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
       });
       navigate(`/reports/${res.id}`);
     } catch {

@@ -219,6 +219,7 @@ export type CreateReportPayload = {
   competitors: string[];
   target_audience: string;
   founder_goal: string;
+  selected_platforms: string[];
   website_url?: string;
 };
 
