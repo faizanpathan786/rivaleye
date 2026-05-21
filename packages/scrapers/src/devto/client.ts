@@ -51,8 +51,25 @@ async function apiGet<T>(path: string): Promise<T> {
 }
 
 export async function searchTags(term: string): Promise<DevToTag[]> {
-  const tags = await apiGet<DevToTag[]>(`/tags?per_page=100`);
+  const tags = await apiGet<DevToTag[]>(`/tags?per_page=1000`);
   return tags.filter((t) => t.name.toLowerCase().includes(term.toLowerCase()));
+}
+
+export async function searchArticles(term: string, perPage: number): Promise<DevToArticle[]> {
+  // Fetch top articles from the past year and filter by competitor name in title/description/tags
+  return apiGet<DevToArticle[]>(
+    `/articles?per_page=1000&top=365`,
+  ).then((articles) => {
+    const q = term.toLowerCase();
+    return articles.filter((a) => {
+      const tags = Array.isArray(a.tag_list) ? a.tag_list : (a.tags ?? []);
+      return (
+        a.title.toLowerCase().includes(q) ||
+        a.description?.toLowerCase().includes(q) ||
+        tags.some((t) => t.toLowerCase().includes(q))
+      );
+    }).slice(0, perPage);
+  }).catch(() => []);
 }
 
 export async function getArticlesByTag(tag: string, perPage: number): Promise<DevToArticle[]> {

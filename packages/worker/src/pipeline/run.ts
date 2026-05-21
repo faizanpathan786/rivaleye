@@ -24,7 +24,7 @@ import type {
   SynthOutput,
 } from "../prompts/shared";
 
-const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 60_000, maxAttempts: 3 };
+const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 3 };
 const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 3 };
 const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 2 };
 

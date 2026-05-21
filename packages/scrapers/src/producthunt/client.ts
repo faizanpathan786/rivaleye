@@ -24,25 +24,12 @@ export interface RawPHComment {
   user: { id: string; name: string; username: string };
 }
 
-const TOPICS_QUERY = `
-  query Topics($query: String!) {
-    topics(query: $query, first: 5) {
-      edges { node { id name slug } }
-    }
-  }
-`;
-
-const POSTS_QUERY = `
-  query Posts($topic: String!, $first: Int!) {
-    posts(topic: $topic, first: $first, order: VOTES) {
-      edges {
-        node {
-          id name tagline description url
-          votesCount commentsCount
-          createdAt
-          user { id name username }
-        }
-      }
+const POST_BY_SLUG_QUERY = `
+  query PostBySlug($slug: String!) {
+    post(slug: $slug) {
+      id name tagline description url
+      votesCount commentsCount createdAt
+      user { id name username }
     }
   }
 `;
@@ -87,29 +74,17 @@ async function gql<T>(
   return json.data as T;
 }
 
-export async function findTopicSlug(
+export async function fetchProductPost(
   token: string,
-  query: string,
-): Promise<string | null> {
-  const data = await gql<{ topics: { edges: { node: { slug: string } }[] } }>(
-    token,
-    TOPICS_QUERY,
-    { query },
-  );
-  return data.topics.edges[0]?.node.slug ?? null;
-}
-
-export async function fetchPosts(
-  token: string,
-  topicSlug: string,
-  first: number,
-): Promise<RawPHPost[]> {
-  const data = await gql<{ posts: { edges: { node: RawPHPost }[] } }>(
-    token,
-    POSTS_QUERY,
-    { topic: topicSlug, first },
-  );
-  return data.posts.edges.map((e) => e.node);
+  competitor: string,
+): Promise<RawPHPost | null> {
+  const base = competitor.toLowerCase().replace(/\s+/g, "-");
+  const slugsToTry = [base, `${base}-app`, `${base}-io`, `${base}-ai`, `get${base}`];
+  for (const slug of slugsToTry) {
+    const data = await gql<{ post: RawPHPost | null }>(token, POST_BY_SLUG_QUERY, { slug });
+    if (data.post) return data.post;
+  }
+  return null;
 }
 
 export async function fetchComments(
