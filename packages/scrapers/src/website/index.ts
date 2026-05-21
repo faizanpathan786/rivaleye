@@ -8,15 +8,11 @@ export class WebsiteScraper implements Scraper {
 
   async fetch(query: ScrapeQuery): Promise<NormalizedPost[]> {
     if (!query.websiteUrl) {
-      throw new ScraperError("website", "websiteUrl is required for the website scraper");
+      return [];
     }
     try {
       const pages = await crawlWebsite(query.websiteUrl);
-      const posts = normalizeWebsitePages(pages);
-      if (posts.length === 0) {
-        throw new ScraperError("website", "all crawled pages failed or contained no usable content");
-      }
-      return posts;
+      return normalizeWebsitePages(pages);
     } catch (err) {
       if (err instanceof ScraperError) throw err;
       throw new ScraperError("website", "crawl failed", err);

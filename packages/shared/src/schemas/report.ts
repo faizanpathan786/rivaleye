@@ -129,11 +129,20 @@ export type ReportOutput = z.infer<typeof reportOutputSchema>;
 export type LegacyReportOutput = import("../types/index").PainReportOutput;
 
 // Task 0.3 — Rewritten createReportInputSchema
+const PLATFORM_IDS = ["reddit","appstore","playstore","hackernews","producthunt","devto","website"] as const;
+
 export const createReportInputSchema = z.object({
   category: z.string().min(1),
   competitors: z.array(z.string().min(1)).min(1).max(5),
   target_audience: z.string().min(1),
   founder_goal: reportGoalSchema,
   website_url: z.string().url().optional(),
-});
+  selected_platforms: z.array(z.enum(PLATFORM_IDS)).min(1, "Select at least one platform"),
+}).refine(
+  (data) => {
+    if (data.selected_platforms.includes("website") && !data.website_url) return false;
+    return true;
+  },
+  { message: "website_url is required when website platform is selected", path: ["website_url"] },
+);
 export type CreateReportInput = z.infer<typeof createReportInputSchema>;

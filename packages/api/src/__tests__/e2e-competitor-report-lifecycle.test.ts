@@ -135,6 +135,7 @@ describe("E2E: Competitor → Report → Platform Jobs → Mentions", () => {
       competitors: ["Notion"],
       target_audience: "founders",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     };
 
     const reportResult = await mockCreateReport(testUserId, reportInput);
@@ -174,6 +175,7 @@ describe("E2E: Competitor → Report → Platform Jobs → Mentions", () => {
       competitors: ["Notion"],
       target_audience: "founders",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     });
     const reportId = reportResult.id;
 
@@ -216,6 +218,7 @@ describe("E2E: Competitor → Report → Platform Jobs → Mentions", () => {
       competitors: ["Notion"],
       target_audience: "founders",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     });
     const reportId = reportResult.id;
 
@@ -238,6 +241,7 @@ describe("E2E: Competitor → Report → Platform Jobs → Mentions", () => {
       competitors: ["Notion"],
       target_audience: "founders",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     });
     const reportId = reportResult.id;
 
@@ -334,6 +338,7 @@ describe("E2E: Competitor → Report → Platform Jobs → Mentions", () => {
       competitors: ["Notion"],
       target_audience: "founders",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     });
     const reportId = reportResult.id;
 
@@ -394,6 +399,7 @@ describe("E2E: Competitor → Report → Platform Jobs → Mentions", () => {
       competitors: ["Asana"],
       target_audience: "remote teams",
       founder_goal: "find_weaknesses",
+      selected_platforms: ["reddit"],
     });
     const reportId = reportResult.id;
 

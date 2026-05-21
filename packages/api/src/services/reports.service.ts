@@ -105,7 +105,7 @@ export async function createReport(
 
     if (engine === "postgres") {
       await tx.insert(report_platform_jobs).values(
-        ENABLED_PLATFORMS.map((platform) => ({
+        input.selected_platforms.map((platform) => ({
           report_id: reportRow.id,
           platform,
           status: "queued" as const,
@@ -114,7 +114,7 @@ export async function createReport(
     } else if (engine === "inngest") {
       // Keep existing behavior: all platforms via Inngest
       await tx.insert(report_platform_jobs).values(
-        ENABLED_PLATFORMS.map((platform) => ({
+        input.selected_platforms.map((platform) => ({
           report_id: reportRow.id,
           platform,
           status: "queued" as const,
@@ -122,7 +122,7 @@ export async function createReport(
       );
 
       await inngest.send(
-        ENABLED_PLATFORMS.map((platform) => ({
+        input.selected_platforms.map((platform) => ({
           name: "scrape.fetch" as const,
           data: {
             reportId: reportRow.id,

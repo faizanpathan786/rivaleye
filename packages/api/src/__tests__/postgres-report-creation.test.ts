@@ -94,6 +94,7 @@ describe("Postgres Report Creation", () => {
       competitors: ["Slack", "Microsoft Teams"],
       target_audience: "Tech startups",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     };
 
     const { id: reportId } = await mockCreateReport(testUserId, input);
@@ -122,6 +123,7 @@ describe("Postgres Report Creation", () => {
       competitors: ["Shopify"],
       target_audience: "Small businesses",
       founder_goal: "compare_alternatives",
+      selected_platforms: ["reddit"],
     };
 
     const { id: reportId } = await mockCreateReport(testUserId, input);
@@ -158,6 +160,7 @@ describe("Postgres Report Creation", () => {
       competitors: ["Workday"],
       target_audience: "Enterprises",
       founder_goal: "validate_idea",
+      selected_platforms: ["reddit"],
     };
 
     const { id: reportId } = await mockCreateReport(testUserId, input);
@@ -192,6 +195,7 @@ describe("Postgres Report Creation", () => {
       competitors: ["HubSpot"],
       target_audience: "Growth teams",
       founder_goal: "improve_positioning",
+      selected_platforms: ["reddit"],
     };
 
     // This mimics what would happen if report creation failed mid-way
@@ -225,6 +229,7 @@ describe("Postgres Report Creation", () => {
       competitors: ["Test"],
       target_audience: "Tests",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     };
 
     // Create report without calling inngest
@@ -277,6 +282,7 @@ describe("Postgres Report Creation", () => {
         competitors: ["Test"],
         target_audience: "Test",
         founder_goal: "find_user_pain",
+        selected_platforms: ["reddit"],
       };
 
       const { id: reportId } = await mockCreateReport(testUserId, input);
@@ -302,6 +308,7 @@ describe("Postgres Report Creation", () => {
         competitors: [`Competitor ${i}`],
         target_audience: `Audience ${i}`,
         founder_goal: "find_user_pain",
+        selected_platforms: ["reddit"],
       }),
     );
 
@@ -332,6 +339,7 @@ describe("Postgres Report Creation", () => {
       competitors: ["Test"],
       target_audience: "Test",
       founder_goal: "find_user_pain",
+      selected_platforms: ["reddit"],
     };
 
     const { id: reportId } = await mockCreateReport(testUserId, input);
