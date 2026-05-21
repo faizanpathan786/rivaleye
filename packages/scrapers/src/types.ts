@@ -8,7 +8,8 @@ export type PlatformId =
   | "playstore"
   | "gmaps"
   | "hackernews"
-  | "devto";
+  | "devto"
+  | "website";
 
 export interface NormalizedPost {
   platform: PlatformId;
@@ -28,6 +29,7 @@ export interface ScrapeQuery {
   category?: string;
   keywords?: string[];
   limit?: number;
+  websiteUrl?: string;
 }
 
 export interface Scraper {
