@@ -65,25 +65,30 @@ function generateWorkerId(): string {
  * @param config - Worker configuration (ID, poll interval, timeouts)
  */
 async function pollSourceJobs(config: WorkerConfig): Promise<void> {
+  const MAX_CONCURRENT_SOURCE = 2;
+  let activeJobs = 0;
+
   log.info(
-    { workerId: config.workerId, interval: config.pollIntervalMs },
+    { workerId: config.workerId, interval: config.pollIntervalMs, maxConcurrent: MAX_CONCURRENT_SOURCE },
     "Starting source job polling loop"
   );
 
   while (true) {
     try {
-      // Claim the next job within a transaction for atomicity
+      if (activeJobs >= MAX_CONCURRENT_SOURCE) {
+        await sleep(config.pollIntervalMs);
+        continue;
+      }
+
       const job = await db.transaction(async (tx) =>
         claimSourceJob(tx as any, config.workerId)
       );
 
       if (!job) {
-        // No jobs available; sleep and try again
         await sleep(config.pollIntervalMs);
         continue;
       }
 
-      // Load report metadata for context
       const [report] = await db
         .select()
         .from(reports)
@@ -95,7 +100,6 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
           { jobId: job.id, reportId: job.report_id },
           "Report not found for claimed job"
         );
-        // Mark job failed and move on
         await db
           .update(report_platform_jobs)
           .set({
@@ -111,25 +115,22 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
         continue;
       }
 
-      // Process the job
-      try {
-        await processSourceJob(job, report, config.workerId);
-        log.info(
-          { jobId: job.id, platform: job.platform },
-          "Source job completed successfully"
-        );
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        log.error(
-          { jobId: job.id, platform: job.platform, error: errorMsg },
-          "Source job processing failed"
-        );
-        // Job handles its own retry logic, so we continue polling
-      }
+      // Fire and forget — increment counter before async work starts
+      activeJobs++;
+      processSourceJob(job, report, config.workerId)
+        .then(() => {
+          log.info({ jobId: job.id, platform: job.platform }, "Source job completed successfully");
+        })
+        .catch((err: unknown) => {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          log.error({ jobId: job.id, platform: job.platform, error: errorMsg }, "Source job processing failed");
+        })
+        .finally(() => {
+          activeJobs--;
+        });
 
-      // No sleep between successful processes; claim the next job immediately
+      // No sleep — immediately try to claim another job up to MAX_CONCURRENT_SOURCE
     } catch (err) {
-      // Unexpected error in polling loop; log and continue
       const errorMsg = err instanceof Error ? err.message : String(err);
       log.error({ error: errorMsg }, "Unexpected error in source polling loop");
       await sleep(config.pollIntervalMs);
