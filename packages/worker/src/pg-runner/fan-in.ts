@@ -13,6 +13,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
+import { reports } from "../../../api/src/db/schema/reports.js";
 import { log } from "../logger";
 
 /**
@@ -37,7 +38,7 @@ export async function fanInCheck(reportId: string): Promise<void> {
 
     // Load all source jobs for this report
     const jobs = await tx
-      .select({ status: report_platform_jobs.status })
+      .select({ status: report_platform_jobs.status, platform: report_platform_jobs.platform })
       .from(report_platform_jobs)
       .where(eq(report_platform_jobs.report_id, reportId));
 
@@ -56,7 +57,19 @@ export async function fanInCheck(reportId: string): Promise<void> {
     const hasCompletedJob = jobs.some((j) => j.status === "completed");
 
     if (!hasCompletedJob) {
-      await log(reportId, "warn", "fan-in", null, `All source jobs failed; skipping synthesis job creation`);
+      await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);
+      const failedPlatforms = jobs.map((j) => j.platform ?? "unknown");
+      await tx
+        .update(reports)
+        .set({
+          status: "failed",
+          stage: "failed",
+          partial: false,
+          failed_platforms: failedPlatforms,
+          error: "All platforms failed to fetch data",
+          updated_at: new Date(),
+        })
+        .where(eq(reports.id, reportId));
       return;
     }
 
