@@ -7,6 +7,7 @@ export const ENABLED_PLATFORMS = [
   "hackernews",
   "producthunt",
   "devto",
+  "website",
 ] as const;
 
 export type EnabledPlatformId = (typeof ENABLED_PLATFORMS)[number];

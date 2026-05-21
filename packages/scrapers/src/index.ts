@@ -9,6 +9,7 @@ export { PlayStoreScraper } from "./playstore";
 export { GoogleMapsScraper } from "./gmaps";
 export { HackerNewsScraper } from "./hackernews";
 export { DevToScraper } from "./devto";
+export { WebsiteScraper } from "./website";
 import type { Scraper, PlatformId } from "./types";
 import { RedditScraper } from "./reddit";
 import { CapterraScraper } from "./capterra";
@@ -20,6 +21,7 @@ import { PlayStoreScraper } from "./playstore";
 import { GoogleMapsScraper } from "./gmaps";
 import { HackerNewsScraper } from "./hackernews";
 import { DevToScraper } from "./devto";
+import { WebsiteScraper } from "./website";
 
 export function getScraper(platform: PlatformId): Scraper {
   switch (platform) {
@@ -43,6 +45,8 @@ export function getScraper(platform: PlatformId): Scraper {
       return new HackerNewsScraper();
     case "devto":
       return new DevToScraper();
+    case "website":
+      return new WebsiteScraper();
   }
 }
 
@@ -53,4 +57,5 @@ export const ALL_PLATFORMS: PlatformId[] = [
   "hackernews",
   "producthunt",
   "devto",
+  "website",
 ];
