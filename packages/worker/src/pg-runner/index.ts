@@ -132,8 +132,13 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
       // No sleep — immediately try to claim another job up to MAX_CONCURRENT_SOURCE
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
-      log.error({ error: errorMsg }, "Unexpected error in source polling loop");
-      await sleep(config.pollIntervalMs);
+      if (isConnectionError(err)) {
+        log.warn({ error: errorMsg }, "DB connection lost in source polling loop — backing off 5s");
+        await sleep(5000);
+      } else {
+        log.error({ error: errorMsg }, "Unexpected error in source polling loop");
+        await sleep(config.pollIntervalMs);
+      }
     }
   }
 }
@@ -215,13 +220,14 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
 
       // No sleep between successful processes
     } catch (err) {
-      // Unexpected error in polling loop
       const errorMsg = err instanceof Error ? err.message : String(err);
-      log.error(
-        { error: errorMsg },
-        "Unexpected error in synthesis polling loop"
-      );
-      await sleep(config.pollIntervalMs);
+      if (isConnectionError(err)) {
+        log.warn({ error: errorMsg }, "DB connection lost in synthesis polling loop — backing off 5s");
+        await sleep(5000);
+      } else {
+        log.error({ error: errorMsg }, "Unexpected error in synthesis polling loop");
+        await sleep(config.pollIntervalMs);
+      }
     }
   }
 }
@@ -351,10 +357,14 @@ async function recoverStaleJobs(config: WorkerConfig): Promise<void> {
       // Sleep before next recovery check
       await sleep(RECOVERY_POLL_MS);
     } catch (err) {
-      // Log but continue; recovery loop should be resilient
       const errorMsg = err instanceof Error ? err.message : String(err);
-      log.error({ error: errorMsg }, "Error in recovery loop");
-      await sleep(RECOVERY_POLL_MS);
+      if (isConnectionError(err)) {
+        log.warn({ error: errorMsg }, "DB connection lost in recovery loop — backing off 5s");
+        await sleep(5000);
+      } else {
+        log.error({ error: errorMsg }, "Error in recovery loop");
+        await sleep(RECOVERY_POLL_MS);
+      }
     }
   }
 }
@@ -377,6 +387,11 @@ function getBackoffMs(attemptCount: number): number {
  */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isConnectionError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes("CONNECTION_CLOSED") || msg.includes("CONNECTION_DESTROYED") || msg.includes("ECONNRESET");
 }
 
 /**
