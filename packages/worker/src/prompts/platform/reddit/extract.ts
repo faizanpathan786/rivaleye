@@ -15,12 +15,13 @@ Return ONE JSON object matching this exact shape (all keys required, never renam
 }
 
 Rules:
+- RELEVANCE FILTER (apply first): Only extract signals from posts that are discussing the Competitor as a SOFTWARE PRODUCT (project management tool, issue tracker, engineering tool). If a post uses the competitor name as a generic word (e.g. "linear algebra", "linear regression", "linear narrative", "linear increase"), or discusses an unrelated product, person, or topic, skip that post entirely — return no signals from it.
 - complaints[].text: describe the specific product pain. Use "text", never "description" or any other key.
 - complaints[].severity: 0..1 (higher = more severe / more frequently mentioned).
-- features_requested[].feature: only include genuine product capability gaps — things the product should do but doesn't. DO NOT include posts where the user is asking "where can I find an alternative to X" or "does anyone know of a tool that does X". Those are switching signals, not feature gaps. A real feature gap looks like: "Twilio doesn't support SMS pumping detection" or "No webhook retry dashboard".
+- features_requested[].feature: only include genuine product capability gaps — things the product should do but doesn't. DO NOT include posts where the user is asking "where can I find an alternative to X" or "does anyone know of a tool that does X". Those are switching signals, not feature gaps. A real feature gap looks like: "Linear doesn't support recurring tasks" or "No nested subtask depth limit configuration".
 - switching_signals: only when a poster explicitly mentions switching to/from a competing product by name.
 - voice_phrases: 1-3 word phrases the users actually typed. Authentic language only — no paraphrasing.
-- notable_quotes[].text: verbatim quote from a post, under 150 characters, that best illustrates a core pain. Must be actual user text, not a summary.
+- notable_quotes[].text: verbatim quote from a post, under 150 characters, that best illustrates a core pain about the Competitor software. Must be actual user text, not a summary. Must be about the software product — not about an unrelated topic.
 - notable_quotes[].author: the Reddit username of the poster (from the post data).
 - Use the id labels in evidence_ids; never invent ids.
 - If a section has no signal, return an empty array — never omit the key.
@@ -37,7 +38,7 @@ export function buildRedditExtract(input: RedditExtractInput): {
   schema: typeof platformExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | score=${p.score ?? 0} | ${oneLine(p.body)}`)
+    .map((p) => `- id=${p.id} | score=${p.score ?? 0} | ${truncate(p.body, 1500)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}
@@ -51,6 +52,6 @@ Return the JSON object now.`;
   return { system: SYSTEM, user, schema: platformExtractSchema };
 }
 
-function oneLine(s: string): string {
-  return s.replace(/\s+/g, " ").trim().slice(0, 500);
+function truncate(s: string, max: number): string {
+  return s.replace(/\s+/g, " ").trim().slice(0, max);
 }
