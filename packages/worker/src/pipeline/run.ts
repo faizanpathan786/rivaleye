@@ -24,6 +24,14 @@ import type {
   SynthOutput,
 } from "../prompts/shared";
 
+function stripEvidenceIds(merged: MergedClusters): MergedClusters {
+  return {
+    ...merged,
+    complaint_clusters: merged.complaint_clusters.map(({ evidence_ids: _e, ...rest }) => ({ ...rest, evidence_ids: [] })),
+    feature_clusters: merged.feature_clusters.map(({ evidence_ids: _e, ...rest }) => ({ ...rest, evidence_ids: [] })),
+  };
+}
+
 const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 3 };
 const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 3 };
 const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 240_000, maxAttempts: 2 };
@@ -146,7 +154,7 @@ export async function runPipeline(reportId: string): Promise<void> {
       complaints: synth.complaints?.length ?? 0,
       opportunities: synth.opportunities?.length ?? 0,
     });
-    const resultE = await runStageERefine({ llm, ctx, merged, draft: synth }, LLM_OPTS_E);
+    const resultE = await runStageERefine({ llm, ctx, merged: stripEvidenceIds(merged), draft: synth }, LLM_OPTS_E);
     if (resultE.fellBackToDraft) {
       await log(reportId, "warn", "E", null, "stage E fell back to draft output");
     } else {
