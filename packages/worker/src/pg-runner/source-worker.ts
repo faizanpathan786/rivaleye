@@ -14,17 +14,18 @@
 import { and, eq } from "drizzle-orm";
 import type { NormalizedPost } from "@rivaleye/scrapers";
 import { getScraper } from "@rivaleye/scrapers";
-import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
+import { LLM_MODEL, LlmSchemaError, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
 import pino from "pino";
 import { db } from "../db";
 import { mentions } from "../../../api/src/db/schema/mentions.js";
 import { reports } from "../../../api/src/db/schema/reports.js";
-import { report_platform_jobs } from "../../../api/src/db/schema/pipeline.js";
+import { report_platform_jobs, report_platform_briefs } from "../../../api/src/db/schema/pipeline.js";
 import { emit } from "../events/emit";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { fanInCheck } from "../llm/fan-in";
 import type { SourceJobRow } from "./types";
+import type { PlatformExtract } from "../prompts/shared";
 
 const log = pino({ name: "source-worker" });
 const CHUNK_SIZE = 500;
@@ -82,13 +83,19 @@ export async function processSourceJob(
     });
 
     // Step 2: Fetch from scraper
-    log.info({ jobId: job.id, platform: job.platform }, "Fetching posts from scraper");
+    log.info({ jobId: job.id, platform: job.platform, competitor: reportRow.primary_competitor_name, category: reportRow.category }, "Fetching posts from scraper");
     posts = await fetchPosts(job.platform, reportRow);
-    log.info({ jobId: job.id, platform: job.platform, count: posts.length }, "Fetched posts");
+    const scores = posts.map((p) => p.score ?? 0);
+    log.info({
+      jobId: job.id, platform: job.platform, count: posts.length,
+      withBody: posts.filter((p) => (p.body?.length ?? 0) > 20).length,
+      scoreMin: Math.min(...scores), scoreMax: Math.max(...scores), scoreMed: scores.sort((a,b)=>a-b)[Math.floor(scores.length/2)] ?? 0,
+    }, "Fetched posts");
 
     // Step 3: Persist mentions to database
-    log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform, count: posts.length }, "Persisting mentions");
+    log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform, count: posts.length, chunks: Math.ceil(posts.length / CHUNK_SIZE) }, "Persisting mentions to DB");
     await persistMentions(job.report_id, job.platform, posts);
+    log.info({ jobId: job.id, platform: job.platform }, "Mentions persisted");
 
     // Step 4: Update report status to "running" if not already
     log.info({ jobId: job.id, reportId: job.report_id }, "Updating report status to running");
@@ -97,13 +104,40 @@ export async function processSourceJob(
       .set({ status: "running", updated_at: new Date() })
       .where(eq(reports.id, job.report_id));
 
+    // Step 4b: Skip A/B and complete early if no posts found
+    if (posts.length === 0) {
+      log.warn({ jobId: job.id, platform: job.platform }, "No posts found; skipping Stage A/B and marking completed");
+      const durationMs = Date.now() - startedAt;
+      await db
+        .update(report_platform_jobs)
+        .set({
+          status: "completed",
+          completed_at: new Date(),
+          locked_at: null,
+          locked_by: null,
+          updated_at: new Date(),
+        })
+        .where(eq(report_platform_jobs.id, job.id));
+      await emit({
+        reportId: job.report_id,
+        platform: job.platform,
+        stage: "scrape.fetch",
+        event: "completed",
+        attempt: job.attempt_count,
+        durationMs,
+        metadata: { posts_count: 0 },
+      });
+      await fanInCheck(job.report_id, "fan-in");
+      return;
+    }
+
     // Step 5: Run Stage A extraction
     log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage A extraction");
-    await runStageAExtractionStep(job.report_id, job.platform, posts, reportRow);
+    const extract = await runStageAExtractionStep(job.report_id, job.platform, posts, reportRow);
 
-    // Step 6: Run Stage B summarization
+    // Step 6: Run Stage B summarization + persist brief
     log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage B summarization");
-    await runStageBSummarizationStep(job.report_id, job.platform);
+    await runStageBSummarizationStep(job.report_id, job.platform, extract, reportRow);
 
     // Step 7: Mark job completed
     const durationMs = Date.now() - startedAt;
@@ -276,10 +310,10 @@ async function runStageAExtractionStep(
   platform: string,
   posts: NormalizedPost[],
   reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string }
-): Promise<void> {
+): Promise<PlatformExtract> {
   if (posts.length === 0) {
     log.warn({ reportId, platform }, "No posts found; skipping Stage A extraction");
-    return;
+    return { complaints: [], features_requested: [], pricing_signals: [], switching_signals: [], voice_phrases: { positive: [], negative: [] }, notable_quotes: [] };
   }
 
   const ctx = {
@@ -290,20 +324,64 @@ async function runStageAExtractionStep(
     goal: reportRow.goal,
   };
 
-  // Cap to 50 posts — free-tier LLMs return empty content on large contexts
-  const postsForLlm = posts.slice(0, 50);
+  const BATCH_SIZE = 50;
+  const batches: NormalizedPost[][] = [];
+  for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+    batches.push(posts.slice(i, i + BATCH_SIZE));
+  }
 
-  const result = await runStageAExtract({
-    llm: getLlm(),
-    ctx,
-    platform: platform as any,
-    posts: postsForLlm,
-  });
+  log.info({ reportId, platform, totalPosts: posts.length, batches: batches.length, batchSize: BATCH_SIZE }, "Stage A: processing posts in batches");
 
-  log.info(
-    { reportId, platform, promptTokens: result.usage.promptTokens, completionTokens: result.usage.completionTokens },
-    "Stage A extraction completed"
-  );
+  const allExtracts: PlatformExtract[] = [];
+  let totalPromptTokens = 0;
+  let totalCompletionTokens = 0;
+
+  for (const [batchIdx, batch] of batches.entries()) {
+    log.info({ reportId, platform, batchIdx: batchIdx + 1, totalBatches: batches.length, batchSize: batch.length }, "Stage A: running batch");
+    let result: Awaited<ReturnType<typeof runStageAExtract>>;
+    try {
+      result = await runStageAExtract({
+        llm: getLlm(),
+        ctx,
+        platform: platform as any,
+        posts: batch,
+      });
+    } catch (err) {
+      if (err instanceof LlmSchemaError) {
+        log.error({ reportId, platform, batchIdx, issues: err.issues, rawJson: JSON.stringify(err.raw).slice(0, 2000) }, "Stage A: LLM batch failed schema validation");
+      }
+      throw err;
+    }
+    allExtracts.push(result.extract);
+    totalPromptTokens += result.usage.promptTokens;
+    totalCompletionTokens += result.usage.completionTokens;
+  }
+
+  // Merge all batch extracts into one
+  const merged: PlatformExtract = {
+    complaints: allExtracts.flatMap((e) => e.complaints),
+    features_requested: allExtracts.flatMap((e) => e.features_requested),
+    pricing_signals: allExtracts.flatMap((e) => e.pricing_signals),
+    switching_signals: allExtracts.flatMap((e) => e.switching_signals),
+    voice_phrases: {
+      positive: allExtracts.flatMap((e) => e.voice_phrases.positive),
+      negative: allExtracts.flatMap((e) => e.voice_phrases.negative),
+    },
+    notable_quotes: allExtracts.flatMap((e) => e.notable_quotes),
+  };
+
+  log.info({
+    reportId, platform,
+    batches: batches.length,
+    promptTokens: totalPromptTokens, completionTokens: totalCompletionTokens,
+    complaints: merged.complaints.length,
+    featuresRequested: merged.features_requested.length,
+    pricingSignals: merged.pricing_signals.length,
+    switchingSignals: merged.switching_signals.length,
+    notableQuotes: merged.notable_quotes.length,
+  }, "Stage A extraction completed");
+
+  return merged;
 }
 
 /**
@@ -314,74 +392,60 @@ async function runStageAExtractionStep(
  * @param reportId - Report UUID
  * @param platform - Platform identifier
  */
-async function runStageBSummarizationStep(reportId: string, platform: string): Promise<void> {
-  // Load mentions for the platform to reconstruct posts
-  const mentions_rows = await db
-    .select()
-    .from(mentions)
-    .where(and(eq(mentions.report_id, reportId), eq(mentions.platform, platform)));
-
-  if (mentions_rows.length === 0) {
-    log.warn({ reportId, platform }, "No mentions found; skipping Stage B summarization");
-    return;
-  }
-
-  // Convert mentions to NormalizedPost format for context
-  const posts: NormalizedPost[] = mentions_rows.map((m) => ({
-    platform: m.platform as any,
-    externalId: m.external_id,
-    url: m.url ?? "",
-    author: m.author ?? null,
-    title: m.title ?? null,
-    body: m.body ?? "",
-    score: m.score ?? null,
-    numComments: m.num_comments ?? null,
-    createdAt: m.posted_at ?? new Date(),
-    raw: (m.raw ?? {}) as unknown,
-  }));
-
-  // Load the report for context
-  const [report] = await db
-    .select()
-    .from(reports)
-    .where(eq(reports.id, reportId))
-    .limit(1);
-
-  if (!report) {
-    throw new Error(`Report ${reportId} not found`);
-  }
-
+async function runStageBSummarizationStep(
+  reportId: string,
+  platform: string,
+  extract: PlatformExtract,
+  reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string }
+): Promise<void> {
   const ctx = {
     reportId,
-    competitor: report.primary_competitor_name ?? (report.competitors[0] ?? ""),
-    category: report.category,
-    audience: report.audience ?? null,
-    goal: report.goal,
+    competitor: reportRow.primary_competitor_name ?? (reportRow.category ?? ""),
+    category: reportRow.category,
+    audience: reportRow.audience ?? null,
+    goal: reportRow.goal,
   };
 
-  // Run Stage A extraction first to get the extract for Stage B
-  const stageAResult = await runStageAExtract({
-    llm: getLlm(),
-    ctx,
-    platform: platform as any,
-    posts: posts.slice(0, 50),
-  });
-
-  // Run Stage B summarization
+  log.info({ reportId, platform, complaints: extract.complaints.length }, "Stage B: running LLM summarization");
   const stageBResult = await runStageBSummarize({
     llm: getLlm(),
     ctx,
     platform: platform as any,
-    extract: stageAResult.extract,
+    extract,
   });
 
-  log.info(
-    {
-      reportId,
+  log.info({
+    reportId, platform,
+    promptTokens: stageBResult.usage.promptTokens,
+    completionTokens: stageBResult.usage.completionTokens,
+    headline: stageBResult.brief.headline,
+    topThemes: stageBResult.brief.top_themes.length,
+    sentiment: stageBResult.brief.sentiment,
+  }, "Stage B summarization completed");
+
+  // Persist brief to DB so synthesis (Stage C) can load it
+  log.info({ reportId, platform }, "Stage B: persisting brief to DB");
+  await db
+    .insert(report_platform_briefs)
+    .values({
+      report_id: reportId,
       platform,
-      promptTokens: stageBResult.usage.promptTokens,
-      completionTokens: stageBResult.usage.completionTokens,
-    },
-    "Stage B summarization completed"
-  );
+      extract: extract as unknown as Record<string, unknown>,
+      summary: stageBResult.brief as unknown as Record<string, unknown>,
+      model_used: stageBResult.model,
+      prompt_tokens: stageBResult.usage.promptTokens,
+      completion_tokens: stageBResult.usage.completionTokens,
+    })
+    .onConflictDoUpdate({
+      target: [report_platform_briefs.report_id, report_platform_briefs.platform],
+      set: {
+        extract: extract as unknown as Record<string, unknown>,
+        summary: stageBResult.brief as unknown as Record<string, unknown>,
+        model_used: stageBResult.model,
+        prompt_tokens: stageBResult.usage.promptTokens,
+        completion_tokens: stageBResult.usage.completionTokens,
+      },
+    });
+
+  log.info({ reportId, platform }, "Stage B: brief persisted");
 }
