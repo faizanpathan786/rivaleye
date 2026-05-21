@@ -1,64 +1,275 @@
 ---
-const features = [
+// src/components/Features.astro
+// Section 03 — the six report lenses. Each card has its own micro-viz.
+
+const lenses = [
   {
-    title: "Pain clusters",
-    body: "Thousands of complaints grouped into ranked themes, so you see the biggest problems first.",
+    n: '01',
+    title: 'Top pain points',
+    desc: 'Severity-ranked clusters of what users complain about most. Frequency × emotional weight × recency.',
+    viz: 'severity',
   },
   {
-    title: "Feature gaps",
-    body: "What users wish the competitor had — your roadmap, sourced from real demand.",
+    n: '02',
+    title: 'Feature gaps',
+    desc: "What users explicitly wish the competitor had but doesn't. Each gap is sourced from real requests.",
+    viz: 'gaps',
   },
   {
-    title: "Pricing pain",
-    body: "Where users feel overcharged, nickel-and-dimed, or trapped by the pricing model.",
+    n: '03',
+    title: 'Pricing pain',
+    desc: "Where users push back on price, what tiers they think are missing, what they'd actually pay.",
+    viz: 'pricing',
   },
   {
-    title: "Switching signals",
-    body: "Users actively looking to leave — and exactly what would make them switch.",
+    n: '04',
+    title: 'Switching signals',
+    desc: "Who's threatening to leave, where they say they'd go, and which features would keep them.",
+    viz: 'switching',
   },
   {
-    title: "Positioning angles",
-    body: "The messaging wedges your competitor leaves wide open for you to take.",
+    n: '05',
+    title: 'Positioning angles',
+    desc: 'How users actually describe the competitor — the messaging your marketing can steal or sidestep.',
+    viz: 'positioning',
   },
   {
-    title: "Product opportunities",
-    body: "Concrete, prioritized ideas for what to build to win frustrated users.",
+    n: '06',
+    title: 'Product opportunities',
+    desc: 'Derived greenfield: clusters of pain with no good solution that you could build a wedge around.',
+    viz: 'opportunities',
   },
 ];
 ---
 
-<section id="features" class="border-y border-line bg-surface">
-  <div class="mx-auto max-w-6xl px-6 py-24">
-    <div class="mx-auto max-w-2xl text-center">
-      <p
-        class="reveal text-sm font-semibold uppercase tracking-wider text-accent"
-      >
-        What you get
+<section
+  id="lenses"
+  aria-labelledby="lenses-heading"
+  class="relative bg-[var(--color-bg-1)] py-24 md:py-32 border-t border-[var(--color-line-1)] overflow-hidden"
+>
+  {/* Backdrop */}
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-dots opacity-30 mask-fade-edges"></div>
+  </div>
+
+  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+    {/* Header */}
+    <div
+      class="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-14 md:mb-20 reveal-stagger"
+    >
+      <div>
+        <div class="flex items-center gap-3 mb-6">
+          <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]">
+            § 03
+          </span>
+          <span class="block w-8 h-px bg-[var(--color-line-2)]"></span>
+          <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
+            Report lenses
+          </span>
+        </div>
+        <h2
+          id="lenses-heading"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2.5rem,5.5vw,5rem)] max-w-[14ch]"
+        >
+          Six ways to read the signal.
+        </h2>
+      </div>
+      <p class="max-w-[420px] text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-fg-2)]">
+        Every Pain Report ships with six lenses. Each one re-clusters the same complaints around a
+        different decision you're trying to make.
       </p>
-      <h2 class="reveal mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-        Six lenses on your competitor's weaknesses.
-      </h2>
     </div>
-    <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+    {/* Grid */}
+    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)] reveal-stagger">
       {
-        features.map((f) => (
-          <div class="reveal rounded-card border border-line bg-bg p-7">
-            <div class="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 12l5 5L19 7"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+        lenses.map((lens) => (
+          <li class="relative bg-[var(--color-bg-0)] p-7 md:p-8 group hover:bg-[var(--color-bg-1)] transition-colors duration-300">
+            {/* Subtle hover scan line */}
+            <span
+              aria-hidden="true"
+              class="absolute top-0 left-0 h-px w-0 bg-[var(--color-lime)] group-hover:w-full transition-all duration-700 ease-out"
+            />
+
+            {/* Eyebrow */}
+            <div class="flex items-center justify-between mb-8">
+              <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)]">
+                Lens / {lens.n}
+              </span>
+              <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-4)] group-hover:text-[var(--color-lime)] transition-colors duration-300">
+                ↗
+              </span>
             </div>
-            <h3 class="mt-4 text-lg font-semibold">{f.title}</h3>
-            <p class="mt-2 text-sm leading-relaxed text-muted">{f.body}</p>
-          </div>
+
+            {/* Title */}
+            <h3 class="display-tight text-[22px] md:text-[26px] text-[var(--color-fg-0)] mb-4 leading-tight tracking-tight">
+              {lens.title}
+            </h3>
+
+            {/* Desc */}
+            <p class="text-[14px] leading-[1.55] text-[var(--color-fg-2)] mb-7 min-h-[4.5em]">
+              {lens.desc}
+            </p>
+
+            {/* Per-lens micro viz */}
+            {lens.viz === 'severity' && (
+              <div class="space-y-2.5">
+                {[
+                  { l: 'Slow on large pages', v: 92 },
+                  { l: 'Offline mode broken', v: 78 },
+                  { l: 'Permissions confusing', v: 61 },
+                ].map((row) => (
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="font-mono text-[10px] tracking-wide text-[var(--color-fg-2)] truncate">
+                        {row.l}
+                      </span>
+                      <span class="font-mono text-[10px] text-[var(--color-fg-3)]">{row.v}</span>
+                    </div>
+                    <div class="h-1 bg-[var(--color-bg-3)]">
+                      <div
+                        class="h-full bg-[var(--color-lime)]"
+                        style={`width: ${row.v}%`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {lens.viz === 'gaps' && (
+              <div class="space-y-2 font-mono text-[11px]">
+                {[
+                  { l: 'real offline mode', want: 247 },
+                  { l: 'AI workspace search', want: 189 },
+                  { l: 'native mobile editor', want: 156 },
+                  { l: 'self-hosting option', want: 92 },
+                ].map((row) => (
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-[var(--color-rose)]">✕</span>
+                    <span class="text-[var(--color-fg-1)] flex-1 truncate">{row.l}</span>
+                    <span class="text-[var(--color-fg-3)] whitespace-nowrap">
+                      {row.want} asks
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {lens.viz === 'pricing' && (
+              <div>
+                <div class="font-mono text-[10px] tracking-widest text-[var(--color-fg-3)] uppercase mb-3 flex items-center justify-between">
+                  <span>willingness to pay</span>
+                  <span class="text-[var(--color-lime)]">vs $18 / mo</span>
+                </div>
+                <div class="relative h-12">
+                  {/* Distribution bars */}
+                  <div class="absolute inset-x-0 bottom-0 flex items-end gap-[2px] h-full">
+                    {[12, 22, 38, 58, 78, 86, 64, 42, 24, 14, 8, 5].map((h, i) => (
+                      <div
+                        class="flex-1 bg-[var(--color-fg-4)] data-[hot=true]:bg-[var(--color-lime)]"
+                        data-hot={i === 4 || i === 5}
+                        style={`height: ${h}%`}
+                      />
+                    ))}
+                  </div>
+                  {/* Current price marker */}
+                  <div
+                    aria-hidden="true"
+                    class="absolute top-0 bottom-0 border-l border-dashed border-[var(--color-rose)]"
+                    style="left: 66%;"
+                  >
+                    <span class="absolute -top-2 -translate-x-1/2 font-mono text-[9px] text-[var(--color-rose)] whitespace-nowrap">
+                      now
+                    </span>
+                  </div>
+                </div>
+                <div class="mt-3 flex justify-between font-mono text-[10px] text-[var(--color-fg-3)]">
+                  <span>$0</span>
+                  <span>$36</span>
+                </div>
+              </div>
+            )}
+
+            {lens.viz === 'switching' && (
+              <div class="space-y-2 font-mono text-[11px]">
+                <div class="flex items-center justify-between text-[var(--color-fg-3)]">
+                  <span>migration intent</span>
+                  <span class="text-[var(--color-rose)]">142 mentions</span>
+                </div>
+                {[
+                  { to: '→ Obsidian', pct: 38 },
+                  { to: '→ Linear (docs)', pct: 24 },
+                  { to: '→ Apple Notes', pct: 18 },
+                  { to: '→ Self-hosted', pct: 12 },
+                ].map((row) => (
+                  <div class="flex items-center gap-3">
+                    <span class="text-[var(--color-fg-1)] w-28 truncate">{row.to}</span>
+                    <div class="flex-1 h-1 bg-[var(--color-bg-3)]">
+                      <div
+                        class="h-full bg-[var(--color-lime)]"
+                        style={`width: ${row.pct * 2.5}%`}
+                      />
+                    </div>
+                    <span class="text-[var(--color-fg-3)] w-8 text-right">{row.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {lens.viz === 'positioning' && (
+              <div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                  <div class="border border-[var(--color-line-1)] bg-[var(--color-bg-1)] p-2.5">
+                    <div class="font-mono text-[9px] tracking-widest text-[var(--color-lime)] uppercase mb-1">
+                      praise
+                    </div>
+                    <div class="font-mono text-[11px] text-[var(--color-fg-1)] leading-tight">
+                      "infinitely flexible"
+                    </div>
+                  </div>
+                  <div class="border border-[var(--color-line-1)] bg-[var(--color-bg-1)] p-2.5">
+                    <div class="font-mono text-[9px] tracking-widest text-[var(--color-rose)] uppercase mb-1">
+                      criticism
+                    </div>
+                    <div class="font-mono text-[11px] text-[var(--color-fg-1)] leading-tight">
+                      "death by features"
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex h-1.5">
+                    <span class="bg-[var(--color-lime)]" style="width: 58%" />
+                    <span class="bg-[var(--color-fg-4)]" style="width: 14%" />
+                    <span class="bg-[var(--color-rose)]" style="width: 28%" />
+                  </div>
+                  <div class="flex justify-between mt-2 font-mono text-[9px] tracking-widest uppercase">
+                    <span class="text-[var(--color-lime)]">+58%</span>
+                    <span class="text-[var(--color-fg-3)]">14%</span>
+                    <span class="text-[var(--color-rose)]">−28%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {lens.viz === 'opportunities' && (
+              <div class="space-y-2 font-mono text-[11px]">
+                {[
+                  { l: 'Offline-first Notion clone', score: 94 },
+                  { l: 'AI search built right', score: 81 },
+                  { l: 'Sub-second mobile editor', score: 73 },
+                ].map((row, i) => (
+                  <div class="flex items-center gap-3 border border-[var(--color-line-1)] bg-[var(--color-bg-1)] px-2.5 py-2">
+                    <span class="text-[var(--color-fg-4)] w-4">0{i + 1}</span>
+                    <span class="text-[var(--color-fg-1)] flex-1 truncate">{row.l}</span>
+                    <span class="text-[var(--color-lime)] tabular-nums">{row.score}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </li>
         ))
       }
-    </div>
+    </ul>
   </div>
 </section>

@@ -1,0 +1,121 @@
+---
+// src/components/CTA.astro
+// Section 06 — closing CTA with email capture island.
+import EmailForm from '~/components/react/EmailForm';
+---
+
+<section
+  id="cta"
+  aria-labelledby="cta-heading"
+  class="relative bg-[var(--color-bg-0)] py-28 md:py-40 border-t border-[var(--color-line-1)] overflow-hidden"
+>
+  {/* Atmospheric backdrop */}
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-grid opacity-40 mask-fade-edges"></div>
+    <div
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.08] blur-[140px]"
+      style="background: radial-gradient(circle, var(--color-lime) 0%, transparent 70%);"
+    >
+    </div>
+    {/* Centered crosshair tick rows */}
+    <div class="absolute left-0 right-0 top-[35%] h-px bg-[var(--color-line-1)]"></div>
+    <div class="absolute left-0 right-0 top-[65%] h-px bg-[var(--color-line-1)]"></div>
+  </div>
+
+  <div class="mx-auto max-w-[900px] px-5 md:px-8">
+    {/* Eyebrow */}
+    <div class="flex items-center justify-center gap-3 mb-10 reveal">
+      <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime"></span>
+      <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
+        § 06 / get started
+      </span>
+      <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime"></span>
+    </div>
+
+    {/* Headline */}
+    <h2
+      id="cta-heading"
+      class="display-tight text-[var(--color-fg-0)] text-center text-[clamp(3rem,8vw,7rem)] mb-8 reveal"
+    >
+      <span class="block">Stop guessing.</span>
+      <span class="block">
+        <span class="text-[var(--color-lime)] glow-lime-text">Start</span>
+        <span> scanning.</span>
+      </span>
+    </h2>
+
+    {/* Subline */}
+    <p
+      class="text-center text-[17px] md:text-[19px] leading-[1.55] text-[var(--color-fg-2)] max-w-[56ch] mx-auto mb-12 reveal"
+    >
+      Your competitor's users are leaving evidence right now. Give us four minutes — we'll hand you
+      the dossier.
+    </p>
+
+    {/* Email form (terminal-framed) */}
+    <div class="relative max-w-[600px] mx-auto reveal">
+      {/* Offset frame */}
+      <div
+        aria-hidden="true"
+        class="absolute -inset-2 border border-[var(--color-line-1)] translate-x-2 translate-y-2"
+      >
+      </div>
+      <div
+        aria-hidden="true"
+        class="absolute inset-0 bg-[var(--color-lime)] opacity-[0.05] blur-3xl"
+      ></div>
+
+      <div class="relative border border-[var(--color-line-2)] bg-[var(--color-bg-1)] scanlines">
+        {/* Window chrome */}
+        <div
+          class="flex items-center justify-between border-b border-[var(--color-line-1)] px-4 py-2.5 bg-[var(--color-bg-2)]"
+        >
+          <div class="flex items-center gap-2">
+            <span class="block w-2 h-2 rounded-full bg-[var(--color-fg-4)]"></span>
+            <span class="block w-2 h-2 rounded-full bg-[var(--color-fg-4)]"></span>
+            <span class="block w-2 h-2 rounded-full bg-[var(--color-lime)]"></span>
+          </div>
+          <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
+            rivaleye / sign-in
+          </span>
+          <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-lime)]">
+            ready
+          </span>
+        </div>
+        <div class="p-6 md:p-7">
+          <EmailForm client:visible />
+        </div>
+      </div>
+    </div>
+
+    {/* Trust strip */}
+    <ul
+      class="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-[640px] mx-auto reveal-stagger"
+    >
+      {
+        [
+          { label: 'First scan', value: 'Free, no card' },
+          { label: 'Setup time', value: '< 30 seconds' },
+          { label: 'Cancel anytime', value: 'From settings' },
+        ].map((t) => (
+          <li class="flex items-center gap-3 border border-[var(--color-line-1)] bg-[var(--color-bg-1)]/40 px-4 py-3.5">
+            <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full" />
+            <div class="flex flex-col">
+              <span class="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-fg-3)]">
+                {t.label}
+              </span>
+              <span class="text-[13px] text-[var(--color-fg-1)] mt-0.5">{t.value}</span>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/* Footnote */}
+    <p
+      class="mt-12 text-center font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)]"
+    >
+      ↳ 312 product teams scanning right now
+    </p>
+  </div>
+</section>

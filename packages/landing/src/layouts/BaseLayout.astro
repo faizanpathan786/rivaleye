@@ -1,0 +1,67 @@
+---
+// src/layouts/BaseLayout.astro
+import '~/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'RivalEye — Find what your competitor’s users hate before you build.',
+  description = 'RivalEye scrapes complaints across Reddit, G2, Capterra, Product Hunt, X, App Store, Play Store, and Google Maps — then clusters them into a Competitor Pain Report.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#07080A" />
+    <meta name="color-scheme" content="dark" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="RivalEye" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="preconnect" href="data:" />
+  </head>
+  <body class="grain" data-grain>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-[var(--color-lime)] focus:text-[var(--color-bg-0)] focus:px-3 focus:py-2 focus:font-mono focus:text-xs focus:tracking-widest focus:uppercase"
+    >
+      Skip to content
+    </a>
+
+    <slot />
+
+    <script>
+      import { initReveals, initCounters, registerGsap } from '~/lib/motion';
+
+      const boot = () => {
+        registerGsap();
+        initReveals();
+        initCounters();
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+      } else {
+        boot();
+      }
+    </script>
+  </body>
+</html>

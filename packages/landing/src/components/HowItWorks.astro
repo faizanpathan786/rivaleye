@@ -1,44 +1,269 @@
 ---
+// src/components/HowItWorks.astro
+// Section 02 — three steps, alternating layout, vertical rail.
+
 const steps = [
   {
-    n: "01",
-    title: "Name a competitor",
-    body: "Enter a competing product or a category. That's the entire setup.",
+    n: '01',
+    title: 'Drop in a competitor.',
+    desc: 'A name, a domain, an App Store URL — anything. RivalEye finds them across every relevant platform.',
+    bullets: ['no integrations', 'no API keys', 'no setup'],
+    visual: 'input',
   },
   {
-    n: "02",
-    title: "Workers scrape in parallel",
-    body: "RivalEye pulls discussions and reviews from every supported platform at once.",
+    n: '02',
+    title: 'We read every complaint, everywhere.',
+    desc: 'RivalEye scrapes Reddit, G2, Capterra, Product Hunt, X, the App Store, Play Store, and Google Maps — concurrently. Most scans complete in under five minutes.',
+    bullets: ['8 sources', '24/7 refresh', 'historical archive'],
+    visual: 'scan',
   },
   {
-    n: "03",
-    title: "Get a Pain Report",
-    body: "AI clusters thousands of complaints into clear, ranked, actionable themes.",
+    n: '03',
+    title: 'Get the Pain Report.',
+    desc: 'Complaints get clustered into six lenses — pain points, feature gaps, pricing pain, switching signals, positioning angles, and product opportunities. Each cluster cites the original source.',
+    bullets: ['6 cluster lenses', 'severity ranked', 'every quote sourced'],
+    visual: 'report',
   },
 ];
 ---
 
-<section id="how" class="mx-auto max-w-6xl px-6 py-24">
-  <div class="mx-auto max-w-2xl text-center">
-    <p class="reveal text-sm font-semibold uppercase tracking-wider text-accent">
-      How it works
-    </p>
-    <h2 class="reveal mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-      From competitor name to insight in three steps.
-    </h2>
+<section
+  id="how"
+  aria-labelledby="how-heading"
+  class="relative bg-[var(--color-bg-0)] py-24 md:py-32 overflow-hidden border-t border-[var(--color-line-1)]"
+>
+  {/* Subtle backdrop */}
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-grid opacity-30 mask-fade-edges"></div>
+    <div
+      class="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.04] blur-[120px]"
+      style="background: radial-gradient(circle, var(--color-lime) 0%, transparent 70%);"
+    >
+    </div>
   </div>
-  <div class="mt-14 grid gap-6 sm:grid-cols-3">
-    {
-      steps.map((s) => (
-        <div
-          class="reveal rounded-card border border-line bg-surface p-7"
-          style="box-shadow: var(--shadow-soft)"
-        >
-          <span class="text-sm font-semibold text-accent">{s.n}</span>
-          <h3 class="mt-3 text-lg font-semibold">{s.title}</h3>
-          <p class="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
-        </div>
-      ))
-    }
+
+  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+    {/* Section header */}
+    <div class="mb-16 md:mb-24 reveal-stagger">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]">§ 02</span>
+        <span class="block w-8 h-px bg-[var(--color-line-2)]"></span>
+        <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
+          How it works
+        </span>
+      </div>
+      <h2
+        id="how-heading"
+        class="display-tight text-[var(--color-fg-0)] text-[clamp(2.5rem,5.5vw,5rem)] max-w-[18ch]"
+      >
+        Three steps. <span class="text-[var(--color-fg-3)]">No</span>
+        <span class="text-[var(--color-fg-3)]"> integrations</span>.
+      </h2>
+    </div>
+
+    {/* Steps */}
+    <div class="relative">
+      {/* Vertical rail (desktop only) */}
+      <div
+        aria-hidden="true"
+        class="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2"
+      >
+        <div class="h-full w-full bg-gradient-to-b from-transparent via-[var(--color-line-2)] to-transparent"></div>
+      </div>
+
+      <div class="space-y-24 md:space-y-32">
+        {
+          steps.map((step, idx) => (
+            <div
+              class={`relative grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center reveal-stagger ${
+                idx % 2 === 1 ? 'lg:[direction:rtl]' : ''
+              }`}
+            >
+              {/* Rail dot */}
+              <span
+                aria-hidden="true"
+                class="hidden lg:block absolute left-1/2 top-12 -translate-x-1/2 w-3 h-3 border border-[var(--color-lime)] bg-[var(--color-bg-0)]"
+              >
+                <span class="absolute inset-1 bg-[var(--color-lime)]" />
+              </span>
+
+              {/* Text column */}
+              <div class="lg:col-span-5 [direction:ltr]">
+                <div class="flex items-baseline gap-4 mb-6">
+                  <span class="font-display text-7xl md:text-8xl font-medium text-[var(--color-bg-4)] tracking-tight leading-none">
+                    {step.n}
+                  </span>
+                  <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)] pb-2">
+                    / step {step.n}
+                  </span>
+                </div>
+                <h3 class="display-tight text-[var(--color-fg-0)] text-[clamp(1.75rem,3.2vw,2.75rem)] max-w-[16ch] mb-5">
+                  {step.title}
+                </h3>
+                <p class="text-[16px] md:text-[17px] leading-[1.6] text-[var(--color-fg-2)] max-w-[44ch] mb-6">
+                  {step.desc}
+                </p>
+                <ul class="flex flex-wrap gap-2">
+                  {step.bullets.map((b) => (
+                    <li class="inline-flex items-center gap-2 border border-[var(--color-line-2)] bg-[var(--color-bg-1)] px-3 py-1.5">
+                      <span class="inline-block w-1 h-1 rounded-full bg-[var(--color-lime)]" />
+                      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-2)]">
+                        {b}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Visual column */}
+              <div class="lg:col-span-6 lg:col-start-7 [direction:ltr]">
+                {step.visual === 'input' && (
+                  <div class="relative border border-[var(--color-line-2)] bg-[var(--color-bg-1)] scanlines">
+                    <div class="flex items-center justify-between border-b border-[var(--color-line-1)] px-4 py-2.5 bg-[var(--color-bg-2)]">
+                      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
+                        rivaleye / new-scan
+                      </span>
+                      <span class="flex items-center gap-1.5 font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]">
+                        ⌘ K
+                      </span>
+                    </div>
+                    <div class="p-6">
+                      <label class="block label-mono mb-3">target competitor</label>
+                      <div class="flex items-center gap-3 border border-[var(--color-line-3)] bg-[var(--color-bg-0)] px-4 py-4">
+                        <span class="text-[var(--color-lime)] font-mono">{'>'}</span>
+                        <span class="flex-1 font-mono text-[15px] text-[var(--color-fg-0)]">
+                          notion.so
+                        </span>
+                        <span class="inline-block w-2 h-4 bg-[var(--color-lime)] animate-blink" />
+                      </div>
+                      <div class="mt-5 space-y-1.5">
+                        <div class="flex items-center justify-between font-mono text-[11px] text-[var(--color-fg-3)]">
+                          <span>↳ Identified</span>
+                          <span class="text-[var(--color-lime)]">Notion · SaaS · Workspace</span>
+                        </div>
+                        <div class="flex items-center justify-between font-mono text-[11px] text-[var(--color-fg-3)]">
+                          <span>↳ Domains found</span>
+                          <span class="text-[var(--color-fg-1)]">11 across 8 platforms</span>
+                        </div>
+                        <div class="flex items-center justify-between font-mono text-[11px] text-[var(--color-fg-3)]">
+                          <span>↳ Ready to scan</span>
+                          <span class="inline-flex items-center gap-1.5 text-[var(--color-lime)]">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-lime)] animate-pulse-lime" />
+                            yes
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        class="mt-6 w-full bg-[var(--color-lime)] text-[var(--color-bg-0)] py-3 font-mono text-[11px] font-medium tracking-[0.22em] uppercase hover:bg-[var(--color-lime-1)] transition-colors"
+                      >
+                        Begin scan →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {step.visual === 'scan' && (
+                  <div class="relative border border-[var(--color-line-2)] bg-[var(--color-bg-1)] scanlines">
+                    <div class="flex items-center justify-between border-b border-[var(--color-line-1)] px-4 py-2.5 bg-[var(--color-bg-2)]">
+                      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
+                        rivaleye / scan in progress
+                      </span>
+                      <span class="flex items-center gap-1.5 font-mono text-[10px] tracking-widest uppercase">
+                        <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime" />
+                        <span class="text-[var(--color-lime)]">live</span>
+                      </span>
+                    </div>
+                    <div class="p-6 grid grid-cols-2 gap-3">
+                      {[
+                        { src: 'reddit', pct: 100, found: 312 },
+                        { src: 'g2', pct: 100, found: 89 },
+                        { src: 'capterra', pct: 100, found: 54 },
+                        { src: 'producthunt', pct: 100, found: 31 },
+                        { src: 'x', pct: 67, found: 142 },
+                        { src: 'apple', pct: 44, found: 78 },
+                        { src: 'play', pct: 12, found: 22 },
+                        { src: 'maps', pct: 0, found: 0 },
+                      ].map((p) => (
+                        <div class="border border-[var(--color-line-1)] bg-[var(--color-bg-0)] p-3">
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-2)]">
+                              {p.src}
+                            </span>
+                            <span class="font-mono text-[10px] tracking-widest text-[var(--color-fg-3)]">
+                              {p.pct}%
+                            </span>
+                          </div>
+                          <div class="relative h-1 bg-[var(--color-bg-3)] overflow-hidden">
+                            <div
+                              class="absolute left-0 top-0 bottom-0 bg-[var(--color-lime)]"
+                              style={`width: ${p.pct}%`}
+                            />
+                          </div>
+                          <div class="mt-2 font-mono text-[10px] tracking-widest text-[var(--color-fg-3)]">
+                            {p.found > 0 ? `+${p.found} complaints` : 'queued'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {step.visual === 'report' && (
+                  <div class="relative border border-[var(--color-line-2)] bg-[var(--color-bg-1)] scanlines">
+                    <div class="flex items-center justify-between border-b border-[var(--color-line-1)] px-4 py-2.5 bg-[var(--color-bg-2)]">
+                      <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
+                        notion.report.pain
+                      </span>
+                      <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-lime)]">
+                        ready · 04:12
+                      </span>
+                    </div>
+                    <div class="p-6">
+                      <div class="flex items-baseline justify-between mb-4">
+                        <span class="font-display text-2xl font-medium text-[var(--color-fg-0)] tracking-tight">
+                          Pain Report
+                        </span>
+                        <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]">
+                          v.01
+                        </span>
+                      </div>
+                      <div class="space-y-3">
+                        {[
+                          { lens: 'Top pain points', n: 24 },
+                          { lens: 'Feature gaps', n: 18 },
+                          { lens: 'Pricing pain', n: 11 },
+                          { lens: 'Switching signals', n: 9 },
+                          { lens: 'Positioning angles', n: 7 },
+                          { lens: 'Product opportunities', n: 14 },
+                        ].map((lens) => (
+                          <div class="flex items-center justify-between py-2 border-b border-[var(--color-line-1)] last:border-b-0">
+                            <div class="flex items-center gap-3">
+                              <span class="block w-1 h-4 bg-[var(--color-lime)]" />
+                              <span class="text-[14px] text-[var(--color-fg-1)]">{lens.lens}</span>
+                            </div>
+                            <span class="font-mono text-[10px] tracking-widest text-[var(--color-fg-3)]">
+                              {lens.n} clusters
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div class="mt-5 pt-4 border-t border-[var(--color-line-2)] flex items-center justify-between">
+                        <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]">
+                          Total clusters
+                        </span>
+                        <span class="font-display text-3xl font-medium text-[var(--color-lime)] tracking-tight">
+                          83
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
   </div>
 </section>

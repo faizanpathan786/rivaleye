@@ -1,0 +1,146 @@
+---
+// src/components/FAQ.astro
+// Section 05 — terminal-style expandable FAQ.
+
+const faqs = [
+  {
+    q: 'What sources do you actually scan?',
+    a: 'Reddit (every relevant subreddit), G2, Capterra, Product Hunt, X (formerly Twitter), the App Store, the Play Store, and Google Maps business reviews. We score and de-duplicate across sources so the same complaint surfaced in three places doesn\'t inflate the signal — it strengthens it.',
+  },
+  {
+    q: 'How long does a scan take?',
+    a: 'Most scans complete in three to seven minutes. The first scan of a new competitor takes longest because we build out the historical archive. Subsequent refreshes are incremental and finish in under sixty seconds.',
+  },
+  {
+    q: 'How accurate are the clusters?',
+    a: 'Clustering is the core of the product. We use a custom pipeline — embedding similarity, severity scoring, and a final LLM pass for cluster naming and de-duplication. Every cluster cites the source complaints so you can verify any claim in two clicks. Accuracy on our internal test set runs around 94% (correct cluster) and 89% (correct severity rank).',
+  },
+  {
+    q: 'Is this legal? What about privacy?',
+    a: 'We only scan public content — public reviews, public posts, public app store entries. We don\'t scrape private DMs, email, or anything behind a login. We respect robots.txt and platform terms of service. We do not retain personally identifying information from review authors; quotes shown in reports are attributed to their public source, never to a named individual.',
+  },
+  {
+    q: 'How fresh is the data?',
+    a: 'Reports rescan daily by default. You can trigger an on-demand refresh from the report view at any time. Each report shows the last-scanned timestamp and a diff against the previous run so you can see what changed.',
+  },
+  {
+    q: 'Can I export the report?',
+    a: 'Yes. CSV (clusters + evidence), Notion-compatible Markdown, PDF (executive summary), and a JSON API for piping into your own tooling. Every export preserves the source citations.',
+  },
+  {
+    q: 'How does pricing work?',
+    a: 'Free tier: one scan per month, one tracked competitor. Pro: $79/mo, ten competitors, daily refresh, all exports. Team: $349/mo, unlimited competitors, API access, custom lens prompts. No setup fees, no annual lock-in, cancel from settings.',
+  },
+  {
+    q: 'How is this different from Google Alerts or doing it manually?',
+    a: 'Google Alerts surfaces noise. Manual research caps out at a few dozen complaints before you give up. RivalEye reads thousands, clusters them by underlying pain, severity-ranks the clusters, and tells you which ones are growing — in the time it takes to read this answer. That is the entire difference.',
+  },
+];
+---
+
+<section
+  id="faq"
+  aria-labelledby="faq-heading"
+  class="relative bg-[var(--color-bg-0)] py-24 md:py-32 border-t border-[var(--color-line-1)] overflow-hidden"
+>
+  {/* Backdrop */}
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-grid-fine opacity-20 mask-fade-edges"></div>
+  </div>
+
+  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+    <div class="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+      {/* Left — sticky meta */}
+      <div class="lg:col-span-4 lg:sticky lg:top-32 reveal-stagger">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]"
+            >§ 05</span
+          >
+          <span class="block w-8 h-px bg-[var(--color-line-2)]"></span>
+          <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
+            Questions
+          </span>
+        </div>
+        <h2
+          id="faq-heading"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2.25rem,4.5vw,4rem)] mb-6"
+        >
+          The honest answers.
+        </h2>
+        <p class="text-[15px] leading-[1.6] text-[var(--color-fg-2)] max-w-[36ch] mb-8">
+          Everything we get asked before a first scan. If something isn't here, ask us — replies go
+          to a real human.
+        </p>
+
+        {/* Stat strip */}
+        <div class="grid grid-cols-2 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)] mb-8">
+          <div class="bg-[var(--color-bg-0)] p-4">
+            <div class="label-mono mb-1.5">Questions</div>
+            <div class="font-display text-2xl font-medium text-[var(--color-fg-0)] tracking-tight">
+              {faqs.length} / {faqs.length}
+            </div>
+          </div>
+          <div class="bg-[var(--color-bg-0)] p-4">
+            <div class="label-mono mb-1.5">Avg. reply</div>
+            <div class="font-display text-2xl font-medium text-[var(--color-fg-0)] tracking-tight">
+              &lt; 2h
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="mailto:hi@rivaleye.io"
+          class="inline-flex items-center gap-2 border border-[var(--color-line-2)] bg-[var(--color-bg-1)] px-4 py-3 font-mono text-[11px] font-medium tracking-[0.18em] uppercase text-[var(--color-fg-1)] hover:border-[var(--color-line-3)] hover:bg-[var(--color-bg-2)] transition-colors"
+        >
+          <span>Ask a new question</span>
+          <span class="text-[var(--color-lime)]">↗</span>
+        </a>
+      </div>
+
+      {/* Right — Q/A list */}
+      <div class="lg:col-span-8 reveal-stagger">
+        <div class="border-t border-[var(--color-line-2)]">
+          {
+            faqs.map((item, i) => (
+              <details class="group border-b border-[var(--color-line-2)]" name="faq">
+                <summary class="flex items-start gap-4 md:gap-6 py-6 md:py-7 cursor-pointer list-none hover:bg-[var(--color-bg-1)]/40 transition-colors">
+                  <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-4)] pt-1.5 whitespace-nowrap">
+                    Q.{String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span class="font-display text-[19px] md:text-[22px] font-medium text-[var(--color-fg-0)] tracking-tight leading-[1.3] flex-1">
+                    {item.q}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    class="font-mono text-[var(--color-lime)] text-lg leading-none pt-1.5 transition-transform duration-300 group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <div class="pl-[3.75rem] md:pl-[5rem] pr-10 pb-7 -mt-2">
+                  <div class="flex items-start gap-4 md:gap-6">
+                    <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-lime)] pt-1 whitespace-nowrap -ml-[3.75rem] md:-ml-[5rem]">
+                      A.{String(i + 1).padStart(2, '0')}
+                    </span>
+                    <p class="text-[15px] md:text-[16px] leading-[1.65] text-[var(--color-fg-2)] max-w-[64ch]">
+                      {item.a}
+                    </p>
+                  </div>
+                </div>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  details summary {
+    user-select: none;
+  }
+</style>

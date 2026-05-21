@@ -1,17 +1,190 @@
 ---
+// src/components/Problem.astro
+// Section 01 — the pain RivalEye solves. Editorial layout with a quiet "wall of unread signal" visual.
+
+const unreadComplaints = [
+  '"feels sluggish after 10k blocks"',
+  '"offline is still broken in 2026"',
+  '"AI suggestions are mostly noise"',
+  '"why can I not bulk-edit permissions"',
+  '"the pricing page is a maze"',
+  '"undo doesn’t work across pages"',
+  '"databases are the dealbreaker"',
+  '"export to PDF mangles everything"',
+  '"keyboard nav is half-implemented"',
+  '"share links keep breaking"',
+  '"mobile is a different product"',
+  '"search returns garbage"',
+  '"team plan is overpriced"',
+  '"can’t self-host, dealbreaker"',
+  '"sync conflicts lose work"',
+  '"AI hallucinates citations"',
+  '"two clicks to do anything"',
+  '"new editor is worse"',
+  '"slow even on M3 Max"',
+  '"templates feel abandoned"',
+  '"why is comments a separate panel"',
+  '"icons changed for no reason"',
+  '"signup flow is broken on Safari"',
+  '"can’t delete an account"',
+];
 ---
 
-<section class="mx-auto max-w-3xl px-6 py-24 text-center">
-  <p class="reveal text-sm font-semibold uppercase tracking-wider text-accent">
-    The problem
-  </p>
-  <h2 class="reveal mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-    You're building on guesses.
-  </h2>
-  <p class="reveal mt-5 text-lg text-muted">
-    Your competitor's users are telling you exactly what's broken — in Reddit
-    threads, review sites, and app store ratings. But that signal is scattered
-    across a dozen platforms and thousands of posts. Most founders never read
-    it, and ship features nobody asked for.
-  </p>
+<section
+  id="problem"
+  aria-labelledby="problem-heading"
+  class="relative bg-[var(--color-bg-0)] py-24 md:py-32 overflow-hidden"
+>
+  {/* Atmospheric backdrop */}
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-grid-fine opacity-40 mask-fade-edges"></div>
+  </div>
+
+  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+    {/* Section eyebrow row */}
+    <div class="flex items-center justify-between mb-12 md:mb-20 reveal">
+      <div class="flex items-center gap-3">
+        <span
+          class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]"
+        >
+          § 01
+        </span>
+        <span class="block w-8 h-px bg-[var(--color-line-2)]"></span>
+        <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
+          The problem
+        </span>
+      </div>
+      <span class="hidden md:inline font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]">
+        ↓
+      </span>
+    </div>
+
+    <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      {/* Left — editorial */}
+      <div class="lg:col-span-7 reveal-stagger">
+        <h2
+          id="problem-heading"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2.75rem,6vw,5.5rem)]"
+        >
+          <span class="block">You're building</span>
+          <span class="block">on a <span class="text-[var(--color-lime)] glow-lime-text">hunch</span>.</span>
+        </h2>
+
+        <div class="mt-10 max-w-[600px] space-y-6 text-[17px] md:text-[18px] leading-[1.6] text-[var(--color-fg-2)]">
+          <p>
+            Three Twitter quotes. Two G2 reviews. A Slack thread from your design lead. That's the
+            research most teams do before betting six months of roadmap on a competitor's weak
+            spot.
+          </p>
+          <p>
+            <span class="text-[var(--color-fg-1)]">Real signal lives in thousands of complaints</span>
+             scattered across eight platforms — written by people who already churned, downgraded,
+            or never converted. You won't read them all.
+          </p>
+          <p class="text-[var(--color-fg-1)] border-l-2 border-[var(--color-lime)] pl-5 italic font-display text-[20px] md:text-[22px] leading-[1.45]">
+            RivalEye does. In an afternoon.
+          </p>
+        </div>
+
+        {/* Stat callouts */}
+        <div class="mt-14 grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)]">
+          <div class="bg-[var(--color-bg-0)] p-6">
+            <div class="label-mono mb-3">Avg. complaints read before launching</div>
+            <div class="flex items-baseline gap-3">
+              <span
+                class="font-display text-5xl md:text-6xl font-medium text-[var(--color-fg-0)] tracking-tight"
+                data-counter="47">0</span>
+              <span class="font-mono text-[11px] tracking-widest uppercase text-[var(--color-rose)]">
+                ▼ insufficient
+              </span>
+            </div>
+            <p class="mt-3 text-[13px] leading-[1.5] text-[var(--color-fg-3)]">
+              Across 312 product teams we surveyed in 2025.
+            </p>
+          </div>
+          <div class="bg-[var(--color-bg-0)] p-6">
+            <div class="label-mono mb-3">Complaints available right now</div>
+            <div class="flex items-baseline gap-3">
+              <span
+                class="font-display text-5xl md:text-6xl font-medium text-[var(--color-lime)] tracking-tight"
+                data-counter="2417">0</span>
+              <span class="font-mono text-[11px] tracking-widest uppercase text-[var(--color-fg-3)]">
+                per scan / avg
+              </span>
+            </div>
+            <p class="mt-3 text-[13px] leading-[1.5] text-[var(--color-fg-3)]">
+              Real complaints on a typical SaaS competitor today.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right — wall of unread signal */}
+      <aside
+        class="lg:col-span-5 relative reveal"
+        aria-label="Examples of complaints you might be missing"
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)]">
+            ↳ what you're not reading
+          </span>
+        </div>
+        <div class="relative border border-[var(--color-line-1)] bg-[var(--color-bg-1)]/40 backdrop-blur-sm h-[520px] overflow-hidden">
+          {/* Top + bottom fade */}
+          <div
+            aria-hidden="true"
+            class="absolute top-0 left-0 right-0 h-16 z-10 pointer-events-none"
+            style="background: linear-gradient(to bottom, var(--color-bg-0), transparent);"
+          >
+          </div>
+          <div
+            aria-hidden="true"
+            class="absolute bottom-0 left-0 right-0 h-32 z-10 pointer-events-none"
+            style="background: linear-gradient(to top, var(--color-bg-0), transparent);"
+          >
+          </div>
+
+          {/* Scrolling vertical column of complaints */}
+          <div class="px-5 py-4 space-y-2 animate-marquee-y">
+            {
+              [...unreadComplaints, ...unreadComplaints].map((q) => (
+                <div class="font-mono text-[12px] text-[var(--color-fg-3)] leading-relaxed">
+                  <span class="text-[var(--color-fg-4)]">▼</span> {q}
+                </div>
+              ))
+            }
+          </div>
+
+          {/* Center "missed" badge */}
+          <div
+            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 border border-[var(--color-rose)]/40 bg-[var(--color-bg-0)]/95 backdrop-blur px-4 py-2 font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-rose)]"
+          >
+            ✕ unread by your team
+          </div>
+        </div>
+        <p class="mt-4 font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
+          ↑ Real-format complaints · 24 of ~2,400
+        </p>
+      </aside>
+    </div>
+  </div>
 </section>
+
+<style>
+  @keyframes marquee-y {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-50%);
+    }
+  }
+  .animate-marquee-y {
+    animation: marquee-y 40s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee-y {
+      animation: none !important;
+    }
+  }
+</style>
