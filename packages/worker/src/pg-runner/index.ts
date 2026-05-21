@@ -391,7 +391,14 @@ function sleep(ms: number): Promise<void> {
 
 function isConnectionError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  return msg.includes("CONNECTION_CLOSED") || msg.includes("CONNECTION_DESTROYED") || msg.includes("ECONNRESET");
+  return (
+    msg.includes("CONNECTION_CLOSED") ||
+    msg.includes("CONNECTION_DESTROYED") ||
+    msg.includes("ECONNRESET") ||
+    msg.includes("ENOTFOUND") ||
+    msg.includes("ECONNREFUSED") ||
+    msg.includes("CONNECT_TIMEOUT")
+  );
 }
 
 /**
