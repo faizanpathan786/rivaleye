@@ -1,0 +1,44 @@
+---
+const steps = [
+  {
+    n: "01",
+    title: "Name a competitor",
+    body: "Enter a competing product or a category. That's the entire setup.",
+  },
+  {
+    n: "02",
+    title: "Workers scrape in parallel",
+    body: "RivalEye pulls discussions and reviews from every supported platform at once.",
+  },
+  {
+    n: "03",
+    title: "Get a Pain Report",
+    body: "AI clusters thousands of complaints into clear, ranked, actionable themes.",
+  },
+];
+---
+
+<section id="how" class="mx-auto max-w-6xl px-6 py-24">
+  <div class="mx-auto max-w-2xl text-center">
+    <p class="reveal text-sm font-semibold uppercase tracking-wider text-accent">
+      How it works
+    </p>
+    <h2 class="reveal mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+      From competitor name to insight in three steps.
+    </h2>
+  </div>
+  <div class="mt-14 grid gap-6 sm:grid-cols-3">
+    {
+      steps.map((s) => (
+        <div
+          class="reveal rounded-card border border-line bg-surface p-7"
+          style="box-shadow: var(--shadow-soft)"
+        >
+          <span class="text-sm font-semibold text-accent">{s.n}</span>
+          <h3 class="mt-3 text-lg font-semibold">{s.title}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>

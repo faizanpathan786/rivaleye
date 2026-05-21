@@ -1,0 +1,21 @@
+---
+import { EmailForm } from "./EmailForm.tsx";
+---
+
+<section id="cta" class="px-6 pb-24">
+  <div
+    class="mx-auto max-w-5xl overflow-hidden rounded-card bg-accent px-8 py-16 text-center"
+  >
+    <h2
+      class="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl"
+    >
+      Stop guessing what to build.
+    </h2>
+    <p class="mx-auto mt-4 max-w-lg text-balance text-accent-soft">
+      Join the private beta and get your first Competitor Pain Report free.
+    </p>
+    <div class="mt-8 flex justify-center">
+      <EmailForm client:load variant="band" />
+    </div>
+  </div>
+</section>
