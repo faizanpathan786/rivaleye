@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import type { BrowserContext, Page } from "playwright";
 import { normalizeUrl, normalizeInternalUrls } from "./url-utils";
 import { selectTopUrls } from "./page-selector";
 import { ScraperError } from "../types";
@@ -27,24 +28,27 @@ export async function crawlWebsite(websiteUrl: string): Promise<CrawledPage[]> {
       userAgent:
         "Mozilla/5.0 (compatible; RivalEye/1.0; +https://rivaleye.com/bot)",
     });
+    try {
+      const discoveredUrls = await discoverLinks(context, normalizedHomepage);
+      const selectedUrls = selectTopUrls(discoveredUrls, normalizedHomepage, PAGE_LIMIT);
 
-    const discoveredUrls = await discoverLinks(context, normalizedHomepage);
-    const selectedUrls = selectTopUrls(discoveredUrls, normalizedHomepage, PAGE_LIMIT);
+      const pages: CrawledPage[] = [];
+      for (const url of selectedUrls) {
+        const page = await crawlSinglePage(context, url);
+        pages.push(page);
+      }
 
-    const pages: CrawledPage[] = [];
-    for (const url of selectedUrls) {
-      const page = await crawlSinglePage(context, url);
-      pages.push(page);
+      return pages;
+    } finally {
+      await context.close();
     }
-
-    return pages;
   } finally {
     await browser.close();
   }
 }
 
 async function discoverLinks(
-  context: import("playwright").BrowserContext,
+  context: BrowserContext,
   homepageUrl: string,
 ): Promise<string[]> {
   const page = await context.newPage();
@@ -64,7 +68,7 @@ async function discoverLinks(
 }
 
 async function crawlSinglePage(
-  context: import("playwright").BrowserContext,
+  context: BrowserContext,
   url: string,
 ): Promise<CrawledPage> {
   const page = await context.newPage();
@@ -107,7 +111,7 @@ async function crawlSinglePage(
   }
 }
 
-async function removeClutter(page: import("playwright").Page): Promise<void> {
+async function removeClutter(page: Page): Promise<void> {
   await page
     .evaluate(() => {
       const selectors = ["nav", "header", "footer", "script", "style", "noscript", "form", ".cookie-banner", "#cookie-banner"];
@@ -118,7 +122,7 @@ async function removeClutter(page: import("playwright").Page): Promise<void> {
     .catch(() => {});
 }
 
-async function extractMarkdown(page: import("playwright").Page): Promise<string> {
+async function extractMarkdown(page: Page): Promise<string> {
   const text = await page.evaluate(() => {
     function nodeToText(node: Node, depth: number): string {
       if (node.nodeType === Node.TEXT_NODE) {

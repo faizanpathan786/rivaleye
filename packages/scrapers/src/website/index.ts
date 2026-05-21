@@ -12,7 +12,11 @@ export class WebsiteScraper implements Scraper {
     }
     try {
       const pages = await crawlWebsite(query.websiteUrl);
-      return normalizeWebsitePages(pages);
+      const posts = normalizeWebsitePages(pages);
+      if (posts.length === 0) {
+        throw new ScraperError("website", "all crawled pages failed or contained no usable content");
+      }
+      return posts;
     } catch (err) {
       if (err instanceof ScraperError) throw err;
       throw new ScraperError("website", "crawl failed", err);
