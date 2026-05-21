@@ -27,6 +27,7 @@ const PLATFORMS = [
   { id: "playstore",   name: "Play Store",    sub: "Android low-star reviews",        live: true  },
   { id: "hackernews",  name: "Hacker News",   sub: "Show HN, Ask HN, comments",       live: true  },
   { id: "devto",       name: "Dev.to",        sub: "Articles & community comments",   live: true  },
+  { id: "website",     name: "Website",       sub: "Marketing site, pricing, features", live: true },
   { id: "twitter",     name: "X / Twitter",   sub: "Complaint & switching tweets",    live: false },
   { id: "linkedin",    name: "LinkedIn",      sub: "Public posts & comments",         live: false },
   { id: "capterra",    name: "Capterra",      sub: "Verified buyer reviews",          live: false },
@@ -71,9 +72,10 @@ export function ScanPage() {
   const [range, setRange] = useState<string>("90d");
   const [platforms, setPlatforms] = useState<Record<PlatformId, boolean>>({
     reddit: true, producthunt: true, appstore: true, playstore: true,
-    hackernews: true, devto: true,
+    hackernews: true, devto: true, website: false,
     twitter: false, linkedin: false, capterra: false, gmaps: false,
   });
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [goal, setGoal] = useState<ReportGoal>("find_weaknesses");
   const [depth, setDepth] = useState<string>("standard");
 
@@ -87,7 +89,8 @@ export function ScanPage() {
     !isPending &&
     name.trim().length > 0 &&
     category.trim().length > 0 &&
-    audience.trim().length > 0;
+    audience.trim().length > 0 &&
+    (!platforms.website || websiteUrl.trim().length > 0);
 
   const start = async () => {
     if (!canSubmit) return;
@@ -99,6 +102,7 @@ export function ScanPage() {
         target_audience: audience.trim(),
         founder_goal: goal,
         selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
+        website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
       });
       navigate(`/reports/${res.id}`);
     } catch {
@@ -250,6 +254,21 @@ export function ScanPage() {
         <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 8 }}>
           ESTIMATED {selectedPlatformCount * 220}+ items · cost ≈ {selectedPlatformCount} scan credits
         </div>
+        {platforms.website && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 6 }}>
+              Competitor website URL <span style={{ color: "var(--fg-muted)", fontWeight: 400 }}>(required for Website platform)</span>
+            </div>
+            <input
+              className="re-input"
+              style={{ height: 40, fontSize: 14, width: "100%" }}
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              placeholder="https://linear.app"
+            />
+          </div>
+        )}
       </Step>
 
       <Step n={6} label="Analysis depth">
@@ -421,6 +440,13 @@ function PlatformIcon({ id, active }: { id: PlatformId; active: boolean }) {
           <rect x="1.5" y="3" width="13" height="10" rx="2" />
           <path d="M5 6.5v3M7 6.5c1 0 2 .7 2 1.5S8 9.5 7 9.5" strokeLinecap="round" />
           <path d="M10.5 6.5h1.5M10.5 8h1M10.5 9.5h1.5" strokeLinecap="round" />
+        </svg>
+      );
+    case "website":
+      return (
+        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="8" cy="8" r="6" />
+          <path d="M2 8h12M8 2c-1.5 2-2.5 3.8-2.5 6s1 4 2.5 6M8 2c1.5 2 2.5 3.8 2.5 6s-1 4-2.5 6" strokeLinecap="round" />
         </svg>
       );
     case "capterra":
