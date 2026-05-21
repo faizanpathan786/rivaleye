@@ -50,6 +50,7 @@ export const reports = pgTable("reports", {
 
   primary_competitor_name: text("primary_competitor_name"),
   primary_competitor_domain: text("primary_competitor_domain"),
+  website_url: text("website_url"),
   scanned_at: timestamp("scanned_at"),
   time_range: text("time_range"),
   total_sources: integer("total_sources"),
