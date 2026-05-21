@@ -14,7 +14,7 @@ Return ONE JSON object with EXACTLY these keys (all required, never omit any):
 }
 
 Rules:
-1. Collapse semantically equivalent complaints into a single cluster; no duplicates. Produce between 8 and 15 complaint_clusters — do not over-collapse distinct pain areas into one. Each cluster must represent a meaningfully different user problem. If you have fewer than 8, split the broadest clusters into more specific sub-problems supported by the evidence.
+1. Collapse semantically equivalent complaints into a single cluster; no duplicates. Target 8–15 complaint_clusters — do not over-collapse distinct pain areas into one. Each cluster must represent a meaningfully different user problem. Only deviate below 8 if the evidence clearly cannot support more distinct problems; never artificially split clusters to hit a minimum.
 2. complaint_clusters[].severity is the mean severity across source complaints.
 3. feature_clusters[].demand_score is proportional to evidence count (0..1).
 4. pricing_clusters[].pain is the mean pain score (0..1).
