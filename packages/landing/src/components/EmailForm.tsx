@@ -12,6 +12,7 @@ export function EmailForm({ variant = "hero" }: EmailFormProps) {
   const [done, setDone] = useState(false);
 
   const onBand = variant === "band";
+  const errorId = `email-error-${variant}`;
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,6 +27,7 @@ export function EmailForm({ variant = "hero" }: EmailFormProps) {
   if (done) {
     return (
       <p
+        role="status"
         className={
           onBand
             ? "text-base font-medium text-white"
@@ -50,6 +52,8 @@ export function EmailForm({ variant = "hero" }: EmailFormProps) {
           onChange={(e) => setEmail(e.currentTarget.value)}
           placeholder="you@company.com"
           aria-label="Work email"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={
             "w-full rounded-lg border px-4 py-3 text-sm outline-none transition-shadow focus:ring-2 " +
             (onBand
@@ -59,6 +63,8 @@ export function EmailForm({ variant = "hero" }: EmailFormProps) {
         />
         {error ? (
           <p
+            id={errorId}
+            role="alert"
             className={
               "mt-1 text-xs " + (onBand ? "text-white/90" : "text-red-600")
             }
