@@ -32,16 +32,26 @@ export interface RawAppStoreReviewsFeed {
   feed?: { entry?: RawAppStoreReview[] };
 }
 
+function appMatchesCompetitor(appName: string, competitor: string): boolean {
+  const t = appName.toLowerCase().trim();
+  const c = competitor.toLowerCase().trim();
+  if (t === c) return true;
+  if (t.startsWith(`${c} - `) || t.startsWith(`${c}: `) || t.startsWith(`${c} | `)) return true;
+  if (t === `${c} app` || t === `${c} - app`) return true;
+  return false;
+}
+
 export async function searchApps(
   term: string,
   country: string,
   limit: number,
 ): Promise<RawAppStoreApp[]> {
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=${country}&entity=software&limit=${limit}&lang=en_us`;
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=${country}&entity=software&limit=25&lang=en_us`;
   const res = await fetch(url);
   if (!res.ok) throw new ScraperError("appstore", `search HTTP ${res.status}`);
   const data = (await res.json()) as { results: RawAppStoreApp[] };
-  return data.results;
+  const matched = data.results.filter((a) => appMatchesCompetitor(a.trackName, term));
+  return matched.slice(0, limit);
 }
 
 export async function fetchReviews(
