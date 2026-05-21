@@ -1,5 +1,5 @@
 import type { ZodSchema } from "zod";
-import { LlmHttpError, LlmJsonParseError, LlmSchemaError } from "./errors";
+import { LlmHttpError, LlmJsonParseError, LlmSchemaError, formatZodIssues } from "./errors";
 
 export interface LlmRequest<TSchema extends ZodSchema | undefined = undefined> {
   system: string;
@@ -97,7 +97,7 @@ export class OpenRouterClient {
     const json = this.parseJson(raw.content);
     const result = req.schema.safeParse(json);
     if (!result.success) {
-      throw new LlmSchemaError(result.error.issues.map((i) => i.message), json);
+      throw new LlmSchemaError(formatZodIssues(result.error.issues), json);
     }
     return { parsed: result.data, raw: raw.content, usage: raw.usage, model: this.model };
   }

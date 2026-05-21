@@ -1,5 +1,8 @@
+import pino from "pino";
 import { redditGet } from "./client";
 import type { RedditAuthConfig } from "./auth";
+
+const log = pino({ name: "reddit-comments" });
 
 export interface RawRedditComment {
   id: string;
@@ -21,6 +24,8 @@ export async function getComments(
   config: RedditAuthConfig,
   maxComments = 10,
 ): Promise<RawRedditComment[]> {
+  const t0 = Date.now();
+  log.debug({ postId, maxComments }, "Fetching comments");
   const [, commentsListing] = await redditGet<[unknown, CommentListing]>(
     `/comments/${postId}`,
     { depth: 2, limit: maxComments },
@@ -36,5 +41,6 @@ export async function getComments(
     results.push(c);
     if (results.length >= maxComments) break;
   }
+  log.debug({ postId, fetched: results.length, durationMs: Date.now() - t0 }, "Comments fetched");
   return results;
 }

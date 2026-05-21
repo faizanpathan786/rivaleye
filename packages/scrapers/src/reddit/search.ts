@@ -1,5 +1,8 @@
+import pino from "pino";
 import { redditGet } from "./client";
 import type { RedditAuthConfig } from "./auth";
+
+const log = pino({ name: "reddit-search" });
 
 export interface RawRedditPost {
   id: string;
@@ -28,12 +31,16 @@ export async function searchPosts(
   opts: { sort?: string; time?: string; limit?: number } = {},
 ): Promise<RawRedditPost[]> {
   const { sort = "relevance", time = "year", limit = 50 } = opts;
+  const t0 = Date.now();
+  log.info({ term, sort, time, limit }, "Searching Reddit posts");
   const listing = await redditGet<RedditListing>(
     "/search",
     { q: term, type: "link", sort, t: time, limit },
     config,
   );
-  return listing.data.children
+  const results = listing.data.children
     .map((c) => c.data)
     .filter((p) => p.author !== "[deleted]");
+  log.info({ term, returned: results.length, durationMs: Date.now() - t0 }, "Search complete");
+  return results;
 }

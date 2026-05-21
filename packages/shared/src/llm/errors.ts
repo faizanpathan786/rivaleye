@@ -18,3 +18,7 @@ export class LlmSchemaError extends Error {
     this.name = "LlmSchemaError";
   }
 }
+
+export function formatZodIssues(issues: import("zod").ZodIssue[]): string[] {
+  return issues.map((i) => `${i.path.length ? i.path.join(".") : "(root)"}: ${i.message}`);
+}

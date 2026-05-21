@@ -7,7 +7,7 @@ export function normalizePost(
   comments: RawRedditComment[],
 ): NormalizedPost {
   const commentText = comments
-    .slice(0, 5)
+    .slice(0, 10)
     .map((c) => c.body)
     .join("\n\n---\n\n");
 

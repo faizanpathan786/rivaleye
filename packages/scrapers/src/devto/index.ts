@@ -1,6 +1,6 @@
 import type { NormalizedPost, ScrapeQuery, Scraper } from "../types";
 import { ScraperError } from "../types";
-import { getArticlesByTag, getComments, getTopArticlesByTag, searchTags } from "./client";
+import { getArticlesByTag, getComments, getTopArticlesByTag, searchArticles, searchTags } from "./client";
 import type { DevToArticleWithComments } from "./normalize";
 import { normalizeDevToPayload } from "./normalize";
 
@@ -13,15 +13,20 @@ export class DevToScraper implements Scraper {
   async fetch(query: ScrapeQuery): Promise<NormalizedPost[]> {
     try {
       const matchingTags = await searchTags(query.competitor);
-      const tag = matchingTags[0]?.name ?? query.competitor;
+      const tag = matchingTags[0]?.name;
 
       const perPage = query.limit ?? DEFAULT_PER_PAGE;
-      const [recentArticles, topArticles] = await Promise.all([
-        getArticlesByTag(tag, perPage).catch(() => [] as Awaited<ReturnType<typeof getArticlesByTag>>),
-        getTopArticlesByTag(tag, perPage).catch(
-          () => [] as Awaited<ReturnType<typeof getTopArticlesByTag>>,
-        ),
-      ]);
+      let recentArticles: Awaited<ReturnType<typeof getArticlesByTag>> = [];
+      let topArticles: Awaited<ReturnType<typeof getTopArticlesByTag>> = [];
+
+      if (tag) {
+        [recentArticles, topArticles] = await Promise.all([
+          getArticlesByTag(tag, perPage).catch(() => []),
+          getTopArticlesByTag(tag, perPage).catch(() => []),
+        ]);
+      } else {
+        recentArticles = await searchArticles(query.competitor, perPage * 5);
+      }
 
       const seenIds = new Set<number>();
       const allArticles = [...recentArticles, ...topArticles].filter((a) => {

@@ -20,18 +20,17 @@ function navPath(t: NavTarget): string {
   }
 }
 
-// TODO(backend): platform selection isn't yet wired to a backend field on
-// reports — keep as a static suggestion list until the worker supports
-// per-platform fan-out config from the create payload.
 const PLATFORMS = [
-  { id: "reddit",      name: "Reddit",       sub: "Threads, comments, subreddits" },
-  { id: "g2",          name: "G2",           sub: "Detractor reviews & 1–3★ ratings" },
-  { id: "linkedin",    name: "LinkedIn",     sub: "Public posts & comments" },
-  { id: "producthunt", name: "Product Hunt", sub: "Launch comments, alternatives" },
-  { id: "twitter",     name: "X / Twitter",  sub: "Complaint & switching tweets" },
-  { id: "youtube",     name: "YouTube",      sub: "Review videos & comments" },
-  { id: "appstore",    name: "App Store",    sub: "iOS + Android low-star reviews" },
-  { id: "hn",          name: "Hacker News",  sub: "Show HN, Ask HN" },
+  { id: "reddit",      name: "Reddit",        sub: "Threads, comments, subreddits",   live: true  },
+  { id: "producthunt", name: "Product Hunt",  sub: "Launch comments, alternatives",   live: true  },
+  { id: "appstore",    name: "App Store",     sub: "iOS low-star reviews",            live: true  },
+  { id: "playstore",   name: "Play Store",    sub: "Android low-star reviews",        live: true  },
+  { id: "hackernews",  name: "Hacker News",   sub: "Show HN, Ask HN, comments",       live: true  },
+  { id: "devto",       name: "Dev.to",        sub: "Articles & community comments",   live: true  },
+  { id: "twitter",     name: "X / Twitter",   sub: "Complaint & switching tweets",    live: false },
+  { id: "linkedin",    name: "LinkedIn",      sub: "Public posts & comments",         live: false },
+  { id: "capterra",    name: "Capterra",      sub: "Verified buyer reviews",          live: false },
+  { id: "gmaps",       name: "Google Maps",   sub: "Local & product reviews",         live: false },
 ] as const;
 
 type PlatformId = (typeof PLATFORMS)[number]["id"];
@@ -71,15 +70,16 @@ export function ScanPage() {
   const [audience, setAudience] = useState("");
   const [range, setRange] = useState<string>("90d");
   const [platforms, setPlatforms] = useState<Record<PlatformId, boolean>>({
-    reddit: true, g2: true, linkedin: true, producthunt: true,
-    twitter: true, youtube: false, appstore: false, hn: false,
+    reddit: true, producthunt: true, appstore: true, playstore: true,
+    hackernews: true, devto: true,
+    twitter: false, linkedin: false, capterra: false, gmaps: false,
   });
   const [goal, setGoal] = useState<ReportGoal>("find_weaknesses");
   const [depth, setDepth] = useState<string>("standard");
 
   const { mutateAsync, isPending, error } = useCreateReportMutation();
 
-  const selectedPlatformCount = Object.values(platforms).filter(Boolean).length;
+  const selectedPlatformCount = PLATFORMS.filter((p) => p.live && platforms[p.id]).length;
   const goalLabel = GOALS.find((g) => g.id === goal)?.label.toLowerCase() ?? "";
   const rangeLabel = RANGES.find((r) => r.v === range)?.l ?? "";
 
@@ -213,28 +213,34 @@ export function ScanPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>
           {PLATFORMS.map((p) => {
             const on = platforms[p.id];
+            const disabled = !p.live;
             return (
               <button
                 key={p.id}
-                onClick={() => setPlatforms((s) => ({ ...s, [p.id]: !s[p.id] }))}
+                onClick={() => !disabled && setPlatforms((s) => ({ ...s, [p.id]: !s[p.id] }))}
                 className="re-btn"
+                disabled={disabled}
                 style={{
                   justifyContent: "space-between",
-                  background: on ? "var(--accent-soft)" : "var(--surface)",
-                  borderColor: on ? "var(--accent)" : "var(--border-strong)",
-                  color: on ? "var(--accent)" : "var(--fg)",
+                  background: disabled ? "var(--surface)" : on ? "var(--accent-soft)" : "var(--surface)",
+                  borderColor: disabled ? "var(--border-soft)" : on ? "var(--accent)" : "var(--border-strong)",
+                  color: disabled ? "var(--fg-faint)" : on ? "var(--accent)" : "var(--fg)",
                   height: 52,
                   padding: "0 12px",
+                  opacity: disabled ? 0.55 : 1,
+                  cursor: disabled ? "default" : "pointer",
                 }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
-                  <PlatformIcon id={p.id} active={on} />
+                  <PlatformIcon id={p.id} active={on && !disabled} />
                   <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                     <span style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</span>
-                    <span className="text-fg-muted" style={{ fontSize: 11, fontWeight: 400 }}>{p.sub}</span>
+                    <span className="text-fg-muted" style={{ fontSize: 11, fontWeight: 400 }}>
+                      {disabled ? "Coming soon" : p.sub}
+                    </span>
                   </span>
                 </span>
-                {on && <Icon name="check" size={14} />}
+                {!disabled && on && <Icon name="check" size={14} />}
               </button>
             );
           })}
@@ -365,13 +371,6 @@ function PlatformIcon({ id, active }: { id: PlatformId; active: boolean }) {
           <path d="M12 5.2 9.5 2.5" strokeLinecap="round" />
         </svg>
       );
-    case "g2":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="8" cy="8" r="6" />
-          <path d="M5.8 6.2c.3-.7 1.1-1.2 2-1.2 1.1 0 2 .7 2 1.7 0 .8-.4 1.3-1.2 1.9-.9.6-1.6 1.1-1.6 1.9v.6h2.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
     case "linkedin":
       return (
         <svg viewBox="0 0 16 16" style={s} fill="currentColor">
@@ -394,13 +393,6 @@ function PlatformIcon({ id, active }: { id: PlatformId; active: boolean }) {
           <path d="M11.5 2h2L9.4 7l4.6 7h-3.7l-3-4.5L4 14H2l4.4-5.2L2 2h3.8l2.8 4.1L11.5 2Z" />
         </svg>
       );
-    case "youtube":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="1.5" y="3.5" width="13" height="9" rx="2" />
-          <path d="M6.8 6 10 8l-3.2 2V6Z" fill="currentColor" stroke="none" />
-        </svg>
-      );
     case "appstore":
       return (
         <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -408,11 +400,38 @@ function PlatformIcon({ id, active }: { id: PlatformId; active: boolean }) {
           <path d="M9.5 4c.3-.4.5-1 .4-1.5-.5 0-1.1.3-1.4.7-.3.3-.5.9-.4 1.4.5 0 1-.3 1.4-.6Z" />
         </svg>
       );
-    case "hn":
+    case "playstore":
+      return (
+        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 2.5l10 5.5-10 5.5V2.5Z" strokeLinejoin="round" />
+        </svg>
+      );
+    case "hackernews":
       return (
         <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.4">
           <rect x="2" y="2" width="12" height="12" rx="1.5" />
           <path d="M5 5.5l3 3.5 3-3.5M8 9v3" strokeLinecap="round" />
+        </svg>
+      );
+    case "devto":
+      return (
+        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="1.5" y="3" width="13" height="10" rx="2" />
+          <path d="M5 6.5v3M7 6.5c1 0 2 .7 2 1.5S8 9.5 7 9.5" strokeLinecap="round" />
+          <path d="M10.5 6.5h1.5M10.5 8h1M10.5 9.5h1.5" strokeLinecap="round" />
+        </svg>
+      );
+    case "capterra":
+      return (
+        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M8 2L2 6v8h4V9h4v5h4V6L8 2Z" strokeLinejoin="round" />
+        </svg>
+      );
+    case "gmaps":
+      return (
+        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5S12.5 9.5 12.5 6c0-2.5-2-4.5-4.5-4.5Z" strokeLinejoin="round" />
+          <circle cx="8" cy="6" r="1.5" />
         </svg>
       );
     default:

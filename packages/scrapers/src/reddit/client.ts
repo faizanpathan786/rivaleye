@@ -1,8 +1,10 @@
 import axios, { type AxiosInstance } from "axios";
+import pino from "pino";
 import { type RedditAuthConfig, getAccessToken } from "./auth";
 import { RateLimiter } from "./rate-limiter";
 import { ScraperError } from "../types";
 
+const log = pino({ name: "reddit-client" });
 const limiter = new RateLimiter(55);
 
 function sleep(ms: number) {
@@ -28,20 +30,29 @@ export async function redditGet<T>(
 
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
+    const t0 = Date.now();
+    log.debug({ path, params, attempt }, "Reddit API GET");
     try {
       const resp = await instance.get<T>(path, { params });
+      log.debug({ path, attempt, durationMs: Date.now() - t0, status: resp.status }, "Reddit API GET success");
       return resp.data;
     } catch (err) {
       lastError = err;
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 429) {
-          const retryAfter = Number(err.response.headers["retry-after"] ?? 60);
+        const status = err.response?.status;
+        if (status === 429) {
+          const retryAfter = Number(err.response?.headers["retry-after"] ?? 60);
+          log.warn({ path, attempt, retryAfter }, "Reddit API 429 rate-limited; waiting");
           await sleep(retryAfter * 1000);
           await limiter.acquire();
           continue;
         }
-        if (err.response && err.response.status < 500) break;
+        if (err.response && err.response.status < 500) {
+          log.error({ path, attempt, status, durationMs: Date.now() - t0 }, "Reddit API non-retryable error");
+          break;
+        }
       }
+      log.warn({ path, attempt, durationMs: Date.now() - t0, err: err instanceof Error ? err.message : String(err) }, "Reddit API GET failed; retrying");
       if (attempt < 2) await sleep(1000 * 2 ** attempt);
     }
   }

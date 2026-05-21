@@ -1,8 +1,9 @@
-import { and, eq, sql } from "drizzle-orm";
+import pino from "pino";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { report_platform_jobs } from "../../../api/src/db/schema/pipeline.js";
-import { pipeline_events } from "../../../api/src/db/schema/pipeline-events.js";
-import { inngest } from "../inngest/client";
+import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
+
+const log = pino({ name: "fan-in" });
 
 export async function fanInCheck(
   reportId: string,
@@ -16,28 +17,35 @@ export async function fanInCheck(
       .from(report_platform_jobs)
       .where(eq(report_platform_jobs.report_id, reportId));
 
-    const allTerminal =
-      jobs.length > 0 &&
-      jobs.every((j) => j.status === "completed" || j.status === "failed");
-    if (!allTerminal) return;
+    const completed = jobs.filter((j) => j.status === "completed").length;
+    const failed = jobs.filter((j) => j.status === "failed").length;
+    const pending = jobs.length - completed - failed;
 
-    const already = await tx
-      .select({ id: pipeline_events.id })
-      .from(pipeline_events)
-      .where(
-        and(
-          eq(pipeline_events.report_id, reportId),
-          eq(pipeline_events.stage, "synth.run"),
-          eq(pipeline_events.event, "started"),
-        ),
-      )
+    log.info({ reportId, reason, total: jobs.length, completed, failed, pending }, "Fan-in check");
+
+    const allTerminal = jobs.length > 0 && pending === 0;
+    if (!allTerminal) {
+      log.info({ reportId, pending }, "Fan-in not ready; synthesis job not created yet");
+      return;
+    }
+
+    // Idempotent: insert only if no synthesis job exists for this report yet
+    const existing = await tx
+      .select({ id: synthesis_jobs.id, status: synthesis_jobs.status })
+      .from(synthesis_jobs)
+      .where(eq(synthesis_jobs.report_id, reportId))
       .limit(1);
 
-    if (already.length > 0 && reason !== "retry") return;
+    if (existing.length > 0 && reason !== "retry") {
+      log.info({ reportId, existingId: existing[0]?.id, existingStatus: existing[0]?.status }, "Synthesis job already exists; skipping");
+      return;
+    }
 
-    await inngest.send({
-      name: "synth.run",
-      data: { reportId, reason },
-    });
+    await tx
+      .insert(synthesis_jobs)
+      .values({ report_id: reportId })
+      .onConflictDoNothing();
+
+    log.info({ reportId, completed, failed }, "Synthesis job queued");
   });
 }
