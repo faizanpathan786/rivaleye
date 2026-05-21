@@ -4,8 +4,8 @@ import { fetchReviews, searchApps } from "./client";
 import type { RawPlayStoreReview } from "./client";
 import { normalizePlayStorePayload } from "./normalize";
 
-const DEFAULT_APP_LIMIT = 5;
-const DEFAULT_REVIEW_NUM = 100;
+const DEFAULT_APP_LIMIT = 3;
+const DEFAULT_REVIEW_NUM = 200;
 
 export class PlayStoreScraper implements Scraper {
   readonly platform = "playstore" as const;
