@@ -219,6 +219,7 @@ export type CreateReportPayload = {
   competitors: string[];
   target_audience: string;
   founder_goal: string;
+  website_url?: string;
 };
 
 export type CreateReportResponse = { id: string; stage: string };

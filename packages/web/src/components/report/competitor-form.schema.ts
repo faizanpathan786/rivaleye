@@ -6,6 +6,7 @@ export const competitorFormSchema = z.object({
   category: z.string().min(1, "Category is required"),
   audience: z.string().optional(),
   goal: reportGoalSchema,
+  website_url: z.string().url("Must be a valid URL (e.g. https://linear.app)").optional().or(z.literal("")),
 });
 
 export type CompetitorFormValues = z.infer<typeof competitorFormSchema>;

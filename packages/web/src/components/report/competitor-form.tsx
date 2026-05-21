@@ -45,6 +45,7 @@ export function CompetitorForm() {
       category: "",
       audience: "",
       goal: "find_user_pain",
+      website_url: "",
     },
   });
 
@@ -54,6 +55,7 @@ export function CompetitorForm() {
       competitors: [values.competitor],
       target_audience: values.audience ?? values.category,
       founder_goal: values.goal,
+      website_url: values.website_url || undefined,
     });
     addReport({
       id: result.id,
@@ -130,7 +132,7 @@ export function CompetitorForm() {
           <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
             Optional details
           </summary>
-          <div className="mt-3">
+          <div className="mt-3 space-y-4">
             <FormField
               control={form.control}
               name="audience"
@@ -139,6 +141,26 @@ export function CompetitorForm() {
                   <FormLabel>Target audience</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. sales teams, solo founders" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="website_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Competitor website URL{" "}
+                    <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://linear.app"
+                      type="url"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
