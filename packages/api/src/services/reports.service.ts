@@ -97,6 +97,7 @@ export async function createReport(
         status: "queued",
         stage: "queued",
         primary_competitor_name: competitor,
+        website_url: input.website_url ?? null,
       })
       .returning({ id: reports.id });
 

@@ -134,5 +134,6 @@ export const createReportInputSchema = z.object({
   competitors: z.array(z.string().min(1)).min(1).max(5),
   target_audience: z.string().min(1),
   founder_goal: reportGoalSchema,
+  website_url: z.string().url().optional(),
 });
 export type CreateReportInput = z.infer<typeof createReportInputSchema>;

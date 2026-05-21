@@ -64,7 +64,7 @@ function getBackoffMs(attemptCount: number): number {
  */
 export async function processSourceJob(
   job: SourceJobRow,
-  reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string },
+  reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string; website_url?: string | null },
   workerId: string,
 ): Promise<void> {
   const startedAt = Date.now();
@@ -249,13 +249,14 @@ export async function processSourceJob(
  */
 async function fetchPosts(
   platform: string,
-  reportRow: { primary_competitor_name: string | null; category: string }
+  reportRow: { primary_competitor_name: string | null; category: string; website_url?: string | null }
 ): Promise<NormalizedPost[]> {
   const scraper = getScraper(platform as any);
   const posts = await scraper.fetch({
     competitor: reportRow.primary_competitor_name ?? "",
     category: reportRow.category,
-    keywords: [], // Phase 1: empty keywords
+    keywords: [],
+    websiteUrl: reportRow.website_url ?? undefined,
   });
   return posts;
 }
