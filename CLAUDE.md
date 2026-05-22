@@ -6,13 +6,13 @@ Source of truth for repo layout, conventions, and hard rules. Read before non-tr
 
 ## 1. What this repo is
 
-The RivalEye monorepo. RivalEye helps early-stage B2B SaaS founders find what users complain about in competing products, starting with Reddit pain reports.
+The RivalEye monorepo. RivalEye is the **user-perception layer of competitor research** — it helps SaaS teams understand what a competitor's users actually say in public, and turn that into product, positioning, and growth decisions.
 
-**One-liner:** Find what your competitor's users hate before you build.
+**One-liner:** See what users really think about your competitors — what they love, what they hate, what they want next, and who may be ready to switch.
 
-**MVP scope:** founder enters a competitor/category → workers pull discussions from multiple platforms in parallel (Reddit, G2, Capterra, Twitter/X, LinkedIn, Product Hunt, App Store, Play Store, Google Maps reviews) → LLM clusters complaints → user gets a Competitor Pain Report (top pain points, feature gaps, pricing pain, switching signals, positioning angles, product opportunities).
+**MVP scope:** a user enters a competitor → workers pull public discussions from multiple platforms in parallel → LLM clusters them into four core signal types — **Love, Pain, Gap, Switch** — → user gets a Competitor Perception Report with quotes, source links, and recommended actions. The first goal is one genuinely useful report, not a big dashboard or every-platform monitoring.
 
-See `docs/` for the full PRD (port from `archive/legacy-v1` if missing).
+> **Read `docs/product-goal.md` before any non-trivial product, scope, or roadmap decision.** It is the canonical product vision and north star. Note the framing is four signal types — older code/docs may use pain-only ("Competitor Pain Report") language.
 
 ---
 
