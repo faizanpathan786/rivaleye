@@ -211,7 +211,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
     <div
       style={{
         padding: "18px 28px 14px",
-        borderBottom: "1px solid var(--border)",
+        borderBottom: "1px solid var(--border-soft)",
         background: "var(--glass)",
         backdropFilter: "blur(18px) saturate(140%)",
         WebkitBackdropFilter: "blur(18px) saturate(140%)",
@@ -236,10 +236,10 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="eyebrow" style={{ fontSize: 10 }}>SCAN REPORT</span>
-                <span className="mono faint" style={{ fontSize: 10 }}>·</span>
+                <span className="re-eyebrow" style={{ fontSize: 10 }}>SCAN REPORT</span>
+                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>·</span>
                 <span
-                  className="mono"
+                  className="font-mono-feat"
                   style={{
                     fontSize: 10, fontWeight: 600,
                     textTransform: "uppercase", letterSpacing: "0.08em",
@@ -249,15 +249,15 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
                   {meta.glyph} {meta.name} lens
                 </span>
               </div>
-              <h1 className="h1" style={{ fontSize: 24, marginTop: 4, display: "flex", alignItems: "center", gap: 10 }}>
+              <h1 className="re-h1" style={{ fontSize: 24, marginTop: 4, display: "flex", alignItems: "center", gap: 10 }}>
                 {c.name}
-                <span className="mono faint" style={{ fontSize: 12, fontWeight: 400 }}>{c.domain}</span>
-                <span className="chip pos" style={{ fontSize: 9 }}>FRESH</span>
+                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12, fontWeight: 400 }}>{c.domain}</span>
+                <span className="re-chip re-chip-pos" style={{ fontSize: 9 }}>FRESH</span>
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
-                <span className="mono faint" style={{ fontSize: 11 }}>SCANNED {c.scannedAt}</span>
-                <span className="mono faint" style={{ fontSize: 11 }}>·</span>
-                <span className="mono faint" style={{ fontSize: 11 }}>
+                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>SCANNED {c.scannedAt}</span>
+                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>·</span>
+                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
                   {c.sources.toLocaleString()} mentions · {c.platforms.length} platforms
                 </span>
               </div>
@@ -265,11 +265,11 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
           </div>
 
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span className="mono faint" style={{ fontSize: 11, marginRight: 4 }}>RANGE</span>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>RANGE</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
                 key={r}
-                className={`chip ${range === r ? "solid" : ""}`}
+                className={`re-chip ${range === r ? "re-chip-solid" : ""}`}
                 style={{ cursor: "pointer", padding: "3px 10px" }}
                 aria-pressed={range === r}
                 onClick={() => setRange(r)}
@@ -277,11 +277,11 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
                 {r}
               </button>
             ))}
-            <div style={{ width: 1, height: 18, background: "var(--border)", margin: "0 6px" }} />
-            <button className="btn ghost sm" onClick={() => onNav("/compare")}>
+            <div style={{ width: 1, height: 18, background: "var(--border-soft)", margin: "0 6px" }} />
+            <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("/compare")}>
               <Icon name="compare" size={14} /> Compare
             </button>
-            <button className="btn ghost sm">
+            <button className="re-btn re-btn-ghost re-btn-sm">
               <Icon name="download" size={14} /> Export
             </button>
           </div>
@@ -301,8 +301,8 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
       <PerceptionHero data={data} />
 
       <div style={{ marginTop: 28 }}>
-        <div className="eyebrow" style={{ fontSize: 10 }}>EXECUTIVE MEMO</div>
-        <h2 className="h2" style={{ fontSize: 28, marginTop: 8, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 920 }}>
+        <div className="re-eyebrow" style={{ fontSize: 10 }}>EXECUTIVE MEMO</div>
+        <h2 className="re-h2" style={{ fontSize: 28, marginTop: 8, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 920 }}>
           {c.name}'s pain is structural, not stylistic — and pricing is the wedge users are already naming for you.
         </h2>
         <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
@@ -320,7 +320,7 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
       </div>
 
       <div style={{ marginTop: 28 }}>
-        <div className="eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           {(["founder", "product", "marketing", "growth"] as const).map((id) => (
             <LensPreviewCard key={id} id={id} onPick={onPickLens} />
@@ -331,10 +331,10 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
       <div style={{ marginTop: 32 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
-            <div className="eyebrow" style={{ fontSize: 10 }}>THE THREE QUOTES THAT SAY IT ALL</div>
-            <h3 className="h2" style={{ fontSize: 18, marginTop: 6 }}>Top of mind, top of thread</h3>
+            <div className="re-eyebrow" style={{ fontSize: 10 }}>THE THREE QUOTES THAT SAY IT ALL</div>
+            <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>Top of mind, top of thread</h3>
           </div>
-          <span className="mono faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
           <AnchorQuote q={data.quotes[2]} theme="Pricing" color="#ff5c1a" />
@@ -346,7 +346,7 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
       <div
         style={{
           marginTop: 32, padding: "22px 24px",
-          background: "var(--surface)", borderRadius: "var(--r-lg)", border: "1px solid var(--border)",
+          background: "var(--surface)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-soft)",
           display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 24,
         }}
       >
@@ -365,8 +365,8 @@ function SummaryStat({ label, value, tone, sub }: { label: string; value: string
     tone === "neg" ? "var(--neg)" : tone === "pos" ? "var(--pos)" : tone === "warn" ? "var(--warn)" : "var(--fg)";
   return (
     <div>
-      <div className="eyebrow" style={{ fontSize: 10 }}>{label}</div>
-      <div className="mono tnum" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginTop: 4, color }}>
+      <div className="re-eyebrow" style={{ fontSize: 10 }}>{label}</div>
+      <div className="font-mono-feat tnum" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginTop: 4, color }}>
         {value}
       </div>
       <div style={{ fontSize: 11, color, marginTop: 2 }}>{sub}</div>
@@ -380,7 +380,7 @@ function SummaryStat({ label, value, tone, sub }: { label: string; value: string
 function PerceptionHero({ data }: { data: ScanData }) {
   const s = data.competitor.sentiment;
   return (
-    <div className="card elev" style={{ overflow: "hidden", position: "relative" }}>
+    <div className="re-card re-card-elev" style={{ overflow: "hidden", position: "relative" }}>
       <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.4 }} />
       <div
         style={{
@@ -391,10 +391,10 @@ function PerceptionHero({ data }: { data: ScanData }) {
         <PerceptionRing positive={s.positive} neutral={s.neutral} negative={s.negative} index={s.overall} />
 
         <div style={{ minWidth: 0 }}>
-          <div className="eyebrow" style={{ fontSize: 10 }}>
+          <div className="re-eyebrow" style={{ fontSize: 10 }}>
             WHAT USERS THINK OF {data.competitor.name.toUpperCase()}
           </div>
-          <h2 className="h2" style={{ fontSize: 26, marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+          <h2 className="re-h2" style={{ fontSize: 26, marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             Negative-leaning, with the loudest theme being <span style={{ color: "var(--accent)" }}>pricing</span>.
           </h2>
 
@@ -407,26 +407,26 @@ function PerceptionHero({ data }: { data: ScanData }) {
                   key={id}
                   style={{
                     padding: "12px 14px",
-                    border: "1px solid var(--border)",
+                    border: "1px solid var(--border-soft)",
                     borderRadius: "var(--r-md)",
                     background: "var(--surface-solid)",
                     borderTop: `2px solid ${m.color}`,
                   }}
                 >
                   <div
-                    className="mono"
+                    className="font-mono-feat"
                     style={{ fontSize: 9, color: m.color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
                   >
                     {m.glyph} {m.name}
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 4 }}>
                     <span
-                      className="mono tnum"
+                      className="font-mono-feat tnum"
                       style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color: m.color }}
                     >
                       {h.score}
                     </span>
-                    <span className="mono faint" style={{ fontSize: 11 }}>/100</span>
+                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>/100</span>
                   </div>
                 </div>
               );
@@ -463,20 +463,20 @@ function PerceptionRing({ positive, neutral, negative, index }: { positive: numb
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         }}
       >
-        <div className="mono faint" style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>
           PERCEPTION
         </div>
         <div
-          className="mono tnum"
+          className="font-mono-feat tnum"
           style={{ fontSize: 36, fontWeight: 500, letterSpacing: "-0.03em", marginTop: 2, color: "var(--neg)" }}
         >
           {index.toFixed(2)}
         </div>
         <div style={{ display: "flex", gap: 6, marginTop: 6, fontFamily: "var(--font-mono)", fontSize: 9 }}>
           <span style={{ color: "var(--pos)" }}>+{Math.round(positive * 100)}</span>
-          <span className="faint">·</span>
-          <span className="faint">{Math.round(neutral * 100)}</span>
-          <span className="faint">·</span>
+          <span className="text-fg-faint">·</span>
+          <span className="text-fg-faint">{Math.round(neutral * 100)}</span>
+          <span className="text-fg-faint">·</span>
           <span style={{ color: "var(--neg)" }}>−{Math.round(negative * 100)}</span>
         </div>
       </div>
@@ -498,7 +498,7 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        border: `1px solid ${hover ? m.color + "55" : "var(--border)"}`,
+        border: `1px solid ${hover ? m.color + "55" : "var(--border-soft)"}`,
         borderRadius: "var(--r-lg)",
         background: hover ? `linear-gradient(135deg, ${m.bg}, transparent 70%)` : "var(--surface)",
         padding: 0,
@@ -516,27 +516,27 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
       <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "flex-start" }}>
         <div>
           <div
-            className="mono"
+            className="font-mono-feat"
             style={{ fontSize: 10, color: m.color, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}
           >
             {m.glyph} {m.name.toUpperCase()} LENS
           </div>
-          <h3 className="h2" style={{ fontSize: 19, marginTop: 6, letterSpacing: "-0.015em", lineHeight: 1.3 }}>
+          <h3 className="re-h2" style={{ fontSize: 19, marginTop: 6, letterSpacing: "-0.015em", lineHeight: 1.3 }}>
             {h.insight}
           </h3>
-          <div className="muted" style={{ marginTop: 4, fontSize: 12.5 }}>{m.role}</div>
+          <div className="text-fg-muted" style={{ marginTop: 4, fontSize: 12.5 }}>{m.role}</div>
 
           <div style={{ marginTop: 16, display: "flex", gap: 14, flexWrap: "wrap" }}>
             {h.stats.map((s) => (
               <div key={s.k}>
                 <div
-                  className="mono"
+                  className="font-mono-feat"
                   style={{ fontSize: 16, fontWeight: 600, color: m.color, fontVariantNumeric: "tabular-nums" }}
                 >
                   {s.v}
                 </div>
                 <div
-                  className="mono faint"
+                  className="font-mono-feat text-fg-faint"
                   style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}
                 >
                   {s.k}
@@ -556,7 +556,7 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
             >
               {h.score}
             </div>
-            <div className="mono faint" style={{ fontSize: 10, marginTop: 2 }}>/100</div>
+            <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10, marginTop: 2 }}>/100</div>
           </div>
           <span
             style={{
@@ -585,20 +585,20 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
 function AnchorQuote({ q, theme, color }: { q: ScanQuote | undefined; theme: string; color: string }) {
   if (!q) return null;
   return (
-    <div className="card" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12, borderTop: `2px solid ${color}` }}>
+    <div className="re-card" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12, borderTop: `2px solid ${color}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span
-          className="mono"
+          className="font-mono-feat"
           style={{ fontSize: 10, color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
         >
           THEME · {theme.toUpperCase()}
         </span>
-        <span className="mono tnum faint" style={{ fontSize: 11 }}>{q.score}↑</span>
+        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>{q.score}↑</span>
       </div>
       <p style={{ margin: 0, fontSize: 15, fontStyle: "italic", lineHeight: 1.55, color: "var(--fg)" }}>
         "{q.text}"
       </p>
-      <div className="mono faint" style={{ fontSize: 11 }}>
+      <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
         {q.who} · {q.sub} · {q.when}
       </div>
     </div>
