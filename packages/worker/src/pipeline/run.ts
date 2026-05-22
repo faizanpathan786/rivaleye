@@ -21,8 +21,11 @@ import type {
   PlatformBrief,
   PlatformExtract,
   MergedClusters,
+  StageAExtract,
   SynthOutput,
 } from "../prompts/shared";
+import type { PlatformId } from "@rivaleye/scrapers";
+import { emptyStageAExtract } from "./signal-adapters";
 
 function stripEvidenceIds(merged: MergedClusters): MergedClusters {
   return {
@@ -87,6 +90,13 @@ export async function runPipeline(reportId: string): Promise<void> {
     delete raw._signals;
     return raw as unknown as PlatformExtract;
   });
+  const signalExtracts: Array<{ platform: PlatformId; extract: StageAExtract }> = briefRows.map((row) => {
+    const raw = row.extract as Record<string, unknown>;
+    return {
+      platform: row.platform as PlatformId,
+      extract: (raw._signals ?? emptyStageAExtract()) as StageAExtract,
+    };
+  });
 
   const ctx: PipelineCtx = {
     reportId: report.id,
@@ -110,17 +120,21 @@ export async function runPipeline(reportId: string): Promise<void> {
     await log(reportId, "info", "C", null, "skipping stage C (checkpoint found)");
     merged = checkpoints.get("C") as unknown as MergedClusters;
   } else {
-    await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: extracts.length });
-    const resultC = await runStageCMerge({ llm, ctx, briefs, extracts }, LLM_OPTS_C);
+    await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: signalExtracts.length });
+    const resultC = await runStageCMerge({ llm, ctx, briefs, signalExtracts }, LLM_OPTS_C);
     await log(reportId, "info", "C", null, "stage C done", {
       promptTokens: resultC.usage.promptTokens,
       completionTokens: resultC.usage.completionTokens,
-      complaintClusters: resultC.merged.complaint_clusters.length,
-      featureClusters: resultC.merged.feature_clusters.length,
-      pricingClusters: resultC.merged.pricing_clusters.length,
+      loveClusters: resultC.mergedSignals.love_clusters.length,
+      painClusters: resultC.mergedSignals.pain_clusters.length,
+      gapClusters: resultC.mergedSignals.gap_clusters.length,
+      switchClusters: resultC.mergedSignals.switch_clusters.length,
+      pricingClusters: resultC.mergedSignals.pricing_clusters.length,
+      featureClusters: resultC.mergedSignals.feature_clusters.length,
+      positioningClusters: resultC.mergedSignals.positioning_clusters.length,
     });
     merged = resultC.merged;
-    await saveCheckpoint(reportId, "C", merged as unknown as Record<string, unknown>);
+    await saveCheckpoint(reportId, "C", { ...merged, _signals: resultC.mergedSignals } as unknown as Record<string, unknown>);
   }
 
   // Stage D
