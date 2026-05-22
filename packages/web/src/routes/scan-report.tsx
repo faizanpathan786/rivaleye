@@ -8,6 +8,10 @@ import { GrowthPage } from "./growth";
 
 // Scan Report v2 — one scan, five lenses. UI only.
 // TODO(backend): replace SCAN_DATA with the scan-synthesis endpoint payload.
+// TODO(backend): the unified-header `range` state is local to this component;
+// embedded lens pages keep their own (now-suppressed) `range` state. When real
+// data lands, lift `range` and thread it as a prop into the lens pages so the
+// header control actually filters each lens.
 
 type LensId = "summary" | "founder" | "product" | "marketing" | "growth";
 
