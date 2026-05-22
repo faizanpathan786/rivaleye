@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:scrape": "bun --watch src/scrape/index.ts",
-    "dev:llm":    "bun --watch src/llm/index.ts",
-    "dev:synth":  "bun --watch src/synth/index.ts",
+    "dev:scrape": "bun --watch --env-file=../../.env src/scrape/index.ts",
+    "dev:llm":    "bun --watch --env-file=../../.env src/llm/index.ts",
+    "dev:synth":  "bun --watch --env-file=../../.env src/synth/index.ts",
     "dev:postgres": "bun --watch --env-file=../../.env src/pg-runner/index.ts",
     "dev":        "concurrently -n scrape,llm,synth -c blue,green,yellow \"pnpm dev:scrape\" \"pnpm dev:llm\" \"pnpm dev:synth\"",
     "type-check": "tsc --noEmit",
