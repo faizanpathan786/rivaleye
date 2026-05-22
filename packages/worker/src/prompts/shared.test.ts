@@ -5,6 +5,7 @@ import {
   mergedClustersSchema,
   synthOutputSchema,
 } from "./shared";
+import { stageAExtractSchema } from "./shared";
 
 describe("canonical pipeline schemas", () => {
   it("accepts a minimal valid PlatformExtract", () => {
@@ -91,5 +92,110 @@ describe("canonical pipeline schemas", () => {
         },
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("stageAExtractSchema", () => {
+  it("parses a full valid Stage A extract", () => {
+    const parsed = stageAExtractSchema.parse({
+      love_signals: [
+        {
+          title: "Fast onboarding",
+          summary: "Users praise reaching first value in minutes.",
+          sentiment: 0.8,
+          strength_or_severity: 0.7,
+          evidence_ids: ["reddit:1"],
+          representative_quotes: [
+            { author: "u/matt", text: "running before my coffee cooled", evidence_id: "reddit:1" },
+          ],
+          related_features: ["setup wizard"],
+          user_segment: "solo devs",
+        },
+      ],
+      pain_signals: [],
+      gap_signals: [],
+      switch_signals: [
+        {
+          title: "Eyeing Plivo",
+          summary: "A user is pricing out Plivo.",
+          sentiment: -0.4,
+          strength_or_severity: 0.6,
+          evidence_ids: ["reddit:2"],
+          representative_quotes: [],
+          related_features: [],
+          user_segment: null,
+          direction: "outbound",
+          alternatives_mentioned: ["Plivo"],
+        },
+      ],
+      pricing_signals: [
+        {
+          title: "Surprise surcharges",
+          summary: "Carrier fees not shown upfront.",
+          sentiment: -0.6,
+          strength_or_severity: 0.8,
+          evidence_ids: ["reddit:3"],
+          representative_quotes: [],
+          related_features: [],
+          user_segment: null,
+          tier_label: "Pay-as-you-go",
+          quoted_price: "$0.0079/msg",
+        },
+      ],
+      feature_signals: [
+        {
+          title: "Messaging API",
+          summary: "Users discuss the messaging API quality.",
+          sentiment: 0.2,
+          strength_or_severity: 0.5,
+          evidence_ids: ["reddit:4"],
+          representative_quotes: [],
+          related_features: [],
+          user_segment: null,
+          feature_name: "Messaging API",
+          perception: "mixed",
+        },
+      ],
+      voice_phrases: { positive: ["just works"], negative: ["too expensive"] },
+      evidence_quotes: [
+        {
+          author: "u/matt",
+          text: "running before my coffee cooled",
+          evidence_id: "reddit:1",
+          signal_type: "love",
+          sentiment: 0.8,
+        },
+      ],
+    });
+    expect(parsed.love_signals.length).toBe(1);
+    expect(parsed.switch_signals[0]?.direction).toBe("outbound");
+    expect(parsed.pricing_signals[0]?.quoted_price).toBe("$0.0079/msg");
+  });
+
+  it("fills array defaults when signal groups are omitted", () => {
+    const parsed = stageAExtractSchema.parse({
+      pain_signals: [],
+      voice_phrases: { positive: [], negative: [] },
+    });
+    expect(parsed.love_signals).toEqual([]);
+    expect(parsed.feature_signals).toEqual([]);
+    expect(parsed.positioning_signals).toEqual([]);
+    expect(parsed.evidence_quotes).toEqual([]);
+  });
+
+  it("rejects sentiment outside -1..1", () => {
+    expect(() =>
+      stageAExtractSchema.parse({
+        love_signals: [
+          {
+            title: "x",
+            summary: "y",
+            sentiment: 2,
+            strength_or_severity: 0.5,
+          },
+        ],
+        voice_phrases: { positive: [], negative: [] },
+      }),
+    ).toThrow();
   });
 });

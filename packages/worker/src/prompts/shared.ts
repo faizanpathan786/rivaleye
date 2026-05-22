@@ -12,6 +12,69 @@ export const platformIdSchema = z.enum([
 
 export const switchingDirectionSchema = z.enum(["inbound", "outbound"]);
 
+export const stageASignalSchema = z.object({
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  sentiment: z.number().min(-1).max(1),
+  strength_or_severity: z.number().min(0).max(1),
+  evidence_ids: z.array(z.string()).default([]),
+  representative_quotes: z
+    .array(
+      z.object({
+        author: z.string(),
+        text: z.string().min(1),
+        evidence_id: z.string(),
+      }),
+    )
+    .default([]),
+  related_features: z.array(z.string()).default([]),
+  user_segment: z.string().nullable().default(null),
+});
+
+export const stageASwitchSignalSchema = stageASignalSchema.extend({
+  direction: switchingDirectionSchema,
+  alternatives_mentioned: z.array(z.string()).default([]),
+});
+
+export const stageAPricingSignalSchema = stageASignalSchema.extend({
+  tier_label: z.string().nullable().default(null),
+  quoted_price: z.string().nullable().default(null),
+});
+
+export const stageAFeatureSignalSchema = stageASignalSchema.extend({
+  feature_name: z.string().min(1),
+  perception: z.enum(["loved", "mixed", "criticized"]),
+});
+
+export const stageAPositioningSignalSchema = stageASignalSchema.extend({
+  angle: z.string().min(1),
+  against: z.string().nullable().default(null),
+  audience: z.string().nullable().default(null),
+});
+
+export const evidenceQuoteSchema = z.object({
+  author: z.string(),
+  text: z.string().min(1),
+  evidence_id: z.string(),
+  signal_type: z.enum(["love", "pain", "gap", "switch", "pricing", "feature", "positioning"]),
+  sentiment: z.number().min(-1).max(1).nullable().default(null),
+});
+
+export const stageAExtractSchema = z.object({
+  love_signals: z.array(stageASignalSchema).default([]),
+  pain_signals: z.array(stageASignalSchema).default([]),
+  gap_signals: z.array(stageASignalSchema).default([]),
+  switch_signals: z.array(stageASwitchSignalSchema).default([]),
+  pricing_signals: z.array(stageAPricingSignalSchema).default([]),
+  feature_signals: z.array(stageAFeatureSignalSchema).default([]),
+  positioning_signals: z.array(stageAPositioningSignalSchema).default([]),
+  voice_phrases: z.object({
+    positive: z.array(z.string()).default([]),
+    negative: z.array(z.string()).default([]),
+  }),
+  evidence_quotes: z.array(evidenceQuoteSchema).default([]),
+});
+
 export const platformExtractSchema = z.object({
   complaints: z.array(
     z.object({
@@ -242,6 +305,14 @@ export type PlatformExtract = z.infer<typeof platformExtractSchema>;
 export type PlatformBrief = z.infer<typeof platformBriefSchema>;
 export type MergedClusters = z.infer<typeof mergedClustersSchema>;
 export type SynthOutput = z.infer<typeof synthOutputSchema>;
+
+export type StageASignal = z.infer<typeof stageASignalSchema>;
+export type StageASwitchSignal = z.infer<typeof stageASwitchSignalSchema>;
+export type StageAPricingSignal = z.infer<typeof stageAPricingSignalSchema>;
+export type StageAFeatureSignal = z.infer<typeof stageAFeatureSignalSchema>;
+export type StageAPositioningSignal = z.infer<typeof stageAPositioningSignalSchema>;
+export type EvidenceQuote = z.infer<typeof evidenceQuoteSchema>;
+export type StageAExtract = z.infer<typeof stageAExtractSchema>;
 
 export interface PipelineCtx {
   reportId: string;
