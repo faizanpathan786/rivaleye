@@ -921,8 +921,9 @@ export const evidenceItemSchema = z.object({
    */
   source_item_id: z.string(),
 
-  /** Direct URL to the post, comment, or review page. */
-  source_url: z.string().url(),
+  /** Direct URL to the post, comment, or review page.
+   *  Nullable — some sources (e.g. app-store review aggregators) have no per-item URL. */
+  source_url: z.string().url().nullable(),
 
   /**
    * ISO-8601 date string of when the source was published.
