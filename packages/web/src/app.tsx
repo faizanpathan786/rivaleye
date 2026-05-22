@@ -6,8 +6,13 @@ import { RadarPage } from "./routes/radar";
 import { CompetitorsPage } from "./routes/competitors";
 import { ScanPage } from "./routes/scan";
 import { ComparePage } from "./routes/compare";
+import { FounderPage } from "./routes/founder";
+import { ProductPage } from "./routes/product";
+import { MarketingPage } from "./routes/marketing";
+import { GrowthPage } from "./routes/growth";
 import { HistoryPage } from "./routes/history";
 import { ReportPage } from "./routes/report";
+import { ScanReportPage } from "./routes/scan-report";
 import { AccountPage } from "./routes/account";
 import { SignInPage } from "./routes/signin";
 import { NotFoundPage } from "./routes/not-found";
@@ -48,8 +53,13 @@ const router = createBrowserRouter([
       { path: "competitors", Component: CompetitorsPage },
       { path: "scan", Component: ScanPage },
       { path: "compare", Component: ComparePage },
+      { path: "founder", Component: FounderPage },
+      { path: "product", Component: ProductPage },
+      { path: "marketing", Component: MarketingPage },
+      { path: "growth", Component: GrowthPage },
       { path: "history", Component: HistoryPage },
       { path: "reports/:id", Component: ReportPage },
+      { path: "scan-report", Component: ScanReportPage },
       { path: "account", Component: AccountPage },
     ],
   },
