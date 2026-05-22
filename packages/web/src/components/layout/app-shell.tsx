@@ -15,6 +15,7 @@ const CRUMB_MAP: CrumbConfig = {
   "/competitors": ["Stitchworks", "Competitors"],
   "/scan": ["Stitchworks", "New scan"],
   "/compare": ["Stitchworks", "Compare"],
+  "/scan-report": ["Stitchworks", "Scan Report"],
   "/history": ["Stitchworks", "History"],
   "/account": ["Stitchworks", "Settings"],
 };
@@ -210,7 +211,7 @@ function Sidebar() {
         return (
           <NavLink
             key={r.id}
-            to={`/reports/${r.id}`}
+            to="/scan-report"
             title={`${label} — ${relativeTime(r.scanned_at ?? r.created_at)}`}
             className={({ isActive }) =>
               `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${
