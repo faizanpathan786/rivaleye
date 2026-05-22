@@ -6,6 +6,7 @@ import {
   synthOutputSchema,
 } from "./shared";
 import { stageAExtractSchema } from "./shared";
+import { mergedSignalsSchema, stageCMergeLlmSchema } from "./shared";
 
 describe("canonical pipeline schemas", () => {
   it("accepts a minimal valid PlatformExtract", () => {
@@ -197,5 +198,94 @@ describe("stageAExtractSchema", () => {
         voice_phrases: { positive: [], negative: [] },
       }),
     ).toThrow();
+  });
+});
+
+describe("mergedSignalsSchema", () => {
+  it("parses a minimal valid merged-signals object", () => {
+    const parsed = mergedSignalsSchema.parse({
+      love_clusters: [],
+      pain_clusters: [],
+      gap_clusters: [],
+      switch_clusters: [],
+      pricing_clusters: [],
+      feature_clusters: [],
+      positioning_clusters: [],
+      evidence_index: [],
+      voice_top: { positive: [], negative: [] },
+      cross_platform_themes: [],
+      source_coverage: [],
+      clustering_meta: {
+        total_input_signals: 0,
+        total_output_clusters: 0,
+        model: "test",
+        generated_at: "2026-05-22T00:00:00.000Z",
+      },
+    });
+    expect(parsed.love_clusters).toEqual([]);
+  });
+
+  it("parses a love cluster and a switch cluster with their type-specific fields", () => {
+    const parsed = mergedSignalsSchema.parse({
+      love_clusters: [
+        {
+          id: "love-fast-setup",
+          title: "Fast setup",
+          summary: "Users praise quick onboarding.",
+          signal_type: "love",
+          strength_or_severity: 0.7,
+          evidence_ids: ["reddit:1"],
+          representative_quotes: [{ author: "u/x", text: "up in minutes", evidence_id: "reddit:1" }],
+          role_relevance: ["founder", "product"],
+        },
+      ],
+      pain_clusters: [],
+      gap_clusters: [],
+      switch_clusters: [
+        {
+          id: "switch-plivo",
+          title: "Eyeing Plivo",
+          summary: "Users pricing out Plivo.",
+          signal_type: "switch",
+          strength_or_severity: 0.6,
+          evidence_ids: ["reddit:2"],
+          representative_quotes: [],
+          role_relevance: ["growth"],
+          direction: "outbound",
+          competitor: "Plivo",
+          alternatives: ["Plivo", "Voco"],
+          urgency: "high",
+        },
+      ],
+      pricing_clusters: [],
+      feature_clusters: [],
+      positioning_clusters: [],
+      evidence_index: [],
+      voice_top: { positive: [], negative: [] },
+      cross_platform_themes: [],
+      source_coverage: [],
+      clustering_meta: {
+        total_input_signals: 2, total_output_clusters: 2, model: "t", generated_at: "2026-05-22T00:00:00.000Z",
+      },
+    });
+    expect(parsed.love_clusters[0]?.frequency).toBe(0);
+    expect(parsed.switch_clusters[0]?.urgency).toBe("high");
+  });
+});
+
+describe("stageCMergeLlmSchema", () => {
+  it("parses the lean LLM output (7 cluster arrays + voice_top + themes)", () => {
+    const parsed = stageCMergeLlmSchema.parse({
+      love_clusters: [],
+      pain_clusters: [],
+      gap_clusters: [],
+      switch_clusters: [],
+      pricing_clusters: [],
+      feature_clusters: [],
+      positioning_clusters: [],
+      voice_top: { positive: [], negative: [] },
+      cross_platform_themes: [],
+    });
+    expect(parsed.feature_clusters).toEqual([]);
   });
 });

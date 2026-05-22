@@ -172,6 +172,121 @@ export const mergedClustersSchema = z.object({
   ),
 });
 
+export const signalClusterTypeSchema = z.enum([
+  "love", "pain", "gap", "switch", "pricing", "feature", "positioning",
+]);
+export const roleRelevanceSchema = z.enum(["founder", "product", "marketing", "growth"]);
+
+export const clusterQuoteSchema = z.object({
+  author: z.string(),
+  text: z.string().min(1),
+  evidence_id: z.string(),
+});
+
+export const signalClusterBaseSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  signal_type: signalClusterTypeSchema,
+  frequency: z.number().int().nonnegative().default(0),
+  source_spread: z.number().int().nonnegative().default(0),
+  platforms: z.array(platformIdSchema).default([]),
+  confidence: z.number().min(0).max(1).default(0),
+  strength_or_severity: z.number().min(0).max(1),
+  evidence_ids: z.array(z.string()).default([]),
+  representative_quotes: z.array(clusterQuoteSchema).default([]),
+  related_signal_ids: z.array(z.string()).default([]),
+  role_relevance: z.array(roleRelevanceSchema).default([]),
+});
+
+export const loveClusterSchema = signalClusterBaseSchema;
+export const painClusterSchema = signalClusterBaseSchema.extend({
+  affected_segment: z.string().nullable().default(null),
+  opportunity_implication: z.string().nullable().default(null),
+});
+export const gapClusterSchema = signalClusterBaseSchema.extend({
+  workaround: z.string().nullable().default(null),
+  product_opportunity: z.string().nullable().default(null),
+});
+export const switchClusterSchema = signalClusterBaseSchema.extend({
+  direction: switchingDirectionSchema,
+  competitor: z.string().nullable().default(null),
+  alternatives: z.array(z.string()).default([]),
+  urgency: z.enum(["low", "medium", "high"]).default("low"),
+});
+export const pricingClusterSchema = signalClusterBaseSchema.extend({
+  tier_label: z.string().nullable().default(null),
+  quoted_prices: z.array(z.string()).default([]),
+  affected_segment: z.string().nullable().default(null),
+});
+export const featureClusterSchema = signalClusterBaseSchema.extend({
+  feature_name: z.string().min(1),
+  perception: z.enum(["loved", "mixed", "criticized"]),
+  product_lesson: z.string().nullable().default(null),
+});
+export const positioningClusterSchema = signalClusterBaseSchema.extend({
+  angle: z.string().min(1),
+  against: z.string().nullable().default(null),
+  promise_vs_reality: z.string().nullable().default(null),
+});
+
+export const evidenceIndexItemSchema = z.object({
+  evidence_id: z.string(),
+  source: platformIdSchema,
+  text: z.string(),
+  author: z.string().nullable().default(null),
+  source_url: z.string().nullable().default(null),
+  source_date: z.string().nullable().default(null),
+  related_signal_ids: z.array(z.string()).default([]),
+  related_cluster_ids: z.array(z.string()).default([]),
+  sentiment: z.number().min(-1).max(1).nullable().default(null),
+  confidence: z.number().min(0).max(1).default(0),
+});
+
+const voiceTopSchema = z.object({
+  positive: z.array(z.object({ word: z.string(), count: z.number().int().nonnegative() })).default([]),
+  negative: z.array(z.object({ word: z.string(), count: z.number().int().nonnegative() })).default([]),
+});
+const crossPlatformThemeSchema = z.object({
+  theme: z.string(),
+  signal_type: signalClusterTypeSchema,
+  platforms: z.array(platformIdSchema),
+  weight: z.number().min(0).max(1),
+});
+
+/** What the Stage C LLM returns — the seven cluster arrays plus voice/themes.
+ *  Code-computed fields (frequency, source_spread, platforms, confidence) carry
+ *  schema defaults here and are overwritten during enrichment. */
+export const stageCMergeLlmSchema = z.object({
+  love_clusters: z.array(loveClusterSchema).default([]),
+  pain_clusters: z.array(painClusterSchema).default([]),
+  gap_clusters: z.array(gapClusterSchema).default([]),
+  switch_clusters: z.array(switchClusterSchema).default([]),
+  pricing_clusters: z.array(pricingClusterSchema).default([]),
+  feature_clusters: z.array(featureClusterSchema).default([]),
+  positioning_clusters: z.array(positioningClusterSchema).default([]),
+  voice_top: voiceTopSchema,
+  cross_platform_themes: z.array(crossPlatformThemeSchema).default([]),
+});
+
+/** The full enriched Stage C output — LLM clusters + code-built index/coverage/meta. */
+export const mergedSignalsSchema = stageCMergeLlmSchema.extend({
+  evidence_index: z.array(evidenceIndexItemSchema).default([]),
+  source_coverage: z
+    .array(z.object({
+      platform: platformIdSchema,
+      signal_count: z.number().int().nonnegative(),
+      contributed: z.boolean(),
+    }))
+    .default([]),
+  clustering_meta: z.object({
+    total_input_signals: z.number().int().nonnegative(),
+    total_output_clusters: z.number().int().nonnegative(),
+    model: z.string(),
+    generated_at: z.string(),
+  }),
+});
+
 export const sentimentTrendEnum = z.enum(["up", "down", "flat"]);
 export const effortEnum = z.enum(["low", "med", "high"]);
 export const payoffEnum = z.enum(["low", "med", "high"]);
@@ -313,6 +428,18 @@ export type StageAFeatureSignal = z.infer<typeof stageAFeatureSignalSchema>;
 export type StageAPositioningSignal = z.infer<typeof stageAPositioningSignalSchema>;
 export type EvidenceQuote = z.infer<typeof evidenceQuoteSchema>;
 export type StageAExtract = z.infer<typeof stageAExtractSchema>;
+
+export type SignalClusterBase = z.infer<typeof signalClusterBaseSchema>;
+export type LoveCluster = z.infer<typeof loveClusterSchema>;
+export type PainCluster = z.infer<typeof painClusterSchema>;
+export type GapCluster = z.infer<typeof gapClusterSchema>;
+export type SwitchCluster = z.infer<typeof switchClusterSchema>;
+export type PricingCluster = z.infer<typeof pricingClusterSchema>;
+export type FeatureCluster = z.infer<typeof featureClusterSchema>;
+export type PositioningCluster = z.infer<typeof positioningClusterSchema>;
+export type EvidenceIndexItem = z.infer<typeof evidenceIndexItemSchema>;
+export type StageCMergeLlmOutput = z.infer<typeof stageCMergeLlmSchema>;
+export type MergedSignals = z.infer<typeof mergedSignalsSchema>;
 
 export interface PipelineCtx {
   reportId: string;
