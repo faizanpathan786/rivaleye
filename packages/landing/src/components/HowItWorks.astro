@@ -13,7 +13,7 @@ const steps = [
   {
     n: '02',
     title: 'Scan public conversations.',
-    desc: 'RivalEye analyzes Reddit, app reviews, Product Hunt, Hacker News, Dev.to, and competitor websites — concurrently. Most scans complete in under five minutes.',
+    desc: 'RivalEye analyzes Reddit, Hacker News, Dev.to, Product Hunt, app reviews, and competitor websites — concurrently. Most scans complete in under five minutes.',
     bullets: ['7 sources', 'daily refresh', 'historical data'],
     visual: 'scan',
   },
@@ -177,13 +177,12 @@ const steps = [
                     <div class="p-6 grid grid-cols-2 gap-3">
                       {[
                         { src: 'reddit', pct: 100, found: 312 },
-                        { src: 'g2', pct: 100, found: 89 },
-                        { src: 'capterra', pct: 100, found: 54 },
+                        { src: 'hackernews', pct: 100, found: 48 },
+                        { src: 'dev.to', pct: 100, found: 21 },
                         { src: 'producthunt', pct: 100, found: 31 },
-                        { src: 'x', pct: 67, found: 142 },
-                        { src: 'apple', pct: 44, found: 78 },
-                        { src: 'play', pct: 12, found: 22 },
-                        { src: 'maps', pct: 0, found: 0 },
+                        { src: 'apple', pct: 100, found: 247 },
+                        { src: 'play', pct: 100, found: 94 },
+                        { src: 'website', pct: 67, found: 67 },
                       ].map((p) => (
                         <div class="border border-[var(--color-line-1)] bg-[var(--color-bg-0)] p-3">
                           <div class="flex items-center justify-between mb-2">

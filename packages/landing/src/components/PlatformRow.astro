@@ -5,13 +5,12 @@
 
 const platforms = [
   { name: 'Reddit', sub: 'r/* threads', glyph: 'reddit' },
-  { name: 'G2', sub: 'reviews', glyph: 'g2' },
-  { name: 'Capterra', sub: 'reviews', glyph: 'capterra' },
+  { name: 'Hacker News', sub: 'discussions', glyph: 'hackernews' },
+  { name: 'Dev.to', sub: 'articles', glyph: 'devto' },
   { name: 'Product Hunt', sub: 'launch threads', glyph: 'producthunt' },
-  { name: 'X', sub: 'mentions', glyph: 'x' },
   { name: 'App Store', sub: 'reviews', glyph: 'apple' },
   { name: 'Play Store', sub: 'reviews', glyph: 'play' },
-  { name: 'Google Maps', sub: 'business reviews', glyph: 'maps' },
+  { name: 'Websites', sub: 'public discussion', glyph: 'website' },
 ];
 
 // Duplicate the list for seamless marquee
@@ -30,7 +29,7 @@ const marqueeList = [...platforms, ...platforms];
           id="platforms-label"
           class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]"
         >
-          Sources monitored · 8 platforms · 24/7
+          Sources monitored · 7 platforms · 24/7
         </h2>
       </div>
       <p class="font-mono text-[11px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
@@ -72,28 +71,23 @@ const marqueeList = [...platforms, ...platforms];
                     <line x1="13" y1="9" x2="16.5" y2="7" />
                   </>
                 )}
-                {p.glyph === 'g2' && (
-                  <>
-                    <circle cx="12" cy="12" r="9" />
-                    <text x="12" y="16" text-anchor="middle" font-size="9" font-family="monospace" fill="currentColor" stroke="none">
-                      g2
-                    </text>
-                  </>
-                )}
-                {p.glyph === 'capterra' && (
-                  <>
-                    <path d="M3 4h9v6h6v6l-9 4-6-4z" stroke-linejoin="round" />
-                  </>
-                )}
                 {p.glyph === 'producthunt' && (
                   <>
                     <circle cx="12" cy="12" r="9" />
                     <path d="M9 7v10M9 7h4a3 3 0 010 6H9" stroke-linecap="square" />
                   </>
                 )}
-                {p.glyph === 'x' && (
+                {p.glyph === 'hackernews' && (
                   <>
-                    <path d="M4 4l16 16M20 4L4 20" stroke-linecap="square" />
+                    <path d="M3 3h18v18H3z" stroke-linejoin="round" />
+                    <text x="12" y="16" text-anchor="middle" font-size="10" font-family="monospace" fill="currentColor" stroke="none">
+                      Y
+                    </text>
+                  </>
+                )}
+                {p.glyph === 'devto' && (
+                  <>
+                    <path d="M5 9l7-6 7 6v9H5z" stroke-linejoin="round" />
                   </>
                 )}
                 {p.glyph === 'apple' && (
@@ -106,10 +100,10 @@ const marqueeList = [...platforms, ...platforms];
                     <path d="M5 3l13 9-13 9z" stroke-linejoin="round" />
                   </>
                 )}
-                {p.glyph === 'maps' && (
+                {p.glyph === 'website' && (
                   <>
-                    <path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke-linejoin="round" />
-                    <circle cx="12" cy="9" r="2.5" />
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 3v18M3 12h18M4.22 4.22a9 9 0 0115.56 0M4.22 19.78a9 9 0 0115.56 0" stroke-linecap="round" />
                   </>
                 )}
               </svg>
