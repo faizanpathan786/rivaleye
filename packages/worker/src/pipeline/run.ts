@@ -82,9 +82,11 @@ export async function runPipeline(reportId: string): Promise<void> {
   }
 
   const briefs: PlatformBrief[] = briefRows.map((row) => row.summary as unknown as PlatformBrief);
-  const extracts: PlatformExtract[] = briefRows.map(
-    (row) => row.extract as unknown as PlatformExtract,
-  );
+  const extracts: PlatformExtract[] = briefRows.map((row) => {
+    const raw = { ...(row.extract as Record<string, unknown>) };
+    delete raw._signals;
+    return raw as unknown as PlatformExtract;
+  });
 
   const ctx: PipelineCtx = {
     reportId: report.id,
