@@ -60,10 +60,47 @@
   --container-page: 1400px;
 }
 
+/* ----- Light theme ---------------------------------------------------- */
+@media (prefers-color-scheme: light) {
+  @theme {
+    /* Backgrounds — layered near-white */
+    --color-bg-0: #ffffff;
+    --color-bg-1: #f8f9fb;
+    --color-bg-2: #f0f2f7;
+    --color-bg-3: #e8eaf3;
+    --color-bg-4: #dfe2ed;
+
+    /* Text — dark grays through black */
+    --color-fg-0: #0a0d14;
+    --color-fg-1: #2a2e38;
+    --color-fg-2: #5a6170;
+    --color-fg-3: #8a8f9a;
+    --color-fg-4: #b8bcc7;
+
+    /* Acid lime — darker for light background */
+    --color-lime-0: #3d4f00;
+    --color-lime-1: #5a7700;
+    --color-lime: #6b8e00;
+    --color-lime-2: #8da300;
+    --color-lime-3: #c7e600;
+
+    /* Status — adapted for light theme */
+    --color-rose: #d11a3a;
+    --color-amber: #cc7a00;
+    --color-sky: #0066cc;
+
+    /* Lines — translucent dark lines */
+    --color-line-0: rgba(0, 0, 0, 0.04);
+    --color-line-1: rgba(0, 0, 0, 0.08);
+    --color-line-2: rgba(0, 0, 0, 0.12);
+    --color-line-3: rgba(0, 0, 0, 0.18);
+  }
+}
+
 /* ----- Base layer ------------------------------------------------------ */
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light dark;
   }
 
   html {
@@ -111,6 +148,15 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-bg-4);
+  }
+
+  @media (prefers-color-scheme: light) {
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-bg-2);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-bg-3);
+    }
   }
 }
 
@@ -206,6 +252,17 @@
       rgba(255, 255, 255, 0.012) 3px
     );
     z-index: 2;
+  }
+  @media (prefers-color-scheme: light) {
+    .scanlines::before {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.012) 2px,
+        rgba(0, 0, 0, 0.012) 3px
+      );
+    }
   }
 
   /* Reveal helper (initial state for GSAP / IntersectionObserver) */
