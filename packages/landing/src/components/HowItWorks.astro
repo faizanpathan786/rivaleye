@@ -12,16 +12,16 @@ const steps = [
   },
   {
     n: '02',
-    title: 'We read every complaint, everywhere.',
-    desc: 'RivalEye scrapes Reddit, G2, Capterra, Product Hunt, X, the App Store, Play Store, and Google Maps — concurrently. Most scans complete in under five minutes.',
-    bullets: ['8 sources', '24/7 refresh', 'historical archive'],
+    title: 'Scan public conversations.',
+    desc: 'RivalEye analyzes Reddit, app reviews, Product Hunt, Hacker News, Dev.to, and competitor websites — concurrently. Most scans complete in under five minutes.',
+    bullets: ['7 sources', 'daily refresh', 'historical data'],
     visual: 'scan',
   },
   {
     n: '03',
-    title: 'Get the Pain Report.',
-    desc: 'Complaints get clustered into six lenses — pain points, feature gaps, pricing pain, switching signals, positioning angles, and product opportunities. Each cluster cites the original source.',
-    bullets: ['6 cluster lenses', 'severity ranked', 'every quote sourced'],
+    title: 'Get your perception report.',
+    desc: 'User signals get organized into love, pain, gap, and switch signals — plus pricing and positioning insights. Six lenses to understand different decisions. Every insight is sourced.',
+    bullets: ['6 signal lenses', 'severity ranked', 'fully sourced evidence'],
     visual: 'report',
   },
 ];
@@ -222,7 +222,7 @@ const steps = [
                     <div class="p-6">
                       <div class="flex items-baseline justify-between mb-4">
                         <span class="font-display text-2xl font-medium text-[var(--color-fg-0)] tracking-tight">
-                          Pain Report
+                          Perception Report
                         </span>
                         <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]">
                           v.01
@@ -230,12 +230,12 @@ const steps = [
                       </div>
                       <div class="space-y-3">
                         {[
-                          { lens: 'Top pain points', n: 24 },
-                          { lens: 'Feature gaps', n: 18 },
-                          { lens: 'Pricing pain', n: 11 },
-                          { lens: 'Switching signals', n: 9 },
-                          { lens: 'Positioning angles', n: 7 },
-                          { lens: 'Product opportunities', n: 14 },
+                          { lens: 'Love signals', n: 18 },
+                          { lens: 'Pain signals', n: 24 },
+                          { lens: 'Gap signals', n: 18 },
+                          { lens: 'Switch signals', n: 9 },
+                          { lens: 'Pricing signals', n: 11 },
+                          { lens: 'Positioning signals', n: 7 },
                         ].map((lens) => (
                           <div class="flex items-center justify-between py-2 border-b border-[var(--color-line-1)] last:border-b-0">
                             <div class="flex items-center gap-3">
