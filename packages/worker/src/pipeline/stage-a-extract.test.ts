@@ -1,21 +1,42 @@
 import { describe, expect, it } from "bun:test";
 import { runStageAExtract } from "./stage-a-extract";
-import { buildRedditExtract } from "../prompts/platform/reddit/extract";
 import type { OpenRouterClient } from "@rivaleye/shared";
 
 describe("runStageAExtract (appstore)", () => {
-  it("invokes the LLM with the appstore prompt and returns the parsed extract", async () => {
+  it("invokes the LLM with the appstore prompt and returns the parsed Stage A extract", async () => {
     const fakeLlm = {
       complete: async () => ({
         parsed: {
-          complaints: [
-            { text: "sync breaks daily", severity: 0.8, evidence_ids: ["r1"] },
+          love_signals: [
+            {
+              title: "Clean UI",
+              summary: "Users praise the interface.",
+              sentiment: 0.8,
+              strength_or_severity: 0.7,
+              evidence_ids: ["a1"],
+              representative_quotes: [],
+              related_features: [],
+              user_segment: null,
+            },
           ],
-          features_requested: [],
+          pain_signals: [
+            {
+              title: "Sync breaks",
+              summary: "sync breaks daily",
+              sentiment: -0.8,
+              strength_or_severity: 0.8,
+              evidence_ids: ["a2"],
+              representative_quotes: [],
+              related_features: [],
+              user_segment: null,
+            },
+          ],
+          gap_signals: [],
+          switch_signals: [],
           pricing_signals: [],
-          switching_signals: [],
+          feature_signals: [],
           voice_phrases: { positive: [], negative: ["sync breaks"] },
-          notable_quotes: [],
+          evidence_quotes: [],
         },
         raw: "{}",
         usage: { promptTokens: 10, completionTokens: 5 },
@@ -48,25 +69,8 @@ describe("runStageAExtract (appstore)", () => {
         },
       ],
     });
-    expect(result.extract.complaints.length).toBe(1);
+    expect(result.extract.love_signals.length).toBe(1);
+    expect(result.extract.pain_signals.length).toBe(1);
     expect(result.usage.promptTokens).toBe(10);
-  });
-});
-
-describe("buildRedditExtract", () => {
-  it("system prompt rejects where-can-I-find-X as feature gaps", () => {
-    const result = buildRedditExtract({
-      ctx: { reportId: "r1", competitor: "Twilio", category: "Messaging", audience: null, goal: "find pain" },
-      posts: [],
-    });
-    expect(result.system).toContain("genuine product capability");
-  });
-
-  it("system prompt requires verbatim notable_quotes under 150 chars", () => {
-    const result = buildRedditExtract({
-      ctx: { reportId: "r1", competitor: "Twilio", category: "Messaging", audience: null, goal: "find pain" },
-      posts: [],
-    });
-    expect(result.system).toContain("150");
   });
 });

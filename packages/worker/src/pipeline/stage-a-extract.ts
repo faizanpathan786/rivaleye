@@ -1,6 +1,7 @@
 import type { NormalizedPost, PlatformId } from "@rivaleye/scrapers";
 import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
-import type { PipelineCtx, PlatformExtract } from "../prompts/shared";
+import type { PipelineCtx, StageAExtract } from "../prompts/shared";
+import { stageAExtractSchema } from "../prompts/shared";
 import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
 import { buildPlayStoreExtract } from "../prompts/platform/playstore/extract";
 import { buildHackerNewsExtract } from "../prompts/platform/hackernews/extract";
@@ -17,7 +18,7 @@ export interface StageAInput {
 }
 
 export interface StageAOutput {
-  extract: PlatformExtract;
+  extract: StageAExtract;
   usage: { promptTokens: number; completionTokens: number };
   model: string;
 }
@@ -30,13 +31,13 @@ export async function runStageAExtract(input: StageAInput, opts?: LlmCallOptions
     user: built.user,
     schema: built.schema,
   }, opts);
-  return { extract: res.parsed as PlatformExtract, usage: res.usage, model: res.model };
+  return { extract: res.parsed as StageAExtract, usage: res.usage, model: res.model };
 }
 
 type Builder = (input: StageAInput) => {
   system: string;
   user: string;
-  schema: typeof import("../prompts/shared").platformExtractSchema;
+  schema: typeof stageAExtractSchema;
 };
 
 function pickBuilder(p: PlatformId): Builder {
