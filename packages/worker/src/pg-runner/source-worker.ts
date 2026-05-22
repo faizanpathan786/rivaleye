@@ -25,7 +25,8 @@ import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { fanInCheck } from "./fan-in";
 import type { SourceJobRow } from "./types";
-import type { PlatformExtract } from "../prompts/shared";
+import type { PlatformExtract, StageAExtract } from "../prompts/shared";
+import { emptyStageAExtract, mergeStageAExtracts, toLegacyExtract } from "../pipeline/signal-adapters";
 
 const log = pino({ name: "source-worker" });
 const CHUNK_SIZE = 500;
@@ -134,11 +135,11 @@ export async function processSourceJob(
 
     // Step 5: Run Stage A extraction
     log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage A extraction");
-    const extract = await runStageAExtractionStep(job.report_id, job.platform, posts, reportRow);
+    const stageA = await runStageAExtractionStep(job.report_id, job.platform, posts, reportRow);
 
     // Step 6: Run Stage B summarization + persist brief
     log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage B summarization");
-    await runStageBSummarizationStep(job.report_id, job.platform, extract, reportRow);
+    await runStageBSummarizationStep(job.report_id, job.platform, stageA.legacy, stageA.signals, reportRow);
 
     // Step 7: Mark job completed
     const durationMs = Date.now() - startedAt;
@@ -298,24 +299,21 @@ async function persistMentions(reportId: string, platform: string, posts: Normal
 }
 
 /**
- * Run Stage A extraction (LLM-powered pain extraction).
+ * Run Stage A extraction (LLM-powered signal extraction).
  *
- * Loads mentions for the platform and runs the extraction pipeline.
- *
- * @param reportId - Report UUID
- * @param platform - Platform identifier
- * @param posts - Array of normalized posts (used to build context)
- * @param reportRow - Report metadata
+ * Returns both the new signal-centric extract and the legacy-shaped extract
+ * derived from it, so Stage B/C keep working unchanged.
  */
 async function runStageAExtractionStep(
   reportId: string,
   platform: string,
   posts: NormalizedPost[],
   reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string }
-): Promise<PlatformExtract> {
+): Promise<{ legacy: PlatformExtract; signals: StageAExtract }> {
   if (posts.length === 0) {
     log.warn({ reportId, platform }, "No posts found; skipping Stage A extraction");
-    return { complaints: [], features_requested: [], pricing_signals: [], switching_signals: [], voice_phrases: { positive: [], negative: [] }, notable_quotes: [] };
+    const empty = emptyStageAExtract();
+    return { legacy: toLegacyExtract(empty), signals: empty };
   }
 
   const ctx = {
@@ -334,7 +332,7 @@ async function runStageAExtractionStep(
 
   log.info({ reportId, platform, totalPosts: posts.length, batches: batches.length, batchSize: BATCH_SIZE }, "Stage A: processing posts in batches");
 
-  const allExtracts: PlatformExtract[] = [];
+  const allExtracts: StageAExtract[] = [];
   let totalPromptTokens = 0;
   let totalCompletionTokens = 0;
 
@@ -359,45 +357,39 @@ async function runStageAExtractionStep(
     totalCompletionTokens += result.usage.completionTokens;
   }
 
-  // Merge all batch extracts into one
-  const merged: PlatformExtract = {
-    complaints: allExtracts.flatMap((e) => e.complaints),
-    features_requested: allExtracts.flatMap((e) => e.features_requested),
-    pricing_signals: allExtracts.flatMap((e) => e.pricing_signals),
-    switching_signals: allExtracts.flatMap((e) => e.switching_signals),
-    voice_phrases: {
-      positive: allExtracts.flatMap((e) => e.voice_phrases.positive),
-      negative: allExtracts.flatMap((e) => e.voice_phrases.negative),
-    },
-    notable_quotes: allExtracts.flatMap((e) => e.notable_quotes),
-  };
+  const signals = mergeStageAExtracts(allExtracts);
+  const legacy = toLegacyExtract(signals);
 
   log.info({
     reportId, platform,
     batches: batches.length,
     promptTokens: totalPromptTokens, completionTokens: totalCompletionTokens,
-    complaints: merged.complaints.length,
-    featuresRequested: merged.features_requested.length,
-    pricingSignals: merged.pricing_signals.length,
-    switchingSignals: merged.switching_signals.length,
-    notableQuotes: merged.notable_quotes.length,
+    loveSignals: signals.love_signals.length,
+    painSignals: signals.pain_signals.length,
+    gapSignals: signals.gap_signals.length,
+    switchSignals: signals.switch_signals.length,
+    pricingSignals: signals.pricing_signals.length,
+    featureSignals: signals.feature_signals.length,
+    positioningSignals: signals.positioning_signals.length,
+    evidenceQuotes: signals.evidence_quotes.length,
   }, "Stage A extraction completed");
 
-  return merged;
+  return { legacy, signals };
 }
 
 /**
  * Run Stage B summarization (LLM-powered platform summary).
  *
- * Loads the Stage A extraction result and runs the summarization pipeline.
- *
- * @param reportId - Report UUID
- * @param platform - Platform identifier
+ * Stage B consumes the legacy extract shape unchanged. The persisted
+ * report_platform_briefs.extract column stores the legacy shape at its top
+ * level (so Stage C's cast keeps working) plus the full signal extract
+ * under the _signals key.
  */
 async function runStageBSummarizationStep(
   reportId: string,
   platform: string,
-  extract: PlatformExtract,
+  legacyExtract: PlatformExtract,
+  signals: StageAExtract,
   reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string }
 ): Promise<void> {
   const ctx = {
@@ -408,12 +400,12 @@ async function runStageBSummarizationStep(
     goal: reportRow.goal,
   };
 
-  log.info({ reportId, platform, complaints: extract.complaints.length }, "Stage B: running LLM summarization");
+  log.info({ reportId, platform, complaints: legacyExtract.complaints.length }, "Stage B: running LLM summarization");
   const stageBResult = await runStageBSummarize({
     llm: getLlm(),
     ctx,
     platform: platform as any,
-    extract,
+    extract: legacyExtract,
   });
 
   log.info({
@@ -425,6 +417,8 @@ async function runStageBSummarizationStep(
     sentiment: stageBResult.brief.sentiment,
   }, "Stage B summarization completed");
 
+  const extractColumn = { ...legacyExtract, _signals: signals } as unknown as Record<string, unknown>;
+
   // Persist brief to DB so synthesis (Stage C) can load it
   log.info({ reportId, platform }, "Stage B: persisting brief to DB");
   await db
@@ -432,7 +426,7 @@ async function runStageBSummarizationStep(
     .values({
       report_id: reportId,
       platform,
-      extract: extract as unknown as Record<string, unknown>,
+      extract: extractColumn,
       summary: stageBResult.brief as unknown as Record<string, unknown>,
       model_used: stageBResult.model,
       prompt_tokens: stageBResult.usage.promptTokens,
@@ -441,7 +435,7 @@ async function runStageBSummarizationStep(
     .onConflictDoUpdate({
       target: [report_platform_briefs.report_id, report_platform_briefs.platform],
       set: {
-        extract: extract as unknown as Record<string, unknown>,
+        extract: extractColumn,
         summary: stageBResult.brief as unknown as Record<string, unknown>,
         model_used: stageBResult.model,
         prompt_tokens: stageBResult.usage.promptTokens,

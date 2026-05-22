@@ -13,6 +13,7 @@ import { report_platform_jobs } from "../../../api/src/db/schema/pipeline.js";
 import { LLM_MODEL, LlmSchemaError, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
+import { toLegacyExtract } from "../pipeline/signal-adapters";
 import { fanInCheck } from "../pg-runner/fan-in";
 import { report_platform_briefs } from "../../../api/src/db/schema/pipeline.js";
 import type { NormalizedPost } from "@rivaleye/scrapers";
@@ -64,16 +65,16 @@ const posts: NormalizedPost[] = rows.map((r) => ({
 const postsForLlm = posts.slice(0, 50);
 log.info({ total: posts.length, sending: postsForLlm.length }, "Running Stage A");
 
-let extract;
+let legacyExtract;
 try {
   const result = await runStageAExtract({ llm, ctx, platform: platform as any, posts: postsForLlm });
-  extract = result.extract;
+  legacyExtract = toLegacyExtract(result.extract);
   log.info({
-    complaints: extract.complaints.length,
-    features: extract.features_requested.length,
-    pricing: extract.pricing_signals.length,
-    switching: extract.switching_signals.length,
-    quotes: extract.notable_quotes.length,
+    complaints: legacyExtract.complaints.length,
+    features: legacyExtract.features_requested.length,
+    pricing: legacyExtract.pricing_signals.length,
+    switching: legacyExtract.switching_signals.length,
+    quotes: legacyExtract.notable_quotes.length,
     tokens: result.usage,
   }, "Stage A complete");
 } catch (err) {
@@ -84,7 +85,7 @@ try {
 }
 
 log.info("Running Stage B");
-const stageBResult = await runStageBSummarize({ llm, ctx, platform: platform as any, extract });
+const stageBResult = await runStageBSummarize({ llm, ctx, platform: platform as any, extract: legacyExtract });
 log.info({
   headline: stageBResult.brief.headline,
   themes: stageBResult.brief.top_themes.length,
@@ -95,7 +96,7 @@ log.info({
 // Persist brief
 await db.insert(report_platform_briefs).values({
   report_id: reportId, platform,
-  extract: extract as unknown as Record<string, unknown>,
+  extract: legacyExtract as unknown as Record<string, unknown>,
   summary: stageBResult.brief as unknown as Record<string, unknown>,
   model_used: stageBResult.model,
   prompt_tokens: stageBResult.usage.promptTokens,
@@ -103,7 +104,7 @@ await db.insert(report_platform_briefs).values({
 }).onConflictDoUpdate({
   target: [report_platform_briefs.report_id, report_platform_briefs.platform],
   set: {
-    extract: extract as unknown as Record<string, unknown>,
+    extract: legacyExtract as unknown as Record<string, unknown>,
     summary: stageBResult.brief as unknown as Record<string, unknown>,
     model_used: stageBResult.model,
     prompt_tokens: stageBResult.usage.promptTokens,

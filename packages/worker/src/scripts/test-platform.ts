@@ -3,6 +3,7 @@ import type { PlatformId } from "@rivaleye/scrapers";
 import { OpenRouterClient, LLM_MODEL, LLM_TEMPERATURE, readOpenRouterApiKey } from "@rivaleye/shared";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
+import { toLegacyExtract } from "../pipeline/signal-adapters";
 import type { PipelineCtx } from "../prompts/shared";
 
 const [, , platform, competitor, category = "productivity"] = process.argv;
@@ -48,7 +49,7 @@ if (!platform || !competitor) {
     llm,
     ctx,
     platform: platform as PlatformId,
-    extract: stageA.extract,
+    extract: toLegacyExtract(stageA.extract),
   });
   console.log(`[test-platform] Stage B complete — model: ${stageB.model}`);
   console.log(
