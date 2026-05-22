@@ -169,7 +169,6 @@ export function ScanReportPage() {
       <div style={{ position: "relative", zIndex: 1 }}>
         <UnifiedHeader
           competitor={SCAN_DATA.competitor}
-          lens={lens}
           meta={meta}
           range={range}
           setRange={setRange}
@@ -197,7 +196,6 @@ export function ScanReportPage() {
 
 interface UnifiedHeaderProps {
   competitor: ScanCompetitor;
-  lens: LensId;
   meta: LensMeta;
   range: string;
   setRange: (r: string) => void;
@@ -269,6 +267,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
                 key={r}
                 className={`chip ${range === r ? "solid" : ""}`}
                 style={{ cursor: "pointer", padding: "3px 10px" }}
+                aria-pressed={range === r}
                 onClick={() => setRange(r)}
               >
                 {r}
@@ -438,9 +437,10 @@ function PerceptionHero({ data }: { data: ScanData }) {
 function PerceptionRing({ positive, neutral, negative, index }: { positive: number; neutral: number; negative: number; index: number }) {
   const r = 76;
   const circ = 2 * Math.PI * r;
-  const negLen = negative * circ;
-  const neuLen = neutral * circ;
-  const posLen = positive * circ;
+  const total = positive + neutral + negative || 1;
+  const negLen = (negative / total) * circ;
+  const neuLen = (neutral / total) * circ;
+  const posLen = (positive / total) * circ;
 
   return (
     <div style={{ position: "relative", width: 200, height: 200 }}>
@@ -633,6 +633,7 @@ function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => 
             onClick={() => onPick(id)}
             onMouseEnter={() => setHovered(id)}
             onMouseLeave={() => setHovered(null)}
+            aria-pressed={isActive}
             style={{
               border: 0,
               padding: "8px 14px",
