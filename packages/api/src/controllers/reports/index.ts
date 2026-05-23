@@ -21,6 +21,7 @@ import { getThreadHandler } from "./handlers/getThread";
 import { getLogsHandler } from "./handlers/getLogs";
 import { retryPlatformHandler } from "./handlers/retryPlatform";
 import { cancelHandler } from "./handlers/cancel";
+import { getSectionsHandler } from "./handlers/getSections";
 
 export const reportsController = new Elysia({
   prefix: "/reports",
@@ -47,4 +48,5 @@ export const reportsController = new Elysia({
   .use(getThreadHandler)
   .use(getLogsHandler)
   .use(retryPlatformHandler)
-  .use(cancelHandler);
+  .use(cancelHandler)
+  .use(getSectionsHandler);

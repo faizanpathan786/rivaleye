@@ -22,6 +22,7 @@ import { report_platform_jobs } from "@/db/schema/pipeline";
 import { report_logs } from "@/db/schema/logs";
 import { pipeline_events } from "@/db/schema/pipeline-events";
 import { mentions } from "@/db/schema/mentions";
+import { report_role_sections } from "@/db/schema/report-role-sections";
 import { inngest } from "@/libs/inngest";
 import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
 import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
@@ -481,4 +482,29 @@ export async function cancelReport(
     .set({ status: "cancelled", stage: "cancelled", updated_at: new Date() })
     .where(eq(reports.id, reportId));
   return { ok: true };
+}
+
+export async function getReportSections(reportId: string): Promise<{
+  overview: unknown | null;
+  founder: unknown | null;
+  product: unknown | null;
+  marketing: unknown | null;
+  growth: unknown | null;
+  evidence: unknown | null;
+}> {
+  const rows = await db
+    .select()
+    .from(report_role_sections)
+    .where(eq(report_role_sections.report_id, reportId));
+
+  const byType = new Map(rows.map((r) => [r.section_type, r.data]));
+
+  return {
+    overview: byType.get("overview") ?? null,
+    founder: byType.get("founder") ?? null,
+    product: byType.get("product") ?? null,
+    marketing: byType.get("marketing") ?? null,
+    growth: byType.get("growth") ?? null,
+    evidence: byType.get("evidence") ?? null,
+  };
 }
