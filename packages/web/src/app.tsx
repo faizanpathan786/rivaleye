@@ -12,6 +12,7 @@ import { MarketingPage } from "./routes/marketing";
 import { GrowthPage } from "./routes/growth";
 import { HistoryPage } from "./routes/history";
 import { ReportPage } from "./routes/report";
+import { ReportSectionsPage } from "./routes/report-sections";
 import { ScanReportPage } from "./routes/scan-report";
 import { AccountPage } from "./routes/account";
 import { SignInPage } from "./routes/signin";
@@ -59,6 +60,7 @@ const router = createBrowserRouter([
       { path: "growth", Component: GrowthPage },
       { path: "history", Component: HistoryPage },
       { path: "reports/:id", Component: ReportPage },
+      { path: "reports/:id/sections", Component: ReportSectionsPage },
       { path: "scan-report", Component: ScanReportPage },
       { path: "account", Component: AccountPage },
     ],
