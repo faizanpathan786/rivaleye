@@ -4,11 +4,13 @@ import { db } from "../db";
 import {
   report_actions,
   report_complaints,
+  report_role_sections,
   report_threads,
   reports,
   users,
 } from "../../../api/src/db/schema/index.js";
 import type { SynthOutput } from "../prompts/shared";
+import type { RoleSections } from "../prompts/role-sections/schema";
 import { persistReport } from "./persist";
 
 const TEST_USER_EMAIL = "persist-test@rivaleye.test";
@@ -162,6 +164,192 @@ afterAll(async () => {
   await db.delete(users).where(eq(users.email, TEST_USER_EMAIL));
 }, 15000);
 
+const CONF_MED = { score: 0.5, label: "medium" as const, basis: null };
+const CONF_HIGH = { score: 0.8, label: "high" as const, basis: null };
+const EVIDENCE_REFS = { signal_ids: [], quote_ids: [], source_urls: [] };
+
+const ROLE_SECTIONS_FIXTURE: RoleSections = {
+  overview: {
+    overall_perception_summary: "Users are frustrated.",
+    sources_scanned: ["reddit"],
+    total_mentions: 10,
+    top_love_signal: null,
+    top_pain_signal: null,
+    top_gap_signal: null,
+    top_switch_signal: null,
+    strongest_opportunity: null,
+    confidence_score: CONF_MED,
+    source_coverage: [],
+    report_limitations: [],
+  },
+  founder: {
+    opportunity_score: {
+      score: 60,
+      label: "Moderate",
+      explanation: "Solid signals.",
+      factors: {
+        pain_frequency: 0.6,
+        gap_severity: 0.5,
+        switch_intent: 0.4,
+        competitor_love_strength: 0.3,
+        pricing_pain: 0.5,
+        source_confidence: 0.7,
+      },
+    },
+    market_opening_summary: {
+      summary: "There is a clear opening.",
+      target_segment: "SMBs",
+      main_opportunity: "Stability",
+      why_now: "Competitor is struggling.",
+      confidence: CONF_MED,
+      evidence_refs: EVIDENCE_REFS,
+    },
+    strengths_to_respect: [],
+    weaknesses_to_attack: [],
+    unmet_needs: [],
+    wedge_recommendation: {
+      target_segment: "SMBs",
+      core_pain: "Crashes",
+      positioning_promise: "Crash-free exports",
+      why_this_wedge_exists: "Competitor fails here.",
+      evidence_strength: "medium",
+      risk_level: "low",
+      evidence_refs: EVIDENCE_REFS,
+    },
+    pricing_opportunity: {
+      pricing_pain_score: 0.6,
+      main_pricing_complaint: "Too expensive",
+      affected_segment: "Small teams",
+      suggested_pricing_angle: "Usage-based",
+      risk_warning: null,
+      evidence_refs: EVIDENCE_REFS,
+    },
+    strategic_risks: [],
+    recommended_product_move: {
+      recommendation: "Fix crashes",
+      why: "Users are leaving.",
+      confidence: CONF_HIGH,
+      evidence_refs: EVIDENCE_REFS,
+    },
+    recommended_positioning_move: {
+      recommendation: "Lead with stability",
+      why: "Differentiator.",
+      confidence: CONF_MED,
+      evidence_refs: EVIDENCE_REFS,
+    },
+    recommended_growth_move: {
+      recommendation: "Target Reddit switchers",
+      why: "High switch intent.",
+      confidence: CONF_MED,
+      evidence_refs: EVIDENCE_REFS,
+    },
+    evidence_refs: EVIDENCE_REFS,
+  },
+  product: {
+    product_opportunity_score: {
+      score: 55,
+      label: "Moderate",
+      explanation: "Several feature gaps.",
+      factors: {
+        feature_gap_frequency: 0.5,
+        pain_severity: 0.6,
+        source_spread: 0.4,
+        user_urgency: 0.5,
+        competitor_love_strength: 0.3,
+      },
+    },
+    feature_gap_map: [],
+    complaint_clusters_by_product_area: [],
+    loved_competitor_features: [],
+    workflow_friction: [],
+    roadmap_opportunities: [],
+    build_avoid_learn: { build: [], avoid: [], learn: [] },
+    confidence_summary: CONF_MED,
+    evidence_refs: EVIDENCE_REFS,
+  },
+  marketing: {
+    role: "marketing",
+    competitor_id: "notion",
+    generated_at: "2026-01-01T00:00:00Z",
+    messaging_opportunity_score: {
+      score: 50,
+      label: "Moderate",
+      explanation: "Clear messaging opportunity.",
+      factors: {
+        repeated_user_language_strength: 0.5,
+        pain_clarity: 0.6,
+        promise_reality_gap: 0.4,
+        objection_frequency: 0.3,
+        quote_quality: 0.5,
+        source_confidence: 0.6,
+      },
+    },
+    messaging_summary: "Users are vocal about pricing pain.",
+    user_language_bank: {
+      positive_phrases: [],
+      negative_phrases: [],
+      alternative_seeking_phrases: [],
+      emotional_adjectives: [],
+      category_language: [],
+    },
+    positive_phrases: [],
+    negative_phrases: [],
+    positioning_angles: [],
+    competitor_promise_vs_user_reality: [],
+    objections_to_handle: [],
+    comparison_page_bullets: {
+      hero_angle: "Stability first",
+      why_users_look_for_alternatives: [],
+      where_competitor_is_strong: [],
+      where_users_struggle: [],
+      who_should_choose_us: [],
+      objections_to_handle: [],
+      proof_quotes: [],
+    },
+    copy_ideas: {
+      homepage_headlines: [],
+      subheadlines: [],
+      ad_hooks: [],
+      linkedin_hooks: [],
+      comparison_page_headlines: [],
+      cta_ideas: [],
+    },
+    quote_library: [],
+    evidence_refs: EVIDENCE_REFS,
+  },
+  growth: {
+    highest_opportunity_summary: "High switch intent detected.",
+    switch_intent_score: {
+      score: 65,
+      label: "High",
+      explanation: "Many users looking for alternatives.",
+      factors: {
+        alternative_seeking_posts: 0.7,
+        pricing_complaints: 0.6,
+        explicit_competitor_frustration: 0.5,
+        recency: 0.8,
+        engagement_level: 0.6,
+        source_quality: 0.7,
+      },
+    },
+    switch_intent_feed: [],
+    highest_priority_conversations: [],
+    pricing_pain_leads: [],
+    communities_to_engage: [],
+    suggested_reply_angles: [],
+    segment_hints: [],
+    spam_risk_notes: null,
+    source_links: [],
+    evidence_refs: EVIDENCE_REFS,
+  },
+  evidence: {
+    quotes: [],
+    source_links: [],
+    raw_items: [],
+    filters_supported: ["source", "signal_type", "sentiment", "confidence", "dashboard_section", "date", "role_relevance"],
+  },
+};
+
 describe("persistReport", () => {
   it("writes all synth sections into sub-tables and updates the parent reports row", async () => {
     const platformStats = [
@@ -217,5 +405,54 @@ describe("persistReport", () => {
     expect(updated?.status).toBe("completed");
     expect(updated?.stage).toBe("done");
     expect(updated?.scanned_at).not.toBeNull();
+  }, 30000);
+
+  it("upserts one row per section_type into report_role_sections when roleSections is provided", async () => {
+    await persistReport({
+      reportId: testReportId,
+      synth: SYNTH_FIXTURE,
+      platformStats: [],
+      subreddits: [],
+      roleSections: ROLE_SECTIONS_FIXTURE,
+    });
+
+    const rows = await db
+      .select()
+      .from(report_role_sections)
+      .where(eq(report_role_sections.report_id, testReportId));
+
+    expect(rows).toHaveLength(6);
+
+    const types = rows.map((r) => r.section_type).sort();
+    expect(types).toEqual(["evidence", "founder", "growth", "marketing", "overview", "product"]);
+
+    const overviewRow = rows.find((r) => r.section_type === "overview");
+    expect(overviewRow).toBeDefined();
+    expect((overviewRow?.data as Record<string, unknown>)["overall_perception_summary"]).toBe(
+      "Users are frustrated.",
+    );
+  }, 30000);
+
+  it("does not write role-section rows when roleSections is omitted and legacy persist still completes", async () => {
+    await persistReport({
+      reportId: testReportId,
+      synth: SYNTH_FIXTURE,
+      platformStats: [],
+      subreddits: [],
+    });
+
+    const rows = await db
+      .select()
+      .from(report_role_sections)
+      .where(eq(report_role_sections.report_id, testReportId));
+
+    expect(rows).toHaveLength(0);
+
+    const [updated] = await db
+      .select()
+      .from(reports)
+      .where(eq(reports.id, testReportId));
+
+    expect(updated?.status).toBe("completed");
   }, 30000);
 });

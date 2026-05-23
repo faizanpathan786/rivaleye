@@ -146,9 +146,12 @@ export async function runPipeline(reportId: string): Promise<void> {
 
   // Stage D
   let synth: SynthOutput;
+  let roleSections: RoleSections | undefined;
   if (checkpoints.has("D")) {
     await log(reportId, "info", "D", null, "skipping stage D (checkpoint found)");
-    synth = checkpoints.get("D") as unknown as SynthOutput;
+    const cCheckpoint = checkpoints.get("D") as Record<string, unknown>;
+    synth = cCheckpoint as unknown as SynthOutput;
+    roleSections = cCheckpoint["_role_sections"] as RoleSections | undefined;
   } else {
     await log(reportId, "info", "D", null, "running stage D: synth", {
       complaintClusters: merged.complaint_clusters.length,
@@ -164,7 +167,6 @@ export async function runPipeline(reportId: string): Promise<void> {
     });
     synth = resultD.synth;
 
-    let roleSections: RoleSections | undefined;
     try {
       const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals });
       roleSections = resultRole.roleSections;
@@ -220,7 +222,7 @@ export async function runPipeline(reportId: string): Promise<void> {
   const subreddits = computeSubredditStats(mentionRows);
 
   await log(reportId, "info", "persist", null, "persisting report to sub-tables");
-  await persistReport({ reportId, synth: refined, platformStats, subreddits });
+  await persistReport({ reportId, synth: refined, platformStats, subreddits, roleSections });
   await log(reportId, "info", "persist", null, "persist done", {
     fellBackToDraft,
   });

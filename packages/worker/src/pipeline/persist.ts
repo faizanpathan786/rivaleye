@@ -11,6 +11,8 @@ import {
   report_pricing_quotes,
   report_pricing_tiers,
   report_quotes,
+  report_role_sections,
+  report_section_type_enum,
   report_subreddits,
   report_switching,
   report_thread_messages,
@@ -19,6 +21,7 @@ import {
   reports,
 } from "../../../api/src/db/schema/index.js";
 import type { SynthOutput } from "../prompts/shared";
+import type { RoleSections } from "../prompts/role-sections/schema";
 import { PipelineError } from "./errors";
 
 export interface PlatformStatRow {
@@ -37,10 +40,11 @@ export interface PersistInput {
   synth: SynthOutput;
   platformStats: PlatformStatRow[];
   subreddits: SubredditRow[];
+  roleSections?: RoleSections;
 }
 
 export async function persistReport(input: PersistInput): Promise<void> {
-  const { reportId, synth, platformStats, subreddits } = input;
+  const { reportId, synth, platformStats, subreddits, roleSections } = input;
 
   try {
     await db.transaction(async (tx) => {
@@ -223,6 +227,24 @@ export async function persistReport(input: PersistInput): Promise<void> {
               sort_order: j,
             })),
           );
+        }
+      }
+
+      if (roleSections !== undefined) {
+        for (const sectionType of report_section_type_enum.enumValues) {
+          const data = roleSections[sectionType] as Record<string, unknown>;
+          await tx
+            .insert(report_role_sections)
+            .values({
+              report_id: reportId,
+              section_type: sectionType,
+              data,
+              updated_at: new Date(),
+            })
+            .onConflictDoUpdate({
+              target: [report_role_sections.report_id, report_role_sections.section_type],
+              set: { data, updated_at: new Date() },
+            });
         }
       }
 
