@@ -12,6 +12,7 @@ import type { LlmCallOptions } from "@rivaleye/shared";
 import { log } from "../logger.js";
 import { runStageCMerge } from "./stage-c-merge";
 import { runStageDSynth } from "./stage-d-synth";
+import { runRoleSynthesis } from "./stage-d-role";
 import { runStageERefine } from "./stage-e-refine";
 import { computePlatformStats, computeSubredditStats } from "./derive-stats";
 import { persistReport } from "./persist";
@@ -21,9 +22,11 @@ import type {
   PlatformBrief,
   PlatformExtract,
   MergedClusters,
+  MergedSignals,
   StageAExtract,
   SynthOutput,
 } from "../prompts/shared";
+import type { RoleSections } from "../prompts/role-sections/schema";
 import type { PlatformId } from "@rivaleye/scrapers";
 import { emptyStageAExtract } from "./signal-adapters";
 
@@ -116,9 +119,12 @@ export async function runPipeline(reportId: string): Promise<void> {
 
   // Stage C
   let merged: MergedClusters;
+  let mergedSignals: MergedSignals;
   if (checkpoints.has("C")) {
     await log(reportId, "info", "C", null, "skipping stage C (checkpoint found)");
-    merged = checkpoints.get("C") as unknown as MergedClusters;
+    const cCheckpoint = checkpoints.get("C") as Record<string, unknown>;
+    merged = cCheckpoint as unknown as MergedClusters;
+    mergedSignals = (cCheckpoint["_signals"] ?? {}) as MergedSignals;
   } else {
     await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: signalExtracts.length });
     const resultC = await runStageCMerge({ llm, ctx, briefs, signalExtracts }, LLM_OPTS_C);
@@ -134,6 +140,7 @@ export async function runPipeline(reportId: string): Promise<void> {
       positioningClusters: resultC.mergedSignals.positioning_clusters.length,
     });
     merged = resultC.merged;
+    mergedSignals = resultC.mergedSignals;
     await saveCheckpoint(reportId, "C", { ...merged, _signals: resultC.mergedSignals } as unknown as Record<string, unknown>);
   }
 
@@ -156,7 +163,27 @@ export async function runPipeline(reportId: string): Promise<void> {
       actions: resultD.synth.actions?.length ?? 0,
     });
     synth = resultD.synth;
-    await saveCheckpoint(reportId, "D", synth as unknown as Record<string, unknown>);
+
+    let roleSections: RoleSections | undefined;
+    try {
+      const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals });
+      roleSections = resultRole.roleSections;
+      await log(reportId, "info", "D", null, "stage D role synthesis done", {
+        sections: Object.keys(roleSections),
+        promptTokens: resultRole.usage.promptTokens,
+        completionTokens: resultRole.usage.completionTokens,
+      });
+    } catch (roleErr) {
+      await log(reportId, "warn", "D", null, "stage D role synthesis failed — continuing with legacy report", {
+        error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+      });
+    }
+
+    await saveCheckpoint(
+      reportId,
+      "D",
+      { ...synth, ...(roleSections !== undefined ? { _role_sections: roleSections } : {}) } as unknown as Record<string, unknown>,
+    );
   }
 
   // Stage E
