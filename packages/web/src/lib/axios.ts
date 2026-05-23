@@ -67,5 +67,6 @@ export const endpoints = {
     thread: (id: string, threadId: string) =>
       `/v1/reports/${id}/threads/${threadId}`,
     retryPlatform: (id: string) => `/v1/reports/${id}/retry-platform`,
+    sections: (id: string) => `/v1/reports/${id}/sections`,
   },
 };
