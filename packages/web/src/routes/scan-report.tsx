@@ -1,10 +1,28 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { FounderPage } from "./founder";
 import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
+import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
+import type { EvidenceSection } from "@/lib/dashboard-helpers";
+import {
+  toFounderViewProps,
+  type FounderViewSection,
+} from "@/lib/dashboard-adapters/founder";
+import {
+  toProductViewProps,
+  type ProductViewSection,
+} from "@/lib/dashboard-adapters/product";
+import {
+  toMarketingViewProps,
+  type MarketingViewSection,
+} from "@/lib/dashboard-adapters/marketing";
+import {
+  toGrowthViewProps,
+  type GrowthViewSection,
+} from "@/lib/dashboard-adapters/growth";
 
 // Scan Report v2 — one scan, five lenses. UI only.
 // TODO(backend): replace SCAN_DATA with the scan-synthesis endpoint payload.
@@ -147,9 +165,13 @@ const SCAN_DATA: ScanData = {
 
 export function ScanReportPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id?: string }>();
   const [lens, setLens] = useState<LensId>("summary");
   const [range, setRange] = useState("90d");
   const meta = LENS_META[lens];
+
+  // Live data fetch — only when :id is present in the route.
+  const { data: sections, isLoading, error } = useReportSectionsQuery(id);
 
   useEffect(() => {
     const m = document.querySelector(".main");
@@ -157,6 +179,55 @@ export function ScanReportPage() {
   }, [lens]);
 
   const onNav = (to: string) => navigate(to.startsWith("/") ? to : `/${to}`);
+
+  // When :id is present and we are still loading or errored, show a simple state.
+  if (id && isLoading) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--fg-muted)" }}>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>LOADING REPORT</div>
+        <div style={{ fontSize: 16 }}>Fetching report sections…</div>
+      </div>
+    );
+  }
+
+  if (id && error) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--neg)" }}>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>ERROR</div>
+        <div style={{ fontSize: 16 }}>Failed to load report. Please try again.</div>
+      </div>
+    );
+  }
+
+  // Run all four adapters when live sections are available.
+  // Each section comes back as `unknown | null`. If null → pass `data: undefined`
+  // so the lens page falls back to its built-in mock. If non-null → cast to the
+  // adapter's input type via `as <Role>ViewSection` (intentional boundary cast;
+  // the contract is enforced by Stage D schema, not the web layer).
+  const founderProps =
+    sections?.founder != null
+      ? toFounderViewProps(sections.founder as FounderViewSection)
+      : undefined;
+
+  const productProps =
+    sections?.product != null
+      ? toProductViewProps(sections.product as ProductViewSection)
+      : undefined;
+
+  const marketingProps =
+    sections?.marketing != null
+      ? toMarketingViewProps(sections.marketing as MarketingViewSection)
+      : undefined;
+
+  const growthProps =
+    sections?.growth != null
+      ? toGrowthViewProps(sections.growth as GrowthViewSection)
+      : undefined;
+
+  const evidenceSection: EvidenceSection | null =
+    sections?.evidence != null
+      ? (sections.evidence as EvidenceSection)
+      : null;
 
   return (
     <div style={{ position: "relative", minHeight: "100%" }}>
@@ -181,10 +252,18 @@ export function ScanReportPage() {
 
         <div key={lens} className="fade-up">
           {lens === "summary"   && <ExecutiveSummary data={SCAN_DATA} onPickLens={setLens} />}
-          {lens === "founder"   && <FounderPage embedded />}
-          {lens === "product"   && <ProductPage embedded />}
-          {lens === "marketing" && <MarketingPage embedded />}
-          {lens === "growth"    && <GrowthPage embedded />}
+          {lens === "founder"   && (
+            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} />
+          )}
+          {lens === "product"   && (
+            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} />
+          )}
+          {lens === "marketing" && (
+            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} />
+          )}
+          {lens === "growth"    && (
+            <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} />
+          )}
         </div>
 
         <div style={{ height: 110 }} />
