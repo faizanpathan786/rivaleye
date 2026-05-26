@@ -122,13 +122,35 @@ export function RadarPage() {
         </div>
       </div>
 
-      {/* Stat strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-        <RadarStat label="Active monitors" value={activeMonitors} sub={`of ${competitors.length} competitors`} />
-        <RadarStat label="Events this week" value={allEvents.length} sub="across all sources" trend="up" />
-        <RadarStat label="Urgent" value={urgentCount} tone="neg" sub="needs response today" />
-        <RadarStat label="High priority" value={highCount} tone="warn" sub="watch this week" />
-      </div>
+      {/* Stat strip — hidden when there are no competitors and no events yet */}
+      {competitors.length === 0 && allEvents.length === 0 ? (
+        <div
+          style={{
+            padding: "20px 0",
+            textAlign: "center",
+            color: "var(--fg-muted)",
+            fontSize: 13,
+            lineHeight: 1.55,
+            marginBottom: 20,
+          }}
+        >
+          Radar monitoring shows competitor moves detected across the web. Add competitors or run a scan to activate it.{" "}
+          <button
+            className="re-btn re-btn-ghost re-btn-sm"
+            style={{ display: "inline", padding: "0 4px", fontSize: 13 }}
+            onClick={() => navigate("/scan")}
+          >
+            Run a scan
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          <RadarStat label="Active monitors" value={activeMonitors} sub={`of ${competitors.length} competitors`} />
+          <RadarStat label="Events this week" value={allEvents.length} sub="across all sources" trend="up" />
+          <RadarStat label="Urgent" value={urgentCount} tone="neg" sub="needs response today" />
+          <RadarStat label="High priority" value={highCount} tone="warn" sub="watch this week" />
+        </div>
+      )}
 
       {/* Live ribbon */}
       <div
