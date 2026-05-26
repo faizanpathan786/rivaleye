@@ -15,6 +15,9 @@ import {
   growthViewSectionSchema,
 } from "../prompts/role-sections/schema";
 import { PipelineError } from "./errors";
+import pino from "pino";
+
+const log = pino({ name: "stage-d-role" });
 
 const MAX_TOKENS = 16000;
 
@@ -28,6 +31,19 @@ export interface RoleSynthesisOutput {
   roleSections: RoleSections;
   usage: { promptTokens: number; completionTokens: number };
   model: string;
+}
+
+function safeSection<T>(
+  schema: { safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: { message: string } } },
+  parsed: unknown,
+  name: string,
+): T | undefined {
+  const result = schema.safeParse(parsed);
+  if (!result.success) {
+    log.warn({ error: result.error.message }, `${name} section parse failed`);
+    return undefined;
+  }
+  return result.data;
 }
 
 export async function runRoleSynthesis(
@@ -53,14 +69,28 @@ export async function runRoleSynthesis(
 
     const evidence = buildEvidenceSection(mergedSignals);
 
-    const roleSections: RoleSections = {
-      overview: overviewSectionSchema.parse(overviewRes.parsed),
-      founder: founderViewSectionSchema.parse(founderRes.parsed),
-      product: productViewSectionSchema.parse(productRes.parsed),
-      marketing: marketingViewSectionSchema.parse(marketingRes.parsed),
-      growth: growthViewSectionSchema.parse(growthRes.parsed),
+    // Parse each section individually — one bad LLM response must not kill all sections.
+    const overview = safeSection(overviewSectionSchema, overviewRes.parsed, "overview");
+    const founder = safeSection(founderViewSectionSchema, founderRes.parsed, "founder");
+    const product = safeSection(productViewSectionSchema, productRes.parsed, "product");
+    const marketing = safeSection(marketingViewSectionSchema, marketingRes.parsed, "marketing");
+    const growth = safeSection(growthViewSectionSchema, growthRes.parsed, "growth");
+
+    // Overview is the minimum viable section — abort if it failed.
+    if (overview === undefined) {
+      throw new Error("overview section parse failed — cannot build role sections without it");
+    }
+
+    // Build the assembled sections object. Sections that failed will be
+    // skipped by persistReport (it does `if (data === undefined) continue`).
+    const roleSections = {
+      overview,
+      founder,
+      product,
+      marketing,
+      growth,
       evidence,
-    };
+    } as unknown as RoleSections;
 
     const usage = {
       promptTokens:
