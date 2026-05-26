@@ -232,7 +232,8 @@ export async function persistReport(input: PersistInput): Promise<void> {
 
       if (roleSections !== undefined) {
         for (const sectionType of report_section_type_enum.enumValues) {
-          const data = roleSections[sectionType] as Record<string, unknown>;
+          const data = roleSections[sectionType] as Record<string, unknown> | undefined;
+          if (data === undefined) continue;
           await tx
             .insert(report_role_sections)
             .values({
