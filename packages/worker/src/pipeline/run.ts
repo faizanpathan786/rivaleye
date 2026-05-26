@@ -177,8 +177,14 @@ export async function runPipeline(reportId: string): Promise<void> {
         completionTokens: resultRole.usage.completionTokens,
       });
     } catch (roleErr) {
+      const causeMsg = roleErr instanceof Error && roleErr.cause instanceof Error
+        ? roleErr.cause.message
+        : roleErr instanceof Error && roleErr.cause
+          ? String(roleErr.cause)
+          : null;
       await log(reportId, "warn", "D", null, "stage D role synthesis failed — continuing with legacy report", {
         error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+        cause: causeMsg,
       });
     }
 

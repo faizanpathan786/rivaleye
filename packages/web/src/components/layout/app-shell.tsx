@@ -20,8 +20,19 @@ const CRUMB_MAP: CrumbConfig = {
   "/account": ["Stitchworks", "Settings"],
 };
 
-function deriveCrumbs(pathname: string): string[] {
-  if (pathname.startsWith("/reports/")) return ["Stitchworks", "Reports", "Linear"];
+function deriveCrumbs(pathname: string, reports?: ReportRow[]): string[] {
+  if (pathname.startsWith("/reports/")) {
+    const id = pathname.split("/")[2];
+    const report = reports?.find((r) => r.id === id);
+    const name = report?.primary_competitor_name ?? report?.competitors?.[0] ?? "Report";
+    return ["Stitchworks", "Reports", name];
+  }
+  if (pathname.startsWith("/scan-report/")) {
+    const id = pathname.split("/")[2];
+    const report = reports?.find((r) => r.id === id);
+    const name = report?.primary_competitor_name ?? report?.competitors?.[0] ?? "Scan Report";
+    return ["Stitchworks", "Scan Report", name];
+  }
   return CRUMB_MAP[pathname] ?? ["Stitchworks"];
 }
 
@@ -52,7 +63,8 @@ function relativeTime(iso: string | null | undefined): string {
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const crumbs = deriveCrumbs(location.pathname);
+  const reportsForCrumbs = useReportsQuery();
+  const crumbs = deriveCrumbs(location.pathname, reportsForCrumbs.data ?? []);
   const meQuery = useMeQuery();
   const userInitial = initialOf(meQuery.data?.name ?? meQuery.data?.email);
 
@@ -211,7 +223,7 @@ function Sidebar() {
         return (
           <NavLink
             key={r.id}
-            to="/scan-report"
+            to={`/scan-report/${r.id}`}
             title={`${label} — ${relativeTime(r.scanned_at ?? r.created_at)}`}
             className={({ isActive }) =>
               `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${

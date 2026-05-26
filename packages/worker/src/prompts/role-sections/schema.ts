@@ -40,14 +40,14 @@ export const topSignalSnapshotSchema = z.object({
    * Relative strength of this signal cluster within its type bucket.
    * 0–1; derived from mention frequency + sentiment weight.
    */
-  strength: z.number().min(0).max(1),
+  strength: z.number().min(0).max(1).default(0),
   /**
    * Raw mention count that backs this signal. Null when the platform
    * returned results but exact counts are unavailable.
    */
   mention_count: z.number().int().nonnegative().nullable().default(null),
   /** Signal type tag — always matches the bucket this snapshot lives in. */
-  signal_type: signalTypeSchema,
+  signal_type: signalTypeSchema.catch("pain" as const),
   evidence_refs: evidenceRefSchema,
 });
 
@@ -60,12 +60,12 @@ export const platformCoverageSchema = z.object({
   /** Canonical platform identifier, e.g. "reddit", "g2", "app_store". */
   platform: z.string(),
   /** Number of posts / reviews / threads collected from this platform. */
-  mention_count: z.number().int().nonnegative(),
+  mention_count: z.number().int().nonnegative().default(0),
   /**
    * 0–1 coverage quality for this platform: accounts for date range,
    * volume relative to expected baseline, and API completeness.
    */
-  coverage_score: z.number().min(0).max(1),
+  coverage_score: z.number().min(0).max(1).default(0),
   /**
    * ISO-8601 date of the oldest piece of content included. Null if unknown.
    */
@@ -85,16 +85,16 @@ export type PlatformCoverage = z.infer<typeof platformCoverageSchema>;
  */
 export const strongestOpportunitySchema = z.object({
   /** Short headline, ≤ 80 chars. */
-  headline: z.string().max(80),
+  headline: z.string().max(80).default(""),
   /** 2–3 sentence elaboration of why this opportunity is significant. */
-  rationale: z.string(),
+  rationale: z.string().default(""),
   /**
    * Which signal types contributed to this opportunity.
    * At least one element required.
    */
-  contributing_signal_types: z.array(signalTypeSchema).min(1),
+  contributing_signal_types: z.array(signalTypeSchema).min(1).default(["pain"]),
   /** Relevant to all ICPs by definition; tagged here for transparency. */
-  relevant_roles: z.array(roleSchema).min(1),
+  relevant_roles: z.array(roleSchema).min(1).default(["founder"]),
   evidence_refs: evidenceRefSchema,
   confidence: confidenceSchema,
 });

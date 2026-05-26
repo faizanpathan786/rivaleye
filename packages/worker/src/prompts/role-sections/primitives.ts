@@ -24,8 +24,8 @@ export type EvidenceRef = z.infer<typeof evidenceRefSchema>;
 
 /** Confidence attached to any insight. Never fake certainty. */
 export const confidenceSchema = z.object({
-  score: z.number().min(0).max(1),
-  label: z.enum(["low", "medium", "high"]),
+  score: z.number().min(0).max(1).default(0.5),
+  label: z.enum(["low", "medium", "high"]).default("medium"),
   basis: z.string().nullable().default(null),
 });
 export type Confidence = z.infer<typeof confidenceSchema>;

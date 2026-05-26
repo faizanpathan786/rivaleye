@@ -6,6 +6,7 @@ import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
+import { useReportQuery } from "@/hooks/queries/use-reports";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -172,6 +173,7 @@ export function ScanReportPage() {
 
   // Live data fetch — only when :id is present in the route.
   const { data: sections, isLoading, error } = useReportSectionsQuery(id);
+  const { data: reportRow } = useReportQuery(id);
 
   useEffect(() => {
     const m = document.querySelector(".main");
@@ -229,6 +231,25 @@ export function ScanReportPage() {
       ? (sections.evidence as EvidenceSection)
       : null;
 
+  const liveCompetitor: ScanCompetitor | undefined = reportRow
+    ? {
+        name: reportRow.primary_competitor_name ?? reportRow.competitors[0] ?? reportRow.category,
+        domain: reportRow.primary_competitor_domain ?? "",
+        scannedAt: reportRow.scanned_at ?? reportRow.updated_at,
+        sources: reportRow.total_threads ?? reportRow.total_sources ?? 0,
+        platforms: [],
+        sentiment: {
+          overall: reportRow.sentiment_overall ?? 0,
+          positive: reportRow.sentiment_positive ?? 0,
+          neutral: reportRow.sentiment_neutral ?? 0,
+          negative: reportRow.sentiment_negative ?? 0,
+          trend: reportRow.sentiment_trend ?? "",
+        },
+      }
+    : undefined;
+
+  const competitorData = liveCompetitor ?? SCAN_DATA.competitor;
+
   return (
     <div style={{ position: "relative", minHeight: "100%" }}>
       <div
@@ -243,7 +264,7 @@ export function ScanReportPage() {
 
       <div style={{ position: "relative", zIndex: 1 }}>
         <UnifiedHeader
-          competitor={SCAN_DATA.competitor}
+          competitor={competitorData}
           meta={meta}
           range={range}
           setRange={setRange}
