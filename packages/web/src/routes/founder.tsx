@@ -7,6 +7,7 @@ import { EvidenceDrawer } from "@/components/dashboard/evidence-drawer";
 import {
   bucketFloat,
   confidencePercent,
+  filterByDateRange,
   type Confidence,
   type EvidenceRef,
   type EvidenceSection,
@@ -295,14 +296,27 @@ export function FounderPage({
   embedded = false,
   data,
   evidenceSection,
+  range: propRange,
 }: {
   embedded?: boolean;
   data?: FounderViewProps;
   evidenceSection?: EvidenceSection | null;
+  range?: string;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
-  const [range, setRange] = useState("90d");
+  const [localRange, setLocalRange] = useState("90d");
+
+  // Use prop range if provided (embedded), otherwise local state
+  const range = propRange ?? localRange;
+  const setRange = (r: string) => {
+    if (embedded) {
+      // When embedded, parent controls range — but still allow local handler
+      setLocalRange(r);
+    } else {
+      setLocalRange(r);
+    }
+  };
 
   const F = data ?? FOUNDER_DATA;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
