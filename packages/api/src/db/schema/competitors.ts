@@ -7,6 +7,7 @@ import {
   real,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
@@ -32,7 +33,9 @@ export type CompetitorSocials = {
   blog?: string;
 };
 
-export const competitors = pgTable("competitors", {
+export const competitors = pgTable(
+  "competitors",
+  {
   id: uuid("id").primaryKey().defaultRandom(),
   owner_id: uuid("owner_id")
     .notNull()
@@ -58,7 +61,9 @@ export const competitors = pgTable("competitors", {
   added_at: timestamp("added_at").notNull().defaultNow(),
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
-});
+  },
+  (t) => [unique("competitors_owner_slug_uniq").on(t.owner_id, t.slug)],
+);
 
 export type Competitor = typeof competitors.$inferSelect;
 export type NewCompetitor = typeof competitors.$inferInsert;
