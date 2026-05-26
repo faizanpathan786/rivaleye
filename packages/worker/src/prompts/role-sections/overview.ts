@@ -1,5 +1,6 @@
 import { overviewSectionSchema } from "./schema";
 import type { PipelineCtx, MergedSignals } from "../shared";
+import { buildPlatformSummary } from "./primitives";
 
 export interface BuildOverviewSynthInput {
   ctx: PipelineCtx;
@@ -50,10 +51,13 @@ export function buildOverviewSynth(input: BuildOverviewSynthInput): BuildOvervie
     ? `Audience: ${ctx.audience}`
     : "Audience: not specified";
 
+  const platformSummary = buildPlatformSummary(mergedSignals);
   const user = `Competitor: ${ctx.competitor}
 Category: ${ctx.category}
 ${audienceLine}
 Goal: ${ctx.goal}
+
+${platformSummary}
 
 MERGED SIGNALS (Stage C output):
 ${JSON.stringify(mergedSignals, null, 2)}`;

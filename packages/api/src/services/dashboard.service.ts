@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, gte, sql } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { competitors, type Competitor } from "@/db/schema/competitors";
 import { radar_events, type RadarEvent } from "@/db/schema/radar";
@@ -67,6 +67,7 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
     [radarTotal],
     [radarUrgent],
     [sentimentAvg],
+    [reportsSentimentAvg],
     recentReports,
     recentRadarEvents,
     competitorsSummary,
@@ -96,6 +97,10 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
       .select({ value: avg(competitors.stat_sentiment) })
       .from(competitors)
       .where(eq(competitors.owner_id, userId)),
+    db
+      .select({ value: avg(reports.sentiment_overall) })
+      .from(reports)
+      .where(and(eq(reports.owner_id, userId), isNotNull(reports.sentiment_overall))),
     db
       .select({
         id: reports.id,
@@ -143,11 +148,11 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
       .orderBy(sql`${competitors.last_activity_at} desc nulls last`),
   ]);
 
-  const avgSentimentRaw = sentimentAvg?.value ?? null;
-  const avgSentiment =
-    avgSentimentRaw === null || avgSentimentRaw === undefined
-      ? null
-      : Number(avgSentimentRaw);
+  // Prefer competitors.stat_sentiment; fall back to reports.sentiment_overall when competitors table is empty
+  const competitorSentimentRaw = sentimentAvg?.value ?? null;
+  const reportsSentimentRaw = reportsSentimentAvg?.value ?? null;
+  const rawAvg = competitorSentimentRaw ?? reportsSentimentRaw;
+  const avgSentiment = rawAvg === null || rawAvg === undefined ? null : Number(rawAvg);
 
   return {
     user: { name: userRow.name, email: userRow.email },

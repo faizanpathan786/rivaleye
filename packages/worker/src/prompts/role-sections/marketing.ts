@@ -1,5 +1,6 @@
 import { marketingViewSectionSchema } from "./schema";
 import type { PipelineCtx, MergedSignals } from "../shared";
+import { buildPlatformSummary } from "./primitives";
 
 const SYSTEM_PROMPT = `You are a senior marketing strategist and copywriter working inside the RivalEye signal pipeline.
 
@@ -35,12 +36,15 @@ export function buildMarketingSynth(input: {
 }): { system: string; user: string; schema: typeof marketingViewSectionSchema } {
   const { ctx, mergedSignals } = input;
 
+  const platformSummary = buildPlatformSummary(mergedSignals);
   const user = [
     `Competitor: ${ctx.competitor}`,
     `Category: ${ctx.category}`,
     `Audience: ${ctx.audience ?? "not specified"}`,
     `Goal: ${ctx.goal}`,
     `Report ID: ${ctx.reportId}`,
+    "",
+    platformSummary,
     "",
     "Merged signals (Stage C output):",
     JSON.stringify(mergedSignals, null, 2),

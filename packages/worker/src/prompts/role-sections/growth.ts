@@ -1,5 +1,6 @@
 import { growthViewSectionSchema } from "./schema";
 import type { PipelineCtx, MergedSignals } from "../shared";
+import { buildPlatformSummary } from "./primitives";
 
 // ── SYSTEM prompt ─────────────────────────────────────────────────────────────
 //
@@ -162,10 +163,13 @@ export function buildGrowthSynth(input: {
 } {
   const { ctx, mergedSignals } = input;
 
+  const platformSummary = buildPlatformSummary(mergedSignals);
   const user = `Competitor: ${ctx.competitor}
 Category: ${ctx.category}
 Audience: ${ctx.audience ?? "general"}
 Goal: ${ctx.goal}
+
+${platformSummary}
 
 Merged signals:
 ${JSON.stringify(mergedSignals, null, 2)}

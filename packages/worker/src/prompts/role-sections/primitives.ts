@@ -1,4 +1,22 @@
 import { z } from "zod";
+import type { MergedSignals } from "../shared";
+
+/**
+ * Derives a human-readable platform breakdown from merged evidence.
+ * Used to inject source context into each role section prompt so the LLM
+ * knows which platforms contributed data and can calibrate its output.
+ */
+export function buildPlatformSummary(mergedSignals: MergedSignals): string {
+  const counts = new Map<string, number>();
+  for (const item of mergedSignals.evidence_index) {
+    counts.set(item.source, (counts.get(item.source) ?? 0) + 1);
+  }
+  if (counts.size === 0) return "No platform breakdown available.";
+  const lines = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([platform, count]) => `  - ${platform}: ${count} evidence items`);
+  return `Data sources for this report:\n${lines.join("\n")}`;
+}
 
 export const signalTypeSchema = z.enum([
   "love", "pain", "gap", "switch", "pricing", "feature", "positioning",

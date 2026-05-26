@@ -2,7 +2,15 @@ import { stageAExtractSchema } from "../../shared";
 import type { PipelineCtx } from "../../shared";
 import { buildSignalSystemPrompt } from "../_shared/signal-extraction-rules";
 
-const SYSTEM = buildSignalSystemPrompt("Apple App Store reviews");
+const BASE_SYSTEM = buildSignalSystemPrompt("Apple App Store reviews");
+
+const RATING_CALIBRATION = `\nStar-rating calibration rules (apply to strength_or_severity and sentiment):
+- rating 1–2: strong pain signal. Set strength_or_severity ≥ 0.7 for pain; sentiment ≤ -0.5.
+- rating 3: mixed. Weight feature and gap signals. Sentiment near 0.
+- rating 4–5: love signal. Set strength_or_severity ≥ 0.6 for love; sentiment ≥ 0.5.
+A review's rating is the most reliable sentiment proxy — weight it more than tone alone.`;
+
+const SYSTEM = BASE_SYSTEM + RATING_CALIBRATION;
 
 export interface AppStoreExtractInput {
   ctx: PipelineCtx;

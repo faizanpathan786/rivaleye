@@ -2,7 +2,15 @@ import { stageAExtractSchema } from "../../shared";
 import type { PipelineCtx } from "../../shared";
 import { buildSignalSystemPrompt } from "../_shared/signal-extraction-rules";
 
-const SYSTEM = buildSignalSystemPrompt("Reddit posts and comment threads");
+const BASE_SYSTEM = buildSignalSystemPrompt("Reddit posts and comment threads");
+
+const REDDIT_CONTEXT = `\nReddit context:
+- score = community upvotes. High-score posts (≥50) represent community-validated shared experience — weight strength_or_severity accordingly.
+- Reddit is the highest-trust source for organic, unfiltered user opinion. Pain signals here are especially credible.
+- Switch signals mentioning named alternatives are extremely actionable — users are explicitly asking for or announcing alternatives.
+- voice_phrases should prioritise verbatim phrases users actually typed, not paraphrases.`;
+
+const SYSTEM = BASE_SYSTEM + REDDIT_CONTEXT;
 
 export interface RedditExtractInput {
   ctx: PipelineCtx;

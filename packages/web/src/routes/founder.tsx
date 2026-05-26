@@ -320,6 +320,16 @@ export function FounderPage({
     }
   };
 
+  if (embedded && data === undefined) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+        <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
+          Founder analysis not available — pipeline did not produce this section for the current report.
+        </p>
+      </div>
+    );
+  }
+
   const F = data ?? FOUNDER_DATA;
   const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
