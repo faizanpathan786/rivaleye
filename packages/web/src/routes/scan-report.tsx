@@ -253,16 +253,16 @@ export function ScanReportPage() {
         <div key={lens} className="fade-up">
           {lens === "summary"   && <ExecutiveSummary data={SCAN_DATA} onPickLens={setLens} />}
           {lens === "founder"   && (
-            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} />
+            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} />
           )}
           {lens === "product"   && (
-            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} />
+            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} />
           )}
           {lens === "marketing" && (
-            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} />
+            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} />
           )}
           {lens === "growth"    && (
-            <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} />
+            <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} />
           )}
         </div>
 
