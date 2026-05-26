@@ -133,7 +133,12 @@ export async function processSynthesisJob(
       throw new PermanentError(errorMsg);
     }
 
-    // Step 3: Run synthesis pipeline
+    // Step 3: Update report stage to "clustering" before running pipeline
+    await db
+      .update(reports)
+      .set({ stage: "clustering", updated_at: new Date() })
+      .where(eq(reports.id, job.report_id));
+
     log.info(
       {
         reportId: job.report_id,

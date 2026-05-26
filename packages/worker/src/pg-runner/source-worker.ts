@@ -24,6 +24,7 @@ import { emit } from "../events/emit";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { fanInCheck } from "./fan-in";
+import { PermanentError, RateLimitError } from "../errors";
 import type { SourceJobRow } from "./types";
 import type { PlatformExtract, StageAExtract } from "../prompts/shared";
 import { emptyStageAExtract, mergeStageAExtracts, toLegacyExtract } from "../pipeline/signal-adapters";
@@ -98,11 +99,11 @@ export async function processSourceJob(
     await persistMentions(job.report_id, job.platform, posts);
     log.info({ jobId: job.id, platform: job.platform }, "Mentions persisted");
 
-    // Step 4: Update report status to "running" if not already
-    log.info({ jobId: job.id, reportId: job.report_id }, "Updating report status to running");
+    // Step 4: Update report status to "running" + stage to "scraping"
+    log.info({ jobId: job.id, reportId: job.report_id }, "Updating report status to running/scraping");
     await db
       .update(reports)
-      .set({ status: "running", updated_at: new Date() })
+      .set({ status: "running", stage: "scraping", updated_at: new Date() })
       .where(eq(reports.id, job.report_id));
 
     // Step 4b: Skip A/B and complete early if no posts found
@@ -133,13 +134,17 @@ export async function processSourceJob(
       return;
     }
 
-    // Step 5: Run Stage A extraction
+    // Step 5: Run Stage A extraction (skips LLM calls if brief already cached from prior attempt)
     log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage A extraction");
     const stageA = await runStageAExtractionStep(job.report_id, job.platform, posts, reportRow);
 
-    // Step 6: Run Stage B summarization + persist brief
-    log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage B summarization");
-    await runStageBSummarizationStep(job.report_id, job.platform, stageA.legacy, stageA.signals, reportRow);
+    // Step 6: Run Stage B summarization + persist brief (skipped if Stage A returned cached result)
+    if (stageA.cached) {
+      log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Stage A/B already cached; skipping LLM re-run");
+    } else {
+      log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Running Stage B summarization");
+      await runStageBSummarizationStep(job.report_id, job.platform, stageA.legacy, stageA.signals, reportRow);
+    }
 
     // Step 7: Mark job completed
     const durationMs = Date.now() - startedAt;
@@ -193,11 +198,15 @@ export async function processSourceJob(
     });
 
     // Determine if we should retry or fail permanently
-    if (job.attempt_count < job.max_attempts) {
-      // Retry: reset to queued with exponential backoff
-      const backoffMs = getBackoffMs(job.attempt_count);
+    const isPermanent = err instanceof PermanentError;
+    const canRetry = !isPermanent && job.attempt_count < job.max_attempts;
+
+    if (canRetry) {
+      const backoffMs = err instanceof RateLimitError
+        ? err.retryAfterMs
+        : getBackoffMs(job.attempt_count);
       log.info(
-        { jobId: job.id, attemptCount: job.attempt_count, maxAttempts: job.max_attempts, backoffMs },
+        { jobId: job.id, attemptCount: job.attempt_count, maxAttempts: job.max_attempts, backoffMs, isRateLimit: err instanceof RateLimitError },
         "Retrying job with backoff"
       );
 
@@ -213,10 +222,9 @@ export async function processSourceJob(
         })
         .where(eq(report_platform_jobs.id, job.id));
     } else {
-      // Permanent failure: mark failed
       log.error(
-        { jobId: job.id, attemptCount: job.attempt_count, maxAttempts: job.max_attempts },
-        "Job exceeded max attempts; marking as failed"
+        { jobId: job.id, attemptCount: job.attempt_count, maxAttempts: job.max_attempts, isPermanent },
+        "Job exceeded max attempts or is permanent failure; marking as failed"
       );
 
       await db
@@ -303,17 +311,40 @@ async function persistMentions(reportId: string, platform: string, posts: Normal
  *
  * Returns both the new signal-centric extract and the legacy-shaped extract
  * derived from it, so Stage B/C keep working unchanged.
+ *
+ * On retry: if a brief already exists in the DB for this report+platform,
+ * the cached extract is returned without re-running LLM calls.
  */
 async function runStageAExtractionStep(
   reportId: string,
   platform: string,
   posts: NormalizedPost[],
   reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string }
-): Promise<{ legacy: PlatformExtract; signals: StageAExtract }> {
+): Promise<{ legacy: PlatformExtract; signals: StageAExtract; cached: boolean }> {
   if (posts.length === 0) {
     log.warn({ reportId, platform }, "No posts found; skipping Stage A extraction");
     const empty = emptyStageAExtract();
-    return { legacy: toLegacyExtract(empty), signals: empty };
+    return { legacy: toLegacyExtract(empty), signals: empty, cached: false };
+  }
+
+  // Check if brief already exists (retry-safe cache: skip re-processing if already done)
+  const [existingBrief] = await db
+    .select({ extract: report_platform_briefs.extract })
+    .from(report_platform_briefs)
+    .where(
+      and(
+        eq(report_platform_briefs.report_id, reportId),
+        eq(report_platform_briefs.platform, platform)
+      )
+    )
+    .limit(1);
+
+  if (existingBrief) {
+    log.info({ reportId, platform }, "Stage A: brief already exists, returning cached extract");
+    const raw = existingBrief.extract as Record<string, unknown> & { _signals?: StageAExtract };
+    const signals: StageAExtract = raw._signals ?? emptyStageAExtract();
+    const legacy = raw as unknown as PlatformExtract;
+    return { legacy, signals, cached: true };
   }
 
   const ctx = {
@@ -330,32 +361,31 @@ async function runStageAExtractionStep(
     batches.push(posts.slice(i, i + BATCH_SIZE));
   }
 
-  log.info({ reportId, platform, totalPosts: posts.length, batches: batches.length, batchSize: BATCH_SIZE }, "Stage A: processing posts in batches");
+  log.info({ reportId, platform, totalPosts: posts.length, batches: batches.length, batchSize: BATCH_SIZE }, "Stage A: processing posts in parallel batches");
 
-  const allExtracts: StageAExtract[] = [];
-  let totalPromptTokens = 0;
-  let totalCompletionTokens = 0;
-
-  for (const [batchIdx, batch] of batches.entries()) {
-    log.info({ reportId, platform, batchIdx: batchIdx + 1, totalBatches: batches.length, batchSize: batch.length }, "Stage A: running batch");
-    let result: Awaited<ReturnType<typeof runStageAExtract>>;
-    try {
-      result = await runStageAExtract({
-        llm: getLlm(),
-        ctx,
-        platform: platform as any,
-        posts: batch,
-      });
-    } catch (err) {
-      if (err instanceof LlmSchemaError) {
-        log.error({ reportId, platform, batchIdx, issues: err.issues, rawJson: JSON.stringify(err.raw).slice(0, 2000) }, "Stage A: LLM batch failed schema validation");
+  // Run all batches in parallel to reduce total LLM latency
+  const batchResults = await Promise.all(
+    batches.map(async (batch, batchIdx) => {
+      log.info({ reportId, platform, batchIdx: batchIdx + 1, totalBatches: batches.length, batchSize: batch.length }, "Stage A: running batch");
+      try {
+        return await runStageAExtract({
+          llm: getLlm(),
+          ctx,
+          platform: platform as any,
+          posts: batch,
+        });
+      } catch (err) {
+        if (err instanceof LlmSchemaError) {
+          log.error({ reportId, platform, batchIdx, issues: err.issues, rawJson: JSON.stringify(err.raw).slice(0, 2000) }, "Stage A: LLM batch failed schema validation");
+        }
+        throw err;
       }
-      throw err;
-    }
-    allExtracts.push(result.extract);
-    totalPromptTokens += result.usage.promptTokens;
-    totalCompletionTokens += result.usage.completionTokens;
-  }
+    })
+  );
+
+  const allExtracts = batchResults.map((r) => r.extract);
+  const totalPromptTokens = batchResults.reduce((sum, r) => sum + r.usage.promptTokens, 0);
+  const totalCompletionTokens = batchResults.reduce((sum, r) => sum + r.usage.completionTokens, 0);
 
   const signals = mergeStageAExtracts(allExtracts);
   const legacy = toLegacyExtract(signals);
@@ -374,7 +404,7 @@ async function runStageAExtractionStep(
     evidenceQuotes: signals.evidence_quotes.length,
   }, "Stage A extraction completed");
 
-  return { legacy, signals };
+  return { legacy, signals, cached: false };
 }
 
 /**
