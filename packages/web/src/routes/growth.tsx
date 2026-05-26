@@ -6,6 +6,7 @@ import { ScoreFactors } from "@/components/dashboard/score-factors";
 import { EvidenceDrawer } from "@/components/dashboard/evidence-drawer";
 import {
   bucketFloat,
+  filterByDateRange,
   type Confidence,
   type EvidenceRef,
   type EvidenceSection,
@@ -621,15 +622,21 @@ export function GrowthPage({
   embedded = false,
   data,
   evidenceSection,
+  range: propRange,
 }: {
   embedded?: boolean;
   data?: GrowthViewProps;
   evidenceSection?: EvidenceSection | null;
+  range?: string;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
-  const [range, setRange] = useState("90d");
+  const [localRange, setLocalRange] = useState("90d");
   const [filter, setFilter] = useState<Filter>({ intent: "all", source: "all", urgency: "all" });
+
+  // Use prop range if provided (embedded), otherwise local state
+  const range = propRange ?? localRange;
+  const setRange = (r: string) => setLocalRange(r);
 
   const G = data ?? GROWTH_DATA;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
