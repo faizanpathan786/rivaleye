@@ -251,7 +251,12 @@ export function ScanReportPage() {
         />
 
         <div key={lens} className="fade-up">
-          {lens === "summary"   && <ExecutiveSummary data={SCAN_DATA} onPickLens={setLens} />}
+          {lens === "summary"   && (
+            <ExecutiveSummary
+              data={sections?.summary ? (sections.summary as ScanData) : SCAN_DATA}
+              onPickLens={setLens}
+            />
+          )}
           {lens === "founder"   && (
             <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} />
           )}
