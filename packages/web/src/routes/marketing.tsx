@@ -657,14 +657,16 @@ export function MarketingPage({
   embedded = false,
   data,
   evidenceSection,
+  range: propRange,
 }: {
   embedded?: boolean;
   data?: MarketingViewProps;
   evidenceSection?: EvidenceSection | null;
+  range?: string;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
-  const [range, setRange] = useState("90d");
+  const [range, setRange] = useState(propRange ?? "90d");
   const [quoteFilter, setQuoteFilter] = useState("all");
   const [quoteSearch, setQuoteSearch] = useState("");
   const [activeLangTab, setActiveLangTab] = useState<LangTab>("positive_phrases");
