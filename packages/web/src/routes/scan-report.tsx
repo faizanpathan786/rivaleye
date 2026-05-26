@@ -6,7 +6,7 @@ import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
-import { useReportQuery } from "@/hooks/queries/use-reports";
+import { useReportQuery, useReportsQuery } from "@/hooks/queries/use-reports";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -170,6 +170,15 @@ export function ScanReportPage() {
   const [lens, setLens] = useState<LensId>("summary");
   const [range, setRange] = useState("90d");
   const meta = LENS_META[lens];
+
+  // When no :id, redirect to the most recent report.
+  const { data: allReports } = useReportsQuery();
+  useEffect(() => {
+    const first = allReports?.[0];
+    if (!id && first) {
+      navigate(`/scan-report/${first.id}`, { replace: true });
+    }
+  }, [id, allReports, navigate]);
 
   // Live data fetch — only when :id is present in the route.
   const { data: sections, isLoading, error } = useReportSectionsQuery(id);
@@ -337,7 +346,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
                 boxShadow: "var(--shadow-sm)",
               }}
             >
-              L
+              {c.name[0]?.toUpperCase() ?? "?"}
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

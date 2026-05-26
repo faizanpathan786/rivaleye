@@ -208,7 +208,7 @@ export function DashboardPage() {
                   gap: 12,
                   cursor: "pointer",
                 }}
-                onClick={() => navigate("/scan-report")}
+                onClick={() => navigate(`/scan-report/${r.id}`)}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
@@ -262,7 +262,7 @@ export function DashboardPage() {
                     className="re-btn re-btn-ghost re-btn-icon re-btn-sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate("/scan-report");
+                      navigate(`/scan-report/${r.id}`);
                     }}
                   >
                     <Icon name="chev-right" size={14} />
