@@ -8,6 +8,7 @@ export type Sections = {
   product: unknown | null;
   marketing: unknown | null;
   growth: unknown | null;
+  summary: unknown | null;
   evidence: unknown | null;
 };
 
