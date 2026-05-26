@@ -2,7 +2,7 @@ import { integer, jsonb, pgEnum, pgTable, timestamp, unique, uuid } from "drizzl
 import { reports } from "./reports";
 
 export const report_section_type_enum = pgEnum("report_section_type", [
-  "overview", "founder", "product", "marketing", "growth", "evidence",
+  "overview", "founder", "product", "marketing", "growth", "evidence", "summary",
 ]);
 export type ReportSectionType = typeof report_section_type_enum.enumValues[number];
 

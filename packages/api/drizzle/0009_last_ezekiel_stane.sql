@@ -1,0 +1,1 @@
+ALTER TYPE "public"."report_section_type" ADD VALUE 'summary';
