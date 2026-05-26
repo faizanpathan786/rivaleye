@@ -1,5 +1,6 @@
 import { productViewSectionSchema } from "./schema";
 import type { PipelineCtx, MergedSignals } from "../shared";
+import { buildPlatformSummary } from "./primitives";
 
 const SYSTEM = `You are a senior product strategist analyzing competitor user signals.
 Your job is to answer the question: "What should we build or prioritize?"
@@ -53,10 +54,13 @@ export function buildProductSynth(input: {
 }): { system: string; user: string; schema: typeof productViewSectionSchema } {
   const { ctx, mergedSignals } = input;
 
+  const platformSummary = buildPlatformSummary(mergedSignals);
   const user = `Competitor: ${ctx.competitor}
 Category: ${ctx.category}
 Audience: ${ctx.audience ?? "general"}
 Goal: ${ctx.goal}
+
+${platformSummary}
 
 Merged signals:
 ${JSON.stringify(mergedSignals, null, 2)}

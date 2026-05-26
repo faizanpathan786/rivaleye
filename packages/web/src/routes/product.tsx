@@ -594,6 +594,16 @@ export function ProductPage({
   const [range, setRange] = useState(propRange ?? "90d");
   const [filters, setFilters] = useState<Filters>({ source: "all", area: "all", severity: "all" });
 
+  if (embedded && data === undefined) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+        <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
+          Product analysis not available — pipeline did not produce this section for the current report.
+        </p>
+      </div>
+    );
+  }
+
   const P = data ?? PRODUCT_DATA;
   const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);

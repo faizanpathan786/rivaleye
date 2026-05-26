@@ -2,7 +2,15 @@ import { stageAExtractSchema } from "../../shared";
 import type { PipelineCtx } from "../../shared";
 import { buildSignalSystemPrompt } from "../_shared/signal-extraction-rules";
 
-const SYSTEM = buildSignalSystemPrompt("Hacker News stories and comments");
+const BASE_SYSTEM = buildSignalSystemPrompt("Hacker News stories and comments");
+
+const HN_CONTEXT = `\nHacker News context:
+- Audience is developers, founders, and technical decision-makers — not general consumers.
+- score = HN community upvotes. High-score posts (≥100) represent strong developer-community endorsement; weight strength_or_severity accordingly.
+- Prioritise positioning signals (how technical users frame and compare the product), feature signals (specific technical capabilities praised or criticized), and gap signals (missing developer-facing functionality).
+- Pain signals from this source carry extra weight for technical/API/reliability concerns.`;
+
+const SYSTEM = BASE_SYSTEM + HN_CONTEXT;
 
 export interface HackerNewsExtractInput {
   ctx: PipelineCtx;

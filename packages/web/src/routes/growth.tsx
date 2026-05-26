@@ -638,6 +638,16 @@ export function GrowthPage({
   const range = propRange ?? localRange;
   const setRange = (r: string) => setLocalRange(r);
 
+  if (embedded && data === undefined) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+        <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
+          Growth analysis not available — pipeline did not produce this section for the current report.
+        </p>
+      </div>
+    );
+  }
+
   const G = data ?? GROWTH_DATA;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);

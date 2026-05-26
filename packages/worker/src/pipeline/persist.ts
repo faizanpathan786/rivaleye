@@ -250,6 +250,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
       }
 
       const totalThreads = synth.threads.length;
+      const totalSources = platformStats.reduce((s, p) => s + p.count, 0);
       const { report_meta: meta } = synth;
 
       await tx
@@ -270,6 +271,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
           switching_net_signal: meta.switching_net_signal,
           switching_reasons_out: meta.switching_reasons_out,
           total_threads: totalThreads,
+          total_sources: totalSources,
           scanned_at: new Date(),
           updated_at: new Date(),
         })
