@@ -5,6 +5,8 @@ import {
   evidenceRefSchema,
   confidenceSchema,
 } from "./primitives";
+import type { SummaryData } from "../summary-synthesis";
+import { summaryDataSchema } from "../summary-synthesis";
 
 // Re-export primitives so consumers can import from a single place if desired.
 export {
@@ -1081,5 +1083,6 @@ export const roleSectionsSchema = z.object({
   marketing: marketingViewSectionSchema,
   growth: growthViewSectionSchema,
   evidence: evidenceSectionSchema,
+  summary: summaryDataSchema.optional(),
 });
 export type RoleSections = z.infer<typeof roleSectionsSchema>;

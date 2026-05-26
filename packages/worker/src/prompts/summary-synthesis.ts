@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { PipelineCtx, PlatformExtract } from "./shared";
 
-const summaryDataSchema = z.object({
+export const summaryDataSchema = z.object({
   competitor: z.object({
     name: z.string(),
     domain: z.string(),

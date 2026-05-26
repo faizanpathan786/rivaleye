@@ -13,6 +13,7 @@ import { log } from "../logger.js";
 import { runStageCMerge } from "./stage-c-merge";
 import { runStageDSynth } from "./stage-d-synth";
 import { runRoleSynthesis } from "./stage-d-role";
+import { buildSummarySynthesis, type SummaryData } from "../prompts/summary-synthesis";
 import { runStageERefine } from "./stage-e-refine";
 import { computePlatformStats, computeSubredditStats } from "./derive-stats";
 import { persistReport } from "./persist";
@@ -179,6 +180,79 @@ export async function runPipeline(reportId: string): Promise<void> {
       await log(reportId, "warn", "D", null, "stage D role synthesis failed — continuing with legacy report", {
         error: roleErr instanceof Error ? roleErr.message : String(roleErr),
       });
+    }
+
+    // Generate cross-platform summary
+    if (roleSections !== undefined) {
+      try {
+        const mentionCount = (synth.quotes?.length ?? 0) + (synth.complaints?.length ?? 0) + (synth.feature_gaps?.length ?? 0) + (synth.switching?.length ?? 0);
+        const overallSentiment = synth.report_meta?.sentiment_overall ?? 0;
+        const positiveSentiment = synth.report_meta?.sentiment_positive ?? 0;
+        const neutralSentiment = synth.report_meta?.sentiment_neutral ?? 0;
+        const negativeSentiment = synth.report_meta?.sentiment_negative ?? 0;
+        const sentimentTrend = synth.report_meta?.sentiment_trend ?? "0%";
+
+        const platformNames: Record<string, string> = {
+          reddit: "Reddit",
+          producthunt: "Product Hunt",
+          appstore: "App Store",
+          playstore: "Play Store",
+          g2: "G2",
+          capterra: "Capterra",
+          twitter: "X (Twitter)",
+          linkedin: "LinkedIn",
+          trustpilot: "Trustpilot",
+          gmaps: "Google Maps",
+        };
+
+        const summaryPrompt = buildSummarySynthesis({
+          ctx,
+          competitor: ctx.competitor,
+          scannedAt: new Date().toISOString(),
+          sources: mentionCount,
+          platforms: briefs.map((b) => ({ id: b.platform, name: platformNames[b.platform] ?? b.platform })),
+          sentiment: {
+            overall: overallSentiment,
+            positive: positiveSentiment,
+            neutral: neutralSentiment,
+            negative: negativeSentiment,
+            trend: sentimentTrend,
+          },
+          platformExtracts: Object.fromEntries(
+            extracts.map((e, i) => {
+              const brief = briefs[i];
+              const platformId = brief?.platform ?? `platform-${i}`;
+              return [platformId, e];
+            })
+          ),
+          topQuotes: (resultD.synth.quotes ?? []).map((q) => ({
+            who: q.who ?? "Unknown",
+            sub: q.sub ?? q.when_label ?? "Unknown",
+            when: q.when_label ?? "Unknown",
+            score: q.score ?? 0,
+            sentiment: q.sentiment ?? 0,
+            text: q.text ?? "",
+            platform: "mixed",
+          })),
+        });
+
+        const summaryRes = await llm.complete({
+          system: summaryPrompt.system,
+          user: summaryPrompt.user,
+          schema: summaryPrompt.schema,
+        });
+
+        const summaryData = summaryRes.parsed as SummaryData;
+        roleSections.summary = summaryData;
+        await log(reportId, "info", "D", null, "stage D summary synthesis done", {
+          promptTokens: summaryRes.usage.promptTokens,
+          completionTokens: summaryRes.usage.completionTokens,
+        });
+      } catch (err) {
+        await log(reportId, "warn", "D", null, "Failed to generate summary section; continuing without it", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
 
     await saveCheckpoint(
