@@ -64,6 +64,13 @@
       "when": 1779526227503,
       "tag": "0008_nappy_rocket_racer",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1779773352251,
+      "tag": "0009_last_ezekiel_stane",
+      "breakpoints": true
     }
   ]
 }

@@ -449,6 +449,7 @@ export {
   recoverStaleJobs,
   getBackoffMs,
   sleep,
+  main,
   type WorkerConfig,
 };
 
