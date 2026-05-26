@@ -107,3 +107,49 @@ export function bucketFloat(
 export function confidencePercent(c: Confidence): number {
   return Math.round(c.score * 100);
 }
+
+/**
+ * Filter quotes/mentions by date range.
+ * @param items Array of items with `createdAt`, `when`, or `timestamp` field
+ * @param range "24h" | "7d" | "30d" | "90d"
+ */
+export function filterByDateRange<T extends { createdAt?: Date | string | null; when?: string }>(
+  items: T[],
+  range?: string,
+): T[] {
+  if (!range || range === "90d") return items; // Default: no filtering or full 90d
+
+  const now = new Date();
+  const rangeMs = {
+    "24h": 24 * 60 * 60 * 1000,
+    "7d": 7 * 24 * 60 * 60 * 1000,
+    "30d": 30 * 24 * 60 * 60 * 1000,
+  }[range];
+
+  if (!rangeMs) return items; // Invalid range, return all
+
+  return items.filter((item) => {
+    const date = item.createdAt
+      ? new Date(item.createdAt)
+      : parseWhenString(item.when);
+    if (!date) return true; // No date, include it
+    return now.getTime() - date.getTime() <= rangeMs;
+  });
+}
+
+function parseWhenString(when?: string): Date | null {
+  if (!when) return null;
+  const match = when.match(/^(\d+)([hdwm])$/); // "3d", "1w", "2m"
+  if (!match || !match[1] || !match[2]) return null;
+
+  const num = match[1];
+  const unit = match[2];
+  const ms =
+    unit === "h" ? +num * 60 * 60 * 1000
+    : unit === "d" ? +num * 24 * 60 * 60 * 1000
+    : unit === "w" ? +num * 7 * 24 * 60 * 60 * 1000
+    : unit === "m" ? +num * 30 * 24 * 60 * 60 * 1000
+    : 0;
+
+  return ms > 0 ? new Date(Date.now() - ms) : null;
+}
