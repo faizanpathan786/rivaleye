@@ -21,6 +21,15 @@ const log = pino({ name: "stage-d-role" });
 
 const MAX_TOKENS = 16000;
 
+function parseRaw(raw: string): unknown {
+  try {
+    const trimmed = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    return JSON.parse(trimmed);
+  } catch {
+    return undefined;
+  }
+}
+
 export interface RoleSynthesisInput {
   llm: OpenRouterClient;
   ctx: PipelineCtx;
@@ -59,22 +68,24 @@ export async function runRoleSynthesis(
     const marketingBuilt = buildMarketingSynth({ ctx, mergedSignals });
     const growthBuilt = buildGrowthSynth({ ctx, mergedSignals });
 
+    // Don't pass schemas to llm.complete — let it return raw strings so LlmSchemaError
+    // doesn't kill the whole Promise.all. We validate each section ourselves via safeSection.
     const [overviewRes, founderRes, productRes, marketingRes, growthRes] = await Promise.all([
-      llm.complete({ system: overviewBuilt.system, user: overviewBuilt.user, schema: overviewBuilt.schema, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: founderBuilt.system, user: founderBuilt.user, schema: founderBuilt.schema, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: productBuilt.system, user: productBuilt.user, schema: productBuilt.schema, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: marketingBuilt.system, user: marketingBuilt.user, schema: marketingBuilt.schema, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: growthBuilt.system, user: growthBuilt.user, schema: growthBuilt.schema, maxTokens: MAX_TOKENS }, opts),
+      llm.complete({ system: overviewBuilt.system, user: overviewBuilt.user, maxTokens: MAX_TOKENS }, opts),
+      llm.complete({ system: founderBuilt.system, user: founderBuilt.user, maxTokens: MAX_TOKENS }, opts),
+      llm.complete({ system: productBuilt.system, user: productBuilt.user, maxTokens: MAX_TOKENS }, opts),
+      llm.complete({ system: marketingBuilt.system, user: marketingBuilt.user, maxTokens: MAX_TOKENS }, opts),
+      llm.complete({ system: growthBuilt.system, user: growthBuilt.user, maxTokens: MAX_TOKENS }, opts),
     ]);
 
     const evidence = buildEvidenceSection(mergedSignals);
 
     // Parse each section individually — one bad LLM response must not kill all sections.
-    const overview = safeSection(overviewSectionSchema, overviewRes.parsed, "overview");
-    const founder = safeSection(founderViewSectionSchema, founderRes.parsed, "founder");
-    const product = safeSection(productViewSectionSchema, productRes.parsed, "product");
-    const marketing = safeSection(marketingViewSectionSchema, marketingRes.parsed, "marketing");
-    const growth = safeSection(growthViewSectionSchema, growthRes.parsed, "growth");
+    const overview = safeSection(overviewSectionSchema, parseRaw(overviewRes.raw), "overview");
+    const founder = safeSection(founderViewSectionSchema, parseRaw(founderRes.raw), "founder");
+    const product = safeSection(productViewSectionSchema, parseRaw(productRes.raw), "product");
+    const marketing = safeSection(marketingViewSectionSchema, parseRaw(marketingRes.raw), "marketing");
+    const growth = safeSection(growthViewSectionSchema, parseRaw(growthRes.raw), "growth");
 
     // Overview is the minimum viable section — abort if it failed.
     if (overview === undefined) {

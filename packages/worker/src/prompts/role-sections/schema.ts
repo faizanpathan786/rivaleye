@@ -183,17 +183,17 @@ export type OverviewSection = z.infer<typeof overviewSectionSchema>;
 // ─── Opportunity Score ────────────────────────────────────────────────────────
 // Numeric factors are all 0..1 (signal-derived weights); score is 0..100.
 export const opportunityScoreSchema = z.object({
-  score: z.number().min(0).max(100),
-  label: z.string(),
-  explanation: z.string(),
+  score: z.number().min(0).max(100).default(0),
+  label: z.string().default(""),
+  explanation: z.string().default(""),
   factors: z.object({
-    pain_frequency: z.number().min(0).max(1),
-    gap_severity: z.number().min(0).max(1),
-    switch_intent: z.number().min(0).max(1),
-    competitor_love_strength: z.number().min(0).max(1),
-    pricing_pain: z.number().min(0).max(1),
-    source_confidence: z.number().min(0).max(1),
-  }),
+    pain_frequency: z.number().min(0).max(1).default(0),
+    gap_severity: z.number().min(0).max(1).default(0),
+    switch_intent: z.number().min(0).max(1).default(0),
+    competitor_love_strength: z.number().min(0).max(1).default(0),
+    pricing_pain: z.number().min(0).max(1).default(0),
+    source_confidence: z.number().min(0).max(1).default(0),
+  }).catch({ pain_frequency: 0, gap_severity: 0, switch_intent: 0, competitor_love_strength: 0, pricing_pain: 0, source_confidence: 0 }),
 });
 export type OpportunityScore = z.infer<typeof opportunityScoreSchema>;
 
@@ -343,17 +343,26 @@ export type FounderViewSection = z.infer<typeof founderViewSectionSchema>;
 // 1. Product Opportunity Score
 // ──────────────────────────────────────────────
 // factors are 0..1 intensity weights derived from signal corpus
+const zeroToOne = z.number().min(0).max(1);
+const defaultFactors = {
+  feature_gap_frequency: 0,
+  pain_severity: 0,
+  source_spread: 0,
+  user_urgency: 0,
+  competitor_love_strength: 0,
+};
+
 export const productOpportunityScoreSchema = z.object({
-  score: z.number().min(0).max(100),
-  label: z.string(),
-  explanation: z.string(),
+  score: z.number().min(0).max(100).default(0),
+  label: z.string().default(""),
+  explanation: z.string().default(""),
   factors: z.object({
-    feature_gap_frequency: z.number().min(0).max(1),   // 0..1 normalised rate of gap signals
-    pain_severity: z.number().min(0).max(1),           // 0..1 aggregate severity of pain signals
-    source_spread: z.number().min(0).max(1),           // 0..1 fraction of ingested platforms with evidence
-    user_urgency: z.number().min(0).max(1),            // 0..1 proxy from switching/churn signal density
-    competitor_love_strength: z.number().min(0).max(1),// 0..1 inverse: high love → lower opportunity
-  }),
+    feature_gap_frequency: zeroToOne.default(0),
+    pain_severity: zeroToOne.default(0),
+    source_spread: zeroToOne.default(0),
+    user_urgency: zeroToOne.default(0),
+    competitor_love_strength: zeroToOne.default(0),
+  }).catch(defaultFactors),
 });
 export type ProductOpportunityScore = z.infer<typeof productOpportunityScoreSchema>;
 
@@ -363,13 +372,13 @@ export type ProductOpportunityScore = z.infer<typeof productOpportunityScoreSche
 // mentions: integer count of posts/comments referencing the gap
 // severity: 0..1 intensity of user frustration about the gap
 export const featureGapItemSchema = z.object({
-  feature_gap: z.string(),
-  summary: z.string(),
-  mentions: z.number().int().min(0),                   // count of raw signal references
-  sources: z.array(z.string()).default([]),             // platform names e.g. ["reddit","g2"]
-  severity: z.number().min(0).max(1),                  // 0..1 intensity
+  feature_gap: z.string().default(""),
+  summary: z.string().default(""),
+  mentions: z.number().int().min(0).default(0),
+  sources: z.array(z.string()).default([]),
+  severity: z.number().min(0).max(1).default(0),
   confidence: confidenceSchema,
-  user_segment: z.string().nullable().default(null),   // e.g. "enterprise admins"
+  user_segment: z.string().nullable().default(null),
   suggested_action: z.string().nullable().default(null),
   evidence_refs: evidenceRefSchema,
 });
@@ -385,27 +394,32 @@ export type FeatureGapMap = z.infer<typeof featureGapMapSchema>;
 // severity: 0..1 intensity
 // source_spread: 0..1 fraction of platforms where cluster appears
 // impact_on_workflow: 0..1 inferred disruption level
-export const productAreaSchema = z.enum([
-  "onboarding",
-  "performance",
-  "ux_navigation",
-  "collaboration",
-  "permissions",
-  "integrations",
-  "reporting_analytics",
-  "pricing_packaging",
-  "support_reliability",
-]);
+// Preprocess to lowercase + underscore-normalise before enum validation so the LLM
+// returning "Performance" or "Pricing" doesn't cause a hard failure.
+export const productAreaSchema = z.preprocess(
+  (v) => typeof v === "string" ? v.toLowerCase().replace(/[\s/]+/g, "_").replace(/pricing$/, "pricing_packaging") : v,
+  z.enum([
+    "onboarding",
+    "performance",
+    "ux_navigation",
+    "collaboration",
+    "permissions",
+    "integrations",
+    "reporting_analytics",
+    "pricing_packaging",
+    "support_reliability",
+  ]).catch("performance" as const),
+);
 export type ProductArea = z.infer<typeof productAreaSchema>;
 
 export const complaintClusterItemSchema = z.object({
   product_area: productAreaSchema,
-  complaint_title: z.string(),
-  summary: z.string(),
-  frequency: z.number().int().min(0),                  // count
-  severity: z.number().min(0).max(1),                  // 0..1 intensity
-  source_spread: z.number().min(0).max(1),             // 0..1 fraction of platforms
-  impact_on_workflow: z.number().min(0).max(1),        // 0..1 disruption intensity
+  complaint_title: z.string().default(""),
+  summary: z.string().default(""),
+  frequency: z.number().int().min(0).default(0),
+  severity: z.number().min(0).max(1).default(0),
+  source_spread: z.number().min(0).max(1).default(0),
+  impact_on_workflow: z.number().min(0).max(1).default(0),
   suggested_product_response: z.string().nullable().default(null),
   evidence_refs: evidenceRefSchema,
 });
@@ -423,11 +437,11 @@ export const recommendationSchema = z.enum(["learn", "match", "differentiate", "
 export type Recommendation = z.infer<typeof recommendationSchema>;
 
 export const lovedCompetitorFeatureItemSchema = z.object({
-  feature_name: z.string(),
-  why_users_love_it: z.string(),
-  positive_mentions: z.number().int().min(0),          // count
-  stickiness_level: z.number().min(0).max(1),          // 0..1 intensity
-  recommendation: recommendationSchema,
+  feature_name: z.string().default(""),
+  why_users_love_it: z.string().default(""),
+  positive_mentions: z.number().int().min(0).default(0),
+  stickiness_level: z.number().min(0).max(1).default(0),
+  recommendation: recommendationSchema.catch("learn" as const),
   product_lesson: z.string().nullable().default(null),
   evidence_refs: evidenceRefSchema,
 });
@@ -442,10 +456,10 @@ export type LovedCompetitorFeatures = z.infer<typeof lovedCompetitorFeaturesSche
 // frequency: integer count of posts describing this friction
 // impact: 0..1 intensity of workflow disruption
 export const workflowFrictionItemSchema = z.object({
-  workflow_name: z.string(),
-  friction_point: z.string(),
-  impact: z.number().min(0).max(1),                    // 0..1 intensity
-  frequency: z.number().int().min(0),                  // count
+  workflow_name: z.string().default(""),
+  friction_point: z.string().default(""),
+  impact: z.number().min(0).max(1).default(0),
+  frequency: z.number().int().min(0).default(0),
   affected_segment: z.string().nullable().default(null),
   suggested_improvement: z.string().nullable().default(null),
   evidence_refs: evidenceRefSchema,
@@ -460,11 +474,15 @@ export type WorkflowFriction = z.infer<typeof workflowFrictionSchema>;
 // ──────────────────────────────────────────────
 // expected_impact: 0..1 intensity of potential positive outcome
 export const roadmapOpportunityItemSchema = z.object({
-  opportunity_title: z.string(),
-  user_problem: z.string(),
-  suggested_feature: z.string(),
-  expected_impact: z.number().min(0).max(1),           // 0..1 intensity
-  effort_estimate: z.enum(["low", "medium", "high"]),
+  opportunity_title: z.string().default(""),
+  user_problem: z.string().default(""),
+  suggested_feature: z.string().default(""),
+  // LLM sometimes returns 0-10 or 0-100 scale; normalise to 0-1
+  expected_impact: z.preprocess(
+    (v) => typeof v === "number" && v > 1 ? v / (v > 10 ? 100 : 10) : v,
+    z.number().min(0).max(1).default(0),
+  ),
+  effort_estimate: z.enum(["low", "medium", "high"]).catch("medium" as const),
   confidence: confidenceSchema,
   why_now: z.string().nullable().default(null),
   evidence_refs: evidenceRefSchema,
@@ -479,18 +497,19 @@ export type RoadmapOpportunities = z.infer<typeof roadmapOpportunitiesSchema>;
 // ──────────────────────────────────────────────
 // evidence_count: integer count of signals supporting the item
 export const buildAvoidLearnItemSchema = z.object({
-  title: z.string(),
-  reason: z.string(),
-  evidence_count: z.number().int().min(0),             // count
+  title: z.string().default(""),
+  reason: z.string().default(""),
+  evidence_count: z.number().int().min(0).default(0),
   confidence: confidenceSchema,
   evidence_refs: evidenceRefSchema,
 });
 export type BuildAvoidLearnItem = z.infer<typeof buildAvoidLearnItemSchema>;
 
 export const buildAvoidLearnSchema = z.object({
-  build: z.array(buildAvoidLearnItemSchema).default([]),
-  avoid: z.array(buildAvoidLearnItemSchema).default([]),
-  learn: z.array(buildAvoidLearnItemSchema).default([]),
+  // LLM sometimes returns arrays of strings; .catch([]) ensures we don't fail hard
+  build: z.array(buildAvoidLearnItemSchema).catch([]),
+  avoid: z.array(buildAvoidLearnItemSchema).catch([]),
+  learn: z.array(buildAvoidLearnItemSchema).catch([]),
 });
 export type BuildAvoidLearn = z.infer<typeof buildAvoidLearnSchema>;
 
@@ -515,17 +534,17 @@ export type ProductViewSection = z.infer<typeof productViewSectionSchema>;
 // =============================================================================
 
 export const messagingOpportunityScoreSchema = z.object({
-  score: z.number().min(0).max(100),
-  label: z.string(),
-  explanation: z.string(),
+  score: z.number().min(0).max(100).default(0),
+  label: z.string().default(""),
+  explanation: z.string().default(""),
   factors: z.object({
-    repeated_user_language_strength: z.number().min(0).max(1),
-    pain_clarity: z.number().min(0).max(1),
-    promise_reality_gap: z.number().min(0).max(1),
-    objection_frequency: z.number().min(0).max(1),
-    quote_quality: z.number().min(0).max(1),
-    source_confidence: z.number().min(0).max(1),
-  }),
+    repeated_user_language_strength: z.number().min(0).max(1).default(0),
+    pain_clarity: z.number().min(0).max(1).default(0),
+    promise_reality_gap: z.number().min(0).max(1).default(0),
+    objection_frequency: z.number().min(0).max(1).default(0),
+    quote_quality: z.number().min(0).max(1).default(0),
+    source_confidence: z.number().min(0).max(1).default(0),
+  }).catch({ repeated_user_language_strength: 0, pain_clarity: 0, promise_reality_gap: 0, objection_frequency: 0, quote_quality: 0, source_confidence: 0 }),
 });
 
 export type MessagingOpportunityScore = z.infer<
@@ -547,11 +566,12 @@ export type PhraseItem = z.infer<typeof phraseItemSchema>;
 // ── User Language Bank ────────────────────────────────────────────────────────
 
 export const userLanguageBankSchema = z.object({
-  positive_phrases: z.array(phraseItemSchema).default([]),
-  negative_phrases: z.array(phraseItemSchema).default([]),
-  alternative_seeking_phrases: z.array(phraseItemSchema).default([]),
-  emotional_adjectives: z.array(phraseItemSchema).default([]),
-  category_language: z.array(phraseItemSchema).default([]),
+  // LLM sometimes returns arrays of strings — .catch([]) so a bad sub-array doesn't kill the section
+  positive_phrases: z.array(phraseItemSchema).catch([]),
+  negative_phrases: z.array(phraseItemSchema).catch([]),
+  alternative_seeking_phrases: z.array(phraseItemSchema).catch([]),
+  emotional_adjectives: z.array(phraseItemSchema).catch([]),
+  category_language: z.array(phraseItemSchema).catch([]),
 });
 
 export type UserLanguageBank = z.infer<typeof userLanguageBankSchema>;
@@ -559,12 +579,12 @@ export type UserLanguageBank = z.infer<typeof userLanguageBankSchema>;
 // ── Positioning Angles ────────────────────────────────────────────────────────
 
 export const positioningAngleSchema = z.object({
-  angle_title: z.string(),
-  suggested_message: z.string(),
-  pain_targeted: z.string(),
-  competitor_weakness: z.string(),
-  competitor_strength_to_respect: z.string(),
-  best_channel_or_use_case: z.string(),
+  angle_title: z.string().default(""),
+  suggested_message: z.string().default(""),
+  pain_targeted: z.string().default(""),
+  competitor_weakness: z.string().default(""),
+  competitor_strength_to_respect: z.string().default(""),
+  best_channel_or_use_case: z.string().default(""),
   risk_warning: z.string().nullable().default(null),
   confidence: confidenceSchema,
   evidence_refs: evidenceRefSchema,
@@ -575,11 +595,11 @@ export type PositioningAngle = z.infer<typeof positioningAngleSchema>;
 // ── Competitor Promise vs User Reality ────────────────────────────────────────
 
 export const promiseVsRealityItemSchema = z.object({
-  competitor_claim: z.string(),
-  user_reality: z.string(),
-  gap_summary: z.string(),
-  messaging_opportunity: z.string(),
-  evidence_count: z.number().int().min(0),
+  competitor_claim: z.string().default(""),
+  user_reality: z.string().default(""),
+  gap_summary: z.string().default(""),
+  messaging_opportunity: z.string().default(""),
+  evidence_count: z.number().int().min(0).default(0),
   evidence_refs: evidenceRefSchema,
 });
 
@@ -600,11 +620,11 @@ export const objectionTypeSchema = z.enum([
 export type ObjectionType = z.infer<typeof objectionTypeSchema>;
 
 export const objectionItemSchema = z.object({
-  objection_title: z.string(),
-  objection_type: objectionTypeSchema,
-  why_users_hesitate: z.string(),
-  frequency: z.number().int().min(0),
-  suggested_response: z.string(),
+  objection_title: z.string().default(""),
+  objection_type: objectionTypeSchema.catch("pricing" as const),
+  why_users_hesitate: z.string().default(""),
+  frequency: z.number().int().min(0).default(0),
+  suggested_response: z.string().default(""),
   confidence: confidenceSchema,
   evidence_refs: evidenceRefSchema,
 });
@@ -614,13 +634,14 @@ export type ObjectionItem = z.infer<typeof objectionItemSchema>;
 // ── Comparison Page Bullets ───────────────────────────────────────────────────
 
 export const comparisonPageBulletsSchema = z.object({
-  hero_angle: z.string(),
-  why_users_look_for_alternatives: z.array(z.string()).default([]),
-  where_competitor_is_strong: z.array(z.string()).default([]),
-  where_users_struggle: z.array(z.string()).default([]),
-  who_should_choose_us: z.array(z.string()).default([]),
-  objections_to_handle: z.array(z.string()).default([]),
-  proof_quotes: z.array(z.string()).default([]),
+  hero_angle: z.string().default(""),
+  why_users_look_for_alternatives: z.array(z.string()).catch([]),
+  where_competitor_is_strong: z.array(z.string()).catch([]),
+  where_users_struggle: z.array(z.string()).catch([]),
+  who_should_choose_us: z.array(z.string()).catch([]),
+  // LLM sometimes returns objects here instead of strings
+  objections_to_handle: z.array(z.string()).catch([]),
+  proof_quotes: z.array(z.string()).catch([]),
 });
 
 export type ComparisonPageBullets = z.infer<typeof comparisonPageBulletsSchema>;
@@ -673,22 +694,22 @@ export type QuoteLibraryItem = z.infer<typeof quoteLibraryItemSchema>;
 // ── MarketingViewSection (root) ───────────────────────────────────────────────
 
 export const marketingViewSectionSchema = z.object({
-  role: z.literal("marketing"),
-  competitor_id: z.string(),
-  generated_at: z.string(),                         // ISO 8601 UTC
+  role: z.literal("marketing").default("marketing" as const).catch("marketing" as const),
+  competitor_id: z.string().default(""),
+  generated_at: z.string().default(""),
   messaging_opportunity_score: messagingOpportunityScoreSchema,
-  messaging_summary: z.string(),
+  messaging_summary: z.string().default(""),
   user_language_bank: userLanguageBankSchema,
-  // top-level aliases kept for spec compliance; both point into user_language_bank
-  positive_phrases: z.array(phraseItemSchema).default([]),
-  negative_phrases: z.array(phraseItemSchema).default([]),
+  // top-level aliases; LLM sometimes returns strings here — catch to empty
+  positive_phrases: z.array(phraseItemSchema).catch([]),
+  negative_phrases: z.array(phraseItemSchema).catch([]),
   positioning_angles: z.array(positioningAngleSchema).default([]),
   competitor_promise_vs_user_reality: z.array(promiseVsRealityItemSchema).default([]),
   objections_to_handle: z.array(objectionItemSchema).default([]),
   comparison_page_bullets: comparisonPageBulletsSchema,
-  copy_ideas: copyIdeasSchema,                       // covers landing_page_copy_ideas + ad_angle_ideas
+  copy_ideas: copyIdeasSchema,
   quote_library: z.array(quoteLibraryItemSchema).default([]),
-  evidence_refs: evidenceRefSchema,                  // section-level aggregate evidence
+  evidence_refs: evidenceRefSchema,
 });
 
 export type MarketingViewSection = z.infer<typeof marketingViewSectionSchema>;
@@ -715,17 +736,17 @@ const lowMedHighSchema = z.enum(["low", "medium", "high"]);
 
 // 1. Switch Intent Score
 export const switchIntentScoreSchema = z.object({
-  score: z.number().min(0).max(100),
-  label: z.string(),
-  explanation: z.string(),
+  score: z.number().min(0).max(100).default(0),
+  label: z.string().default(""),
+  explanation: z.string().default(""),
   factors: z.object({
-    alternative_seeking_posts: z.number().min(0).max(1),
-    pricing_complaints: z.number().min(0).max(1),
-    explicit_competitor_frustration: z.number().min(0).max(1),
-    recency: z.number().min(0).max(1),
-    engagement_level: z.number().min(0).max(1),
-    source_quality: z.number().min(0).max(1),
-  }),
+    alternative_seeking_posts: z.number().min(0).max(1).default(0),
+    pricing_complaints: z.number().min(0).max(1).default(0),
+    explicit_competitor_frustration: z.number().min(0).max(1).default(0),
+    recency: z.number().min(0).max(1).default(0),
+    engagement_level: z.number().min(0).max(1).default(0),
+    source_quality: z.number().min(0).max(1).default(0),
+  }).catch({ alternative_seeking_posts: 0, pricing_complaints: 0, explicit_competitor_frustration: 0, recency: 0, engagement_level: 0, source_quality: 0 }),
 });
 export type SwitchIntentScore = z.infer<typeof switchIntentScoreSchema>;
 
@@ -897,7 +918,7 @@ export const sourceLinkSchema = z.object({
   /** Human-readable label, e.g. "Reddit r/saasdiscussion". */
   label: z.string(),
   /** Canonical URL for the source thread, page, or review. */
-  url: z.string().url(),
+  url: z.string().url().catch(""),
 });
 export type SourceLink = z.infer<typeof sourceLinkSchema>;
 
@@ -915,7 +936,7 @@ export const evidenceItemSchema = z.object({
   quote: z.string(),
 
   /** Platform that produced this quote. */
-  source: evidenceSourceSchema,
+  source: evidenceSourceSchema.catch("reddit" as const),
 
   /**
    * ID of the source item (raw_item.id) this quote was extracted from.
@@ -925,13 +946,13 @@ export const evidenceItemSchema = z.object({
 
   /** Direct URL to the post, comment, or review page.
    *  Nullable — some sources (e.g. app-store review aggregators) have no per-item URL. */
-  source_url: z.string().url().nullable(),
+  source_url: z.string().url().nullable().catch(null),
 
   /**
    * ISO-8601 date string of when the source was published.
    * Nullable when the platform does not expose publish date.
    */
-  source_date: z.string().datetime({ offset: true }).nullable().default(null),
+  source_date: z.string().datetime({ offset: true }).nullable().default(null).catch(null),
 
   /**
    * Username, display name, or brief context (e.g. "G2 reviewer, 50-200 employees").

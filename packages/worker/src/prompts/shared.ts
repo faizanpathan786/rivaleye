@@ -329,7 +329,7 @@ export const synthOutputSchema = z.object({
   quotes: z.array(
     z.object({
       who: z.string(),
-      sub: z.string().nullable(),
+      sub: z.string().nullable().default(null),
       when_label: z.string().nullable().default(null),
       score: z.number().int().default(0),
       sentiment: z.number().nullable().catch(null),
@@ -362,7 +362,7 @@ export const synthOutputSchema = z.object({
   leads: z.array(
     z.object({
       who: z.string(),
-      sub: z.string().nullable(),
+      sub: z.string().nullable().default(null),
       when_label: z.string().nullable().default(null),
       score: z.number().int().default(0),
       signal: z.string().nullable(),
