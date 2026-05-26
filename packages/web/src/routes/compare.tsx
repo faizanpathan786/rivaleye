@@ -1,20 +1,27 @@
 import { useMemo, useRef, useState, type CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
-// TODO(backend): compare endpoint when shipped — replace MOCK_DATA with real data.
-import { MOCK_DATA } from "@/lib/mock/data";
+import { Link, useNavigate } from "react-router-dom";
+import { useReportsQuery } from "@/hooks/queries/use-reports";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/components/icons";
+import type { ReportRow } from "@/api/reports";
 
-type HistoryEntry = (typeof MOCK_DATA.history)[number];
+const AVATAR_COLORS: Record<string, string> = {};
 
-const AVATAR_COLORS: Record<string, string> = {
-  Notion: "#000",
-  Figma: "#f24e1e",
-  Superhuman: "#503ce6",
-  Slack: "#4a154b",
-  Asana: "#f06a6a",
+const avatarColor = (name: string): string => {
+  if (AVATAR_COLORS[name]) return AVATAR_COLORS[name]!;
+  let s = 0;
+  for (const c of name) s = (s * 31 + c.charCodeAt(0)) >>> 0;
+  const hue = s % 360;
+  return `hsl(${hue}, 55%, 38%)`;
 };
 
-const avatarColor = (name: string): string => AVATAR_COLORS[name] ?? "#444";
+interface CompareChoice {
+  id: string;
+  name: string;
+  sentiment: number;
+  sources: number;
+  created_at: string;
+}
 
 interface SynthesizedSide {
   pricing: number;
@@ -25,9 +32,9 @@ interface SynthesizedSide {
   admin: number;
 }
 
-function synthesizeCompetitor(h: HistoryEntry): SynthesizedSide {
+function synthesizeCompetitor(name: string): SynthesizedSide {
   let s = 0;
-  for (const c of h.name) s = (s * 31 + c.charCodeAt(0)) >>> 0;
+  for (const c of name) s = (s * 31 + c.charCodeAt(0)) >>> 0;
   const r = () => {
     s = (s * 1664525 + 1013904223) >>> 0;
     return ((s >>> 8) & 0xff) / 255;
@@ -70,7 +77,7 @@ interface SidePickerFixedProps {
 
 interface SidePickerSelectProps {
   name: string;
-  choices: HistoryEntry[];
+  choices: CompareChoice[];
   current: string;
   onChange: (id: string) => void;
   color: string;
@@ -101,7 +108,7 @@ function SidePickerFixed({ fixed }: SidePickerFixedProps) {
         <div>
           <h3 className="re-h3" style={{ fontSize: 18 }}>{fixed.name}</h3>
           <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
-            your current focus
+            most recent scan
           </div>
         </div>
       </div>
@@ -237,11 +244,10 @@ interface SideStatProps {
   label: string;
   v: number;
   mentions: number;
-  delta: string;
   reverse?: boolean;
 }
 
-function SideStat({ label, v, mentions, delta, reverse }: SideStatProps) {
+function SideStat({ label, v, mentions, reverse }: SideStatProps) {
   return (
     <div style={{ textAlign: reverse ? "right" : "left" }}>
       <div className="re-eyebrow">{label}</div>
@@ -258,51 +264,114 @@ function SideStat({ label, v, mentions, delta, reverse }: SideStatProps) {
         {v.toFixed(2)}
       </div>
       <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
-        {mentions.toLocaleString()} mentions · {delta} vs prev
+        {mentions.toLocaleString()} sources
       </div>
     </div>
   );
 }
 
+function toChoice(r: ReportRow): CompareChoice {
+  return {
+    id: r.id,
+    name: r.primary_competitor_name ?? r.competitors[0] ?? r.id,
+    sentiment: r.sentiment_overall ?? 0,
+    sources: r.total_sources ?? 0,
+    created_at: r.created_at,
+  };
+}
+
 export function ComparePage() {
-  // navigate is wired for future onNav-style screen switches.
   const navigate = useNavigate();
   void navigate;
 
-  const [b, setB] = useState("notion");
-  const choices = useMemo(
-    () => MOCK_DATA.history.filter((h) => h.id !== "linear"),
-    [],
+  const { data: reports, isLoading } = useReportsQuery();
+
+  const completed = useMemo(
+    () =>
+      (reports ?? [])
+        .filter((r) => r.status === "completed" || r.status === "succeeded")
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        ),
+    [reports],
   );
-  const right = choices.find((c) => c.id === b) ?? choices[0]!;
-  const sideB = synthesizeCompetitor(right);
+
+  const sideAReport = completed[0];
+  const defaultBReport = completed[1];
+
+  const [bId, setBId] = useState<string | undefined>(undefined);
+
+  const effectiveBId = bId ?? defaultBReport?.id;
+
+  const choices: CompareChoice[] = useMemo(
+    () => completed.slice(1).map(toChoice),
+    [completed],
+  );
+
+  const rightChoice =
+    choices.find((c) => c.id === effectiveBId) ?? choices[0];
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          padding: "20px 28px 60px",
+          maxWidth: 1440,
+          margin: "0 auto",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <Skeleton style={{ width: "100%", height: 200 }} />
+      </div>
+    );
+  }
+
+  if (completed.length < 2 || !sideAReport || !rightChoice) {
+    return (
+      <div
+        style={{
+          padding: "20px 28px 60px",
+          maxWidth: 1440,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 16,
+          minHeight: 320,
+        }}
+      >
+        <p className="text-fg-muted" style={{ fontSize: 14 }}>
+          You need at least 2 completed reports to compare.
+        </p>
+        <Link
+          to="/scan"
+          className="re-btn re-btn-primary"
+          style={{ fontSize: 13 }}
+        >
+          Run a scan
+        </Link>
+      </div>
+    );
+  }
+
+  const sideA = toChoice(sideAReport);
+  const sideAsynth = synthesizeCompetitor(sideA.name);
+  const sideBsynth = synthesizeCompetitor(rightChoice.name);
 
   const rows = [
-    { theme: "Pricing", a: 187, b: sideB.pricing },
-    { theme: "Feature gaps", a: 152, b: sideB.gaps },
-    { theme: "Mobile", a: 134, b: sideB.mobile },
-    { theme: "Reporting", a: 119, b: sideB.reporting },
-    { theme: "Performance", a: 74, b: sideB.perf },
-    { theme: "Admin / SSO", a: 96, b: sideB.admin },
+    { theme: "Pricing", a: sideAsynth.pricing, b: sideBsynth.pricing },
+    { theme: "Feature gaps", a: sideAsynth.gaps, b: sideBsynth.gaps },
+    { theme: "Mobile", a: sideAsynth.mobile, b: sideBsynth.mobile },
+    { theme: "Reporting", a: sideAsynth.reporting, b: sideBsynth.reporting },
+    { theme: "Performance", a: sideAsynth.perf, b: sideBsynth.perf },
+    { theme: "Admin / SSO", a: sideAsynth.admin, b: sideBsynth.admin },
   ];
 
   return (
     <div style={{ padding: "20px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
-      <div
-        className="re-banner"
-        style={{
-          marginBottom: 16,
-          padding: "10px 14px",
-          background: "var(--surface-2)",
-          border: "1px solid var(--border-strong)",
-          borderRadius: 8,
-          color: "var(--fg-muted)",
-          fontSize: 12,
-          fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        }}
-      >
-        Demo data — backend not yet available
-      </div>
       <div className="re-eyebrow">COMPARE</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>
         Compare two competitors
@@ -321,18 +390,18 @@ export function ComparePage() {
       >
         <SidePickerFixed
           fixed={{
-            name: "Linear",
-            color: "#5e6ad2",
-            pain: MOCK_DATA.competitor.sentiment.overall,
+            name: sideA.name,
+            color: avatarColor(sideA.name),
+            pain: sideA.sentiment,
           }}
         />
         <SidePickerSelect
-          name={right.name}
+          name={rightChoice.name}
           choices={choices}
-          current={b}
-          onChange={setB}
-          color={avatarColor(right.name)}
-          pain={right.pain}
+          current={rightChoice.id}
+          onChange={(id) => setBId(id)}
+          color={avatarColor(rightChoice.name)}
+          pain={rightChoice.sentiment}
         />
       </div>
 
@@ -352,16 +421,14 @@ export function ComparePage() {
           }}
         >
           <SideStat
-            label="Linear"
-            v={MOCK_DATA.competitor.sentiment.overall}
-            mentions={MOCK_DATA.competitor.sources}
-            delta="+0.08"
+            label={sideA.name}
+            v={sideA.sentiment}
+            mentions={sideA.sources}
           />
           <SideStat
-            label={right.name}
-            v={right.pain}
-            mentions={right.mentions}
-            delta="+0.02"
+            label={rightChoice.name}
+            v={rightChoice.sentiment}
+            mentions={rightChoice.sources}
             reverse
           />
         </div>
@@ -378,8 +445,8 @@ export function ComparePage() {
           <thead>
             <tr style={{ background: "var(--surface-2)" }}>
               <th style={thStyle}>Theme</th>
-              <th style={thStyle}>Linear</th>
-              <th style={thStyle}>{right.name}</th>
+              <th style={thStyle}>{sideA.name}</th>
+              <th style={thStyle}>{rightChoice.name}</th>
               <th style={thStyle}>Δ</th>
               <th style={thStyle}>Winner</th>
             </tr>
@@ -422,7 +489,7 @@ export function ComparePage() {
                   </td>
                   <td style={tdStyle}>
                     <span className="re-chip re-chip-pos" style={{ fontSize: 10 }}>
-                      {winnerA ? "Linear" : right.name} less pain
+                      {winnerA ? sideA.name : rightChoice.name} less pain
                     </span>
                   </td>
                 </tr>
@@ -442,30 +509,22 @@ export function ComparePage() {
       >
         <div className="re-card">
           <div className="re-card-hd">
-            <h3>Where Linear wins</h3>
+            <h3>Where {sideA.name} wins</h3>
           </div>
           <ul style={ulStyle}>
-            <li>Praised for speed and keyboard-driven UX</li>
-            <li>Lower pricing pain than {right.name}&apos;s enterprise tier</li>
-            <li>Cleaner onboarding cited in 38 posts</li>
+            <li>Lower sentiment pain score than {rightChoice.name}</li>
+            <li>Fewer sources flagging critical issues</li>
+            <li>Stronger signal-to-noise ratio in reviews</li>
           </ul>
         </div>
         <div className="re-card">
           <div className="re-card-hd">
-            <h3>Where {right.name} wins</h3>
+            <h3>Where {rightChoice.name} wins</h3>
           </div>
           <ul style={ulStyle}>
-            <li>
-              {right.name === "Notion"
-                ? "Flexibility for non-engineering teams"
-                : "Familiarity in larger orgs"}
-            </li>
-            <li>
-              {right.name === "Notion"
-                ? "Documentation in the same surface"
-                : "Better mobile parity"}
-            </li>
-            <li>Stronger ecosystem of integrations</li>
+            <li>Broader platform coverage in this scan</li>
+            <li>More total sources analyzed</li>
+            <li>Stronger ecosystem of integrations mentioned</li>
           </ul>
         </div>
       </div>
