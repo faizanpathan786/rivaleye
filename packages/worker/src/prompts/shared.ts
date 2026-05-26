@@ -288,7 +288,10 @@ export const mergedSignalsSchema = stageCMergeLlmSchema.extend({
 });
 
 export const sentimentTrendEnum = z.enum(["up", "down", "flat"]);
-export const effortEnum = z.enum(["low", "med", "high"]);
+export const effortEnum = z.preprocess(
+  (v) => v === "medium" ? "med" : v,
+  z.enum(["low", "med", "high"]),
+);
 export const payoffEnum = z.enum(["low", "med", "high"]);
 
 export const synthOutputSchema = z.object({

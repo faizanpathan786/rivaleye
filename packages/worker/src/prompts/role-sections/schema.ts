@@ -623,7 +623,8 @@ export const objectionItemSchema = z.object({
   objection_title: z.string().default(""),
   objection_type: objectionTypeSchema.catch("pricing" as const),
   why_users_hesitate: z.string().default(""),
-  frequency: z.number().int().min(0).default(0),
+  // LLM sometimes returns floats — floor to int
+  frequency: z.preprocess((v) => typeof v === "number" ? Math.floor(v) : v, z.number().int().min(0).default(0)),
   suggested_response: z.string().default(""),
   confidence: confidenceSchema,
   evidence_refs: evidenceRefSchema,
@@ -656,9 +657,9 @@ export type ComparisonPageBullets = z.infer<typeof comparisonPageBulletsSchema>;
 // encourages the frontend to render a single tabbed "Copy Ideas" widget.
 
 export const copyItemSchema = z.object({
-  copy: z.string(),
-  signal_behind_it: z.string(),
-  best_use_case: z.string(),
+  copy: z.string().default(""),
+  signal_behind_it: z.string().default(""),
+  best_use_case: z.string().default(""),
   confidence: confidenceSchema,
   evidence_refs: evidenceRefSchema,
 });
@@ -679,13 +680,13 @@ export type CopyIdeas = z.infer<typeof copyIdeasSchema>;
 // ── Quote Library ─────────────────────────────────────────────────────────────
 
 export const quoteLibraryItemSchema = z.object({
-  quote: z.string(),
-  source: z.string(),
+  quote: z.string().default(""),
+  source: z.string().default(""),
   source_date: z.string().nullable().default(null),
-  sentiment: z.number().min(-1).max(1),
-  signal_type: signalTypeSchema,
+  sentiment: z.number().min(-1).max(1).default(0),
+  signal_type: signalTypeSchema.catch("pain" as const),
   related_positioning_angle: z.string().nullable().default(null),
-  copy_usefulness_score: z.number().min(0).max(1),
+  copy_usefulness_score: z.number().min(0).max(1).default(0),
   source_url: z.string().nullable().default(null),
 });
 
