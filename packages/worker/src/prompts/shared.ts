@@ -32,7 +32,7 @@ export const stageASignalSchema = z.object({
 });
 
 export const stageASwitchSignalSchema = stageASignalSchema.extend({
-  direction: switchingDirectionSchema,
+  direction: switchingDirectionSchema.default("outbound"),
   alternatives_mentioned: z.array(z.string()).default([]),
 });
 
@@ -42,12 +42,12 @@ export const stageAPricingSignalSchema = stageASignalSchema.extend({
 });
 
 export const stageAFeatureSignalSchema = stageASignalSchema.extend({
-  feature_name: z.string().min(1),
-  perception: z.enum(["loved", "mixed", "criticized"]),
+  feature_name: z.string().min(1).default("unknown feature"),
+  perception: z.enum(["loved", "mixed", "criticized"]).default("mixed"),
 });
 
 export const stageAPositioningSignalSchema = stageASignalSchema.extend({
-  angle: z.string().min(1),
+  angle: z.string().min(1).default("unspecified"),
   against: z.string().nullable().default(null),
   audience: z.string().nullable().default(null),
 });

@@ -37,5 +37,11 @@ Rules:
 - voice_phrases: 1-3 word phrases users actually typed. Authentic language only — no paraphrasing.
 - related_features / user_segment: fill only when stated in the source; otherwise [] / null.
 - If a section has no signal, return an empty array — never omit the key. Never invent data.
-- Return ONLY the JSON object. No prose, no markdown fences.`;
+- Return ONLY the JSON object. No prose, no markdown fences.
+
+REQUIRED TYPE-SPECIFIC FIELDS — every item in these arrays MUST include these extra keys or the output is invalid:
+- feature_signals items: "feature_name" (the exact feature name, non-empty string) AND "perception" (one of "loved", "mixed", "criticized"). Never omit either.
+- switch_signals items: "direction" (one of "inbound", "outbound") AND "alternatives_mentioned" (array, may be empty).
+- positioning_signals items: "angle" (non-empty string describing the positioning framing). Never omit.
+Double-check every feature_signals item has both "feature_name" and "perception" before returning.`;
 }
