@@ -6,6 +6,7 @@ import { ScoreFactors } from "@/components/dashboard/score-factors";
 import { EvidenceDrawer } from "@/components/dashboard/evidence-drawer";
 import {
   bucketFloat,
+  filterByDateRange,
   type Confidence,
   type EvidenceRef,
   type EvidenceSection,
@@ -578,15 +579,17 @@ interface Filters {
 export function ProductPage({
   embedded = false,
   data,
+  range: propRange,
   evidenceSection,
 }: {
   embedded?: boolean;
   data?: ProductViewProps;
+  range?: string;
   evidenceSection?: EvidenceSection | null;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
-  const [range, setRange] = useState("90d");
+  const [range, setRange] = useState(propRange ?? "90d");
   const [filters, setFilters] = useState<Filters>({ source: "all", area: "all", severity: "all" });
 
   const P = data ?? PRODUCT_DATA;
