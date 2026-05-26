@@ -106,7 +106,7 @@ export const overviewSectionSchema = z.object({
    * 2–4 sentence narrative synthesis of overall competitor user perception.
    * Written in plain English for the summary card header.
    */
-  overall_perception_summary: z.string(),
+  overall_perception_summary: z.string().default(""),
 
   /**
    * Ordered list of platform identifiers that were included in this report,
@@ -125,31 +125,31 @@ export const overviewSectionSchema = z.object({
    * The single highest-strength signal cluster of type "love".
    * Null when no love signals were found.
    */
-  top_love_signal: topSignalSnapshotSchema.nullable().default(null),
+  top_love_signal: topSignalSnapshotSchema.nullable().default(null).catch(null),
 
   /**
    * The single highest-strength signal cluster of type "pain".
    * Null when no pain signals were found.
    */
-  top_pain_signal: topSignalSnapshotSchema.nullable().default(null),
+  top_pain_signal: topSignalSnapshotSchema.nullable().default(null).catch(null),
 
   /**
    * The single highest-strength signal cluster of type "gap".
    * Null when no gap signals were found.
    */
-  top_gap_signal: topSignalSnapshotSchema.nullable().default(null),
+  top_gap_signal: topSignalSnapshotSchema.nullable().default(null).catch(null),
 
   /**
    * The single highest-strength signal cluster of type "switch".
    * Null when no switching signals were found.
    */
-  top_switch_signal: topSignalSnapshotSchema.nullable().default(null),
+  top_switch_signal: topSignalSnapshotSchema.nullable().default(null).catch(null),
 
   /**
    * The single cross-signal opportunity most worth acting on immediately.
    * Null when confidence is too low to surface a reliable opportunity.
    */
-  strongest_opportunity: strongestOpportunitySchema.nullable().default(null),
+  strongest_opportunity: strongestOpportunitySchema.nullable().default(null).catch(null),
 
   /**
    * Aggregate confidence in the overview section as a whole.
