@@ -297,11 +297,13 @@ export function FounderPage({
   data,
   evidenceSection,
   range: propRange,
+  competitorName,
 }: {
   embedded?: boolean;
   data?: FounderViewProps;
   evidenceSection?: EvidenceSection | null;
   range?: string;
+  competitorName?: string;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
@@ -319,6 +321,7 @@ export function FounderPage({
   };
 
   const F = data ?? FOUNDER_DATA;
+  const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
 
@@ -338,7 +341,7 @@ export function FounderPage({
 
         <SectionHead
           eyebrow="01 · Strengths"
-          title="What users love about Linear"
+          title={`What users love about ${cName}`}
           subtitle="Know what not to underestimate. Match these or compete elsewhere."
         />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -394,7 +397,7 @@ export function FounderPage({
           ))}
         </div>
 
-        <FounderFooter onNav={(to) => navigate(to)} />
+        <FounderFooter onNav={(to) => navigate(to)} competitorName={cName} />
       </div>
 
       <EvidenceDrawer
@@ -1174,7 +1177,8 @@ function ActionCard({
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER STRIP
 
-function FounderFooter({ onNav }: { onNav: (to: string) => void }) {
+function FounderFooter({ onNav, competitorName }: { onNav: (to: string) => void; competitorName?: string }) {
+  const cName = competitorName ?? "the competitor";
   return (
     <div
       style={{
@@ -1193,8 +1197,7 @@ function FounderFooter({ onNav }: { onNav: (to: string) => void }) {
       <div>
         <div style={eyebrow}>NORTH STAR</div>
         <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
-          "Now I understand where Linear is strong, where users are frustrated, what the market wants, and what
-          opportunity we can attack."
+          {`"Now I understand where ${cName} is strong, where users are frustrated, what the market wants, and what opportunity we can attack."`}
         </p>
       </div>
       <div style={{ display: "flex", gap: 8 }}>

@@ -581,11 +581,13 @@ export function ProductPage({
   data,
   range: propRange,
   evidenceSection,
+  competitorName,
 }: {
   embedded?: boolean;
   data?: ProductViewProps;
   range?: string;
   evidenceSection?: EvidenceSection | null;
+  competitorName?: string;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
@@ -593,6 +595,7 @@ export function ProductPage({
   const [filters, setFilters] = useState<Filters>({ source: "all", area: "all", severity: "all" });
 
   const P = data ?? PRODUCT_DATA;
+  const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
 
@@ -607,7 +610,7 @@ export function ProductPage({
 
         <SectionHeadPM
           eyebrow="01 · Feature gap map"
-          title="What users want that Linear doesn't solve"
+          title={`What users want that ${cName} doesn't solve`}
           subtitle="Ranked by evidence × severity. Click any row for quotes and context."
           right={<FiltersStrip filters={filters} setFilters={setFilters} />}
         />

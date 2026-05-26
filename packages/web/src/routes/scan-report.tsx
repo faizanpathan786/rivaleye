@@ -279,13 +279,13 @@ export function ScanReportPage() {
             />
           )}
           {lens === "founder"   && (
-            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} />
+            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
           )}
           {lens === "product"   && (
-            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} />
+            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
           )}
           {lens === "marketing" && (
-            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} />
+            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
           )}
           {lens === "growth"    && (
             <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} />

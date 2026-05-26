@@ -658,11 +658,13 @@ export function MarketingPage({
   data,
   evidenceSection,
   range: propRange,
+  competitorName,
 }: {
   embedded?: boolean;
   data?: MarketingViewProps;
   evidenceSection?: EvidenceSection | null;
   range?: string;
+  competitorName?: string;
 }) {
   const navigate = useNavigate();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
@@ -672,6 +674,7 @@ export function MarketingPage({
   const [activeLangTab, setActiveLangTab] = useState<LangTab>("positive_phrases");
 
   const M = data ?? MARKETING_DATA;
+  const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
 
@@ -751,10 +754,10 @@ export function MarketingPage({
 
         <SectionHeadMK
           eyebrow="05 · Comparison page builder"
-          title={`"Linear alternative" — assembled.`}
-          subtitle="Drop these blocks onto your /linear-alternative page. Pre-built for SEO and decision velocity."
+          title={`"${cName} alternative" — assembled.`}
+          subtitle={`Drop these blocks onto your /${cName.toLowerCase().replace(/\s+/g, "-")}-alternative page. Pre-built for SEO and decision velocity.`}
         />
-        <ComparisonBuilder c={M.comparison} />
+        <ComparisonBuilder c={M.comparison} competitorName={cName} />
 
         <SectionHeadMK
           eyebrow="06 · Copy ideas"
@@ -1433,7 +1436,7 @@ function ObjectionCard({
 
 type BuilderTone = "strong" | "weak" | "us" | "neutral";
 
-function ComparisonBuilder({ c }: { c: MarketingViewProps["comparison"] }) {
+function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["comparison"]; competitorName?: string }) {
   return (
     <div className="re-card" style={{ overflow: "hidden" }}>
       <div
@@ -1468,7 +1471,7 @@ function ComparisonBuilder({ c }: { c: MarketingViewProps["comparison"] }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid var(--border-soft)" }}>
-        <BuilderBlock title="Where Linear is strong" tone="strong" items={c.where_competitor_is_strong} />
+        <BuilderBlock title={`Where ${competitorName ?? "the competitor"} is strong`} tone="strong" items={c.where_competitor_is_strong} />
         <BuilderBlock title="Where users struggle" tone="weak" items={c.where_users_struggle} borderLeft />
       </div>
 
