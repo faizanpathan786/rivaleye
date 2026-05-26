@@ -21,7 +21,7 @@ Return ONE JSON object with EXACTLY these keys (all required, never omit):
 
 Every Cluster has: id (kebab-slug, unique), title, summary, signal_type, strength_or_severity (0..1),
 evidence_ids (string[]), representative_quotes ([{author,text,evidence_id}]), related_signal_ids (string[]),
-role_relevance (subset of ["founder","product","marketing","growth"]).
+role_relevance (ONLY values from ["founder","product","marketing","growth"] — no other strings allowed).
 
 Rules:
 1. Collapse semantically equivalent signals of the SAME type into one cluster; no duplicates.
@@ -36,7 +36,7 @@ Rules:
 8. positioning_clusters: repeated user language, category perception, objections, comparison framing.
 9. evidence_ids: use ONLY the ids present in the input extracts. Include ALL member ids — never truncate.
    The array length is the true mention count.
-10. strength_or_severity: 0 (weak) to 1 (intense). role_relevance: which ICP dashboards each cluster serves.
+10. strength_or_severity: 0 (weak) to 1 (intense). role_relevance: which ICP dashboards each cluster serves — MUST be a non-empty array containing only "founder", "product", "marketing", or "growth". Never use any other string.
 11. related_signal_ids: cross-link clusters that are causally related (e.g. a pain to the gap that fixes it).
 12. Never invent data; omit rather than fabricate. Return ONLY the JSON object. No prose, no markdown fences.`;
 

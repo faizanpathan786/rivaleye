@@ -175,7 +175,7 @@ export const mergedClustersSchema = z.object({
 export const signalClusterTypeSchema = z.enum([
   "love", "pain", "gap", "switch", "pricing", "feature", "positioning",
 ]);
-export const roleRelevanceSchema = z.enum(["founder", "product", "marketing", "growth"]);
+export const roleRelevanceSchema = z.enum(["founder", "product", "marketing", "growth"]).catch("founder" as const);
 
 export const clusterQuoteSchema = z.object({
   author: z.string(),
