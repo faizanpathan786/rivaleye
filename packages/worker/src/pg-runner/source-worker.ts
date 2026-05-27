@@ -11,7 +11,7 @@
  * On error: retry with exponential backoff until max_attempts exceeded.
  */
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { NormalizedPost } from "@rivaleye/scrapers";
 import { getScraper } from "@rivaleye/scrapers";
 import { LLM_MODEL, LlmSchemaError, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
@@ -99,12 +99,17 @@ export async function processSourceJob(
     await persistMentions(job.report_id, job.platform, posts);
     log.info({ jobId: job.id, platform: job.platform }, "Mentions persisted");
 
-    // Step 4: Update report status to "running" + stage to "scraping"
-    log.info({ jobId: job.id, reportId: job.report_id }, "Updating report status to running/scraping");
+    // Step 4: Update report status to "running" + stage to "scraping" only if not already terminal.
+    // Late-arriving recovery scrape jobs must not overwrite a completed/failed report's status.
     await db
       .update(reports)
       .set({ status: "running", stage: "scraping", updated_at: new Date() })
-      .where(eq(reports.id, job.report_id));
+      .where(
+        and(
+          eq(reports.id, job.report_id),
+          sql`${reports.status} NOT IN ('completed', 'failed')`,
+        )
+      );
 
     // Step 4b: Skip A/B and complete early if no posts found
     if (posts.length === 0) {

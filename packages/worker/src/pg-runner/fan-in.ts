@@ -29,35 +29,34 @@ import { log } from "../logger";
  * @throws Error if database operation fails (not caught; caller decides retry strategy)
  */
 export async function fanInCheck(reportId: string): Promise<void> {
-  await db.transaction(async (tx) => {
-    // Acquire advisory lock scoped to this transaction
-    // hashtext(reportId) converts string to stable hash for locking
+  // All decision logic runs inside a transaction with an advisory lock.
+  // log() calls use a separate DB connection and are moved OUTSIDE the transaction
+  // to avoid side-channel writes that commit even when the transaction rolls back.
+  type Outcome =
+    | { kind: "not-ready"; terminalCount: number; total: number }
+    | { kind: "all-failed"; failedPlatforms: string[] }
+    | { kind: "created"; id: string; completedCount: number; total: number }
+    | { kind: "exists"; completedCount: number; total: number };
+
+  const outcome = await db.transaction(async (tx): Promise<Outcome> => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${reportId}))`);
 
-    await log(reportId, "info", "fan-in", null, "Acquired advisory lock; checking source job statuses");
-
-    // Load all source jobs for this report
     const jobs = await tx
       .select({ status: report_platform_jobs.status, platform: report_platform_jobs.platform })
       .from(report_platform_jobs)
       .where(eq(report_platform_jobs.report_id, reportId));
 
-    // Check if all jobs are terminal (completed or failed)
     const allTerminal =
       jobs.length > 0 &&
       jobs.every((j) => j.status === "completed" || j.status === "failed");
 
     if (!allTerminal) {
       const terminalCount = jobs.filter((j) => j.status === "completed" || j.status === "failed").length;
-      await log(reportId, "info", "fan-in", null, `Not all source jobs are terminal (${terminalCount}/${jobs.length}); skipping synthesis job creation`);
-      return;
+      return { kind: "not-ready", terminalCount, total: jobs.length };
     }
 
-    // Check if at least one job succeeded (completed)
     const hasCompletedJob = jobs.some((j) => j.status === "completed");
-
     if (!hasCompletedJob) {
-      await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);
       const failedPlatforms = jobs.map((j) => j.platform ?? "unknown");
       await tx
         .update(reports)
@@ -70,14 +69,11 @@ export async function fanInCheck(reportId: string): Promise<void> {
           updated_at: new Date(),
         })
         .where(eq(reports.id, reportId));
-      return;
+      return { kind: "all-failed", failedPlatforms };
     }
 
     const completedCount = jobs.filter((j) => j.status === "completed").length;
-    await log(reportId, "info", "fan-in", null, `All source jobs terminal with at least one success (${completedCount}/${jobs.length}); creating synthesis job`);
 
-    // Create synthesis job using onConflictDoNothing for idempotency
-    // The unique constraint synthesis_jobs_report_id_uniq ensures only one per report
     const result = await tx
       .insert(synthesis_jobs)
       .values({
@@ -91,9 +87,26 @@ export async function fanInCheck(reportId: string): Promise<void> {
       .returning();
 
     if (result.length > 0) {
-      await log(reportId, "info", "fan-in", null, `Synthesis job created: ${result[0]?.id}`);
-    } else {
-      await log(reportId, "info", "fan-in", null, "Synthesis job already exists (insert was no-op)");
+      return { kind: "created", id: result[0]!.id, completedCount, total: jobs.length };
     }
+    return { kind: "exists", completedCount, total: jobs.length };
   });
+
+  // Log outcomes after the transaction commits so log entries are never ghost-created
+  switch (outcome.kind) {
+    case "not-ready":
+      await log(reportId, "info", "fan-in", null, `Not all source jobs are terminal (${outcome.terminalCount}/${outcome.total}); skipping synthesis job creation`);
+      break;
+    case "all-failed":
+      await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);
+      break;
+    case "created":
+      await log(reportId, "info", "fan-in", null, `All source jobs terminal with at least one success (${outcome.completedCount}/${outcome.total}); creating synthesis job`);
+      await log(reportId, "info", "fan-in", null, `Synthesis job created: ${outcome.id}`);
+      break;
+    case "exists":
+      await log(reportId, "info", "fan-in", null, `All source jobs terminal with at least one success (${outcome.completedCount}/${outcome.total}); creating synthesis job`);
+      await log(reportId, "info", "fan-in", null, "Synthesis job already exists (insert was no-op)");
+      break;
+  }
 }

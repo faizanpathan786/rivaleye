@@ -13,7 +13,7 @@
  * Should be run as a background loop (e.g., every 30 seconds) on one worker.
  */
 
-import { and, eq, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, lte } from "drizzle-orm";
 import { db } from "../db";
 import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
 import { log } from "../logger";
@@ -78,7 +78,22 @@ async function recoverStaleSourceJobs(timeoutMinutes: number): Promise<void> {
   for (const job of staleJobs) {
     const staleDurationMs = job.locked_at ? new Date().getTime() - job.locked_at.getTime() : 0;
 
-    if (job.attempt_count < job.max_attempts) {
+    // If synthesis has already started for this report, re-queuing a source job would
+    // break the fan-in check (synthesis sees a pending platform). Always fail-forward.
+    const existingSynthesisJob = await db
+      .select({ id: synthesis_jobs.id })
+      .from(synthesis_jobs)
+      .where(
+        and(
+          eq(synthesis_jobs.report_id, job.report_id),
+          inArray(synthesis_jobs.status, ["queued", "running", "completed"])
+        )
+      )
+      .limit(1);
+
+    const synthesisAlreadyStarted = existingSynthesisJob.length > 0;
+
+    if (!synthesisAlreadyStarted && job.attempt_count < job.max_attempts) {
       // Retry: reset to queued with immediate run_after
       console.log(
         `[recovery] Recovering stale source job ${job.id} (report=${job.report_id}, platform=${job.platform}, attempt=${job.attempt_count}/${job.max_attempts}, stale=${staleDurationMs}ms): resetting to queued`
@@ -98,9 +113,12 @@ async function recoverStaleSourceJobs(timeoutMinutes: number): Promise<void> {
 
       await log(job.report_id, "warn", "recovery", job.platform, `Job stale for ${staleDurationMs}ms; recovered and retrying (attempt ${job.attempt_count + 1}/${job.max_attempts})`);
     } else {
-      // Permanent failure: mark failed and trigger fan-in
+      const failReason = synthesisAlreadyStarted
+        ? `Stale lock detected after ${staleDurationMs}ms; synthesis already started — marking failed to unblock fan-in`
+        : `Stale lock detected after ${staleDurationMs}ms; exceeded max attempts`;
+
       console.error(
-        `[recovery] Stale source job ${job.id} (report=${job.report_id}, platform=${job.platform}, attempt=${job.attempt_count}/${job.max_attempts}, stale=${staleDurationMs}ms) exceeded max attempts; marking as failed`
+        `[recovery] Stale source job ${job.id} (report=${job.report_id}, platform=${job.platform}, attempt=${job.attempt_count}/${job.max_attempts}, stale=${staleDurationMs}ms) — ${synthesisAlreadyStarted ? "synthesis already started" : "exceeded max attempts"}; marking as failed`
       );
 
       await db
@@ -110,13 +128,13 @@ async function recoverStaleSourceJobs(timeoutMinutes: number): Promise<void> {
           stage: "failed" as const,
           locked_at: null,
           locked_by: null,
-          last_error: `Stale lock detected after ${staleDurationMs}ms; exceeded max attempts`,
+          last_error: failReason,
           completed_at: new Date(),
           updated_at: new Date(),
         })
         .where(eq(report_platform_jobs.id, job.id));
 
-      await log(job.report_id, "error", "recovery", job.platform, `Job stale for ${staleDurationMs}ms; exceeded max attempts and marked as failed`);
+      await log(job.report_id, "error", "recovery", job.platform, failReason);
 
       // Trigger fan-in check in case other sources completed
       await fanInCheck(job.report_id);

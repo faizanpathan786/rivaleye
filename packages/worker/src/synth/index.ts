@@ -2,14 +2,14 @@ import { serve } from "inngest/bun";
 import { inngest } from "../inngest/client";
 import { synthRun } from "./run";
 import { getPipelineEngine } from "../config";
-import { main } from "../pg-runner/index.js";
+import { mainSynthOnly } from "../pg-runner/index.js";
 
-const port = Number(process.env.WORKER_SYNTH_PORT ?? 3102);
+const port = Number(process.env.WORKER_SYNTH_PORT ?? 4003);
 const engine = getPipelineEngine();
 
 if (engine === "postgres") {
-  console.log("[worker-synth] Starting in postgres mode (pg-runner polling)");
-  main().catch(err => console.error("[worker-synth] Fatal error:", err));
+  console.log("[worker-synth] Starting in postgres mode (pg-runner synth-only polling)");
+  mainSynthOnly().catch(err => console.error("[worker-synth] Fatal error:", err));
 } else {
   console.log("[worker-synth] Starting in inngest mode (synth.run events)");
 }
