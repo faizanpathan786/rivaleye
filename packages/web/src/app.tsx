@@ -63,6 +63,7 @@ const router = createBrowserRouter([
       { path: "reports/:id/sections", Component: ReportSectionsPage },
       { path: "scan-report", Component: ScanReportPage },
       { path: "scan-report/:id", Component: ScanReportPage },
+      { path: "scan-report/:id/:lens", Component: ScanReportPage },
       { path: "account", Component: AccountPage },
     ],
   },

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { FounderPage } from "./founder";
@@ -50,6 +50,8 @@ const LENS_META: Record<LensId, LensMeta> = {
   growth:    { name: "Growth",    color: "#16a34a", bg: "rgba(22,163,74,0.10)",  glyph: "↗", role: "Switch intent · live conversations" },
 };
 
+const LENS_ORDER: LensId[] = ["summary", "founder", "product", "marketing", "growth"];
+
 
 
 interface ScanCompetitor {
@@ -85,19 +87,26 @@ interface SummaryData {
 
 export function ScanReportPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id?: string }>();
-  const [lens, setLens] = useState<LensId>("summary");
+  const { id, lens: lensParam } = useParams<{ id?: string; lens?: string }>();
+  // Lens is driven by the route so each dashboard is its own deep-linkable URL.
+  const lens: LensId = LENS_ORDER.includes(lensParam as LensId) ? (lensParam as LensId) : "summary";
   const [range, setRange] = useState("90d");
+  const [printingAll, setPrintingAll] = useState(false);
   const meta = LENS_META[lens];
 
-  // When no :id, redirect to the most recent report.
+  const goToLens = (next: LensId) => {
+    if (!id) return;
+    navigate(`/scan-report/${id}/${next}`);
+  };
+
+  // When no :id, redirect to the most recent report (preserving the lens).
   const { data: allReports } = useReportsQuery();
   useEffect(() => {
     const first = allReports?.[0];
     if (!id && first) {
-      navigate(`/scan-report/${first.id}`, { replace: true });
+      navigate(`/scan-report/${first.id}/${lens}`, { replace: true });
     }
-  }, [id, allReports, navigate]);
+  }, [id, allReports, navigate, lens]);
 
   // Live data fetch — only when :id is present in the route.
   const { data: sections, isLoading, error } = useReportSectionsQuery(id);
@@ -107,6 +116,24 @@ export function ScanReportPage() {
     const m = document.querySelector(".main");
     if (m) m.scrollTo({ top: 0, behavior: "smooth" });
   }, [lens]);
+
+  // Full-report PDF: once the stacked print container is mounted, fire the
+  // browser print dialog, then revert so the screen view returns.
+  useEffect(() => {
+    if (!printingAll) return;
+    const revert = () => setPrintingAll(false);
+    window.addEventListener("afterprint", revert);
+    const t = window.setTimeout(() => window.print(), 80);
+    return () => {
+      window.removeEventListener("afterprint", revert);
+      window.clearTimeout(t);
+    };
+  }, [printingAll]);
+
+  // "This dashboard" prints the on-screen lens; "Full report" mounts the
+  // stacked container (the effect above triggers print).
+  const exportThis = () => window.print();
+  const exportAll = () => setPrintingAll(true);
 
   const onNav = (to: string) => navigate(to.startsWith("/") ? to : `/${to}`);
 
@@ -183,9 +210,25 @@ export function ScanReportPage() {
     sentiment: { overall: 0, positive: 0, neutral: 0, negative: 0, trend: "" },
   };
 
+  const renderLens = (l: LensId) => {
+    switch (l) {
+      case "summary":
+        return <ExecutiveSummary data={summaryData} competitor={competitorData} onPickLens={goToLens} />;
+      case "founder":
+        return <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
+      case "product":
+        return <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
+      case "marketing":
+        return <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
+      case "growth":
+        return <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} />;
+    }
+  };
+
   return (
-    <div style={{ position: "relative", minHeight: "100%" }}>
+    <div style={{ position: "relative", minHeight: "100%" }} className={printingAll ? "printing-all" : undefined}>
       <div
+        className="no-print"
         style={{
           position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
           background: lens === "summary"
@@ -195,41 +238,40 @@ export function ScanReportPage() {
         }}
       />
 
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div className="scan-live-view" style={{ position: "relative", zIndex: 1 }}>
         <UnifiedHeader
           competitor={competitorData}
           meta={meta}
           range={range}
           setRange={setRange}
           onNav={onNav}
+          onExportThis={exportThis}
+          onExportAll={exportAll}
         />
 
         <div key={lens} className="fade-up">
-          {lens === "summary"   && (
-            <ExecutiveSummary
-              data={summaryData}
-              competitor={competitorData}
-              onPickLens={setLens}
-            />
-          )}
-          {lens === "founder"   && (
-            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
-          )}
-          {lens === "product"   && (
-            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
-          )}
-          {lens === "marketing" && (
-            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
-          )}
-          {lens === "growth"    && (
-            <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} />
-          )}
+          {renderLens(lens)}
         </div>
 
         <div style={{ height: 110 }} />
       </div>
 
-      <LensDock active={lens} onPick={setLens} />
+      <LensDock active={lens} onPick={goToLens} />
+
+      {printingAll && (
+        <div className="print-all-only">
+          {LENS_ORDER.map((l, i) => (
+            <section key={l} className={i > 0 ? "print-page-break" : undefined}>
+              <div style={{ padding: "16px 28px 0" }}>
+                <div className="re-eyebrow" style={{ fontSize: 10, color: LENS_META[l].color }}>
+                  {LENS_META[l].glyph} {LENS_META[l].name.toUpperCase()}{l !== "summary" ? " LENS" : ""}
+                </div>
+              </div>
+              {renderLens(l)}
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -243,9 +285,11 @@ interface UnifiedHeaderProps {
   range: string;
   setRange: (r: string) => void;
   onNav: (to: string) => void;
+  onExportThis: () => void;
+  onExportAll: () => void;
 }
 
-function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedHeaderProps) {
+function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportThis, onExportAll }: UnifiedHeaderProps) {
   return (
     <div
       style={{
@@ -303,7 +347,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div className="no-print" style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>RANGE</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
@@ -320,15 +364,79 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
             <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("/compare")}>
               <Icon name="compare" size={14} /> Compare
             </button>
-            <button className="re-btn re-btn-ghost re-btn-sm">
-              <Icon name="download" size={14} /> Export
-            </button>
+            <ExportMenu onExportThis={onExportThis} onExportAll={onExportAll} lensName={meta.name} />
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+// ----------------------------------------------------------------------------
+// EXPORT MENU — browser print-to-PDF, single dashboard or full report
+
+function ExportMenu({
+  onExportThis,
+  onExportAll,
+  lensName,
+}: {
+  onExportThis: () => void;
+  onExportAll: () => void;
+  lensName: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const choose = (fn: () => void) => {
+    setOpen(false);
+    // Defer so the menu unmounts before the print dialog blocks the thread.
+    setTimeout(fn, 0);
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <Icon name="download" size={14} /> Export
+      </button>
+
+      {open && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setOpen(false)} />
+          <div
+            role="menu"
+            style={{
+              position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50,
+              minWidth: 220, padding: 5,
+              background: "var(--surface-solid)",
+              border: "1px solid var(--border-soft)",
+              borderRadius: "var(--r-md)",
+              boxShadow: "var(--shadow-lg, 0 16px 40px rgba(0,0,0,0.18))",
+            }}
+          >
+            <button className="re-menu-item" style={exportItemStyle} onClick={() => choose(onExportThis)}>
+              <Icon name="download" size={13} />
+              <span>Export <b>{lensName}</b> dashboard</span>
+            </button>
+            <button className="re-menu-item" style={exportItemStyle} onClick={() => choose(onExportAll)}>
+              <Icon name="download" size={13} />
+              <span>Export full report (all dashboards)</span>
+            </button>
+            <div style={{ padding: "6px 10px 2px", fontSize: 10 }} className="font-mono-feat text-fg-faint">
+              Opens your browser print dialog · choose “Save as PDF”
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const exportItemStyle: CSSProperties = {
+  display: "flex", alignItems: "center", gap: 9,
+  width: "100%", padding: "8px 10px",
+  border: 0, background: "transparent", cursor: "pointer",
+  textAlign: "left", fontSize: 13, color: "var(--fg)",
+  borderRadius: "var(--r-sm, 6px)",
+};
 
 // ----------------------------------------------------------------------------
 // EXECUTIVE SUMMARY
@@ -646,6 +754,7 @@ function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => 
 
   return (
     <div
+      className="no-print"
       style={{
         position: "fixed", bottom: 22, left: "50%", transform: "translateX(-50%)",
         zIndex: 40,

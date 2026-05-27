@@ -345,3 +345,49 @@
 .fade-up { animation: fadeUp 360ms cubic-bezier(.2,.7,.2,1) both; }
 @keyframes radar-sweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .radar-sweep { animation: radar-sweep 4s linear infinite; transform-origin: center; }
+
+/* ---------------------------------------------------------------------------
+   PRINT / PDF EXPORT
+   Browser print-to-PDF for the scan report. Hides app chrome (topbar, sidebar,
+   floating lens dock, action buttons) and lets the report content flow full
+   width. Two modes driven by a class on the report root:
+     - default        → prints the on-screen dashboard ("this dashboard")
+     - .printing-all  → prints the stacked full report, hiding the live view
+--------------------------------------------------------------------------- */
+
+/* The stacked all-dashboards container is screen-hidden; only used for print. */
+.print-all-only { display: none; }
+
+@media print {
+  @page { margin: 14mm; }
+
+  html, body { background: #fff !important; }
+
+  /* Hide app chrome and any explicitly non-printable element. */
+  .topbar,
+  .sidebar,
+  .dot-grid-bg,
+  .no-print { display: none !important; }
+
+  /* Collapse the app grid so the report uses the full page. */
+  .app {
+    display: block !important;
+    height: auto !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+  }
+  .main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Keep cards intact across page boundaries. */
+  .re-card { break-inside: avoid; }
+
+  /* Page break before each dashboard in the full-report export. */
+  .print-page-break { break-before: page; }
+
+  /* Full-report mode: show the stacked container, hide the single live view. */
+  .printing-all .scan-live-view { display: none !important; }
+  .printing-all .print-all-only { display: block !important; }
+}
