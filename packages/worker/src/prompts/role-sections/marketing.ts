@@ -8,17 +8,19 @@ Your job for the MARKETING section is to answer the question: **"What should we 
 
 You translate raw competitor-user signals into words, angles, and creative assets that marketing practitioners — copywriters, demand-gen leads, and growth marketers — can act on directly. Your output covers:
 
-- **messaging_opportunity_score** — a composite 0–100 score with six factor weights (repeated_user_language_strength, pain_clarity, promise_reality_gap, objection_frequency, quote_quality, source_confidence).
-- **messaging_summary** — 2–4 sentence plain-English synthesis of the messaging opportunity.
-- **user_language_bank** — five phrase buckets (positive_phrases, negative_phrases, alternative_seeking_phrases, emotional_adjectives, category_language) using the exact words real users write.
-- **positive_phrases** and **negative_phrases** — top-level aliases mirroring the corresponding user_language_bank buckets (both must be populated identically to the bank entries).
-- **positioning_angles** — evidence-backed angles a marketer can use in copy; each carries competitor_weakness, competitor_strength_to_respect, pain_targeted, suggested_message, best_channel_or_use_case, an optional risk_warning, confidence, and evidence_refs.
-- **competitor_promise_vs_user_reality** — a gap analysis table: for each competitor marketing claim, document what users actually experience and the resulting messaging_opportunity.
-- **objections_to_handle** — buying objections (pricing, migration, trust, feature_completeness, complexity, support, integration) with why_users_hesitate, frequency, suggested_response, confidence, and evidence_refs.
-- **comparison_page_bullets** — structured VS-page scaffold: hero_angle, why_users_look_for_alternatives, where_competitor_is_strong, where_users_struggle, who_should_choose_us, objections_to_handle, proof_quotes.
-- **copy_ideas** — six sub-arrays (homepage_headlines, subheadlines, ad_hooks, linkedin_hooks, comparison_page_headlines, cta_ideas); each copy item carries signal_behind_it, best_use_case, confidence, and evidence_refs.
-- **quote_library** — curated quotes graded by copy_usefulness_score (0–1); each carries source, sentiment, signal_type, and an optional related_positioning_angle.
-- **evidence_refs** — section-level aggregate evidence rollup.
+Use the EXACT field names below for every item — wrong field names are dropped and render as empty rows.
+
+- **messaging_opportunity_score** — object: { score (0–100 int), label (string), explanation (string), factors: { repeated_user_language_strength, pain_clarity, promise_reality_gap, objection_frequency, quote_quality, source_confidence } (each 0–1) }.
+- **messaging_summary** — string, 2–4 sentences.
+- **user_language_bank** — object with five arrays: positive_phrases, negative_phrases, alternative_seeking_phrases, emotional_adjectives, category_language. EACH array item is an object: { phrase (string, the exact words a user wrote, REQUIRED non-empty), frequency (int count), sentiment (-1..1 float), source_count (int), evidence_refs }.
+- **positive_phrases** and **negative_phrases** — top-level arrays of the SAME phrase-item shape { phrase, frequency, sentiment, source_count, evidence_refs }; mirror the corresponding user_language_bank buckets.
+- **positioning_angles** — array of objects, each: { angle_title (string, REQUIRED non-empty), suggested_message (string), pain_targeted (string), competitor_weakness (string), competitor_strength_to_respect (string), best_channel_or_use_case (string), risk_warning (string|null), confidence { score 0–1, label, basis }, evidence_refs }.
+- **competitor_promise_vs_user_reality** — array of objects, each: { competitor_claim (string, REQUIRED non-empty), user_reality (string), gap_summary (string), messaging_opportunity (string), evidence_count (int), evidence_refs }.
+- **objections_to_handle** — array of objects, each: { objection_title (string, REQUIRED non-empty), objection_type (one of: pricing | migration | trust | feature_completeness | complexity | support | integration), why_users_hesitate (string), frequency (int), suggested_response (string), confidence { score, label, basis }, evidence_refs }.
+- **comparison_page_bullets** — object: { hero_angle (string), why_users_look_for_alternatives (string[]), where_competitor_is_strong (string[]), where_users_struggle (string[]), who_should_choose_us (string[]), objections_to_handle (string[]), proof_quotes (string[]) }.
+- **copy_ideas** — object with six arrays: homepage_headlines, subheadlines, ad_hooks, linkedin_hooks, comparison_page_headlines, cta_ideas. EACH item is an object: { copy (string, the actual copy text, REQUIRED non-empty), signal_behind_it (string), best_use_case (string), confidence { score, label, basis }, evidence_refs }.
+- **quote_library** — array of objects, each: { quote (string, REQUIRED non-empty), source (string platform), source_date (string|null), sentiment (-1..1), signal_type (love|pain|gap|switch|pricing|feature|positioning), related_positioning_angle (string|null), copy_usefulness_score (0–1), source_url (string|null) }.
+- **evidence_refs** — section-level rollup { signal_ids: string[], quote_ids: string[], source_urls: string[] }.
 
 ## Hard rules
 

@@ -11,16 +11,42 @@ The JSON must validate against the ProductViewSection schema.
 
 ## Output contract
 
-Return a single JSON object with exactly these top-level keys:
-- product_opportunity_score   — score 0–100, label, explanation, five factor weights 0–1
-- feature_gap_map             — array of feature gaps (gap signals → what users say is missing)
-- complaint_clusters_by_product_area — array of pain clusters mapped to product areas
-- loved_competitor_features   — array of love/feature signals (what the competitor does well)
-- workflow_friction           — array of workflow-level friction points
-- roadmap_opportunities       — array of prioritised build opportunities
-- build_avoid_learn           — { build: [], avoid: [], learn: [] } distillation
-- confidence_summary          — overall section confidence { score 0–1, label, basis }
-- evidence_refs               — section-level rollup { signal_ids, quote_ids, source_urls }
+Return a single JSON object with exactly these top-level keys. Use the EXACT field
+names below for every item — wrong field names are dropped and render as empty rows.
+
+- product_opportunity_score — object: { score (0–100 int), label (string), explanation (string),
+    factors: { feature_gap_frequency, pain_severity, source_spread, user_urgency,
+    competitor_love_strength } (each 0–1) }
+- feature_gap_map — array of objects, each:
+    { feature_gap (string — the missing capability, REQUIRED non-empty),
+      summary (string), mentions (int count), sources (string[] of platforms),
+      severity (0–1), confidence { score 0–1, label, basis },
+      user_segment (string|null), suggested_action (string|null), evidence_refs }
+- complaint_clusters_by_product_area — array of objects, each:
+    { product_area (one of: onboarding | performance | ux_navigation | collaboration |
+      permissions | integrations | reporting_analytics | pricing_packaging | support_reliability),
+      complaint_title (string, REQUIRED non-empty), summary (string), frequency (int),
+      severity (0–1), source_spread (0–1), impact_on_workflow (0–1),
+      suggested_product_response (string|null), evidence_refs }
+- loved_competitor_features — array of objects, each:
+    { feature_name (string, REQUIRED non-empty), why_users_love_it (string),
+      positive_mentions (int), stickiness_level (0–1),
+      recommendation (one of: learn | match | differentiate | ignore),
+      product_lesson (string|null), evidence_refs }
+- workflow_friction — array of objects, each:
+    { workflow_name (string, REQUIRED non-empty), friction_point (string), impact (0–1),
+      frequency (int), affected_segment (string|null), suggested_improvement (string|null),
+      evidence_refs }
+- roadmap_opportunities — array of objects, each:
+    { opportunity_title (string, REQUIRED non-empty), user_problem (string),
+      suggested_feature (string), expected_impact (0–1),
+      effort_estimate (one of: low | medium | high), confidence { score, label, basis },
+      why_now (string|null), evidence_refs }
+- build_avoid_learn — object { build: [], avoid: [], learn: [] }, each list item:
+    { title (string, REQUIRED non-empty), reason (string), evidence_count (int),
+      confidence { score, label, basis }, evidence_refs }
+- confidence_summary — { score (0–1), label, basis }
+- evidence_refs — section-level rollup { signal_ids: string[], quote_ids: string[], source_urls: string[] }
 
 ## Evidence rules (non-negotiable)
 
