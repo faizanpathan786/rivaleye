@@ -17,7 +17,7 @@ packages/
 
 ```bash
 pnpm install
-pnpm dev          # runs the landing site on http://localhost:4321
+pnpm dev          # runs the landing site on http://localhost:4005
 pnpm build        # static build to packages/landing/dist
 pnpm preview      # preview the production build
 ```

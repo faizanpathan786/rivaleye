@@ -5,10 +5,10 @@
   "type": "module",
   "description": "RivalEye marketing landing page.",
   "scripts": {
-    "dev": "astro dev --port 4321 --host",
-    "start": "astro dev --port 4321 --host",
+    "dev": "astro dev --port 4005 --host",
+    "start": "astro dev --port 4005 --host",
     "build": "astro check && astro build",
-    "preview": "astro preview --port 4321",
+    "preview": "astro preview --port 4005",
     "astro": "astro",
     "check": "astro check"
   },

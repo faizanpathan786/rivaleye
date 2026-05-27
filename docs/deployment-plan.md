@@ -188,9 +188,9 @@ COPY packages/ packages/
 
 # ── API image ─────────────────────────────────────────────────────────────────
 FROM base AS api
-EXPOSE 3001
+EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+  CMD curl -f http://localhost:4000/health || exit 1
 CMD ["bun", "packages/api/src/server.ts"]
 
 # ── Worker image ──────────────────────────────────────────────────────────────
@@ -299,14 +299,14 @@ spec:
       containers:
         - image: REGION-docker.pkg.dev/PROJECT/rivaleye/api:SHA
           ports:
-            - containerPort: 3001
+            - containerPort: 4000
           resources:
             limits:
               memory: 512Mi
               cpu: "1"
           env:
             - name: PORT
-              value: "3001"
+              value: "4000"
           # Remaining env vars injected from Secret Manager via gcloud run deploy --set-secrets
       serviceAccountName: rivaleye-api-sa@PROJECT.iam.gserviceaccount.com
 ```

@@ -1688,7 +1688,7 @@ Expected: object with `title`, `description`, `evidence` array.
 pnpm --filter @rivaleye/web dev
 ```
 
-Open `http://localhost:5173`. Enter "Notion", pick category, submit. Should redirect to `/reports/<id>` and show loading → pain cluster cards.
+Open `http://localhost:4004`. Enter "Notion", pick category, submit. Should redirect to `/reports/<id>` and show loading → pain cluster cards.
 
 - [ ] **Step 8: Final type-check across workspace**
 

@@ -830,9 +830,9 @@ See `docs/testing/03-postgres-runner-e2e.md` for detailed instructions.
 # Terminal 1: Start everything
 pnpm dev
 
-# Terminal 2: Create a report via the app (http://localhost:5173)
+# Terminal 2: Create a report via the app (http://localhost:4004)
 # or via curl:
-curl -X POST http://localhost:3001/v1/reports \
+curl -X POST http://localhost:4000/v1/reports \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{

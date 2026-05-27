@@ -11,12 +11,12 @@ pnpm dev
 ```
 
 `pnpm dev` boots:
-- `@rivaleye/api`     on :3001
-- `@rivaleye/web`     on :5173
-- `@rivaleye/worker`  spawns three processes (scrape:3100, llm:3101, synth:3102) via concurrently
+- `@rivaleye/api`     on :4000
+- `@rivaleye/web`     on :4004
+- `@rivaleye/worker`  spawns three processes (scrape:4001, llm:4002, synth:4003) via concurrently
 
 Open:
-- App:           http://localhost:5173
+- App:           http://localhost:4004
 - Inngest UI:    http://localhost:8288
 
 Inngest auto-discovers the three worker endpoints on `/api/inngest` on each port.

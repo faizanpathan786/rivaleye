@@ -429,7 +429,7 @@ Goal: make sure spec §9 state matrix is covered everywhere.
 ### Task 10.4 — Manual browser smoke test (golden path) [sequential]
 - **Pre-req:** API running on `:6090`, worker running, Postgres reachable.
 - **Steps:**
-  1. `pnpm --filter @rivaleye/web dev`, visit `http://localhost:5173/`.
+  1. `pnpm --filter @rivaleye/web dev`, visit `http://localhost:4004/`.
   2. Confirm Cold Steel dark theme; Geist font loaded (DevTools → Network → woff).
   3. Fill form: competitor "Notion", category "productivity", optional audience "PMs", goal default. Submit.
   4. Verify redirect to `/reports/<uuid>`; skeleton + stage indicator visible.

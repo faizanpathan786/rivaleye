@@ -1401,7 +1401,7 @@ Expected: 0 errors.
 cd /Users/apple/Desktop/rivaleye-v3 && pnpm --filter @rivaleye/web dev &
 ```
 
-Open `http://localhost:5173` in browser. Navigate to the new report form. Verify:
+Open `http://localhost:4004` in browser. Navigate to the new report form. Verify:
 - "Competitor website URL (optional)" input appears
 - Leaving it blank submits without `website_url` in payload
 - Entering an invalid URL shows validation error "Must be a valid URL"

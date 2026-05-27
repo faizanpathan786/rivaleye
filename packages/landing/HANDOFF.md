@@ -9,7 +9,7 @@ Direction: **TERMINAL** — Bloomberg-intelligence aesthetic, acid lime on near-
 tar -xzf rivaleye.tar.gz
 cd rivaleye
 pnpm install
-pnpm dev          # http://localhost:4321
+pnpm dev          # http://localhost:4005
 pnpm build        # static output to packages/landing/dist/
 ```
 

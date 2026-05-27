@@ -4,7 +4,7 @@ import { stageA } from "./stage-a";
 import { stageB } from "./stage-b";
 import { getPipelineEngine } from "../config";
 
-const port = Number(process.env.WORKER_LLM_PORT ?? 3101);
+const port = Number(process.env.WORKER_LLM_PORT ?? 4002);
 const engine = getPipelineEngine();
 
 if (engine === "postgres") {

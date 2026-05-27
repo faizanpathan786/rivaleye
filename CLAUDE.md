@@ -93,7 +93,7 @@ The previous implementation is preserved on the `archive/legacy-v1` branch and *
 |---|---|---|
 | `CONNECTION_STRING` | api | Supabase Postgres connection string |
 | `BETTER_AUTH_SECRET` | api | better-auth signing secret |
-| `BETTER_AUTH_URL` | api | better-auth base URL (e.g. `http://localhost:3001`) |
+| `BETTER_AUTH_URL` | api | better-auth base URL (e.g. `http://localhost:4000`) |
 | `REDDIT_CLIENT_ID` | worker (scrapers/reddit) | Reddit app id |
 | `REDDIT_CLIENT_SECRET` | worker (scrapers/reddit) | Reddit app secret |
 | `REDDIT_USER_AGENT` | worker (scrapers/reddit) | Reddit API user-agent |

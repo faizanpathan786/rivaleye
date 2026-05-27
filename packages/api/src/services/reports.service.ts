@@ -486,6 +486,7 @@ export async function cancelReport(
 
 export async function getReportSections(reportId: string): Promise<{
   overview: unknown | null;
+  summary: unknown | null;
   founder: unknown | null;
   product: unknown | null;
   marketing: unknown | null;
@@ -501,6 +502,7 @@ export async function getReportSections(reportId: string): Promise<{
 
   return {
     overview: byType.get("overview") ?? null,
+    summary: byType.get("summary") ?? null,
     founder: byType.get("founder") ?? null,
     product: byType.get("product") ?? null,
     marketing: byType.get("marketing") ?? null,

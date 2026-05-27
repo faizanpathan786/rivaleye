@@ -143,9 +143,9 @@ INNGEST_EVENT_KEY=
 INNGEST_SIGNING_KEY=
 
 # Worker ports (Inngest dev server discovers these)
-WORKER_SCRAPE_PORT=3100
-WORKER_LLM_PORT=3101
-WORKER_SYNTH_PORT=3102
+WORKER_SCRAPE_PORT=4001
+WORKER_LLM_PORT=4002
+WORKER_SYNTH_PORT=4003
 ```
 
 - [ ] **Step 4: Install**
@@ -2288,12 +2288,12 @@ pnpm dev
 ```
 
 `pnpm dev` boots:
-- `@rivaleye/api`     on :3001
-- `@rivaleye/web`     on :5173
-- `@rivaleye/worker`  spawns three processes (scrape:3100, llm:3101, synth:3102) via concurrently
+- `@rivaleye/api`     on :4000
+- `@rivaleye/web`     on :4004
+- `@rivaleye/worker`  spawns three processes (scrape:4001, llm:4002, synth:4003) via concurrently
 
 Open:
-- App:           http://localhost:5173
+- App:           http://localhost:4004
 - Inngest UI:    http://localhost:8288
 
 Inngest auto-discovers the three worker endpoints on `/api/inngest` on each port.
@@ -2318,7 +2318,7 @@ Expected: Inngest UI at :8288 shows three apps registered: `rivaleye-worker` (sc
 
 - [ ] **Step 3: Submit a new report from the UI**
 
-Open http://localhost:5173, create a report.
+Open http://localhost:4004, create a report.
 
 Verify:
 1. Inngest UI shows 8 `scrape.fetch` events sent within 1s.
