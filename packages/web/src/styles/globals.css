@@ -36,7 +36,7 @@
 
 @layer base {
   :root {
-    /* RivalEye — light, soft, rounded design tokens */
+    /* RivalEye — light, soft, rounded design tokens — blue accent */
     --bg:        #f7f6f3;
     --bg-sunken: #efece6;
     --surface:   rgba(255,255,255,0.78);
@@ -52,9 +52,9 @@
     --border-strong:  rgba(20,16,12,0.13);
     --hover:     rgba(20,16,12,0.04);
 
-    --accent:      #ff5c1a;
+    --accent:      #0061B1;
     --accent-fg:   #ffffff;
-    --accent-soft: rgba(255,92,26,0.10);
+    --accent-soft: rgba(0,97,177,0.12);
 
     --pos:  #16a34a;
     --neu:  #9c958a;
@@ -80,26 +80,26 @@
     --pad-card-hd: 12px 14px;
     --density-row: 36px;
 
-    /* shadcn tokens — map to our palette in HSL */
+    /* shadcn tokens — light blue-accent palette in HSL */
     --background: 40 22% 96%;            /* #f7f6f3 */
     --foreground: 24 14% 8%;             /* #161412 */
     --card: 0 0% 100%;
     --card-foreground: 24 14% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 24 14% 8%;
-    --primary: 24 14% 8%;
+    --primary: 211 100% 35%;             /* #0061B1 */
     --primary-foreground: 0 0% 100%;
     --secondary: 36 18% 92%;
     --secondary-foreground: 24 14% 8%;
     --muted: 36 18% 92%;
     --muted-foreground: 30 8% 33%;
-    --accent-hsl: 17 100% 55%;
+    --accent-hsl: 211 100% 35%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --border: 30 12% 88%;
     --input: 30 12% 88%;
-    --ring: 17 100% 55%;
+    --ring: 211 100% 35%;
     --radius: 10px;
   }
 
@@ -112,8 +112,8 @@
     font-family: "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
     font-feature-settings: "ss01", "ss02", "cv11";
     background:
-      radial-gradient(ellipse 1100px 700px at 8% -10%, rgba(255,140,90,0.10) 0%, transparent 55%),
-      radial-gradient(ellipse 900px 600px at 100% 105%, rgba(99,102,241,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 1100px 700px at 8% -10%, rgba(0,97,177,0.08) 0%, transparent 55%),
+      radial-gradient(ellipse 900px 600px at 100% 105%, rgba(0,97,177,0.05) 0%, transparent 60%),
       var(--bg);
     background-attachment: fixed;
     color: var(--fg);
@@ -207,7 +207,7 @@
   .re-btn-accent {
     background: var(--accent); color: var(--accent-fg);
     border-color: var(--accent);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 4px 14px rgba(255,92,26,0.25);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 14px rgba(56,189,248,0.30);
   }
   .re-btn-accent:hover { filter: brightness(1.06); }
   .re-btn-ghost { background: transparent; border-color: transparent; color: var(--fg-muted); }

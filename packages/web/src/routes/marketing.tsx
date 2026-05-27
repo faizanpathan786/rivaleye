@@ -1061,7 +1061,7 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
             style={{
               margin: "0 18px 18px",
               padding: 18,
-              background: `linear-gradient(135deg, ${VIO_BG}, rgba(255,92,26,0.04))`,
+              background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
               border: `1px solid ${VIO}33`,
               borderRadius: 10,
               position: "relative",
@@ -1493,7 +1493,7 @@ function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["compa
       <div
         style={{
           padding: "32px 32px 28px",
-          background: `linear-gradient(135deg, ${VIO_BG}, rgba(255,92,26,0.04))`,
+          background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
           borderBottom: "1px solid var(--border-soft)",
           position: "relative",
         }}
@@ -1844,7 +1844,7 @@ function MarketingFooter({ onNav }: { onNav: (to: string) => void }) {
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: `linear-gradient(135deg, ${VIO_BG}, rgba(255,92,26,0.04))`,
+        background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
