@@ -43,6 +43,7 @@ function stripEvidenceIds(merged: MergedClusters): MergedClusters {
 // 5 min per attempt gives DeepSeek enough time to generate large JSON responses.
 const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
 const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 3 };
+const LLM_OPTS_D_ROLE: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 2 };
 const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
 
 let _llm: OpenRouterClient | null = null;
@@ -171,7 +172,7 @@ export async function runPipeline(reportId: string): Promise<void> {
     synth = resultD.synth;
 
     try {
-      const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals });
+      const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
       roleSections = resultRole.roleSections;
       await log(reportId, "info", "D", null, "stage D role synthesis done", {
         sections: Object.keys(roleSections),
@@ -248,7 +249,7 @@ export async function runPipeline(reportId: string): Promise<void> {
           system: summaryPrompt.system,
           user: summaryPrompt.user,
           schema: summaryPrompt.schema,
-        });
+        }, LLM_OPTS_D_ROLE);
 
         const summaryData = summaryRes.parsed as SummaryData;
         roleSections.summary = summaryData;
