@@ -10,7 +10,7 @@ export const platformIdSchema = z.enum([
   "website",
 ]);
 
-export const switchingDirectionSchema = z.enum(["inbound", "outbound"]);
+export const switchingDirectionSchema = z.enum(["inbound", "outbound"]).catch("outbound" as const);
 
 export const stageASignalSchema = z.object({
   title: z.string().min(1),
@@ -300,136 +300,146 @@ export const sentimentTrendEnum = z.preprocess(
 );
 export const effortEnum = z.preprocess(
   (v) => v === "medium" ? "med" : v,
-  z.enum(["low", "med", "high"]),
+  z.enum(["low", "med", "high"]).catch("med" as const),
 );
 export const payoffEnum = z.preprocess(
   (v) => v === "medium" ? "med" : v,
-  z.enum(["low", "med", "high"]),
+  z.enum(["low", "med", "high"]).catch("med" as const),
 );
 
 export const synthOutputSchema = z.object({
   complaints: z.array(
     z.object({
-      external_id: z.string(),
-      title: z.string(),
-      tag: z.string().nullable(),
-      mentions: z.number().int().nonnegative(),
-      delta: z.string().nullable(),
-      severity: z.number().min(0).max(1),
-      summary: z.string().nullable(),
-      threads: z.number().int().nonnegative(),
-      sample: z.string().nullable(),
+      external_id: z.string().default(""),
+      title: z.string().default(""),
+      tag: z.string().nullable().default(null),
+      mentions: z.number().int().nonnegative().default(0),
+      delta: z.string().nullable().default(null),
+      severity: z.number().min(0).max(1).default(0),
+      summary: z.string().nullable().default(null),
+      threads: z.number().int().nonnegative().default(0),
+      sample: z.string().nullable().default(null),
     }),
-  ),
+  ).catch([]),
   feature_gaps: z.array(
     z.object({
-      feature: z.string(),
-      votes: z.number().int().nonnegative(),
-      signal: z.number().min(0).max(1),
+      feature: z.string().default(""),
+      votes: z.number().int().nonnegative().default(0),
+      signal: z.number().min(0).max(1).default(0),
     }),
-  ),
+  ).catch([]),
   pricing_tiers: z.array(
-    z.object({ tier: z.string(), pain: z.number().min(0).max(1), note: z.string().nullable() }),
-  ),
+    z.object({
+      tier: z.string().default(""),
+      pain: z.number().min(0).max(1).default(0),
+      note: z.string().nullable().default(null),
+    }),
+  ).catch([]),
   pricing_quotes: z.array(
-    z.object({ who: z.string(), sub: z.string().nullable(), text: z.string() }),
-  ),
+    z.object({
+      who: z.string().default(""),
+      sub: z.string().nullable().default(null),
+      text: z.string().default(""),
+    }),
+  ).catch([]),
   switching: z.array(
     z.object({
       direction: switchingDirectionSchema,
-      competitor_name: z.string(),
-      count: z.number().int().nonnegative(),
-      share: z.number().min(0).max(1),
+      competitor_name: z.string().default(""),
+      count: z.number().int().nonnegative().default(0),
+      share: z.number().min(0).max(1).default(0),
     }),
-  ),
+  ).catch([]),
   quotes: z.array(
     z.object({
-      who: z.string(),
+      who: z.string().default(""),
       sub: z.string().nullable().default(null),
       when_label: z.string().nullable().default(null),
       score: z.number().int().default(0),
       sentiment: z.number().nullable().catch(null),
-      text: z.string(),
+      text: z.string().default(""),
     }),
-  ),
+  ).catch([]),
   voice_words: z.array(
     z.object({
-      kind: z.enum(["positive", "negative"]),
-      word: z.string(),
-      count: z.number().int().nonnegative(),
+      kind: z.enum(["positive", "negative"]).catch("positive" as const),
+      word: z.string().default(""),
+      count: z.number().int().nonnegative().default(0),
     }),
-  ),
+  ).catch([]),
   positioning: z.array(
     z.object({
-      angle: z.string(),
-      thesis: z.string().nullable(),
-      audience: z.string().nullable(),
-      against: z.string().nullable(),
+      angle: z.string().default(""),
+      thesis: z.string().nullable().default(null),
+      audience: z.string().nullable().default(null),
+      against: z.string().nullable().default(null),
     }),
-  ),
+  ).catch([]),
   actions: z.array(
     z.object({
-      step: z.string(),
-      detail: z.string().nullable(),
+      step: z.string().default(""),
+      detail: z.string().nullable().default(null),
       effort: effortEnum,
-      role: z.string().nullable(),
+      role: z.string().nullable().default(null),
     }),
-  ),
+  ).catch([]),
   leads: z.array(
     z.object({
-      who: z.string(),
+      who: z.string().default(""),
       sub: z.string().nullable().default(null),
       when_label: z.string().nullable().default(null),
       score: z.number().int().default(0),
-      signal: z.string().nullable(),
-      quote: z.string().nullable(),
+      signal: z.string().nullable().default(null),
+      quote: z.string().nullable().default(null),
     }),
-  ),
+  ).catch([]),
   opportunities: z.array(
     z.object({
-      title: z.string(),
-      thesis: z.string().nullable(),
+      title: z.string().default(""),
+      thesis: z.string().nullable().default(null),
       effort: effortEnum,
       payoff: payoffEnum,
-      anchor_complaint_external_id: z.string().nullable(),
+      anchor_complaint_external_id: z.string().nullable().default(null),
     }),
-  ),
+  ).catch([]),
   threads: z.array(
     z.object({
-      complaint_external_id: z.string().nullable(),
-      platform: platformIdSchema,
-      url: z.string().nullable(),
-      title: z.string(),
-      author: z.string().nullable(),
-      sub: z.string().nullable(),
-      posted_at: z.string().datetime().nullable(),
-      score: z.number().int(),
-      messages: z
-        .array(
-          z.object({
-            author: z.string().nullable(),
-            body: z.string(),
-            posted_at: z.string().datetime().nullable(),
-            score: z.number().int(),
-          }),
-        )
-        .default([]),
+      complaint_external_id: z.string().nullable().default(null),
+      platform: platformIdSchema.catch("reddit" as const),
+      url: z.string().nullable().default(null),
+      title: z.string().default(""),
+      author: z.string().nullable().default(null),
+      sub: z.string().nullable().default(null),
+      posted_at: z.string().datetime().nullable().default(null),
+      score: z.number().int().default(0),
+      messages: z.array(
+        z.object({
+          author: z.string().nullable().default(null),
+          body: z.string().default(""),
+          posted_at: z.string().datetime().nullable().default(null),
+          score: z.number().int().default(0),
+        }),
+      ).catch([]),
     }),
-  ),
+  ).catch([]),
   report_meta: z.object({
-    sentiment_overall: z.number().min(-1).max(1),
-    sentiment_positive: z.number().min(0).max(1),
-    sentiment_neutral: z.number().min(0).max(1),
-    sentiment_negative: z.number().min(0).max(1),
+    sentiment_overall: z.number().min(-1).max(1).default(0),
+    sentiment_positive: z.number().min(0).max(1).default(0),
+    sentiment_neutral: z.number().min(0).max(1).default(0),
+    sentiment_negative: z.number().min(0).max(1).default(0),
     sentiment_trend: sentimentTrendEnum,
-    voice_summary: z.string().nullable(),
-    voice_phrases: z.array(z.string()),
-    pricing_blended: z.string().nullable(),
-    pricing_pain_score: z.number().min(0).max(1).nullable(),
-    switching_net_signal: z.string().nullable(),
-    switching_reasons_out: z.array(z.string()),
+    voice_summary: z.string().nullable().default(null),
+    voice_phrases: z.array(z.string()).catch([]),
+    pricing_blended: z.string().nullable().default(null),
+    pricing_pain_score: z.number().min(0).max(1).nullable().default(null),
+    switching_net_signal: z.string().nullable().default(null),
+    switching_reasons_out: z.array(z.string()).catch([]),
+  }).catch({
+    sentiment_overall: 0, sentiment_positive: 0, sentiment_neutral: 0, sentiment_negative: 0,
+    sentiment_trend: "flat" as const, voice_summary: null, voice_phrases: [],
+    pricing_blended: null, pricing_pain_score: null, switching_net_signal: null, switching_reasons_out: [],
   }),
-  executive_brief: z.string().min(1),
+  executive_brief: z.string().catch(""),
 });
 
 export type PlatformExtract = z.infer<typeof platformExtractSchema>;

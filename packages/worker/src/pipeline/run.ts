@@ -18,6 +18,10 @@ import { runStageERefine } from "./stage-e-refine";
 import { computePlatformStats, computeSubredditStats } from "./derive-stats";
 import { persistReport } from "./persist";
 import { PipelineError } from "./errors";
+import {
+  mergedClustersSchema,
+  synthOutputSchema,
+} from "../prompts/shared";
 import type {
   PipelineCtx,
   PlatformBrief,
@@ -127,7 +131,9 @@ export async function runPipeline(reportId: string): Promise<void> {
   if (checkpoints.has("C")) {
     await log(reportId, "info", "C", null, "skipping stage C (checkpoint found)");
     const cCheckpoint = checkpoints.get("C") as Record<string, unknown>;
-    merged = cCheckpoint as unknown as MergedClusters;
+    // Parse through schema to strip _signals and other non-MergedClusters keys.
+    // This keeps the Stage E prompt from ballooning with raw signal evidence data.
+    merged = mergedClustersSchema.parse(cCheckpoint);
     mergedSignals = (cCheckpoint["_signals"] ?? {}) as MergedSignals;
   } else {
     await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: signalExtracts.length });
@@ -154,7 +160,8 @@ export async function runPipeline(reportId: string): Promise<void> {
   if (checkpoints.has("D")) {
     await log(reportId, "info", "D", null, "skipping stage D (checkpoint found)");
     const cCheckpoint = checkpoints.get("D") as Record<string, unknown>;
-    synth = cCheckpoint as unknown as SynthOutput;
+    // Parse through schema to strip _role_sections and other non-SynthOutput keys.
+    synth = synthOutputSchema.parse(cCheckpoint);
     roleSections = cCheckpoint["_role_sections"] as RoleSections | undefined;
   } else {
     await log(reportId, "info", "D", null, "running stage D: synth", {
