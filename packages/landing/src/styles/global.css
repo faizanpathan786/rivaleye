@@ -22,12 +22,12 @@
   --color-fg-3: #565b68;
   --color-fg-4: #2e3340;
 
-  /* Acid lime — the one accent */
-  --color-lime-0: #e6ff8a;
-  --color-lime-1: #d4fb5c;
-  --color-lime: #c6f432;
-  --color-lime-2: #9dc418;
-  --color-lime-3: #5c7510;
+  /* Brand blue — the one accent */
+  --color-lime-0: #bae6fd;
+  --color-lime-1: #7dd3fc;
+  --color-lime: #38bdf8;
+  --color-lime-2: #0284c7;
+  --color-lime-3: #0c4a6e;
 
   /* Status (used sparingly for severity coding in the report mock) */
   --color-rose: #ff5c5c;
@@ -77,12 +77,12 @@
     --color-fg-3: #8a8f9a;
     --color-fg-4: #b8bcc7;
 
-    /* Acid lime — darker for light background */
-    --color-lime-0: #3d4f00;
-    --color-lime-1: #5a7700;
-    --color-lime: #6b8e00;
-    --color-lime-2: #8da300;
-    --color-lime-3: #c7e600;
+    /* Brand blue — darker for light background */
+    --color-lime-0: #0c2d4e;
+    --color-lime-1: #0e4d8a;
+    --color-lime: #1565c0;
+    --color-lime-2: #1976d2;
+    --color-lime-3: #90caf9;
 
     /* Status — adapted for light theme */
     --color-rose: #d11a3a;
@@ -207,13 +207,13 @@
 
   /* Lime glow utilities */
   .glow-lime-sm {
-    box-shadow: 0 0 24px -4px rgba(198, 244, 50, 0.35);
+    box-shadow: 0 0 24px -4px rgba(16, 128, 208, 0.35);
   }
   .glow-lime-md {
-    box-shadow: 0 0 60px -8px rgba(198, 244, 50, 0.45);
+    box-shadow: 0 0 60px -8px rgba(16, 128, 208, 0.45);
   }
   .glow-lime-text {
-    text-shadow: 0 0 24px rgba(198, 244, 50, 0.35);
+    text-shadow: 0 0 24px rgba(16, 128, 208, 0.35);
   }
 
   /* Terminal mono label */
@@ -340,10 +340,10 @@
 @keyframes pulse-lime {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(198, 244, 50, 0.5);
+    box-shadow: 0 0 0 0 rgba(16, 128, 208, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(198, 244, 50, 0);
+    box-shadow: 0 0 0 8px rgba(16, 128, 208, 0);
   }
 }
 

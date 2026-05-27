@@ -135,7 +135,7 @@ function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount }: Top
         <button className="re-btn re-btn-ghost re-btn-icon re-btn-sm" onClick={onAccount} title="Account">
           <span
             className="grid place-items-center text-white font-semibold"
-            style={{ width: 22, height: 22, borderRadius: 99, background: "linear-gradient(135deg,#ff5c1a,#ffb05a)", fontSize: 11 }}
+            style={{ width: 22, height: 22, borderRadius: 99, background: "linear-gradient(135deg,#004d8f,#0061B1)", fontSize: 11 }}
           >{userInitial}</span>
         </button>
       </div>

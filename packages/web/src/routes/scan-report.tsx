@@ -44,7 +44,7 @@ interface LensMeta {
 
 const LENS_META: Record<LensId, LensMeta> = {
   summary:   { name: "Summary",   color: "#161412", bg: "rgba(20,16,12,0.05)",   glyph: "◇", role: "Executive memo · neutral" },
-  founder:   { name: "Founder",   color: "#ff5c1a", bg: "rgba(255,92,26,0.10)",  glyph: "⊙", role: "Market opening · wedge to attack" },
+  founder:   { name: "Founder",   color: "#0061B1", bg: "rgba(0,97,177,0.10)",  glyph: "⊙", role: "Market opening · wedge to attack" },
   product:   { name: "Product",   color: "#6366f1", bg: "rgba(99,102,241,0.10)", glyph: "⊞", role: "Roadmap intelligence · gaps & evidence" },
   marketing: { name: "Marketing", color: "#8b5cf6", bg: "rgba(139,92,246,0.10)", glyph: "❝", role: "Positioning · copy · angles" },
   growth:    { name: "Growth",    color: "#16a34a", bg: "rgba(22,163,74,0.10)",  glyph: "↗", role: "Switch intent · live conversations" },
