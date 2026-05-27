@@ -13,7 +13,7 @@
  * Should be run as a background loop (e.g., every 30 seconds) on one worker.
  */
 
-import { and, eq, inArray, lte } from "drizzle-orm";
+import { and, eq, inArray, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
 import { log } from "../logger";
@@ -33,6 +33,7 @@ export async function recoverStaleJobs(config: WorkerConfig): Promise<void> {
   try {
     await recoverStaleSourceJobs(config.sourceJobTimeoutMinutes);
     await recoverStaleSynthesisJobs(config.synthesisJobTimeoutMinutes);
+    await healOrphanedReports();
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error("[recovery] loop failed:", errorMsg);
@@ -213,6 +214,42 @@ async function recoverStaleSynthesisJobs(timeoutMinutes: number): Promise<void> 
         .where(eq(synthesis_jobs.id, job.id));
 
       await log(job.report_id, "error", "synthesis.recovery", null, `Job stale for ${staleDurationMs}ms; exceeded max attempts and marked as failed`);
+    }
+  }
+}
+
+/**
+ * Heal reports where all source jobs are terminal but no synthesis job exists.
+ *
+ * This guards against the rare case where the fan-in transaction rolls back silently
+ * (observed with PgBouncer transaction-mode pooler) leaving the report stuck in
+ * running/scraping forever. Running every 30s ensures it self-heals within one cycle.
+ */
+async function healOrphanedReports(): Promise<void> {
+  // Find report_ids where every source job is terminal AND no synthesis job exists
+  const orphaned = await db.execute<{ report_id: string }>(sql`
+    SELECT DISTINCT rpj.report_id
+    FROM report_platform_jobs rpj
+    WHERE rpj.status IN ('completed', 'failed')
+    GROUP BY rpj.report_id
+    HAVING COUNT(*) = COUNT(CASE WHEN rpj.status IN ('completed', 'failed') THEN 1 END)
+      AND EXISTS (SELECT 1 FROM report_platform_jobs WHERE report_id = rpj.report_id AND status = 'completed')
+      AND NOT EXISTS (SELECT 1 FROM synthesis_jobs WHERE report_id = rpj.report_id)
+  `);
+
+  if (orphaned.rows.length === 0) return;
+
+  console.warn(`[recovery] Found ${orphaned.rows.length} orphaned report(s) with no synthesis job; triggering fan-in`);
+
+  for (const row of orphaned.rows) {
+    const reportId = row.report_id;
+    console.warn(`[recovery] Healing orphaned report ${reportId} — calling fanInCheck`);
+    try {
+      await fanInCheck(reportId);
+      await log(reportId, "warn", "recovery", null, "Healed orphaned report: no synthesis job found despite all source jobs terminal; re-triggered fan-in");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[recovery] fanInCheck failed for orphaned report ${reportId}:`, msg);
     }
   }
 }
