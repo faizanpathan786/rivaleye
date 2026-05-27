@@ -132,19 +132,7 @@ export function SignInPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              background: "var(--fg)",
-              color: "var(--bg)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="logo" size={16} />
-          </div>
+          <img src="/logo.svg" alt="RivalEye logo" style={{ width: 120, height: 120, objectFit: "contain" }} />
           <div
             className="font-mono-feat"
             style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}
