@@ -36,36 +36,36 @@
 
 @layer base {
   :root {
-    /* RivalEye — light, soft, rounded design tokens */
-    --bg:        #f7f6f3;
-    --bg-sunken: #efece6;
-    --surface:   rgba(255,255,255,0.78);
-    --surface-2: rgba(247,246,241,0.85);
-    --surface-solid: #ffffff;
-    --glass:     rgba(255,255,255,0.62);
+    /* RivalEye — dark, terminal, blue-accent design tokens (matches landing) */
+    --bg:        #07080a;
+    --bg-sunken: #0b0d11;
+    --surface:   rgba(16,19,26,0.80);
+    --surface-2: rgba(22,26,35,0.88);
+    --surface-solid: #10131a;
+    --glass:     rgba(11,13,17,0.65);
     --glass-blur: 18px;
 
-    --fg:        #161412;
-    --fg-muted:  #5c574e;
-    --fg-faint:  #9c958a;
-    --border-soft:    rgba(20,16,12,0.07);
-    --border-strong:  rgba(20,16,12,0.13);
-    --hover:     rgba(20,16,12,0.04);
+    --fg:        #f5f7fa;
+    --fg-muted:  #8a90a0;
+    --fg-faint:  #565b68;
+    --border-soft:    rgba(255,255,255,0.07);
+    --border-strong:  rgba(255,255,255,0.13);
+    --hover:     rgba(255,255,255,0.05);
 
-    --accent:      #ff5c1a;
-    --accent-fg:   #ffffff;
-    --accent-soft: rgba(255,92,26,0.10);
+    --accent:      #38bdf8;
+    --accent-fg:   #07080a;
+    --accent-soft: rgba(56,189,248,0.12);
 
-    --pos:  #16a34a;
-    --neu:  #9c958a;
-    --neg:  #dc2626;
-    --warn: #d97706;
+    --pos:  #4ade80;
+    --neu:  #565b68;
+    --neg:  #f87171;
+    --warn: #fbbf24;
 
-    --shadow-sm: 0 1px 0 rgba(20,16,12,0.03), 0 1px 2px rgba(20,16,12,0.04);
-    --shadow-md: 0 1px 0 rgba(20,16,12,0.03), 0 4px 12px rgba(20,16,12,0.05), 0 12px 28px rgba(20,16,12,0.04);
-    --shadow-lg: 0 8px 24px rgba(20,16,12,0.08), 0 32px 64px rgba(20,16,12,0.10);
+    --shadow-sm: 0 1px 0 rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.35);
+    --shadow-md: 0 1px 0 rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.35), 0 12px 28px rgba(0,0,0,0.25);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.45), 0 32px 64px rgba(0,0,0,0.45);
 
-    --grid-color: rgba(20,16,12,0.04);
+    --grid-color: rgba(255,255,255,0.04);
     --grid-size: 28px;
 
     --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -80,26 +80,26 @@
     --pad-card-hd: 12px 14px;
     --density-row: 36px;
 
-    /* shadcn tokens — map to our palette in HSL */
-    --background: 40 22% 96%;            /* #f7f6f3 */
-    --foreground: 24 14% 8%;             /* #161412 */
-    --card: 0 0% 100%;
-    --card-foreground: 24 14% 8%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 24 14% 8%;
-    --primary: 24 14% 8%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 36 18% 92%;
-    --secondary-foreground: 24 14% 8%;
-    --muted: 36 18% 92%;
-    --muted-foreground: 30 8% 33%;
-    --accent-hsl: 17 100% 55%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    /* shadcn tokens — dark blue palette in HSL */
+    --background: 222 30% 4%;            /* #07080a */
+    --foreground: 210 20% 97%;           /* #f5f7fa */
+    --card: 222 26% 7%;                  /* #0f1219 */
+    --card-foreground: 210 20% 97%;
+    --popover: 222 26% 7%;
+    --popover-foreground: 210 20% 97%;
+    --primary: 199 89% 60%;              /* #38bdf8 */
+    --primary-foreground: 222 30% 4%;
+    --secondary: 220 20% 12%;
+    --secondary-foreground: 210 20% 97%;
+    --muted: 220 20% 12%;
+    --muted-foreground: 217 10% 55%;
+    --accent-hsl: 199 89% 60%;
+    --accent-foreground: 222 30% 4%;
+    --destructive: 0 72% 70%;
     --destructive-foreground: 0 0% 100%;
-    --border: 30 12% 88%;
-    --input: 30 12% 88%;
-    --ring: 17 100% 55%;
+    --border: 220 18% 16%;
+    --input: 220 18% 16%;
+    --ring: 199 89% 60%;
     --radius: 10px;
   }
 
@@ -112,8 +112,8 @@
     font-family: "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
     font-feature-settings: "ss01", "ss02", "cv11";
     background:
-      radial-gradient(ellipse 1100px 700px at 8% -10%, rgba(255,140,90,0.10) 0%, transparent 55%),
-      radial-gradient(ellipse 900px 600px at 100% 105%, rgba(99,102,241,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 1100px 700px at 8% -10%, rgba(56,189,248,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 900px 600px at 100% 105%, rgba(56,189,248,0.05) 0%, transparent 60%),
       var(--bg);
     background-attachment: fixed;
     color: var(--fg);
@@ -207,7 +207,7 @@
   .re-btn-accent {
     background: var(--accent); color: var(--accent-fg);
     border-color: var(--accent);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 4px 14px rgba(255,92,26,0.25);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 14px rgba(56,189,248,0.30);
   }
   .re-btn-accent:hover { filter: brightness(1.06); }
   .re-btn-ghost { background: transparent; border-color: transparent; color: var(--fg-muted); }
@@ -283,7 +283,7 @@
   }
   .re-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
-  .re-meter { height: 4px; background: rgba(20,16,12,0.05); border-radius: 99px; overflow: hidden; position: relative; }
+  .re-meter { height: 4px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; position: relative; }
   .re-meter > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width 600ms cubic-bezier(.2,.7,.2,1); }
   .re-meter.neg > i  { background: var(--neg); }
   .re-meter.pos > i  { background: var(--pos); }
@@ -319,10 +319,10 @@
   .sb-idle:hover { background: var(--hover); color: var(--fg); }
   .sb-idle .sb-icon { color: var(--fg-faint); }
   .sb-active {
-    background: rgba(255,255,255,0.85);
+    background: rgba(56,189,248,0.08);
     color: var(--fg);
     font-weight: 500;
-    box-shadow: 0 1px 0 rgba(20,16,12,0.03), 0 1px 3px rgba(20,16,12,0.04);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.25);
     text-decoration: none;
     position: relative;
   }

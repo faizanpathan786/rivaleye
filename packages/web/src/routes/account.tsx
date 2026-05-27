@@ -158,7 +158,7 @@ function ProfileSection() {
               width: 44,
               height: 44,
               borderRadius: 99,
-              background: "linear-gradient(135deg,#ff5c1a,#ffb05a)",
+              background: "linear-gradient(135deg,#38bdf8,#7dd3fc)",
               color: "#fff",
               display: "grid",
               placeItems: "center",

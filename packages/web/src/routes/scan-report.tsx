@@ -6,6 +6,7 @@ import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
+import { useReportQuery } from "@/hooks/queries/use-reports";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -43,7 +44,7 @@ interface LensMeta {
 
 const LENS_META: Record<LensId, LensMeta> = {
   summary:   { name: "Summary",   color: "#161412", bg: "rgba(20,16,12,0.05)",   glyph: "◇", role: "Executive memo · neutral" },
-  founder:   { name: "Founder",   color: "#ff5c1a", bg: "rgba(255,92,26,0.10)",  glyph: "⊙", role: "Market opening · wedge to attack" },
+  founder:   { name: "Founder",   color: "#38bdf8", bg: "rgba(56,189,248,0.10)",  glyph: "⊙", role: "Market opening · wedge to attack" },
   product:   { name: "Product",   color: "#6366f1", bg: "rgba(99,102,241,0.10)", glyph: "⊞", role: "Roadmap intelligence · gaps & evidence" },
   marketing: { name: "Marketing", color: "#8b5cf6", bg: "rgba(139,92,246,0.10)", glyph: "❝", role: "Positioning · copy · angles" },
   growth:    { name: "Growth",    color: "#16a34a", bg: "rgba(22,163,74,0.10)",  glyph: "↗", role: "Switch intent · live conversations" },
@@ -172,6 +173,7 @@ export function ScanReportPage() {
 
   // Live data fetch — only when :id is present in the route.
   const { data: sections, isLoading, error } = useReportSectionsQuery(id);
+  const { data: report } = useReportQuery(id);
 
   useEffect(() => {
     const m = document.querySelector(".main");
@@ -243,7 +245,7 @@ export function ScanReportPage() {
 
       <div style={{ position: "relative", zIndex: 1 }}>
         <UnifiedHeader
-          competitor={SCAN_DATA.competitor}
+          competitor={{ ...SCAN_DATA.competitor, name: report?.primary_competitor_name ?? SCAN_DATA.competitor.name }}
           meta={meta}
           range={range}
           setRange={setRange}
@@ -253,7 +255,13 @@ export function ScanReportPage() {
         <div key={lens} className="fade-up">
           {lens === "summary"   && (
             <ExecutiveSummary
-              data={sections?.summary ? (sections.summary as ScanData) : SCAN_DATA}
+              data={sections?.summary ? (sections.summary as ScanData) : {
+                ...SCAN_DATA,
+                competitor: {
+                  ...SCAN_DATA.competitor,
+                  name: report?.primary_competitor_name ?? SCAN_DATA.competitor.name,
+                },
+              }}
               onPickLens={setLens}
             />
           )}
@@ -421,7 +429,7 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
           <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-          <AnchorQuote q={data.quotes[2]} theme="Pricing" color="#ff5c1a" />
+          <AnchorQuote q={data.quotes[2]} theme="Pricing" color="#38bdf8" />
           <AnchorQuote q={data.quotes[3]} theme="Time tracking" color="#6366f1" />
           <AnchorQuote q={data.quotes[1]} theme="Roadmap" color="#8b5cf6" />
         </div>

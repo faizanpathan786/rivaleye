@@ -576,8 +576,8 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "linear-gradient(180deg, rgba(255,92,26,0.06) 0%, var(--surface) 38%)",
-          borderColor: "rgba(255,92,26,0.18)",
+          background: "linear-gradient(180deg, rgba(56,189,248,0.06) 0%, var(--surface) 38%)",
+          borderColor: "rgba(56,189,248,0.18)",
         }}
       >
         <div
@@ -1089,7 +1089,7 @@ function RiskCard({ r }: { r: FounderViewProps["risks"][number] }) {
 // ─────────────────────────────────────────────────────────────────────────
 // SECTION 6 — ACTION PLAN
 
-const ACTION_COLORS = ["#ff5c1a", "#6366f1", "#16a34a"];
+const ACTION_COLORS = ["#38bdf8", "#6366f1", "#16a34a"];
 const ACTION_KIND_LABEL: Record<FounderViewProps["actions"][number]["kind"], string> = {
   product: "Product move",
   positioning: "Positioning move",
@@ -1182,7 +1182,7 @@ function FounderFooter({ onNav }: { onNav: (to: string) => void }) {
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: "linear-gradient(135deg, rgba(255,92,26,0.06), rgba(99,102,241,0.04))",
+        background: "linear-gradient(135deg, rgba(56,189,248,0.06), rgba(99,102,241,0.04))",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
