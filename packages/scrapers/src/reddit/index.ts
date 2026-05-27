@@ -25,8 +25,8 @@ const SEARCH_TEMPLATES = [
   (name: string) => `using ${phrase(name)}`,
 ];
 
-const MAX_SEARCH_TERMS = process.env["REDDIT_MAX_TERMS"] ? parseInt(process.env["REDDIT_MAX_TERMS"], 10) : SEARCH_TEMPLATES.length;
-const MAX_POSTS_PER_TERM = process.env["REDDIT_MAX_POSTS_PER_TERM"] ? parseInt(process.env["REDDIT_MAX_POSTS_PER_TERM"], 10) : 50;
+const MAX_SEARCH_TERMS = process.env["REDDIT_MAX_TERMS"] ? parseInt(process.env["REDDIT_MAX_TERMS"], 10) : 5;
+const MAX_POSTS_PER_TERM = process.env["REDDIT_MAX_POSTS_PER_TERM"] ? parseInt(process.env["REDDIT_MAX_POSTS_PER_TERM"], 10) : 25;
 const MAX_COMMENTS_PER_POST = 10;
 const MAX_TOTAL_POSTS = MAX_SEARCH_TERMS * MAX_POSTS_PER_TERM;
 

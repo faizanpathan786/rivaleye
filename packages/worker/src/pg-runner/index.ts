@@ -413,7 +413,7 @@ async function main(): Promise<void> {
   const config: WorkerConfig = {
     workerId,
     pollIntervalMs: 1500,
-    sourceJobTimeoutMinutes: 15,
+    sourceJobTimeoutMinutes: 25,
     synthesisJobTimeoutMinutes: 30,
   };
 
@@ -446,7 +446,7 @@ async function mainScrapeOnly(): Promise<void> {
   const config: WorkerConfig = {
     workerId,
     pollIntervalMs: 1500,
-    sourceJobTimeoutMinutes: 15,
+    sourceJobTimeoutMinutes: 25,
     synthesisJobTimeoutMinutes: 30,
   };
   log.info({ workerId, mode: "scrape-only" }, "Starting pg-runner (scrape + recovery only)");
@@ -467,8 +467,8 @@ async function mainSynthOnly(): Promise<void> {
   const config: WorkerConfig = {
     workerId,
     pollIntervalMs: 1500,
-    sourceJobTimeoutMinutes: 15,
-    synthesisJobTimeoutMinutes: 30,
+    sourceJobTimeoutMinutes: 25,
+    synthesisJobTimeoutMinutes: 35,
   };
   log.info({ workerId, mode: "synth-only" }, "Starting pg-runner (synthesis + recovery only)");
   try {

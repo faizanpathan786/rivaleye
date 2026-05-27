@@ -4,7 +4,7 @@ import { fetchReviews, searchApps, type RawAppStoreReviewsFeed } from "./client"
 import { normalizeAppStorePayload } from "./normalize";
 
 const DEFAULT_APP_LIMIT = 5;
-const DEFAULT_REVIEW_PAGES = 10;
+const DEFAULT_REVIEW_PAGES = 5;
 const DEFAULT_COUNTRY = "us";
 
 export class AppStoreScraper implements Scraper {
