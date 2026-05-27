@@ -2,9 +2,20 @@ import { stageCMergeLlmSchema } from "../shared";
 import type { PipelineCtx, PlatformBrief, StageAExtract } from "../shared";
 import type { PlatformId } from "@rivaleye/scrapers";
 
+const PLATFORM_SEMANTIC_CONTEXT = `Platform semantic weights for signal calibration:
+- reddit: organic community opinions — strongest source for pain, love, switch intent, and authentic voice. High trust.
+- appstore / playstore: star-rating user reviews — pain backed by low ratings is high-severity; 5-star love is strong retention proof.
+- producthunt: early-adopter launch feedback — gap and feature requests are highly actionable; every comment is a real person's first impression of the product.
+- hackernews: developer/technical community — positioning critique and architecture concerns are credible; general consumer sentiment weight is lower.
+- devto: developer tutorial ecosystem — integration gaps and DX complaints are credible; marketing/pricing signals carry less weight.
+- website: competitor's own marketing copy — positioning signals and feature claims are authoritative facts about the competitor's self-image; pain/gap signals inferred from copy are lower-confidence than user-generated sources.
+Apply this context when setting strength_or_severity — do NOT exclude evidence from any platform.`;
+
 const SYSTEM = `You are a cross-platform competitor-perception analyst. You receive per-platform signal extracts and merge them into unified, deduplicated clusters — one set of clusters per signal type.
 
 RivalEye captures what users really think about a competitor. Give love and pain EQUAL weight — love is a first-class signal, not an afterthought.
+
+${PLATFORM_SEMANTIC_CONTEXT}
 
 Return ONE JSON object with EXACTLY these keys (all required, never omit):
 {
@@ -21,7 +32,7 @@ Return ONE JSON object with EXACTLY these keys (all required, never omit):
 
 Every Cluster has: id (kebab-slug, unique), title, summary, signal_type, strength_or_severity (0..1),
 evidence_ids (string[]), representative_quotes ([{author,text,evidence_id}]), related_signal_ids (string[]),
-role_relevance (subset of ["founder","product","marketing","growth"]).
+role_relevance (ONLY values from ["founder","product","marketing","growth"] — no other strings allowed).
 
 Rules:
 1. Collapse semantically equivalent signals of the SAME type into one cluster; no duplicates.
@@ -36,7 +47,7 @@ Rules:
 8. positioning_clusters: repeated user language, category perception, objections, comparison framing.
 9. evidence_ids: use ONLY the ids present in the input extracts. Include ALL member ids — never truncate.
    The array length is the true mention count.
-10. strength_or_severity: 0 (weak) to 1 (intense). role_relevance: which ICP dashboards each cluster serves.
+10. strength_or_severity: 0 (weak) to 1 (intense). role_relevance: which ICP dashboards each cluster serves — MUST be a non-empty array containing only "founder", "product", "marketing", or "growth". Never use any other string.
 11. related_signal_ids: cross-link clusters that are causally related (e.g. a pain to the gap that fixes it).
 12. Never invent data; omit rather than fabricate. Return ONLY the JSON object. No prose, no markdown fences.`;
 

@@ -136,7 +136,7 @@ export function useReports() {
 ## 10. Dev commands
 
 ```sh
-pnpm --filter @rivaleye/web dev          # Vite on :5173
+pnpm --filter @rivaleye/web dev          # Vite on :4004
 pnpm --filter @rivaleye/web build        # type-check + vite build
 pnpm --filter @rivaleye/web type-check
 ```

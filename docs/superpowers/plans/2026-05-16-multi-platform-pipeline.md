@@ -643,7 +643,7 @@ Replace the existing `OPENROUTER_API_KEY=sk-or-v1-` line so the file ends up:
 CONNECTION_STRING=postgresql://postgres:postgres@localhost:5432/rivaleye
 
 BETTER_AUTH_SECRET=change-me-in-prod
-BETTER_AUTH_URL=http://localhost:3001
+BETTER_AUTH_URL=http://localhost:4000
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 
@@ -662,7 +662,7 @@ OPENROUTER_API_KEY=sk-or-v1-
 OPENROUTER_MODEL=deepseek/deepseek-chat
 
 # Frontend
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:4000
 ```
 
 - [ ] **Step 11: Type-check shared**
@@ -1986,7 +1986,7 @@ In another terminal:
 
 ```bash
 TOKEN=... # sign-in via /v1/auth/sign-in to obtain a session cookie or jwt
-curl -X POST http://localhost:3001/v1/reports \
+curl -X POST http://localhost:4000/v1/reports \
   -H "Content-Type: application/json" \
   -H "Cookie: better-auth.session_token=$TOKEN" \
   -d '{"category":"productivity","competitors":["Notion"],"target_audience":"founders","founder_goal":"find_user_pain"}'
@@ -3902,7 +3902,7 @@ pnpm --filter @rivaleye/worker dev &
 
 ```bash
 TOKEN=...   # from /v1/auth/sign-in
-curl -X POST http://localhost:3001/v1/reports \
+curl -X POST http://localhost:4000/v1/reports \
   -H "Content-Type: application/json" \
   -H "Cookie: better-auth.session_token=$TOKEN" \
   -d '{"category":"productivity","competitors":["Notion"],"target_audience":"founders","founder_goal":"find_user_pain"}'
@@ -3945,7 +3945,7 @@ Expected:
 
 - [ ] **Step 6: Verify in the web app**
 
-Open `http://localhost:5173/report/<uuid>` (or whatever Vite picks). Every section should render either real data or its empty state. No "loading…" stuck.
+Open `http://localhost:4004/report/<uuid>` (or whatever Vite picks). Every section should render either real data or its empty state. No "loading…" stuck.
 
 - [ ] **Step 7: Stop both processes**
 

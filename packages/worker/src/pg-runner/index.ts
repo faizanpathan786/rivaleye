@@ -65,7 +65,7 @@ function generateWorkerId(): string {
  * @param config - Worker configuration (ID, poll interval, timeouts)
  */
 async function pollSourceJobs(config: WorkerConfig): Promise<void> {
-  const MAX_CONCURRENT_SOURCE = 2;
+  const MAX_CONCURRENT_SOURCE = 5;
   let activeJobs = 0;
 
   log.info(
@@ -413,7 +413,7 @@ async function main(): Promise<void> {
   const config: WorkerConfig = {
     workerId,
     pollIntervalMs: 1500,
-    sourceJobTimeoutMinutes: 15,
+    sourceJobTimeoutMinutes: 25,
     synthesisJobTimeoutMinutes: 30,
   };
 
@@ -441,6 +441,48 @@ async function main(): Promise<void> {
   }
 }
 
+async function mainScrapeOnly(): Promise<void> {
+  const workerId = generateWorkerId();
+  const config: WorkerConfig = {
+    workerId,
+    pollIntervalMs: 1500,
+    sourceJobTimeoutMinutes: 25,
+    synthesisJobTimeoutMinutes: 30,
+  };
+  log.info({ workerId, mode: "scrape-only" }, "Starting pg-runner (scrape + recovery only)");
+  try {
+    await Promise.all([
+      pollSourceJobs(config),
+      recoverStaleJobs(config),
+    ]);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    log.fatal({ error: errorMsg }, "Fatal error in scrape-only main loop");
+    process.exit(1);
+  }
+}
+
+async function mainSynthOnly(): Promise<void> {
+  const workerId = generateWorkerId();
+  const config: WorkerConfig = {
+    workerId,
+    pollIntervalMs: 1500,
+    sourceJobTimeoutMinutes: 25,
+    synthesisJobTimeoutMinutes: 35,
+  };
+  log.info({ workerId, mode: "synth-only" }, "Starting pg-runner (synthesis + recovery only)");
+  try {
+    await Promise.all([
+      pollSynthesisJobs(config),
+      recoverStaleJobs(config),
+    ]);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    log.fatal({ error: errorMsg }, "Fatal error in synth-only main loop");
+    process.exit(1);
+  }
+}
+
 // Export for testing
 export {
   generateWorkerId,
@@ -449,6 +491,9 @@ export {
   recoverStaleJobs,
   getBackoffMs,
   sleep,
+  main,
+  mainScrapeOnly,
+  mainSynthOnly,
   type WorkerConfig,
 };
 

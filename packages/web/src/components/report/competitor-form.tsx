@@ -50,7 +50,7 @@ export function CompetitorForm() {
       category: "",
       audience: "",
       goal: "find_user_pain",
-      selected_platforms: [],
+      selected_platforms: PLATFORM_IDS.filter((p) => p !== "website"),
       website_url: "",
     },
   });

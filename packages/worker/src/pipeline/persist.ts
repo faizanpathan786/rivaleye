@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import {
+  competitors,
   report_actions,
   report_complaints,
   report_feature_gaps,
@@ -41,6 +42,13 @@ export interface PersistInput {
   platformStats: PlatformStatRow[];
   subreddits: SubredditRow[];
   roleSections?: RoleSections;
+}
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export async function persistReport(input: PersistInput): Promise<void> {
@@ -232,7 +240,8 @@ export async function persistReport(input: PersistInput): Promise<void> {
 
       if (roleSections !== undefined) {
         for (const sectionType of report_section_type_enum.enumValues) {
-          const data = roleSections[sectionType] as Record<string, unknown>;
+          const data = roleSections[sectionType] as Record<string, unknown> | undefined;
+          if (data === undefined) continue;
           await tx
             .insert(report_role_sections)
             .values({
@@ -249,6 +258,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
       }
 
       const totalThreads = synth.threads.length;
+      const totalSources = platformStats.reduce((s, p) => s + p.count, 0);
       const { report_meta: meta } = synth;
 
       await tx
@@ -269,6 +279,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
           switching_net_signal: meta.switching_net_signal,
           switching_reasons_out: meta.switching_reasons_out,
           total_threads: totalThreads,
+          total_sources: totalSources,
           scanned_at: new Date(),
           updated_at: new Date(),
         })
@@ -277,5 +288,55 @@ export async function persistReport(input: PersistInput): Promise<void> {
   } catch (err) {
     if (err instanceof PipelineError) throw err;
     throw new PipelineError("persist", "transaction failed", err);
+  }
+
+  // Auto-upsert the competitor row so dashboard counts reflect real data.
+  // Done outside the main transaction so a constraint failure here doesn't
+  // roll back the already-committed report data.
+  try {
+    const [report] = await db
+      .select({
+        owner_id: reports.owner_id,
+        primary_competitor_name: reports.primary_competitor_name,
+        category: reports.category,
+        website_url: reports.website_url,
+        sentiment_overall: reports.sentiment_overall,
+        total_sources: reports.total_sources,
+      })
+      .from(reports)
+      .where(eq(reports.id, reportId))
+      .limit(1);
+
+    if (report?.owner_id && report.primary_competitor_name) {
+      const slug = slugify(report.primary_competitor_name);
+      const now = new Date();
+
+      await db
+        .insert(competitors)
+        .values({
+          owner_id: report.owner_id,
+          slug,
+          name: report.primary_competitor_name,
+          website: report.website_url ?? null,
+          category: report.category ?? null,
+          stat_sentiment: report.sentiment_overall ?? null,
+          stat_mentions: report.total_sources ?? 0,
+          last_activity_at: now,
+          added_at: now,
+          created_at: now,
+          updated_at: now,
+        })
+        .onConflictDoUpdate({
+          target: [competitors.owner_id, competitors.slug],
+          set: {
+            stat_sentiment: report.sentiment_overall ?? null,
+            stat_mentions: report.total_sources ?? 0,
+            last_activity_at: now,
+            updated_at: now,
+          },
+        });
+    }
+  } catch (err) {
+    throw new PipelineError("persist", "competitor upsert failed", err);
   }
 }

@@ -1,5 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { Icon } from "@/components/icons";
 import { ConfidenceIndicator } from "@/components/dashboard/confidence-indicator";
 import { ScoreFactors } from "@/components/dashboard/score-factors";
@@ -297,15 +299,56 @@ export function FounderPage({
   data,
   evidenceSection,
   range: propRange,
+  competitorName,
 }: {
   embedded?: boolean;
   data?: FounderViewProps;
   evidenceSection?: EvidenceSection | null;
   range?: string;
+  competitorName?: string;
 }) {
   const navigate = useNavigate();
+  const reportsQuery = useReportsQuery();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
   const [localRange, setLocalRange] = useState("90d");
+
+  if (!embedded) {
+    if (reportsQuery.isLoading) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "48px 28px", maxWidth: 800, margin: "0 auto" }}>
+          <Skeleton style={{ height: 32, width: 240 }} />
+          <Skeleton style={{ height: 20, width: 400 }} />
+          <Skeleton style={{ height: 20, width: 320 }} />
+        </div>
+      );
+    }
+
+    const reports = reportsQuery.data ?? [];
+    const completed = reports
+      .filter((r) => r.status === "completed")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    if (completed.length > 0) {
+      navigate("/scan-report/" + completed[0]!.id, { replace: true });
+      return null;
+    }
+
+    if (reports.length > 0) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, textAlign: "center" }}>
+          <p style={{ fontSize: 16, color: "var(--fg)" }}>Your report is still processing — check back soon.</p>
+          <a href="/history" style={{ fontSize: 14, color: "var(--accent)", textDecoration: "underline" }}>View History</a>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, textAlign: "center" }}>
+        <p style={{ fontSize: 16, color: "var(--fg)" }}>No reports yet — run your first scan.</p>
+        <a href="/scan" style={{ fontSize: 14, color: "var(--accent)", textDecoration: "underline" }}>Start a Scan</a>
+      </div>
+    );
+  }
 
   // Use prop range if provided (embedded), otherwise local state
   const range = propRange ?? localRange;
@@ -318,7 +361,18 @@ export function FounderPage({
     }
   };
 
+  if (embedded && data === undefined) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+        <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
+          Founder analysis not available — pipeline did not produce this section for the current report.
+        </p>
+      </div>
+    );
+  }
+
   const F = data ?? FOUNDER_DATA;
+  const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
 
@@ -338,7 +392,7 @@ export function FounderPage({
 
         <SectionHead
           eyebrow="01 · Strengths"
-          title="What users love about Linear"
+          title={`What users love about ${cName}`}
           subtitle="Know what not to underestimate. Match these or compete elsewhere."
         />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -394,7 +448,7 @@ export function FounderPage({
           ))}
         </div>
 
-        <FounderFooter onNav={(to) => navigate(to)} />
+        <FounderFooter onNav={(to) => navigate(to)} competitorName={cName} />
       </div>
 
       <EvidenceDrawer
@@ -1174,7 +1228,8 @@ function ActionCard({
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER STRIP
 
-function FounderFooter({ onNav }: { onNav: (to: string) => void }) {
+function FounderFooter({ onNav, competitorName }: { onNav: (to: string) => void; competitorName?: string }) {
+  const cName = competitorName ?? "the competitor";
   return (
     <div
       style={{
@@ -1193,8 +1248,7 @@ function FounderFooter({ onNav }: { onNav: (to: string) => void }) {
       <div>
         <div style={eyebrow}>NORTH STAR</div>
         <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
-          "Now I understand where Linear is strong, where users are frustrated, what the market wants, and what
-          opportunity we can attack."
+          {`"Now I understand where ${cName} is strong, where users are frustrated, what the market wants, and what opportunity we can attack."`}
         </p>
       </div>
       <div style={{ display: "flex", gap: 8 }}>

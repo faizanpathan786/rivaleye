@@ -9,11 +9,12 @@ export const summaryDataSchema = z.object({
     sources: z.number(),
     platforms: z.array(z.object({ id: z.string(), name: z.string() })),
     sentiment: z.object({
-      overall: z.number().min(-1).max(1),
-      positive: z.number().min(0).max(1),
-      neutral: z.number().min(0).max(1),
-      negative: z.number().min(0).max(1),
-      trend: z.string(),
+      overall: z.preprocess((v) => typeof v === "number" && v > 1 ? v / 100 : v, z.number().min(-1).max(1).default(0)),
+      // LLM sometimes returns 0-100 percentages; normalise to 0-1
+      positive: z.preprocess((v) => typeof v === "number" && v > 1 ? v / 100 : v, z.number().min(0).max(1).default(0)),
+      neutral: z.preprocess((v) => typeof v === "number" && v > 1 ? v / 100 : v, z.number().min(0).max(1).default(0)),
+      negative: z.preprocess((v) => typeof v === "number" && v > 1 ? v / 100 : v, z.number().min(0).max(1).default(0)),
+      trend: z.string().default(""),
     }),
   }),
   headlines: z.object({
@@ -29,13 +30,13 @@ export const summaryDataSchema = z.object({
   ).min(1).max(5),
   topQuotes: z.array(
     z.object({
-      who: z.string(),
-      sub: z.string(),
-      when: z.string(),
-      score: z.number(),
-      sentiment: z.number(),
-      text: z.string(),
-      theme: z.string(),
+      who: z.string().default(""),
+      sub: z.string().nullable().default(null),
+      when: z.string().default(""),
+      score: z.number().default(0),
+      sentiment: z.number().default(0),
+      text: z.string().default(""),
+      theme: z.string().default(""),
     })
   ).min(1).max(5),
 });

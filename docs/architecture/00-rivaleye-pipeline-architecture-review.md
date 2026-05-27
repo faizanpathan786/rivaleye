@@ -1925,7 +1925,7 @@ If 2 sources fail, 4 succeed:
 |----------|---------|-----------|------|---------|-----------------|
 | `CONNECTION_STRING` | API + Worker | ✅ YES | string (Postgres URL) | `postgresql://...` | DB connection fails, app crashes |
 | `BETTER_AUTH_SECRET` | API | ✅ YES | string (32+ chars) | Auto-generated | Auth fails, sessions invalid |
-| `BETTER_AUTH_URL` | API | ✅ YES | string (URL) | `http://localhost:3001` | Auth redirects break |
+| `BETTER_AUTH_URL` | API | ✅ YES | string (URL) | `http://localhost:4000` | Auth redirects break |
 | `INNGEST_EVENT_KEY` | API + Worker | ✅ YES (for worker) | string (`sk-...`) | From localhost:8288 | **Events fail with 401, jobs get stuck** |
 | `OPENROUTER_API_KEY` | API + Worker | ✅ YES | string (API key) | From OpenRouter | Keyword expansion + LLM fails |
 | `OPENROUTER_MODEL` | API + Worker | optional | string | `deepseek/deepseek-chat` | Defaults to free model |
@@ -1933,7 +1933,7 @@ If 2 sources fail, 4 succeed:
 | `REDDIT_CLIENT_SECRET` | Worker (scraper) | Conditional | string | From Reddit app | Reddit scraper fails |
 | `REDDIT_USER_AGENT` | Worker (scraper) | Conditional | string | "RivalEye/1.0" | Reddit API blocks request |
 | `PRODUCTHUNT_TOKEN` | Worker (scraper) | Conditional | string | GraphQL API token | ProductHunt scraper fails |
-| `VITE_API_URL` | Frontend | ✅ YES | string (URL) | `http://localhost:3001` | Frontend can't call API |
+| `VITE_API_URL` | Frontend | ✅ YES | string (URL) | `http://localhost:4000` | Frontend can't call API |
 
 ### Local Dev Checklist for Full Pipeline
 
@@ -1950,7 +1950,7 @@ If 2 sources fail, 4 succeed:
 
 **API**:
 - [ ] Run `pnpm --filter @rivaleye/api dev` (Terminal 2)
-- [ ] Check `http://localhost:3001/health` responds with `{ ok: true }`
+- [ ] Check `http://localhost:4000/health` responds with `{ ok: true }`
 
 **Workers** (all three must run simultaneously):
 - [ ] Run `pnpm --filter @rivaleye/worker dev scrape` (Terminal 3)
@@ -1959,7 +1959,7 @@ If 2 sources fail, 4 succeed:
 
 **Frontend**:
 - [ ] Run `pnpm --filter @rivaleye/web dev` (Terminal 6)
-- [ ] Visit `http://localhost:5173`
+- [ ] Visit `http://localhost:4004`
 
 **Test Flow**:
 - [ ] Add a competitor

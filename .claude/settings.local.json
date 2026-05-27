@@ -8,7 +8,8 @@
       "Skill(superpowers:subagent-driven-development)",
       "Skill(superpowers:brainstorming)",
       "Skill(superpowers:writing-plans)",
-      "Skill(superpowers:finishing-a-development-branch)"
+      "Skill(superpowers:finishing-a-development-branch)",
+      "WebSearch"
     ]
   }
 }

@@ -72,6 +72,13 @@ export async function createReport(
   const engine = getPipelineEngine();
   const competitor = input.competitors[0] ?? input.category;
 
+  // Rate limit: max 10 scans per hour per user
+  const recentCount = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(reports)
+    .where(and(eq(reports.owner_id, owner_id), gt(reports.created_at, sql`now() - interval '1 hour'`)));
+  if ((recentCount[0]?.count ?? 0) >= 10) throw new Error("Rate limit exceeded: max 10 scans per hour");
+
   // Expand keywords BEFORE any DB writes — non-fatal, fall back to competitor name
   let keywords: string[];
   try {
@@ -486,6 +493,7 @@ export async function cancelReport(
 
 export async function getReportSections(reportId: string): Promise<{
   overview: unknown | null;
+  summary: unknown | null;
   founder: unknown | null;
   product: unknown | null;
   marketing: unknown | null;
@@ -501,6 +509,7 @@ export async function getReportSections(reportId: string): Promise<{
 
   return {
     overview: byType.get("overview") ?? null,
+    summary: byType.get("summary") ?? null,
     founder: byType.get("founder") ?? null,
     product: byType.get("product") ?? null,
     marketing: byType.get("marketing") ?? null,

@@ -36,22 +36,33 @@ function appMatchesCompetitor(appName: string, competitor: string): boolean {
   const t = appName.toLowerCase().trim();
   const c = competitor.toLowerCase().trim();
   if (t === c) return true;
+  // Standard separators (hyphen, colon, pipe, em-dash, en-dash)
   if (t.startsWith(`${c} - `) || t.startsWith(`${c}: `) || t.startsWith(`${c} | `)) return true;
+  if (t.startsWith(`${c} – `) || t.startsWith(`${c} — `)) return true;
   if (t === `${c} app` || t === `${c} - app`) return true;
+  // Broad fallback: title starts with the competitor name followed by a non-letter
+  const rest = t.slice(c.length);
+  if (rest === "" || (rest.length > 0 && !/^[a-z0-9]/.test(rest))) return true;
   return false;
 }
 
+const SEARCH_COUNTRIES = ["us", "in", "gb"];
+
 export async function searchApps(
   term: string,
-  country: string,
+  _defaultCountry: string,
   limit: number,
-): Promise<RawAppStoreApp[]> {
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=${country}&entity=software&limit=25&lang=en_us`;
-  const res = await fetch(url);
-  if (!res.ok) throw new ScraperError("appstore", `search HTTP ${res.status}`);
-  const data = (await res.json()) as { results: RawAppStoreApp[] };
-  const matched = data.results.filter((a) => appMatchesCompetitor(a.trackName, term));
-  return matched.slice(0, limit);
+): Promise<{ apps: RawAppStoreApp[]; country: string }> {
+  // Try multiple storefronts — some apps only appear in regional stores.
+  for (const country of SEARCH_COUNTRIES) {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=${country}&entity=software&limit=25&lang=en_us`;
+    const res = await fetch(url);
+    if (!res.ok) continue;
+    const data = (await res.json()) as { results: RawAppStoreApp[] };
+    const matched = data.results.filter((a) => appMatchesCompetitor(a.trackName, term));
+    if (matched.length > 0) return { apps: matched.slice(0, limit), country };
+  }
+  return { apps: [], country: "us" };
 }
 
 export async function fetchReviews(

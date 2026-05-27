@@ -5,9 +5,8 @@ import { db } from "@/db/client";
 import * as schema from "@/db/schema";
 
 const defaultTrustedOrigins = [
-  "http://localhost:3001",
-  "http://localhost:5173",
-  "http://localhost:5174",
+  "http://localhost:4000",
+  "http://localhost:4004",
 ];
 const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
   .split(",")
@@ -16,7 +15,7 @@ const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
+  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:4000",
   basePath: "/",
   trustedOrigins: [...defaultTrustedOrigins, ...envTrustedOrigins],
   advanced: {

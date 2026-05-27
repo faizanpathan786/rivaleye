@@ -99,7 +99,7 @@ export function DashboardPage() {
             Good morning{user?.name ? `, ${user.name}` : ""}.
           </h1>
           <p className="text-fg-muted" style={{ marginTop: 6, maxWidth: 600 }}>
-            {stats?.total_competitors ?? 0} competitors tracked · {stats?.total_reports ?? 0} reports ·{" "}
+            {stats?.total_competitors ?? 0} competitors analysed · {stats?.total_reports ?? 0} reports ·{" "}
             {stats?.total_radar_events ?? 0} radar events
           </p>
         </div>
@@ -114,34 +114,48 @@ export function DashboardPage() {
       </div>
 
       {/* Stat strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-        <StatTile
-          label="Competitors tracked"
-          value={String(stats?.total_competitors ?? 0)}
-          delta="active"
-          trend="up"
-        />
-        <StatTile
-          label="Sentiment index"
-          value={sentimentValue}
-          delta="avg across reports"
-          trend={sentimentTone === "neg" ? "down" : "up"}
-          tone={sentimentTone}
-        />
-        <StatTile
-          label="Urgent radar (7d)"
-          value={String(stats?.urgent_radar_events_7d ?? 0)}
-          delta="needs review"
-          trend="up"
-          tone="warn"
-        />
-        <StatTile
-          label="Reports generated"
-          value={String(stats?.total_reports ?? 0)}
-          delta="all-time"
-          trend="up"
-        />
-      </div>
+      {(() => {
+        const showRadar = (stats?.total_radar_events ?? 0) > 0;
+        return (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: showRadar ? "repeat(4, 1fr)" : "repeat(3, 1fr)",
+              gap: 12,
+              marginBottom: 20,
+            }}
+          >
+            <StatTile
+              label="Competitors analysed"
+              value={String(stats?.total_competitors ?? 0)}
+              delta="active"
+              trend="up"
+            />
+            <StatTile
+              label="Reports generated"
+              value={String(stats?.total_reports ?? 0)}
+              delta="all-time"
+              trend="up"
+            />
+            <StatTile
+              label="Sentiment index"
+              value={sentimentValue}
+              delta="avg across reports"
+              trend={sentimentTone === "neg" ? "down" : "up"}
+              tone={sentimentTone}
+            />
+            {showRadar && (
+              <StatTile
+                label="Urgent radar (7d)"
+                value={String(stats?.urgent_radar_events_7d ?? 0)}
+                delta="needs review"
+                trend="up"
+                tone="warn"
+              />
+            )}
+          </div>
+        );
+      })()}
 
       {/* Recent reports */}
       <div className="re-card">
@@ -208,7 +222,7 @@ export function DashboardPage() {
                   gap: 12,
                   cursor: "pointer",
                 }}
-                onClick={() => navigate("/scan-report")}
+                onClick={() => navigate(`/scan-report/${r.id}`)}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
@@ -262,7 +276,7 @@ export function DashboardPage() {
                     className="re-btn re-btn-ghost re-btn-icon re-btn-sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate("/scan-report");
+                      navigate(`/scan-report/${r.id}`);
                     }}
                   >
                     <Icon name="chev-right" size={14} />
@@ -298,9 +312,17 @@ export function DashboardPage() {
                   textAlign: "center",
                   color: "var(--fg-faint)",
                   fontSize: 13,
+                  lineHeight: 1.55,
                 }}
               >
-                No radar events.
+                Radar monitoring activates after your first competitor is added. Run a scan to get started.{" "}
+                <button
+                  className="re-btn re-btn-ghost re-btn-sm"
+                  style={{ display: "inline", padding: "0 4px", fontSize: 13 }}
+                  onClick={() => onNav("scan")}
+                >
+                  Run a scan
+                </button>
               </div>
             ) : (
               radarEvents.slice(0, 4).map((ev, i) => {

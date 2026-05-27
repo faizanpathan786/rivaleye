@@ -21,7 +21,7 @@ CONNECTION_STRING=postgresql://user:password@localhost:5432/rivaleye
 
 # Authentication
 BETTER_AUTH_SECRET=your-secret-here
-BETTER_AUTH_URL=http://localhost:3001
+BETTER_AUTH_URL=http://localhost:4000
 
 # LLM (required for keyword expansion + synthesis)
 OPENROUTER_API_KEY=sk-or-v1-...
@@ -58,7 +58,7 @@ REPORT_PIPELINE_ENGINE=postgres
 **packages/web/.env:**
 
 ```bash
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:4000
 ```
 
 ### 1.2 Required API Keys
@@ -119,7 +119,7 @@ pnpm --filter @rivaleye/api dev
 
 Should output:
 ```
-API listening on http://localhost:3001
+API listening on http://localhost:4000
 ```
 
 ### Terminal 3: Worker (pg-runner)
@@ -144,7 +144,7 @@ pnpm --filter @rivaleye/web dev
 
 Should output:
 ```
-VITE dev server running at http://localhost:5173
+VITE dev server running at http://localhost:4004
 ```
 
 ---
@@ -162,7 +162,7 @@ Check all four terminals show success:
 
 ### Step 2: Sign Up and Log In
 
-1. Open http://localhost:5173 in your browser
+1. Open http://localhost:4004 in your browser
 2. Click "Sign up" (or navigate to `/auth/signup`)
 3. Enter:
    - Email: `test@example.com`
@@ -350,7 +350,7 @@ In your browser or via curl:
 
 ```bash
 curl -H "Authorization: Bearer <your-token>" \
-  http://localhost:3001/v1/reports/550e8400-e29b-41d4-a716-446655440000/progress
+  http://localhost:4000/v1/reports/550e8400-e29b-41d4-a716-446655440000/progress
 ```
 
 **Expected response shape:**
@@ -427,7 +427,7 @@ curl -H "Authorization: Bearer <your-token>" \
 
 ### Step 12: View the Report in the UI
 
-Navigate to http://localhost:5173/reports/550e8400-e29b-41d4-a716-446655440000 (replace with your report ID).
+Navigate to http://localhost:4004/reports/550e8400-e29b-41d4-a716-446655440000 (replace with your report ID).
 
 **Expected:** You see the final report with sections like:
 - Top pain points
@@ -664,9 +664,9 @@ Then the next fan-in check (called by recovery loop or manually) will create syn
 
 1. Check for stray processes:
    ```bash
-   lsof -i :3100
-   lsof -i :3101
-   lsof -i :3102
+   lsof -i :4001
+   lsof -i :4002
+   lsof -i :4003
    ```
 
 2. Or check all Bun processes:

@@ -43,6 +43,8 @@ const RETRY_SUFFIX =
 
 function isTransient(err: unknown): boolean {
   if (err instanceof LlmHttpError) {
+    // 200 with empty content = model returned nothing (transient overload or refusal)
+    if (err.status === 200 && err.message.includes("empty content")) return true;
     return err.status === 429 || err.status >= 500;
   }
   if (err instanceof Error) {

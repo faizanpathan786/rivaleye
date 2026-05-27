@@ -18,6 +18,10 @@ import { runStageERefine } from "./stage-e-refine";
 import { computePlatformStats, computeSubredditStats } from "./derive-stats";
 import { persistReport } from "./persist";
 import { PipelineError } from "./errors";
+import {
+  mergedClustersSchema,
+  synthOutputSchema,
+} from "../prompts/shared";
 import type {
   PipelineCtx,
   PlatformBrief,
@@ -39,9 +43,12 @@ function stripEvidenceIds(merged: MergedClusters): MergedClusters {
   };
 }
 
-const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 3 };
-const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 90_000, maxAttempts: 3 };
-const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 240_000, maxAttempts: 2 };
+// Stage C merges multi-platform signal extracts — can be large with many mentions.
+// 5 min per attempt gives DeepSeek enough time to generate large JSON responses.
+const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
+const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 3 };
+const LLM_OPTS_D_ROLE: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 2 };
+const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
 
 let _llm: OpenRouterClient | null = null;
 
@@ -124,7 +131,9 @@ export async function runPipeline(reportId: string): Promise<void> {
   if (checkpoints.has("C")) {
     await log(reportId, "info", "C", null, "skipping stage C (checkpoint found)");
     const cCheckpoint = checkpoints.get("C") as Record<string, unknown>;
-    merged = cCheckpoint as unknown as MergedClusters;
+    // Parse through schema to strip _signals and other non-MergedClusters keys.
+    // This keeps the Stage E prompt from ballooning with raw signal evidence data.
+    merged = mergedClustersSchema.parse(cCheckpoint);
     mergedSignals = (cCheckpoint["_signals"] ?? {}) as MergedSignals;
   } else {
     await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: signalExtracts.length });
@@ -151,7 +160,8 @@ export async function runPipeline(reportId: string): Promise<void> {
   if (checkpoints.has("D")) {
     await log(reportId, "info", "D", null, "skipping stage D (checkpoint found)");
     const cCheckpoint = checkpoints.get("D") as Record<string, unknown>;
-    synth = cCheckpoint as unknown as SynthOutput;
+    // Parse through schema to strip _role_sections and other non-SynthOutput keys.
+    synth = synthOutputSchema.parse(cCheckpoint);
     roleSections = cCheckpoint["_role_sections"] as RoleSections | undefined;
   } else {
     await log(reportId, "info", "D", null, "running stage D: synth", {
@@ -169,7 +179,7 @@ export async function runPipeline(reportId: string): Promise<void> {
     synth = resultD.synth;
 
     try {
-      const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals });
+      const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
       roleSections = resultRole.roleSections;
       await log(reportId, "info", "D", null, "stage D role synthesis done", {
         sections: Object.keys(roleSections),
@@ -177,8 +187,14 @@ export async function runPipeline(reportId: string): Promise<void> {
         completionTokens: resultRole.usage.completionTokens,
       });
     } catch (roleErr) {
+      const causeMsg = roleErr instanceof Error && roleErr.cause instanceof Error
+        ? roleErr.cause.message
+        : roleErr instanceof Error && roleErr.cause
+          ? String(roleErr.cause)
+          : null;
       await log(reportId, "warn", "D", null, "stage D role synthesis failed — continuing with legacy report", {
         error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+        cause: causeMsg,
       });
     }
 
@@ -240,7 +256,7 @@ export async function runPipeline(reportId: string): Promise<void> {
           system: summaryPrompt.system,
           user: summaryPrompt.user,
           schema: summaryPrompt.schema,
-        });
+        }, LLM_OPTS_D_ROLE);
 
         const summaryData = summaryRes.parsed as SummaryData;
         roleSections.summary = summaryData;

@@ -1747,7 +1747,7 @@ Expected: type-check clean, all tests pass.
 
 - [ ] **Step 2: Run one real report locally**
 
-Start the stack (`pnpm dev` from the repo root) and create a report for a well-known competitor through the web app at `http://localhost:5173`. Wait for it to reach `completed`.
+Start the stack (`pnpm dev` from the repo root) and create a report for a well-known competitor through the web app at `http://localhost:4004`. Wait for it to reach `completed`.
 
 - [ ] **Step 3: Inspect the persisted signals**
 

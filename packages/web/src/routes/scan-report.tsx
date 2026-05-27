@@ -6,7 +6,7 @@ import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
-import { useReportQuery } from "@/hooks/queries/use-reports";
+import { useReportQuery, useReportsQuery } from "@/hooks/queries/use-reports";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -50,60 +50,7 @@ const LENS_META: Record<LensId, LensMeta> = {
   growth:    { name: "Growth",    color: "#16a34a", bg: "rgba(22,163,74,0.10)",  glyph: "↗", role: "Switch intent · live conversations" },
 };
 
-interface LensHighlight {
-  score: number;
-  scoreLabel: string;
-  insight: string;
-  stats: { k: string; v: string }[];
-}
 
-const LENS_HIGHLIGHTS: Record<Exclude<LensId, "summary">, LensHighlight> = {
-  founder: {
-    score: 82, scoreLabel: "Strong opportunity",
-    insight: "Best wedge: The project tool that doesn't punish you for growing.",
-    stats: [
-      { k: "Wedge confidence", v: "92%" },
-      { k: "Risks flagged",    v: "4"   },
-      { k: "Action moves",     v: "3"   },
-    ],
-  },
-  product: {
-    score: 78, scoreLabel: "Strong roadmap opportunity",
-    insight: "Top gap: Native time tracking — 412 mentions, agency wedge wide open.",
-    stats: [
-      { k: "Feature gaps",     v: "8" },
-      { k: "Build candidates", v: "4" },
-      { k: "Roadmap items",    v: "5" },
-    ],
-  },
-  marketing: {
-    score: 86, scoreLabel: "Strong messaging opportunity",
-    insight: "Best angle: “All the speed. None of the seat tax.”",
-    stats: [
-      { k: "Angles",        v: "6"   },
-      { k: "Copy ideas",    v: "17"  },
-      { k: "Quote library", v: "10+" },
-    ],
-  },
-  growth: {
-    score: 79, scoreLabel: "Strong intent signal",
-    insight: "Hottest: r/SaaS cancellation thread — 1.4k upvotes, still on the front page.",
-    stats: [
-      { k: "Hot threads",     v: "3" },
-      { k: "Communities",     v: "7" },
-      { k: "Reply templates", v: "3" },
-    ],
-  },
-};
-
-interface ScanQuote {
-  who: string;
-  sub: string;
-  when: string;
-  score: number;
-  sentiment: number;
-  text: string;
-}
 
 interface ScanCompetitor {
   name: string;
@@ -120,47 +67,19 @@ interface ScanCompetitor {
   };
 }
 
-interface ScanData {
-  competitor: ScanCompetitor;
-  quotes: ScanQuote[];
-}
-
-const SCAN_DATA: ScanData = {
+interface SummaryData {
   competitor: {
-    name: "Linear",
-    domain: "linear.app",
-    scannedAt: "2026-05-12 14:22 UTC",
-    sources: 1247,
-    platforms: [
-      { id: "reddit",      name: "Reddit" },
-      { id: "g2",          name: "G2 reviews" },
-      { id: "linkedin",    name: "LinkedIn" },
-      { id: "producthunt", name: "Product Hunt" },
-      { id: "twitter",     name: "X / Twitter" },
-      { id: "youtube",     name: "YouTube" },
-      { id: "hn",          name: "Hacker News" },
-    ],
-    sentiment: {
-      overall: -0.34,
-      positive: 0.28,
-      neutral: 0.31,
-      negative: 0.41,
-      trend: "+0.08 vs prev 90d",
-    },
-  },
-  quotes: [
-    { who: "u/devops_dan",      sub: "r/sysadmin",          when: "3d", score: 412, sentiment: -0.71,
-      text: "If Linear shipped a real audit log I'd renew tomorrow. Without it our security review is a nightmare." },
-    { who: "u/pm_mariana",      sub: "r/ProductManagement", when: "5d", score: 287, sentiment: -0.55,
-      text: "Cycles are great. Why is there no concept of 'this depends on that' in 2026? I'm building dependency maps in FigJam." },
-    { who: "u/startup_charlie", sub: "r/startups",          when: "1w", score: 198, sentiment: -0.34,
-      text: "Bought Linear for the speed. Stayed for the speed. Annoyed by the price every time we grow." },
-    { who: "u/contractor_v",    sub: "r/ExperiencedDevs",   when: "1w", score: 174, sentiment: -0.62,
-      text: "I bill by the hour. My time tracking lives in Toggl. My work lives in Linear. They will never speak." },
-    { who: "u/founder_h",       sub: "r/SaaS",              when: "2w", score: 138, sentiment: -0.39,
-      text: "Customers ask for our public roadmap. We post one on Notion and try to keep it in sync. We always fail." },
-  ],
-};
+    name: string;
+    domain: string;
+    scannedAt: string;
+    sources: number;
+    platforms: { id: string; name: string }[];
+    sentiment: { overall: number; positive: number; neutral: number; negative: number; trend: string };
+  };
+  headlines: { mainThesis: string; insights: string };
+  topThemes: { name: string; mentions: number; trend: string }[];
+  topQuotes: { who: string; sub: string | null; when: string; score: number; sentiment: number; text: string; theme: string }[];
+}
 
 // ----------------------------------------------------------------------------
 
@@ -171,9 +90,18 @@ export function ScanReportPage() {
   const [range, setRange] = useState("90d");
   const meta = LENS_META[lens];
 
+  // When no :id, redirect to the most recent report.
+  const { data: allReports } = useReportsQuery();
+  useEffect(() => {
+    const first = allReports?.[0];
+    if (!id && first) {
+      navigate(`/scan-report/${first.id}`, { replace: true });
+    }
+  }, [id, allReports, navigate]);
+
   // Live data fetch — only when :id is present in the route.
   const { data: sections, isLoading, error } = useReportSectionsQuery(id);
-  const { data: report } = useReportQuery(id);
+  const { data: reportRow } = useReportQuery(id);
 
   useEffect(() => {
     const m = document.querySelector(".main");
@@ -231,6 +159,30 @@ export function ScanReportPage() {
       ? (sections.evidence as EvidenceSection)
       : null;
 
+  const liveCompetitor: ScanCompetitor | undefined = reportRow
+    ? {
+        name: reportRow.primary_competitor_name ?? reportRow.competitors[0] ?? reportRow.category,
+        domain: reportRow.primary_competitor_domain ?? "",
+        scannedAt: reportRow.scanned_at ?? reportRow.updated_at,
+        sources: reportRow.total_threads ?? reportRow.total_sources ?? 0,
+        platforms: [],
+        sentiment: {
+          overall: reportRow.sentiment_overall ?? 0,
+          positive: reportRow.sentiment_positive ?? 0,
+          neutral: reportRow.sentiment_neutral ?? 0,
+          negative: reportRow.sentiment_negative ?? 0,
+          trend: reportRow.sentiment_trend ?? "",
+        },
+      }
+    : undefined;
+
+  const summaryData: SummaryData | null = sections?.summary != null ? (sections.summary as SummaryData) : null;
+
+  const competitorData: ScanCompetitor = liveCompetitor ?? summaryData?.competitor ?? {
+    name: "—", domain: "", scannedAt: "", sources: 0, platforms: [],
+    sentiment: { overall: 0, positive: 0, neutral: 0, negative: 0, trend: "" },
+  };
+
   return (
     <div style={{ position: "relative", minHeight: "100%" }}>
       <div
@@ -245,7 +197,7 @@ export function ScanReportPage() {
 
       <div style={{ position: "relative", zIndex: 1 }}>
         <UnifiedHeader
-          competitor={{ ...SCAN_DATA.competitor, name: report?.primary_competitor_name ?? SCAN_DATA.competitor.name }}
+          competitor={competitorData}
           meta={meta}
           range={range}
           setRange={setRange}
@@ -255,24 +207,19 @@ export function ScanReportPage() {
         <div key={lens} className="fade-up">
           {lens === "summary"   && (
             <ExecutiveSummary
-              data={sections?.summary ? (sections.summary as ScanData) : {
-                ...SCAN_DATA,
-                competitor: {
-                  ...SCAN_DATA.competitor,
-                  name: report?.primary_competitor_name ?? SCAN_DATA.competitor.name,
-                },
-              }}
+              data={summaryData}
+              competitor={competitorData}
               onPickLens={setLens}
             />
           )}
           {lens === "founder"   && (
-            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} />
+            <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
           )}
           {lens === "product"   && (
-            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} />
+            <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
           )}
           {lens === "marketing" && (
-            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} />
+            <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />
           )}
           {lens === "growth"    && (
             <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} />
@@ -324,7 +271,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
                 boxShadow: "var(--shadow-sm)",
               }}
             >
-              L
+              {c.name[0]?.toUpperCase() ?? "?"}
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -386,8 +333,38 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav }: UnifiedH
 // ----------------------------------------------------------------------------
 // EXECUTIVE SUMMARY
 
-function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (id: LensId) => void }) {
+function ExecutiveSummary({
+  data,
+  competitor,
+  onPickLens,
+}: {
+  data: SummaryData | null;
+  competitor: ScanCompetitor;
+  onPickLens: (id: LensId) => void;
+}) {
+  if (!data) {
+    return (
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 28px 0" }}>
+        <div className="re-card" style={{ padding: 32, textAlign: "center", color: "var(--fg-muted)" }}>
+          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>SUMMARY</div>
+          <div style={{ fontSize: 16 }}>Generating executive summary…</div>
+          <div style={{ fontSize: 13, marginTop: 8, color: "var(--fg-faint)" }}>Switch to a lens below while synthesis completes.</div>
+        </div>
+        <div style={{ marginTop: 24 }}>
+          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {(["founder", "product", "marketing", "growth"] as const).map((id) => (
+              <LensPreviewCard key={id} id={id} onPick={onPickLens} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const c = data.competitor;
+  const lensColors = ["#ff5c1a", "#6366f1", "#8b5cf6"];
+
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 28px 0" }}>
       <PerceptionHero data={data} />
@@ -395,15 +372,10 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
       <div style={{ marginTop: 28 }}>
         <div className="re-eyebrow" style={{ fontSize: 10 }}>EXECUTIVE MEMO</div>
         <h2 className="re-h2" style={{ fontSize: 28, marginTop: 8, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 920 }}>
-          {c.name}'s pain is structural, not stylistic — and pricing is the wedge users are already naming for you.
+          {data.headlines.mainThesis}
         </h2>
         <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
-          Across {c.sources.toLocaleString()} mentions in the last 90 days, three themes own 60% of negative sentiment:
-          per-seat <b style={{ color: "var(--fg)" }}>pricing past 15 seats</b> (187 mentions, +34%),
-          the absence of <b style={{ color: "var(--fg)" }}>native time tracking</b> (152, +18%),
-          and a <b style={{ color: "var(--fg)" }}>mobile app described as "read-mostly"</b> (134, +9%).
-          Net switching is strongly inbound (+325 from Jira, Asana, ClickUp), but outbound mentions cite the same
-          pricing argument and a growing demand for executive roadmap views.
+          {data.headlines.insights}
         </p>
         <p style={{ marginTop: 12, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
           Switch a lens below to read the same evidence through a specific role — founder strategy, product
@@ -420,33 +392,40 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
         </div>
       </div>
 
-      <div style={{ marginTop: 32 }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12 }}>
-          <div>
-            <div className="re-eyebrow" style={{ fontSize: 10 }}>THE THREE QUOTES THAT SAY IT ALL</div>
-            <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>Top of mind, top of thread</h3>
+      {data.topQuotes.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12 }}>
+            <div>
+              <div className="re-eyebrow" style={{ fontSize: 10 }}>TOP QUOTES</div>
+              <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>Top of mind, top of thread</h3>
+            </div>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
           </div>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(data.topQuotes.length, 3)}, 1fr)`, gap: 14 }}>
+            {data.topQuotes.slice(0, 3).map((q, i) => (
+              <AnchorQuote key={i} q={q} color={lensColors[i] ?? "#8b5cf6"} />
+            ))}
+          </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-          <AnchorQuote q={data.quotes[2]} theme="Pricing" color="#0061B1" />
-          <AnchorQuote q={data.quotes[3]} theme="Time tracking" color="#6366f1" />
-          <AnchorQuote q={data.quotes[1]} theme="Roadmap" color="#8b5cf6" />
-        </div>
-      </div>
+      )}
 
       <div
         style={{
           marginTop: 32, padding: "22px 24px",
           background: "var(--surface)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-soft)",
-          display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 24,
+          display: "grid", gridTemplateColumns: `repeat(${2 + data.topThemes.length}, 1fr)`, gap: 24,
         }}
       >
-        <SummaryStat label="Sentiment index" value={c.sentiment.overall.toFixed(2)} tone="neg" sub={c.sentiment.trend} />
-        <SummaryStat label="Mentions" value={c.sources.toLocaleString()} sub="+18% vs prev" />
-        <SummaryStat label="Platforms" value={String(c.platforms.length)} sub="all active" />
-        <SummaryStat label="Switching net" value="+325" tone="pos" sub="inbound · 90d" />
-        <SummaryStat label="Top theme" value="Pricing" tone="warn" sub="187 · +34%" />
+        <SummaryStat
+          label="Sentiment index"
+          value={c.sentiment.overall.toFixed(2)}
+          tone={c.sentiment.overall < -0.1 ? "neg" : c.sentiment.overall > 0.1 ? "pos" : undefined}
+          sub={c.sentiment.trend}
+        />
+        <SummaryStat label="Mentions" value={c.sources.toLocaleString()} sub={`${c.platforms.length} platforms`} />
+        {data.topThemes.map((t) => (
+          <SummaryStat key={t.name} label={t.name} value={String(t.mentions)} tone="warn" sub={t.trend} />
+        ))}
       </div>
     </div>
   );
@@ -469,8 +448,11 @@ function SummaryStat({ label, value, tone, sub }: { label: string; value: string
 // ----------------------------------------------------------------------------
 // PERCEPTION HERO
 
-function PerceptionHero({ data }: { data: ScanData }) {
+function PerceptionHero({ data }: { data: SummaryData }) {
   const s = data.competitor.sentiment;
+  const topTheme = data.topThemes[0];
+  const sentimentLabel =
+    s.overall < -0.2 ? "Negative-leaning" : s.overall > 0.2 ? "Positive-leaning" : "Mixed sentiment";
   return (
     <div className="re-card re-card-elev" style={{ overflow: "hidden", position: "relative" }}>
       <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.4 }} />
@@ -487,13 +469,13 @@ function PerceptionHero({ data }: { data: ScanData }) {
             WHAT USERS THINK OF {data.competitor.name.toUpperCase()}
           </div>
           <h2 className="re-h2" style={{ fontSize: 26, marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-            Negative-leaning, with the loudest theme being <span style={{ color: "var(--accent)" }}>pricing</span>.
+            {sentimentLabel}
+            {topTheme ? <>, with the loudest theme being <span style={{ color: "var(--accent)" }}>{topTheme.name.toLowerCase()}</span>.</> : "."}
           </h2>
 
           <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
             {(["founder", "product", "marketing", "growth"] as const).map((id) => {
               const m = LENS_META[id];
-              const h = LENS_HIGHLIGHTS[id];
               return (
                 <div
                   key={id}
@@ -511,14 +493,8 @@ function PerceptionHero({ data }: { data: ScanData }) {
                   >
                     {m.glyph} {m.name}
                   </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 4 }}>
-                    <span
-                      className="font-mono-feat tnum"
-                      style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", color: m.color }}
-                    >
-                      {h.score}
-                    </span>
-                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>/100</span>
+                  <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 6 }}>
+                    {m.role.split("·")[0]?.trim()}
                   </div>
                 </div>
               );
@@ -581,7 +557,6 @@ function PerceptionRing({ positive, neutral, negative, index }: { positive: numb
 
 function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPick: (id: LensId) => void }) {
   const m = LENS_META[id];
-  const h = LENS_HIGHLIGHTS[id];
   const [hover, setHover] = useState(false);
 
   return (
@@ -605,7 +580,7 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
     >
       <div style={{ height: 3, background: m.color }} />
 
-      <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "flex-start" }}>
+      <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "center" }}>
         <div>
           <div
             className="font-mono-feat"
@@ -613,59 +588,25 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
           >
             {m.glyph} {m.name.toUpperCase()} LENS
           </div>
-          <h3 className="re-h2" style={{ fontSize: 19, marginTop: 6, letterSpacing: "-0.015em", lineHeight: 1.3 }}>
-            {h.insight}
-          </h3>
-          <div className="text-fg-muted" style={{ marginTop: 4, fontSize: 12.5 }}>{m.role}</div>
-
-          <div style={{ marginTop: 16, display: "flex", gap: 14, flexWrap: "wrap" }}>
-            {h.stats.map((s) => (
-              <div key={s.k}>
-                <div
-                  className="font-mono-feat"
-                  style={{ fontSize: 16, fontWeight: 600, color: m.color, fontVariantNumeric: "tabular-nums" }}
-                >
-                  {s.v}
-                </div>
-                <div
-                  className="font-mono-feat text-fg-faint"
-                  style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}
-                >
-                  {s.k}
-                </div>
-              </div>
-            ))}
-          </div>
+          <div className="text-fg-muted" style={{ marginTop: 6, fontSize: 13 }}>{m.role}</div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 14 }}>
-          <div style={{ textAlign: "right" }}>
-            <div
-              style={{
-                fontFamily: "var(--font-mono)", fontSize: 44, fontWeight: 500,
-                letterSpacing: "-0.04em", color: m.color, lineHeight: 0.95,
-              }}
-            >
-              {h.score}
-            </div>
-            <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10, marginTop: 2 }}>/100</div>
-          </div>
-          <span
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "6px 12px",
-              background: hover ? m.color : "var(--surface-solid)",
-              color: hover ? "#fff" : m.color,
-              border: `1px solid ${hover ? m.color : m.color + "55"}`,
-              borderRadius: 99,
-              fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600,
-              letterSpacing: "0.04em",
-              transition: "all 200ms",
-            }}
-          >
-            Enter {m.name} <Icon name="arrow-right" size={11} />
-          </span>
-        </div>
+        <span
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "6px 12px",
+            background: hover ? m.color : "var(--surface-solid)",
+            color: hover ? "#fff" : m.color,
+            border: `1px solid ${hover ? m.color : m.color + "55"}`,
+            borderRadius: 99,
+            fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600,
+            letterSpacing: "0.04em",
+            transition: "all 200ms",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Enter {m.name} <Icon name="arrow-right" size={11} />
+        </span>
       </div>
     </button>
   );
@@ -674,8 +615,7 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
 // ----------------------------------------------------------------------------
 // ANCHOR QUOTE
 
-function AnchorQuote({ q, theme, color }: { q: ScanQuote | undefined; theme: string; color: string }) {
-  if (!q) return null;
+function AnchorQuote({ q, color }: { q: SummaryData["topQuotes"][number]; color: string }) {
   return (
     <div className="re-card" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12, borderTop: `2px solid ${color}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -683,15 +623,15 @@ function AnchorQuote({ q, theme, color }: { q: ScanQuote | undefined; theme: str
           className="font-mono-feat"
           style={{ fontSize: 10, color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
         >
-          THEME · {theme.toUpperCase()}
+          {q.theme ? `THEME · ${q.theme.toUpperCase()}` : "QUOTE"}
         </span>
-        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>{q.score}↑</span>
+        {q.score > 0 && <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>{q.score}↑</span>}
       </div>
       <p style={{ margin: 0, fontSize: 15, fontStyle: "italic", lineHeight: 1.55, color: "var(--fg)" }}>
         "{q.text}"
       </p>
       <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
-        {q.who} · {q.sub} · {q.when}
+        {q.who}{q.sub ? ` · ${q.sub}` : ""}{q.when ? ` · ${q.when}` : ""}
       </div>
     </div>
   );

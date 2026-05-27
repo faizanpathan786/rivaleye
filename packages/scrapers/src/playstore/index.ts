@@ -12,11 +12,11 @@ export class PlayStoreScraper implements Scraper {
 
   async fetch(query: ScrapeQuery): Promise<NormalizedPost[]> {
     try {
-      const apps = await searchApps(query.competitor, query.limit ?? DEFAULT_APP_LIMIT);
+      const { apps, country } = await searchApps(query.competitor, query.limit ?? DEFAULT_APP_LIMIT);
       const reviewsByAppId: Record<string, RawPlayStoreReview[]> = {};
       await Promise.all(
         apps.map(async (a) => {
-          reviewsByAppId[a.appId] = await fetchReviews(a.appId, DEFAULT_REVIEW_NUM);
+          reviewsByAppId[a.appId] = await fetchReviews(a.appId, DEFAULT_REVIEW_NUM, country);
         }),
       );
       return normalizePlayStorePayload(apps, reviewsByAppId);

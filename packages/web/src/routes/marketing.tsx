@@ -1,5 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { Icon } from "@/components/icons";
 import { ConfidenceIndicator } from "@/components/dashboard/confidence-indicator";
 import { ScoreFactors } from "@/components/dashboard/score-factors";
@@ -658,20 +660,72 @@ export function MarketingPage({
   data,
   evidenceSection,
   range: propRange,
+  competitorName,
 }: {
   embedded?: boolean;
   data?: MarketingViewProps;
   evidenceSection?: EvidenceSection | null;
   range?: string;
+  competitorName?: string;
 }) {
   const navigate = useNavigate();
+  const reportsQuery = useReportsQuery();
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
   const [range, setRange] = useState(propRange ?? "90d");
   const [quoteFilter, setQuoteFilter] = useState("all");
   const [quoteSearch, setQuoteSearch] = useState("");
   const [activeLangTab, setActiveLangTab] = useState<LangTab>("positive_phrases");
 
+  if (!embedded) {
+    if (reportsQuery.isLoading) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "48px 28px", maxWidth: 800, margin: "0 auto" }}>
+          <Skeleton style={{ height: 32, width: 240 }} />
+          <Skeleton style={{ height: 20, width: 400 }} />
+          <Skeleton style={{ height: 20, width: 320 }} />
+        </div>
+      );
+    }
+
+    const reports = reportsQuery.data ?? [];
+    const completed = reports
+      .filter((r) => r.status === "completed")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    if (completed.length > 0) {
+      navigate("/scan-report/" + completed[0]!.id, { replace: true });
+      return null;
+    }
+
+    if (reports.length > 0) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, textAlign: "center" }}>
+          <p style={{ fontSize: 16, color: "var(--fg)" }}>Your report is still processing — check back soon.</p>
+          <a href="/history" style={{ fontSize: 14, color: "var(--accent)", textDecoration: "underline" }}>View History</a>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, textAlign: "center" }}>
+        <p style={{ fontSize: 16, color: "var(--fg)" }}>No reports yet — run your first scan.</p>
+        <a href="/scan" style={{ fontSize: 14, color: "var(--accent)", textDecoration: "underline" }}>Start a Scan</a>
+      </div>
+    );
+  }
+
+  if (embedded && data === undefined) {
+    return (
+      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+        <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
+          Marketing analysis not available — pipeline did not produce this section for the current report.
+        </p>
+      </div>
+    );
+  }
+
   const M = data ?? MARKETING_DATA;
+  const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
 
@@ -751,10 +805,10 @@ export function MarketingPage({
 
         <SectionHeadMK
           eyebrow="05 · Comparison page builder"
-          title={`"Linear alternative" — assembled.`}
-          subtitle="Drop these blocks onto your /linear-alternative page. Pre-built for SEO and decision velocity."
+          title={`"${cName} alternative" — assembled.`}
+          subtitle={`Drop these blocks onto your /${cName.toLowerCase().replace(/\s+/g, "-")}-alternative page. Pre-built for SEO and decision velocity.`}
         />
-        <ComparisonBuilder c={M.comparison} />
+        <ComparisonBuilder c={M.comparison} competitorName={cName} />
 
         <SectionHeadMK
           eyebrow="06 · Copy ideas"
@@ -1433,7 +1487,7 @@ function ObjectionCard({
 
 type BuilderTone = "strong" | "weak" | "us" | "neutral";
 
-function ComparisonBuilder({ c }: { c: MarketingViewProps["comparison"] }) {
+function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["comparison"]; competitorName?: string }) {
   return (
     <div className="re-card" style={{ overflow: "hidden" }}>
       <div
@@ -1468,7 +1522,7 @@ function ComparisonBuilder({ c }: { c: MarketingViewProps["comparison"] }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid var(--border-soft)" }}>
-        <BuilderBlock title="Where Linear is strong" tone="strong" items={c.where_competitor_is_strong} />
+        <BuilderBlock title={`Where ${competitorName ?? "the competitor"} is strong`} tone="strong" items={c.where_competitor_is_strong} />
         <BuilderBlock title="Where users struggle" tone="weak" items={c.where_users_struggle} borderLeft />
       </div>
 

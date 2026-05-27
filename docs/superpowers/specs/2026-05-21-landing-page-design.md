@@ -105,7 +105,7 @@ analytics, multi-page routing, i18n. The email form is presentational only.
 
 ## 8. Success criteria
 
-- `pnpm --filter @rivaleye/landing dev` serves the page on :4321.
+- `pnpm --filter @rivaleye/landing dev` serves the page on :4005.
 - `pnpm --filter @rivaleye/landing build` produces a static `dist/` with no
   errors.
 - All nine sections render, responsive from 360px to wide desktop.

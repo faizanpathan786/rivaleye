@@ -309,7 +309,7 @@ Expected: log line showing worker started.
 
 - [ ] **Step 4: Submit Notion report via the UI**
 
-Open `http://localhost:3001` (or wherever the web app runs), submit a new report:
+Open `http://localhost:4000` (or wherever the web app runs), submit a new report:
 - Competitor: `Notion`
 - Category: `Productivity`
 - Goal: `find what users hate so we can position against it`

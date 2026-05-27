@@ -676,7 +676,7 @@ Wait for both API and web to start (~10s).
 
 - [ ] **Step 2: Navigate to a live report**
 
-In browser: `http://localhost:5173/scan-report/<report-id>` (use a real report ID from the database)
+In browser: `http://localhost:4004/scan-report/<report-id>` (use a real report ID from the database)
 
 - [ ] **Step 3: Verify summary loads**
 

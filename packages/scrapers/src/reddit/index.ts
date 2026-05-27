@@ -8,21 +8,25 @@ import { normalizePost } from "./normalize";
 
 const log = pino({ name: "reddit-scraper" });
 
+// Wrap multi-word names in quotes for exact-phrase Reddit search.
+// Single-word names are searched bare (quotes don't help single tokens).
+function phrase(name: string): string {
+  return name.includes(" ") ? `"${name}"` : name;
+}
+
 const SEARCH_TEMPLATES = [
-  (name: string) => name,
-  (name: string) => `${name} complaints`,
-  (name: string) => `${name} alternatives`,
-  (name: string) => `${name} vs`,
-  (name: string) => `${name} pricing`,
-  (name: string) => `${name} switching`,
-  (name: string) => `${name} review`,
-  (name: string) => `using ${name}`,
-  (name: string) => `${name} experience`,
-  (name: string) => `${name} problems`,
+  (name: string) => phrase(name),
+  (name: string) => `${phrase(name)} complaints`,
+  (name: string) => `${phrase(name)} alternatives`,
+  (name: string) => `${phrase(name)} vs`,
+  (name: string) => `${phrase(name)} review`,
+  (name: string) => `${phrase(name)} experience`,
+  (name: string) => `${phrase(name)} problems`,
+  (name: string) => `using ${phrase(name)}`,
 ];
 
-const MAX_SEARCH_TERMS = process.env["REDDIT_MAX_TERMS"] ? parseInt(process.env["REDDIT_MAX_TERMS"], 10) : SEARCH_TEMPLATES.length;
-const MAX_POSTS_PER_TERM = process.env["REDDIT_MAX_POSTS_PER_TERM"] ? parseInt(process.env["REDDIT_MAX_POSTS_PER_TERM"], 10) : 50;
+const MAX_SEARCH_TERMS = process.env["REDDIT_MAX_TERMS"] ? parseInt(process.env["REDDIT_MAX_TERMS"], 10) : 5;
+const MAX_POSTS_PER_TERM = process.env["REDDIT_MAX_POSTS_PER_TERM"] ? parseInt(process.env["REDDIT_MAX_POSTS_PER_TERM"], 10) : 25;
 const MAX_COMMENTS_PER_POST = 10;
 const MAX_TOTAL_POSTS = MAX_SEARCH_TERMS * MAX_POSTS_PER_TERM;
 
@@ -99,7 +103,23 @@ export class RedditScraper implements Scraper {
       log.info({ term, postsAfterTerm: posts.length }, "Term done");
     }
 
-    log.info({ competitor: query.competitor, totalPosts: posts.length, uniqueSubreddits: [...new Set(posts.map(p => (p.raw as any)?.subreddit).filter(Boolean))].length, durationMs: Date.now() - t0 }, "Reddit scrape complete");
-    return posts;
+    // Relevance filter: keep only posts that mention the competitor name
+    // somewhere in their title or body (case-insensitive). This removes false
+    // positives where "varsity", "zerodha", etc. match unrelated subreddits.
+    const competitorLower = query.competitor.toLowerCase();
+    const relevant = posts.filter((p) => {
+      const text = `${p.title ?? ""} ${p.body}`.toLowerCase();
+      return text.includes(competitorLower);
+    });
+    const filtered = posts.length - relevant.length;
+    log.info({
+      competitor: query.competitor,
+      totalPosts: posts.length,
+      relevantPosts: relevant.length,
+      filteredOut: filtered,
+      uniqueSubreddits: [...new Set(relevant.map(p => (p.raw as any)?.subreddit).filter(Boolean))].length,
+      durationMs: Date.now() - t0,
+    }, "Reddit scrape complete");
+    return relevant;
   }
 }

@@ -6,7 +6,7 @@ import { swaggerPlugin } from "./config/swagger";
 import { controllers } from "./controllers";
 import { auth } from "./libs/auth";
 
-const port = Number(process.env.PORT ?? 3001);
+const port = Number(process.env.PORT ?? 4000);
 
 export const app = new Elysia()
   .use(corsPlugin)

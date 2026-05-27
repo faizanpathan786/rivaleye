@@ -4,7 +4,7 @@ import { fetchReviews, searchApps, type RawAppStoreReviewsFeed } from "./client"
 import { normalizeAppStorePayload } from "./normalize";
 
 const DEFAULT_APP_LIMIT = 5;
-const DEFAULT_REVIEW_PAGES = 10;
+const DEFAULT_REVIEW_PAGES = 5;
 const DEFAULT_COUNTRY = "us";
 
 export class AppStoreScraper implements Scraper {
@@ -12,7 +12,7 @@ export class AppStoreScraper implements Scraper {
 
   async fetch(query: ScrapeQuery): Promise<NormalizedPost[]> {
     try {
-      const apps = await searchApps(
+      const { apps, country } = await searchApps(
         query.competitor,
         DEFAULT_COUNTRY,
         query.limit ?? DEFAULT_APP_LIMIT,
@@ -20,7 +20,7 @@ export class AppStoreScraper implements Scraper {
       const reviewsByAppId: Record<string, RawAppStoreReviewsFeed> = {};
       await Promise.all(
         apps.map(async (a) => {
-          const entries = await fetchReviews(a.trackId, DEFAULT_COUNTRY, DEFAULT_REVIEW_PAGES);
+          const entries = await fetchReviews(a.trackId, country, DEFAULT_REVIEW_PAGES);
           reviewsByAppId[String(a.trackId)] = { feed: { entry: entries } };
         }),
       );
