@@ -1,17 +1,19 @@
 # @rivaleye/worker — Background Job Guide
 
-Three long-running Bun processes (`scrape`, `llm`, `synth`). Each serves an Inngest endpoint; the Inngest dev server (local) routes events to them. Runs scrapers and report generation.
+Two long-running Bun processes (`scrape`, `synth`). No HTTP server. No Inngest. No Redis. Queue is Postgres (`report_platform_jobs` + `synthesis_jobs`) polled via `SELECT FOR UPDATE SKIP LOCKED`.
 
-Never serves HTTP. Never imported by `@rivaleye/api`. Api enqueues; worker consumes.
+Never serves HTTP. Never imported by `@rivaleye/api`. Api inserts jobs; worker polls and consumes them.
 
 ---
 
 ## 1. Stack
 
 - **Runtime**: Bun.
-- **Queue**: [Inngest](https://www.inngest.com/) (self-hosted dev server locally via `npx inngest-cli@latest dev`). No Redis, no pg-boss.
-- **Process model**: three independent Bun processes — `scrape`, `llm`, `synth` — each serving its own Inngest endpoint.
-- **DB**: same Drizzle client as api (via shared schema). Worker reads + writes mentions, briefs, jobs, events.
+- **Queue**: Postgres (`report_platform_jobs`, `synthesis_jobs`) polled by `pg-runner`. No Redis, no pg-boss, no Inngest.
+- **Process model**: two independent Bun processes:
+  - `scrape` (`src/scrape/index.ts`) — polls source jobs, runs scrapers + Stage A/B, triggers fan-in.
+  - `synth` (`src/synth/index.ts`) — polls synthesis jobs, runs Stage C/D/E + persist.
+- **DB**: same Drizzle client as api (schema in `packages/api/src/db/schema/`). Worker imports it directly.
 - **Scrapers**: `@rivaleye/scrapers` — `getScraper(platformId)`.
 - **Logging**: pino, JSON to stdout.
 
@@ -22,49 +24,90 @@ Never serves HTTP. Never imported by `@rivaleye/api`. Api enqueues; worker consu
 ```
 packages/worker/
   src/
-    inngest/client.ts    ← shared Inngest client
-    scrape/index.ts      ← Bun.serve, registers scrape.fetch
-    scrape/fetch.ts      ← scrape.fetch function
-    llm/index.ts         ← Bun.serve, registers stage-a + stage-b
-    llm/stage-a.ts       ← llm.stage-a function
-    llm/stage-b.ts       ← llm.stage-b function
-    llm/fan-in.ts        ← advisory-lock fan-in helper
-    synth/index.ts       ← Bun.serve, registers synth.run
-    synth/run.ts         ← synth.run function
-    pipeline/            ← unchanged stage code (stage-a-extract.ts, ...)
-    events/emit.ts       ← pipeline_events writer + pino mirror
-    errors.ts            ← TransientError / PermanentError / RateLimitError
+    scrape/index.ts            ← entry point, calls mainScrapeOnly()
+    synth/index.ts             ← entry point, calls mainSynthOnly()
+    pg-runner/
+      index.ts                 ← pollSourceJobs, pollSynthesisJobs, recoverStaleJobs,
+                                  mainScrapeOnly(), mainSynthOnly()
+      source-worker.ts         ← claims + processes one source job (scrape → Stage A/B → fan-in)
+      synthesis-worker.ts      ← claims + processes one synthesis job (Stage C/D/E → persist)
+      fan-in.ts                ← advisory-lock fan-in: creates synthesis job when all sources done
+      recovery.ts              ← resets stale locked jobs; fail-forward if synthesis already started
+      claim.ts                 ← SELECT FOR UPDATE SKIP LOCKED helpers
+      types.ts                 ← WorkerConfig type
+    pipeline/
+      run.ts                   ← orchestrates Stage C → D → E → persist
+      stage-a-extract.ts       ← per-platform Stage A LLM calls
+      stage-b-summarize.ts     ← per-platform Stage B LLM calls
+      stage-c-merge.ts         ← Stage C merge call
+      stage-d-synth.ts         ← Stage D synth call
+      stage-d-role.ts          ← Stage D role synthesis (5 parallel LLM calls)
+      stage-e-refine.ts        ← Stage E refine call
+      persist.ts               ← writes all sub-tables + report completion
+      derive-stats.ts          ← platform stats + subreddit stats from mentions
+    prompts/
+      platform/<platform>/     ← per-platform extract + summarize prompt builders
+      cross/                   ← merge-signals, refine, synth prompt builders
+      role-sections/           ← founder/product/marketing/growth/overview prompts + schema
+    events/emit.ts             ← writes pipeline_events rows
+    db.ts                      ← Drizzle client (pool: max 5, idle 20s, connect 10s)
 ```
 
 ---
 
-## 3. Job model
+## 3. Job flow
 
-Inngest events (defined in `@rivaleye/shared/inngest-events`):
+```
+API inserts report + N report_platform_jobs (one per selected platform)
+  ↓
+scrape worker polls report_platform_jobs (SELECT FOR UPDATE SKIP LOCKED)
+  → runs scraper → Stage A (LLM extract) → Stage B (LLM summarize)
+  → marks job completed → calls fanInCheck()
 
-| Event           | Worker        | Concurrency               | Next                                |
-|-----------------|---------------|---------------------------|-------------------------------------|
-| `scrape.fetch`  | worker-scrape | 8 global, 1 per (rid,plat) | sends `llm.stage-a`                |
-| `llm.stage-a`   | worker-llm    | 4 global                  | sends `llm.stage-b`                 |
-| `llm.stage-b`   | worker-llm    | 4 global                  | fan-in check → may send `synth.run` |
-| `synth.run`     | worker-synth  | 1 per `reportId`          | marks report complete               |
+fanInCheck() (advisory lock on reportId):
+  → if all platform jobs terminal AND at least one completed:
+      INSERT synthesis_jobs ON CONFLICT DO NOTHING
+  → if all failed: marks report failed
 
-Fan-in uses `pg_advisory_xact_lock(hashtext(reportId))` to guarantee single enqueue.
+synth worker polls synthesis_jobs (SELECT FOR UPDATE SKIP LOCKED)
+  → runs Stage C (merge) → Stage D (synth + role sections) → Stage E (refine)
+  → persist to sub-tables → marks report completed
+```
 
 ---
 
-## 4. Hard rules
+## 4. Concurrency + recovery
+
+- Max 2 concurrent source jobs globally (`MAX_CONCURRENT_SOURCE = 2` in index.ts).
+- `recoverStaleJobs` runs every 30s in both workers.
+  - Source jobs stale after 15 min → retry up to max_attempts; if synthesis already started, mark failed (fail-forward).
+  - Synthesis jobs stale after 30 min → retry up to max_attempts.
+- Advisory lock (`pg_advisory_xact_lock(hashtext(reportId))`) prevents duplicate synthesis job creation.
+
+---
+
+## 5. Hard rules
 
 1. **Worker is the only thing that calls scrapers.** Api enqueues, worker runs.
-2. **Idempotent handlers.** Inngest retries. Every step must be safe to re-run — wrap side effects in `step.run`, upsert by `(platform, external_id)`, check terminal state before transitioning.
-3. **Never block the event loop on a single big scrape.** Use per-function concurrency limits + per-step timeouts.
-4. **Classify errors.** Throw `PermanentError` for non-retriable failures (Inngest converts to `NonRetriableError`); throw anything else for normal retries. Don't swallow.
-5. **Same DB schema as api.** Drizzle schema lives in `packages/api/src/db/schema/`. Worker imports it. Never duplicate schema here.
-6. **Env vars at boot, not mid-handler.** Read `process.env.*` once at module top level.
+2. **Idempotent.** Stage A/B results cached in `report_platform_briefs` — re-running skips LLM if brief exists. Stages C/D/E checkpointed in `report_pipeline_checkpoints`.
+3. **Same DB schema as api.** Drizzle schema in `packages/api/src/db/schema/`. Never duplicate here.
+4. **Env vars at boot.** Read `process.env.*` at module top level, not inside handlers.
+5. **Log() uses global db outside transactions.** Never call `log()` inside a Drizzle transaction — it uses a separate connection and creates ghost entries if the transaction rolls back.
 
 ---
 
-## 5. Open TODOs
+## 6. Dev commands
 
-- [ ] Move Drizzle schema into a shared spot so worker imports without depending on api's HTTP code.
-- [ ] Production hosting story for Inngest (currently local-only via `inngest-cli dev`).
+```sh
+bun --watch --env-file=.env packages/worker/src/scrape/index.ts   # scrape worker
+bun --watch --env-file=.env packages/worker/src/synth/index.ts    # synth worker
+```
+
+Both must run simultaneously for the full pipeline.
+
+---
+
+## 7. Open TODOs
+
+- [ ] Move Drizzle schema into `packages/shared/` so worker doesn't import from `packages/api/`.
+- [ ] Deploy: Railway (2 services) or Cloud Run Jobs. Set `PIPELINE_ENGINE=postgres`.
