@@ -65,7 +65,7 @@ function generateWorkerId(): string {
  * @param config - Worker configuration (ID, poll interval, timeouts)
  */
 async function pollSourceJobs(config: WorkerConfig): Promise<void> {
-  const MAX_CONCURRENT_SOURCE = 2;
+  const MAX_CONCURRENT_SOURCE = 5;
   let activeJobs = 0;
 
   log.info(

@@ -2,7 +2,16 @@ import { stageAExtractSchema } from "../../shared";
 import type { PipelineCtx } from "../../shared";
 import { buildSignalSystemPrompt } from "../_shared/signal-extraction-rules";
 
-const SYSTEM = buildSignalSystemPrompt("Dev.to articles and comments");
+const BASE_SYSTEM = buildSignalSystemPrompt("Dev.to articles and comments");
+
+const DEVTO_CONTEXT = `\nDev.to context:
+- Audience is software developers and engineers writing from hands-on experience — every post is a practitioner opinion.
+- Treat all posts equally regardless of reaction count or reading time.
+- Feature signals and gap signals are especially credible here — developers describe exactly what works and what is missing from a technical standpoint.
+- Pain signals about DX (developer experience), API quality, SDK issues, and documentation gaps are high-value.
+- Positioning signals reflect how the developer community categorises and compares tools — weight these for technical audience targeting.`;
+
+const SYSTEM = BASE_SYSTEM + DEVTO_CONTEXT;
 
 export interface DevToExtractInput {
   ctx: PipelineCtx;
