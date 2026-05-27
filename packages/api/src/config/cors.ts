@@ -1,6 +1,6 @@
 import { cors } from "@elysiajs/cors";
 
-const defaultOrigins = ["http://localhost:4004"];
+const defaultOrigins = process.env.NODE_ENV === "production" ? [] : ["http://localhost:4004"];
 const envOrigins = (process.env.CORS_ORIGINS ?? "")
   .split(",")
   .map((s) => s.trim())
