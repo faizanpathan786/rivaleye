@@ -5,9 +5,9 @@ import { buildSignalSystemPrompt } from "../_shared/signal-extraction-rules";
 const BASE_SYSTEM = buildSignalSystemPrompt("Product Hunt launch posts and community comments");
 
 const PH_CONTEXT = `\nProduct Hunt context:
-- votes = upvotes from the PH community at launch. High votes signal strong early-adopter resonance.
-- Gap and feature request signals here are highly actionable — early adopters explicitly state what they wish the product had.
-- Love signals reflect launch excitement; apply a moderate retention weight (novelty enthusiasm, not long-term stickiness).
+- Audience is early adopters, indie hackers, and founders — every comment represents a real person's first impression.
+- Treat all posts equally regardless of vote count — a single user's feature request or pain point is as valid as a highly-upvoted one.
+- Gap and feature request signals are highly actionable — early adopters explicitly state what they wish the product had.
 - Switch signals naming alternatives are especially credible — early adopters are actively evaluating the market.`;
 
 const SYSTEM = BASE_SYSTEM + PH_CONTEXT;
@@ -23,7 +23,7 @@ export function buildProductHuntExtract(input: ProductHuntExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const reviewBlock = input.reviews
-    .map((r) => `- id=${r.id} | votes=${r.rating} | ${oneLine(r.body)}`)
+    .map((r) => `- id=${r.id} | ${oneLine(r.body)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}

@@ -5,7 +5,7 @@ import type { PlatformId } from "@rivaleye/scrapers";
 const PLATFORM_SEMANTIC_CONTEXT = `Platform semantic weights for signal calibration:
 - reddit: organic community opinions — strongest source for pain, love, switch intent, and authentic voice. High trust.
 - appstore / playstore: star-rating user reviews — pain backed by low ratings is high-severity; 5-star love is strong retention proof.
-- producthunt: early-adopter launch feedback — gap and feature requests are highly actionable; love signals reflect novelty (lower long-term retention weight).
+- producthunt: early-adopter launch feedback — gap and feature requests are highly actionable; every comment is a real person's first impression of the product.
 - hackernews: developer/technical community — positioning critique and architecture concerns are credible; general consumer sentiment weight is lower.
 - devto: developer tutorial ecosystem — integration gaps and DX complaints are credible; marketing/pricing signals carry less weight.
 - website: competitor's own marketing copy — positioning signals and feature claims are authoritative facts about the competitor's self-image; pain/gap signals inferred from copy are lower-confidence than user-generated sources.
@@ -57,42 +57,13 @@ export interface SignalMergeInput {
   signalExtracts: Array<{ platform: PlatformId; extract: StageAExtract }>;
 }
 
-// Cap evidence_quotes per platform so the prompt stays within a manageable size.
-// Quotes referenced by signals take priority; remaining slots filled in order.
-const MAX_EVIDENCE_QUOTES_PER_PLATFORM = 120;
-
-function trimExtractForPrompt(extract: StageAExtract): StageAExtract {
-  if (extract.evidence_quotes.length <= MAX_EVIDENCE_QUOTES_PER_PLATFORM) return extract;
-  const allGroups = [
-    extract.love_signals, extract.pain_signals, extract.gap_signals,
-    extract.switch_signals, extract.pricing_signals, extract.feature_signals,
-    extract.positioning_signals,
-  ];
-  const referencedIds = new Set<string>();
-  for (const group of allGroups) {
-    for (const s of group) {
-      for (const id of s.evidence_ids) referencedIds.add(id);
-    }
-  }
-  const prioritized = extract.evidence_quotes
-    .filter((q) => referencedIds.has(q.evidence_id))
-    .slice(0, MAX_EVIDENCE_QUOTES_PER_PLATFORM);
-  if (prioritized.length < MAX_EVIDENCE_QUOTES_PER_PLATFORM) {
-    const extras = extract.evidence_quotes
-      .filter((q) => !referencedIds.has(q.evidence_id))
-      .slice(0, MAX_EVIDENCE_QUOTES_PER_PLATFORM - prioritized.length);
-    return { ...extract, evidence_quotes: [...prioritized, ...extras] };
-  }
-  return { ...extract, evidence_quotes: prioritized };
-}
-
 export function buildSignalMerge(input: SignalMergeInput): {
   system: string;
   user: string;
   schema: typeof stageCMergeLlmSchema;
 } {
   const extractsBlock = input.signalExtracts
-    .map((s) => `### platform=${s.platform}\n${JSON.stringify(trimExtractForPrompt(s.extract), null, 2)}`)
+    .map((s) => `### platform=${s.platform}\n${JSON.stringify(s.extract, null, 2)}`)
     .join("\n\n");
 
   const user = `Competitor: ${input.ctx.competitor}

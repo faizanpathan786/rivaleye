@@ -6,9 +6,9 @@ const BASE_SYSTEM = buildSignalSystemPrompt("Hacker News stories and comments");
 
 const HN_CONTEXT = `\nHacker News context:
 - Audience is developers, founders, and technical decision-makers — not general consumers.
-- score = HN community upvotes. High-score posts (≥100) represent strong developer-community endorsement; weight strength_or_severity accordingly.
+- Every post represents a real technical user's perspective regardless of score — treat all posts equally when assessing signal strength.
 - Prioritise positioning signals (how technical users frame and compare the product), feature signals (specific technical capabilities praised or criticized), and gap signals (missing developer-facing functionality).
-- Pain signals from this source carry extra weight for technical/API/reliability concerns.`;
+- Pain signals from this source are especially credible for technical/API/reliability concerns.`;
 
 const SYSTEM = BASE_SYSTEM + HN_CONTEXT;
 
@@ -23,7 +23,7 @@ export function buildHackerNewsExtract(input: HackerNewsExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | score=${p.score ?? "n/a"} | ${oneLine(p.body)}`)
+    .map((p) => `- id=${p.id} | ${oneLine(p.body)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}

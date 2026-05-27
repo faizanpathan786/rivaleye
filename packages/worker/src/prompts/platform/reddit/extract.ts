@@ -5,8 +5,8 @@ import { buildSignalSystemPrompt } from "../_shared/signal-extraction-rules";
 const BASE_SYSTEM = buildSignalSystemPrompt("Reddit posts and comment threads");
 
 const REDDIT_CONTEXT = `\nReddit context:
-- score = community upvotes. High-score posts (≥50) represent community-validated shared experience — weight strength_or_severity accordingly.
-- Reddit is the highest-trust source for organic, unfiltered user opinion. Pain signals here are especially credible.
+- Every post represents a real user's organic, unfiltered opinion — treat all posts equally regardless of score.
+- Pain signals here are especially credible because Reddit users speak candidly without brand incentives.
 - Switch signals mentioning named alternatives are extremely actionable — users are explicitly asking for or announcing alternatives.
 - voice_phrases should prioritise verbatim phrases users actually typed, not paraphrases.`;
 
@@ -23,7 +23,7 @@ export function buildRedditExtract(input: RedditExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | score=${p.score ?? 0} | ${truncate(p.body, 1500)}`)
+    .map((p) => `- id=${p.id} | ${truncate(p.body, 1500)}`)
     .join("\n");
   const user = `RELEVANCE FILTER: Only extract signals from posts discussing ${input.ctx.competitor} as a software product in the ${input.ctx.category} category. If a post uses the competitor name as a generic word or discusses an unrelated product, person, or topic, skip that post entirely — extract no signals from it.
 
