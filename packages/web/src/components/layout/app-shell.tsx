@@ -93,9 +93,8 @@ function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount }: Top
         style={{ width: 180, fontSize: 13 }}
         onClick={onBrandClick}
       >
-        <div className="logo relative grid place-items-center" style={{ width: 28, height: 28, color: "var(--accent)" }}>
-          <span className="absolute" style={{ inset: -2, background: "var(--accent-soft)", borderRadius: 7, zIndex: 0 }} />
-          <span className="relative z-[1]"><Icon name="logo" size={18} /></span>
+        <div className="logo relative grid place-items-center" style={{ width: 28, height: 28 }}>
+          <img src="/logo.svg" alt="RivalEye logo" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 6 }} />
         </div>
         <span className="flex items-baseline tracking-[-0.02em]">
           Rival<span style={{ color: "var(--accent)" }}>Eye</span>
