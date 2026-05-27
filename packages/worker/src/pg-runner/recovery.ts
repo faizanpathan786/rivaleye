@@ -237,11 +237,11 @@ async function healOrphanedReports(): Promise<void> {
       AND NOT EXISTS (SELECT 1 FROM synthesis_jobs WHERE report_id = rpj.report_id)
   `);
 
-  if (orphaned.rows.length === 0) return;
+  if (orphaned.length === 0) return;
 
-  console.warn(`[recovery] Found ${orphaned.rows.length} orphaned report(s) with no synthesis job; triggering fan-in`);
+  console.warn(`[recovery] Found ${orphaned.length} orphaned report(s) with no synthesis job; triggering fan-in`);
 
-  for (const row of orphaned.rows) {
+  for (const row of orphaned) {
     const reportId = row.report_id;
     console.warn(`[recovery] Healing orphaned report ${reportId} — calling fanInCheck`);
     try {

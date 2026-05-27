@@ -287,12 +287,25 @@ export const mergedSignalsSchema = stageCMergeLlmSchema.extend({
   }),
 });
 
-export const sentimentTrendEnum = z.enum(["up", "down", "flat"]);
+export const sentimentTrendEnum = z.preprocess(
+  (v) => {
+    if (typeof v !== "string") return v;
+    const lower = v.toLowerCase();
+    if (lower === "increasing" || lower === "improving") return "up";
+    if (lower === "declining" || lower === "decreasing" || lower === "worsening") return "down";
+    if (lower === "stable" || lower === "neutral" || lower === "unchanged") return "flat";
+    return v;
+  },
+  z.enum(["up", "down", "flat"]).catch("flat" as const),
+);
 export const effortEnum = z.preprocess(
   (v) => v === "medium" ? "med" : v,
   z.enum(["low", "med", "high"]),
 );
-export const payoffEnum = z.enum(["low", "med", "high"]);
+export const payoffEnum = z.preprocess(
+  (v) => v === "medium" ? "med" : v,
+  z.enum(["low", "med", "high"]),
+);
 
 export const synthOutputSchema = z.object({
   complaints: z.array(

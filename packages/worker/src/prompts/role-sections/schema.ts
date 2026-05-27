@@ -510,7 +510,7 @@ export const buildAvoidLearnSchema = z.object({
   build: z.array(buildAvoidLearnItemSchema).catch([]),
   avoid: z.array(buildAvoidLearnItemSchema).catch([]),
   learn: z.array(buildAvoidLearnItemSchema).catch([]),
-});
+}).catch({ build: [], avoid: [], learn: [] });
 export type BuildAvoidLearn = z.infer<typeof buildAvoidLearnSchema>;
 
 // ──────────────────────────────────────────────
@@ -518,11 +518,11 @@ export type BuildAvoidLearn = z.infer<typeof buildAvoidLearnSchema>;
 // ──────────────────────────────────────────────
 export const productViewSectionSchema = z.object({
   product_opportunity_score: productOpportunityScoreSchema,
-  feature_gap_map: featureGapMapSchema,
-  complaint_clusters_by_product_area: complaintClustersByProductAreaSchema,
-  loved_competitor_features: lovedCompetitorFeaturesSchema,
-  workflow_friction: workflowFrictionSchema,
-  roadmap_opportunities: roadmapOpportunitiesSchema,
+  feature_gap_map: z.array(featureGapItemSchema).catch([]),
+  complaint_clusters_by_product_area: z.array(complaintClusterItemSchema).catch([]),
+  loved_competitor_features: z.array(lovedCompetitorFeatureItemSchema).catch([]),
+  workflow_friction: z.array(workflowFrictionItemSchema).catch([]),
+  roadmap_opportunities: z.array(roadmapOpportunityItemSchema).catch([]),
   build_avoid_learn: buildAvoidLearnSchema,
   confidence_summary: confidenceSchema,
   evidence_refs: evidenceRefSchema,
@@ -572,7 +572,7 @@ export const userLanguageBankSchema = z.object({
   alternative_seeking_phrases: z.array(phraseItemSchema).catch([]),
   emotional_adjectives: z.array(phraseItemSchema).catch([]),
   category_language: z.array(phraseItemSchema).catch([]),
-});
+}).catch({ positive_phrases: [], negative_phrases: [], alternative_seeking_phrases: [], emotional_adjectives: [], category_language: [] });
 
 export type UserLanguageBank = z.infer<typeof userLanguageBankSchema>;
 
@@ -643,7 +643,7 @@ export const comparisonPageBulletsSchema = z.object({
   // LLM sometimes returns objects here instead of strings
   objections_to_handle: z.array(z.string()).catch([]),
   proof_quotes: z.array(z.string()).catch([]),
-});
+}).catch({ hero_angle: "", why_users_look_for_alternatives: [], where_competitor_is_strong: [], where_users_struggle: [], who_should_choose_us: [], objections_to_handle: [], proof_quotes: [] });
 
 export type ComparisonPageBullets = z.infer<typeof comparisonPageBulletsSchema>;
 
@@ -667,13 +667,13 @@ export const copyItemSchema = z.object({
 export type CopyItem = z.infer<typeof copyItemSchema>;
 
 export const copyIdeasSchema = z.object({
-  homepage_headlines: z.array(copyItemSchema).default([]),
-  subheadlines: z.array(copyItemSchema).default([]),
-  ad_hooks: z.array(copyItemSchema).default([]),
-  linkedin_hooks: z.array(copyItemSchema).default([]),
-  comparison_page_headlines: z.array(copyItemSchema).default([]),
-  cta_ideas: z.array(copyItemSchema).default([]),
-});
+  homepage_headlines: z.array(copyItemSchema).catch([]),
+  subheadlines: z.array(copyItemSchema).catch([]),
+  ad_hooks: z.array(copyItemSchema).catch([]),
+  linkedin_hooks: z.array(copyItemSchema).catch([]),
+  comparison_page_headlines: z.array(copyItemSchema).catch([]),
+  cta_ideas: z.array(copyItemSchema).catch([]),
+}).catch({ homepage_headlines: [], subheadlines: [], ad_hooks: [], linkedin_hooks: [], comparison_page_headlines: [], cta_ideas: [] });
 
 export type CopyIdeas = z.infer<typeof copyIdeasSchema>;
 
@@ -704,12 +704,12 @@ export const marketingViewSectionSchema = z.object({
   // top-level aliases; LLM sometimes returns strings here — catch to empty
   positive_phrases: z.array(phraseItemSchema).catch([]),
   negative_phrases: z.array(phraseItemSchema).catch([]),
-  positioning_angles: z.array(positioningAngleSchema).default([]),
-  competitor_promise_vs_user_reality: z.array(promiseVsRealityItemSchema).default([]),
-  objections_to_handle: z.array(objectionItemSchema).default([]),
+  positioning_angles: z.array(positioningAngleSchema).catch([]),
+  competitor_promise_vs_user_reality: z.array(promiseVsRealityItemSchema).catch([]),
+  objections_to_handle: z.array(objectionItemSchema).catch([]),
   comparison_page_bullets: comparisonPageBulletsSchema,
   copy_ideas: copyIdeasSchema,
-  quote_library: z.array(quoteLibraryItemSchema).default([]),
+  quote_library: z.array(quoteLibraryItemSchema).catch([]),
   evidence_refs: evidenceRefSchema,
 });
 
@@ -846,8 +846,8 @@ export type SegmentHint = z.infer<typeof segmentHintSchema>;
 
 // Source link (growth-local — EvidenceSection defines its own sourceLinkSchema below)
 const growthSourceLinkSchema = z.object({
-  label: z.string(),
-  url: z.string().url(),
+  label: z.string().default(""),
+  url: z.string().url().catch(""),
 });
 
 // ── Root section schema ────────────────────────────────────────────────────────
@@ -860,26 +860,26 @@ export const growthViewSectionSchema = z.object({
   switch_intent_score: switchIntentScoreSchema,
 
   // Widget 2 — switch_intent_feed (feeds related_conversation_id references in widget 6)
-  switch_intent_feed: z.array(switchIntentFeedItemSchema).default([]),
+  switch_intent_feed: z.array(switchIntentFeedItemSchema).catch([]),
 
   // Widget 3 — satisfies conversation_priority_scores product-spec requirement
-  highest_priority_conversations: z.array(highestPriorityConversationSchema).default([]),
+  highest_priority_conversations: z.array(highestPriorityConversationSchema).catch([]),
 
   // Widget 4
-  pricing_pain_leads: z.array(pricingPainLeadSchema).default([]),
+  pricing_pain_leads: z.array(pricingPainLeadSchema).catch([]),
 
   // Widget 5
-  communities_to_engage: z.array(communityToEngageSchema).default([]),
+  communities_to_engage: z.array(communityToEngageSchema).catch([]),
 
   // Widget 6
-  suggested_reply_angles: z.array(suggestedReplyAngleSchema).default([]),
+  suggested_reply_angles: z.array(suggestedReplyAngleSchema).catch([]),
 
   // Widget 7
-  segment_hints: z.array(segmentHintSchema).default([]),
+  segment_hints: z.array(segmentHintSchema).catch([]),
 
   // Section-level references
   spam_risk_notes: z.string().nullable().default(null),
-  source_links: z.array(growthSourceLinkSchema).default([]),
+  source_links: z.array(growthSourceLinkSchema).catch([]),
   evidence_refs: evidenceRefSchema,
 });
 

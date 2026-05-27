@@ -43,13 +43,13 @@ export interface RoleSynthesisOutput {
 }
 
 function safeSection<T>(
-  schema: { safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: { message: string } } },
+  schema: { safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: { message: string; issues?: unknown } } },
   parsed: unknown,
   name: string,
 ): T | undefined {
   const result = schema.safeParse(parsed);
   if (!result.success) {
-    log.warn({ error: result.error.message }, `${name} section parse failed`);
+    log.warn({ error: result.error.message, issues: result.error.issues }, `${name} section parse failed`);
     return undefined;
   }
   return result.data;
