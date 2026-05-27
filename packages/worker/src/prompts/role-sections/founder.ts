@@ -58,7 +58,9 @@ RULES — read carefully:
 4. Be balanced: strengths_to_respect must reflect real love signals; do not manufacture weaknesses or erase genuine strengths.
 5. All numeric scores and factors are derived from the mergedSignals you receive — never invent numbers.
 6. Arrays with no evidence should be [] — do not fabricate items to fill a widget.
-7. The wedge_recommendation must name a specific target segment and a specific core pain, not a generic summary.`;
+7. The wedge_recommendation must name a specific target segment and a specific core pain, not a generic summary.
+
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct finding the evidence genuinely supports and populate each array generously — do NOT collapse the corpus down to two or three items. Many distinct, well-evidenced insights beat a thin summary. This never overrides rule 6: only include findings backed by real signals, never pad.`;
 
 export function buildFounderSynth(input: {
   ctx: PipelineCtx;

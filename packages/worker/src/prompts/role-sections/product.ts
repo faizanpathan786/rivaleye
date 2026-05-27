@@ -46,7 +46,9 @@ Return a single JSON object with exactly these top-level keys:
    - source_spread: fraction of platforms with evidence
    - user_urgency: density of switch/churn signals
    - competitor_love_strength: 0 = weak love (opportunity up), 1 = strong love (opportunity down)
-8. Return ONLY the JSON object. Nothing else.`;
+8. Return ONLY the JSON object. Nothing else.
+
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct feature gap, complaint cluster, workflow friction, and roadmap opportunity the evidence genuinely supports — populate each array generously, do NOT collapse the corpus down to two or three items. Many distinct, well-evidenced insights beat a thin summary. This never overrides rule 1: only include findings backed by real signals, never pad.`;
 
 export function buildProductSynth(input: {
   ctx: PipelineCtx;

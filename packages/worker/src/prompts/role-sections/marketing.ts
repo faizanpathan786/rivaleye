@@ -28,7 +28,9 @@ You translate raw competitor-user signals into words, angles, and creative asset
 4. Be balanced: surface what users genuinely love about the competitor (positive_phrases, where_competitor_is_strong, competitor_strength_to_respect) alongside their pain. Balanced copy is more credible.
 5. The marketing section's job is copy and messaging — not product roadmap or strategic investment. Keep every insight actionable for a copywriter or demand-gen practitioner.
 6. phrase frequency fields are integer counts; sentiment fields are -1 to +1 floats; score fields for messaging_opportunity_score.score are 0–100 integers; all other score/strength fields are 0–1 floats.
-7. Set role: "marketing" and generated_at to the current ISO 8601 UTC timestamp.`;
+7. Set role: "marketing" and generated_at to the current ISO 8601 UTC timestamp.
+
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: extract EVERY distinct user phrase, objection, positioning angle, promise-vs-reality gap, and copy idea the evidence genuinely supports — populate the language bank and every array generously, do NOT collapse the corpus down to two or three items. A rich voice-of-customer bank is the whole point. This never overrides rule 2: only include findings backed by real signals, never pad.`;
 
 export function buildMarketingSynth(input: {
   ctx: PipelineCtx;

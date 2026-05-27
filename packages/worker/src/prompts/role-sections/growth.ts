@@ -149,7 +149,9 @@ RULES — follow every rule, no exceptions
 7. intent_type must be one of the allowed enum values: looking_for_alternative | pricing_complaint | migration_question | tool_recommendation_request | missing_feature_request | competitor_frustration | churn_signal | what_do_you_use_instead.
 8. Use [] for empty arrays, never omit array fields.
 9. spam_risk_notes: if any community in communities_to_engage has strict self-promotion rules (e.g. many subreddits), surface that here so the growth person is aware before engaging.
-10. The section-level evidence_refs at the root is a rollup of all child evidence_refs in the section.`;
+10. The section-level evidence_refs at the root is a rollup of all child evidence_refs in the section.
+
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct switch-intent conversation, pricing-pain lead, community, and segment hint the evidence genuinely supports — populate every feed and array generously, do NOT collapse the corpus down to two or three items. The more real buying-intent conversations surfaced, the more valuable this dashboard. This never overrides rule 2: only include findings backed by real signals, never fabricate.`;
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 

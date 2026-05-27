@@ -10,7 +10,8 @@ import type { PipelineCheckpointStage } from "../../../api/src/db/schema/pipelin
 import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
 import type { LlmCallOptions } from "@rivaleye/shared";
 import { log } from "../logger.js";
-import { runStageCMerge } from "./stage-c-merge";
+import { assembleSignalPool } from "./assemble-signals";
+import { toLegacyMergedClusters } from "./signal-cluster-adapters";
 import { runStageDSynth } from "./stage-d-synth";
 import { runRoleSynthesis } from "./stage-d-role";
 import { buildSummarySynthesis, type SummaryData } from "../prompts/summary-synthesis";
@@ -43,9 +44,6 @@ function stripEvidenceIds(merged: MergedClusters): MergedClusters {
   };
 }
 
-// Stage C merges multi-platform signal extracts — can be large with many mentions.
-// 5 min per attempt gives DeepSeek enough time to generate large JSON responses.
-const LLM_OPTS_C: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
 const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 3 };
 const LLM_OPTS_D_ROLE: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 2 };
 const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
@@ -136,22 +134,19 @@ export async function runPipeline(reportId: string): Promise<void> {
     merged = mergedClustersSchema.parse(cCheckpoint);
     mergedSignals = (cCheckpoint["_signals"] ?? {}) as MergedSignals;
   } else {
-    await log(reportId, "info", "C", null, "running stage C: merge", { platforms: briefs.length, totalExtracts: signalExtracts.length });
-    const resultC = await runStageCMerge({ llm, ctx, briefs, signalExtracts }, LLM_OPTS_C);
+    await log(reportId, "info", "C", null, "running stage C: assemble (no-merge pool)", { platforms: briefs.length, totalExtracts: signalExtracts.length });
+    mergedSignals = assembleSignalPool(signalExtracts);
+    merged = toLegacyMergedClusters(mergedSignals);
     await log(reportId, "info", "C", null, "stage C done", {
-      promptTokens: resultC.usage.promptTokens,
-      completionTokens: resultC.usage.completionTokens,
-      loveClusters: resultC.mergedSignals.love_clusters.length,
-      painClusters: resultC.mergedSignals.pain_clusters.length,
-      gapClusters: resultC.mergedSignals.gap_clusters.length,
-      switchClusters: resultC.mergedSignals.switch_clusters.length,
-      pricingClusters: resultC.mergedSignals.pricing_clusters.length,
-      featureClusters: resultC.mergedSignals.feature_clusters.length,
-      positioningClusters: resultC.mergedSignals.positioning_clusters.length,
+      loveClusters: mergedSignals.love_clusters.length,
+      painClusters: mergedSignals.pain_clusters.length,
+      gapClusters: mergedSignals.gap_clusters.length,
+      switchClusters: mergedSignals.switch_clusters.length,
+      pricingClusters: mergedSignals.pricing_clusters.length,
+      featureClusters: mergedSignals.feature_clusters.length,
+      positioningClusters: mergedSignals.positioning_clusters.length,
     });
-    merged = resultC.merged;
-    mergedSignals = resultC.mergedSignals;
-    await saveCheckpoint(reportId, "C", { ...merged, _signals: resultC.mergedSignals } as unknown as Record<string, unknown>);
+    await saveCheckpoint(reportId, "C", { ...merged, _signals: mergedSignals } as unknown as Record<string, unknown>);
   }
 
   // Stage D

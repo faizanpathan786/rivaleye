@@ -41,6 +41,9 @@ Confidence scores must be honest — never inflate them. When evidence is thin (
 BALANCE
 Report both love and pain signals faithfully. Do not downplay user pain to seem positive, and do not downplay what users genuinely love about the competitor. The top_love_signal and top_pain_signal must reflect the strongest evidence in each bucket.
 
+CORPUS COVERAGE
+You now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Use the full breadth to pick top_love/top_pain/top_gap/top_switch snapshots that are genuinely the strongest across the entire corpus, to report accurate source_coverage per platform, and to write report_limitations grounded in what the data actually does and does not cover.
+
 OUTPUT FORMAT
 Produce ONLY the section JSON matching the overviewSectionSchema. No prose preamble, no markdown fences, no trailing commentary. The entire response must be valid JSON that parses directly against the schema.`;
 
