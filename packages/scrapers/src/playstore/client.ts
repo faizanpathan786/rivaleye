@@ -1,3 +1,4 @@
+import pino from "pino";
 import gplay from "google-play-scraper";
 import type { IAppItem, IReviewsItem } from "google-play-scraper";
 import { ScraperError } from "../types";
@@ -5,6 +6,7 @@ import { ScraperError } from "../types";
 export type RawPlayStoreApp = IAppItem;
 export type RawPlayStoreReview = IReviewsItem;
 
+const log = pino({ name: "playstore-scraper" });
 const SORT_NEWEST = 2 as const;
 
 function appMatchesCompetitor(appTitle: string, competitor: string): boolean {
@@ -23,6 +25,25 @@ function appMatchesCompetitor(appTitle: string, competitor: string): boolean {
 
 const SEARCH_COUNTRIES = ["us", "in", "gb"];
 
+/**
+ * Derive candidate app IDs from a competitor name to use as fallback when
+ * gplay.search() is unavailable (Google blocks scraping from some IPs).
+ *
+ * Covers common patterns: notion.id, com.slack, com.asana.android, etc.
+ */
+function candidateAppIds(name: string): string[] {
+  const n = name.toLowerCase().replace(/\s+/g, "");
+  const nTitle = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase().replace(/\s+/g, "");
+  return [
+    `${n}.id`,
+    `com.${n}`,
+    `com.${nTitle}`,
+    `com.${n}.android`,
+    `com.${n}app`,
+    `${n}.android`,
+  ];
+}
+
 export async function searchApps(term: string, limit: number): Promise<{ apps: RawPlayStoreApp[]; country: string }> {
   try {
     // Try multiple storefronts — app may only be listed in specific regions (e.g., India).
@@ -31,6 +52,22 @@ export async function searchApps(term: string, limit: number): Promise<{ apps: R
       const matched = results.filter((r) => appMatchesCompetitor(r.title, term));
       if (matched.length > 0) return { apps: matched.slice(0, limit), country };
     }
+
+    // gplay.search() can return 0 when Google blocks scraping from the current IP.
+    // Fall back to direct app ID guessing so we still get reviews when we can derive the ID.
+    log.warn({ term }, "gplay.search() returned 0 results; trying heuristic app ID fallback");
+    for (const appId of candidateAppIds(term)) {
+      try {
+        const app = await gplay.app({ appId }) as RawPlayStoreApp;
+        if (appMatchesCompetitor(app.title, term)) {
+          log.info({ term, appId, title: app.title }, "Found app via heuristic ID");
+          return { apps: [app], country: "us" };
+        }
+      } catch {
+        // not found — try next pattern
+      }
+    }
+
     return { apps: [], country: "us" };
   } catch (err) {
     throw new ScraperError("playstore", "search failed", err);
