@@ -494,7 +494,7 @@ function coverageColor(id: string): string {
   return (
     (
       {
-        reddit: "#38bdf8",
+        reddit: "#0061B1",
         g2: "#dc2626",
         linkedin: "#0a66c2",
         producthunt: "#da552f",
@@ -1597,7 +1597,7 @@ function BuildAvoidLearn({
         title="Build"
         items={d.build}
         color="var(--accent)"
-        bg="rgba(56,189,248,0.05)"
+        bg="rgba(0,97,177,0.05)"
         openEvidence={openEvidence}
       />
       <DecisionColumn
@@ -1714,7 +1714,7 @@ function ProductFooter({ onNav }: { onNav: (to: string) => void }) {
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(56,189,248,0.04))",
+        background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(0,97,177,0.04))",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",

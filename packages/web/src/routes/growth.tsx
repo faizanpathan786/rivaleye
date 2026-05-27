@@ -549,7 +549,7 @@ function coverageColor(id: string): string {
   return (
     (
       {
-        reddit: "#38bdf8",
+        reddit: "#0061B1",
         g2: "#dc2626",
         linkedin: "#0a66c2",
         producthunt: "#da552f",
@@ -1224,12 +1224,12 @@ function EngagementBadge({ level }: { level: LowMedHigh }) {
 
 const INTENT_COLORS: Record<SwitchIntentType, string> = {
   looking_for_alternative: "#dc2626",
-  tool_recommendation_request: "#38bdf8",
+  tool_recommendation_request: "#0061B1",
   competitor_frustration: "#d97706",
   missing_feature_request: "#6366f1",
   migration_question: "#8b5cf6",
   churn_signal: "#0ea5e9",
-  pricing_complaint: "#38bdf8",
+  pricing_complaint: "#0061B1",
   what_do_you_use_instead: "#dc2626",
 };
 
@@ -1848,7 +1848,7 @@ function GrowthFooter({ onNav }: { onNav: (to: string) => void }) {
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: `linear-gradient(135deg, ${GRN_BG}, rgba(56,189,248,0.04))`,
+        background: `linear-gradient(135deg, ${GRN_BG}, rgba(0,97,177,0.04))`,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",

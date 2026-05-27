@@ -44,7 +44,7 @@ interface LensMeta {
 
 const LENS_META: Record<LensId, LensMeta> = {
   summary:   { name: "Summary",   color: "#161412", bg: "rgba(20,16,12,0.05)",   glyph: "◇", role: "Executive memo · neutral" },
-  founder:   { name: "Founder",   color: "#38bdf8", bg: "rgba(56,189,248,0.10)",  glyph: "⊙", role: "Market opening · wedge to attack" },
+  founder:   { name: "Founder",   color: "#0061B1", bg: "rgba(0,97,177,0.10)",  glyph: "⊙", role: "Market opening · wedge to attack" },
   product:   { name: "Product",   color: "#6366f1", bg: "rgba(99,102,241,0.10)", glyph: "⊞", role: "Roadmap intelligence · gaps & evidence" },
   marketing: { name: "Marketing", color: "#8b5cf6", bg: "rgba(139,92,246,0.10)", glyph: "❝", role: "Positioning · copy · angles" },
   growth:    { name: "Growth",    color: "#16a34a", bg: "rgba(22,163,74,0.10)",  glyph: "↗", role: "Switch intent · live conversations" },
@@ -429,7 +429,7 @@ function ExecutiveSummary({ data, onPickLens }: { data: ScanData; onPickLens: (i
           <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-          <AnchorQuote q={data.quotes[2]} theme="Pricing" color="#38bdf8" />
+          <AnchorQuote q={data.quotes[2]} theme="Pricing" color="#0061B1" />
           <AnchorQuote q={data.quotes[3]} theme="Time tracking" color="#6366f1" />
           <AnchorQuote q={data.quotes[1]} theme="Roadmap" color="#8b5cf6" />
         </div>
