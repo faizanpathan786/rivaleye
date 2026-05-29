@@ -47,14 +47,22 @@ function candidateAppIds(name: string): string[] {
 /**
  * Direct lookup by Google Play package id. Skips name-based search entirely
  * so we never match a lookalike app when Sonar discovery has handed us the
- * exact identifier. Returns null if the package id is unknown.
+ * exact identifier. Tries each storefront because some apps are region-
+ * locked (e.g. India-only). Returns { app, country } on hit so reviews fetch
+ * from the correct storefront.
  */
-export async function lookupApp(appId: string, country = "us"): Promise<RawPlayStoreApp | null> {
-  try {
-    return (await gplay.app({ appId, lang: "en", country })) as RawPlayStoreApp;
-  } catch {
-    return null;
+export async function lookupApp(
+  appId: string,
+): Promise<{ app: RawPlayStoreApp; country: string } | null> {
+  for (const country of SEARCH_COUNTRIES) {
+    try {
+      const app = (await gplay.app({ appId, lang: "en", country })) as RawPlayStoreApp;
+      if (app) return { app, country };
+    } catch {
+      // Not available in this storefront — try next.
+    }
   }
+  return null;
 }
 
 export async function searchApps(term: string, limit: number): Promise<{ apps: RawPlayStoreApp[]; country: string }> {

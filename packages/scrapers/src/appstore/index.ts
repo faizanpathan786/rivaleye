@@ -22,15 +22,15 @@ export class AppStoreScraper implements Scraper {
       let country: string;
       if (query.appStoreId) {
         // Sonar discovery handed us the exact trackId — skip name search.
-        const app = await lookupApp(query.appStoreId);
-        if (!app) {
+        const found = await lookupApp(query.appStoreId);
+        if (!found) {
           throw new ScraperError(
             "appstore",
-            `lookup failed for appStoreId=${query.appStoreId}`,
+            `lookup failed for appStoreId=${query.appStoreId} (no storefront returned a match)`,
           );
         }
-        apps = [app];
-        country = DEFAULT_COUNTRY;
+        apps = [found.app];
+        country = found.country;
       } else {
         const result = await searchApps(
           query.competitor,

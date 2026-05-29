@@ -51,14 +51,22 @@ const SEARCH_COUNTRIES = ["us", "in", "gb"];
 /**
  * Direct lookup by numeric Apple trackId. Skips name-based search entirely so
  * we never match the wrong app when Sonar discovery has handed us the exact
- * identifier. Returns null if the trackId is unknown.
+ * identifier. Tries each storefront because the same trackId can be live in
+ * one region (e.g. India) but absent from the default US storefront. Returns
+ * { app, country } on hit so reviews fetch from the correct storefront.
  */
-export async function lookupApp(trackId: string): Promise<RawAppStoreApp | null> {
-  const url = `https://itunes.apple.com/lookup?id=${encodeURIComponent(trackId)}&entity=software`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = (await res.json()) as { results: RawAppStoreApp[] };
-  return data.results[0] ?? null;
+export async function lookupApp(
+  trackId: string,
+): Promise<{ app: RawAppStoreApp; country: string } | null> {
+  for (const country of SEARCH_COUNTRIES) {
+    const url = `https://itunes.apple.com/lookup?id=${encodeURIComponent(trackId)}&country=${country}&entity=software`;
+    const res = await fetch(url);
+    if (!res.ok) continue;
+    const data = (await res.json()) as { results: RawAppStoreApp[] };
+    const app = data.results[0];
+    if (app) return { app, country };
+  }
+  return null;
 }
 
 export async function searchApps(
