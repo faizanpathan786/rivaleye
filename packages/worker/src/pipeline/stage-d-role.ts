@@ -20,6 +20,9 @@ import pino from "pino";
 const log = pino({ name: "stage-d-role" });
 
 const MAX_TOKENS = 16000;
+// Number of LLM call attempts per section before we give up on that one
+// dashboard. A failure here is isolated — never blocks other sections.
+const MAX_SECTION_ATTEMPTS = 3;
 
 function parseRaw(raw: string): unknown {
   try {
@@ -28,6 +31,83 @@ function parseRaw(raw: string): unknown {
   } catch {
     return undefined;
   }
+}
+
+interface BuiltPrompt {
+  system: string;
+  user: string;
+}
+
+interface SectionResult<T> {
+  data: T | undefined;
+  usage: { promptTokens: number; completionTokens: number };
+  model: string;
+}
+
+interface SectionSchema<T> {
+  safeParse: (
+    data: unknown,
+  ) =>
+    | { success: true; data: T }
+    | { success: false; error: { message: string; issues?: unknown } };
+}
+
+/**
+ * Run one role-section's LLM call with isolated retry — up to
+ * MAX_SECTION_ATTEMPTS calls, returning the first that parses against the
+ * schema. Retries get a corrective hint so the model re-derives clean JSON
+ * (the typical failure is a truncated or wrapped response).
+ */
+async function ensureSection<T>(
+  llm: OpenRouterClient,
+  built: BuiltPrompt,
+  schema: SectionSchema<T>,
+  name: string,
+  opts?: LlmCallOptions,
+): Promise<SectionResult<T>> {
+  const usage = { promptTokens: 0, completionTokens: 0 };
+  let model = "";
+  for (let attempt = 1; attempt <= MAX_SECTION_ATTEMPTS; attempt++) {
+    const user =
+      attempt === 1
+        ? built.user
+        : `${built.user}\n\nIMPORTANT (retry ${attempt}/${MAX_SECTION_ATTEMPTS}): your previous response did not parse as the expected JSON. Return ONLY a single complete JSON object matching the schema for this section — no prose, no markdown fences, no truncation, no extra keys. Re-derive the JSON from the signals cleanly.`;
+    try {
+      const res = await llm.complete(
+        { system: built.system, user, maxTokens: MAX_TOKENS },
+        opts,
+      );
+      usage.promptTokens += res.usage.promptTokens;
+      usage.completionTokens += res.usage.completionTokens;
+      model = res.model;
+      const parsed = parseRaw(res.raw);
+      const result = schema.safeParse(parsed);
+      if (result.success) {
+        if (attempt > 1) {
+          log.info({ name, attempt }, `${name} section recovered on retry`);
+        }
+        return { data: result.data, usage, model };
+      }
+      log.warn(
+        {
+          name,
+          attempt,
+          error: result.error.message,
+          issues: result.error.issues,
+          rawHead: res.raw.slice(0, 280),
+          rawLength: res.raw.length,
+        },
+        `${name} section parse failed`,
+      );
+    } catch (err) {
+      log.warn(
+        { name, attempt, err: err instanceof Error ? err.message : String(err) },
+        `${name} section call threw`,
+      );
+    }
+  }
+  log.warn({ name, attempts: MAX_SECTION_ATTEMPTS }, `${name} section gave up after retries`);
+  return { data: undefined, usage, model };
 }
 
 export interface RoleSynthesisInput {
@@ -40,19 +120,6 @@ export interface RoleSynthesisOutput {
   roleSections: RoleSections;
   usage: { promptTokens: number; completionTokens: number };
   model: string;
-}
-
-function safeSection<T>(
-  schema: { safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: { message: string; issues?: unknown } } },
-  parsed: unknown,
-  name: string,
-): T | undefined {
-  const result = schema.safeParse(parsed);
-  if (!result.success) {
-    log.warn({ error: result.error.message, issues: result.error.issues }, `${name} section parse failed`);
-    return undefined;
-  }
-  return result.data;
 }
 
 export async function runRoleSynthesis(
@@ -68,57 +135,51 @@ export async function runRoleSynthesis(
     const marketingBuilt = buildMarketingSynth({ ctx, mergedSignals });
     const growthBuilt = buildGrowthSynth({ ctx, mergedSignals });
 
-    // Don't pass schemas to llm.complete — let it return raw strings so LlmSchemaError
-    // doesn't kill the whole Promise.all. We validate each section ourselves via safeSection.
-    const [overviewRes, founderRes, productRes, marketingRes, growthRes] = await Promise.all([
-      llm.complete({ system: overviewBuilt.system, user: overviewBuilt.user, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: founderBuilt.system, user: founderBuilt.user, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: productBuilt.system, user: productBuilt.user, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: marketingBuilt.system, user: marketingBuilt.user, maxTokens: MAX_TOKENS }, opts),
-      llm.complete({ system: growthBuilt.system, user: growthBuilt.user, maxTokens: MAX_TOKENS }, opts),
+    // Each section runs its own isolated retry chain in parallel — a failure
+    // in one (e.g. product returning malformed JSON) never kills the rest.
+    const [overview, founder, product, marketing, growth] = await Promise.all([
+      ensureSection(llm, overviewBuilt, overviewSectionSchema, "overview", opts),
+      ensureSection(llm, founderBuilt, founderViewSectionSchema, "founder", opts),
+      ensureSection(llm, productBuilt, productViewSectionSchema, "product", opts),
+      ensureSection(llm, marketingBuilt, marketingViewSectionSchema, "marketing", opts),
+      ensureSection(llm, growthBuilt, growthViewSectionSchema, "growth", opts),
     ]);
 
     const evidence = buildEvidenceSection(mergedSignals);
 
-    // Parse each section individually — one bad LLM response must not kill all sections.
-    const overview = safeSection(overviewSectionSchema, parseRaw(overviewRes.raw), "overview");
-    const founder = safeSection(founderViewSectionSchema, parseRaw(founderRes.raw), "founder");
-    const product = safeSection(productViewSectionSchema, parseRaw(productRes.raw), "product");
-    const marketing = safeSection(marketingViewSectionSchema, parseRaw(marketingRes.raw), "marketing");
-    const growth = safeSection(growthViewSectionSchema, parseRaw(growthRes.raw), "growth");
-
-    // Overview is the minimum viable section — abort if it failed.
-    if (overview === undefined) {
-      throw new Error("overview section parse failed — cannot build role sections without it");
+    // Overview is the minimum viable section — abort if even retries couldn't
+    // produce it. Anything else can be missing; persistReport skips undefined.
+    if (overview.data === undefined) {
+      throw new Error(
+        `overview section failed after ${MAX_SECTION_ATTEMPTS} attempts — cannot build role sections without it`,
+      );
     }
 
-    // Build the assembled sections object. Sections that failed will be
-    // skipped by persistReport (it does `if (data === undefined) continue`).
     const roleSections = {
-      overview,
-      founder,
-      product,
-      marketing,
-      growth,
+      overview: overview.data,
+      founder: founder.data,
+      product: product.data,
+      marketing: marketing.data,
+      growth: growth.data,
       evidence,
     } as unknown as RoleSections;
 
     const usage = {
       promptTokens:
-        overviewRes.usage.promptTokens +
-        founderRes.usage.promptTokens +
-        productRes.usage.promptTokens +
-        marketingRes.usage.promptTokens +
-        growthRes.usage.promptTokens,
+        overview.usage.promptTokens +
+        founder.usage.promptTokens +
+        product.usage.promptTokens +
+        marketing.usage.promptTokens +
+        growth.usage.promptTokens,
       completionTokens:
-        overviewRes.usage.completionTokens +
-        founderRes.usage.completionTokens +
-        productRes.usage.completionTokens +
-        marketingRes.usage.completionTokens +
-        growthRes.usage.completionTokens,
+        overview.usage.completionTokens +
+        founder.usage.completionTokens +
+        product.usage.completionTokens +
+        marketing.usage.completionTokens +
+        growth.usage.completionTokens,
     };
 
-    return { roleSections, usage, model: overviewRes.model };
+    return { roleSections, usage, model: overview.model };
   } catch (err) {
     if (err instanceof PipelineError) throw err;
     throw new PipelineError("D", "role synthesis failed", err);
