@@ -930,8 +930,13 @@ export type SourceLink = z.infer<typeof sourceLinkSchema>;
  * This is the atomic unit that all other sections reference by `id`.
  */
 export const evidenceItemSchema = z.object({
-  /** Stable UUID assigned by the LLM pipeline. Used as the reference key in `quote_ids`. */
-  id: z.string().uuid(),
+  /**
+   * Stable string id assigned by the pipeline — the SAME id role-section
+   * widgets cite in their evidence_refs.quote_ids. In practice the scraper
+   * layer emits non-UUID ids like "playstore:com.x.y:<uuid>"; we preserve
+   * them verbatim so the round-trip Lookup the drawer relies on works.
+   */
+  id: z.string().min(1),
 
   /** Verbatim or lightly cleaned quote from the source material. */
   quote: z.string(),

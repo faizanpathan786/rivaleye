@@ -125,15 +125,16 @@ function numericToConfidence(score: number) {
   return { score, label, basis: null };
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function mapEvidenceItem(
   item: EvidenceIndexItem,
   clusterMap: Map<string, SignalType>,
   mergedSignals: MergedSignals,
 ) {
   const trimmed = item.evidence_id.trim();
-  const id = UUID_RE.test(trimmed) ? trimmed : randomUUID();
+  // Preserve the original evidence_id so role-section widget evidence_refs.
+  // quote_ids round-trip into the drawer. Only synthesize a UUID when the
+  // upstream id is genuinely empty.
+  const id = trimmed.length > 0 ? trimmed : randomUUID();
   const sentiment = item.sentiment ?? 0;
 
   return {
