@@ -44,6 +44,14 @@ Report both love and pain signals faithfully. Do not downplay user pain to seem 
 CORPUS COVERAGE
 You now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Use the full breadth to pick top_love/top_pain/top_gap/top_switch snapshots that are genuinely the strongest across the entire corpus, to report accurate source_coverage per platform, and to write report_limitations grounded in what the data actually does and does not cover.
 
+EVIDENCE CITATIONS — non-negotiable. Each top_*_signal snapshot AND strongest_opportunity MUST have a populated evidence_refs.
+- evidence_refs.signal_ids = the cluster \`id\` value(s) the snapshot is drawn from (e.g. "pain-reddit-0").
+- evidence_refs.quote_ids = the \`evidence_id\` values from that cluster's representative_quotes and/or evidence_ids arrays.
+- evidence_refs.source_urls = [].
+Example: if top_pain_signal is the pain cluster "pain-reddit-2" with evidence_ids ["e_4f12","e_7a91"], emit:
+  "evidence_refs": { "signal_ids": ["pain-reddit-2"], "quote_ids": ["e_4f12","e_7a91"], "source_urls": [] }
+An empty evidence_refs makes the snapshot uncited — never emit one without at least one signal_id and one quote_id.
+
 OUTPUT FORMAT
 Produce ONLY the section JSON matching the overviewSectionSchema. No prose preamble, no markdown fences, no trailing commentary. The entire response must be valid JSON that parses directly against the schema.`;
 

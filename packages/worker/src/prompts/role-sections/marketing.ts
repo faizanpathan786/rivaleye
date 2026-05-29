@@ -32,7 +32,19 @@ Use the EXACT field names below for every item — wrong field names are dropped
 6. phrase frequency fields are integer counts; sentiment fields are -1 to +1 floats; score fields for messaging_opportunity_score.score are 0–100 integers; all other score/strength fields are 0–1 floats.
 7. Set role: "marketing" and generated_at to the current ISO 8601 UTC timestamp.
 
-CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: extract EVERY distinct user phrase, objection, positioning angle, promise-vs-reality gap, and copy idea the evidence genuinely supports — populate the language bank and every array generously, do NOT collapse the corpus down to two or three items. A rich voice-of-customer bank is the whole point. This never overrides rule 2: only include findings backed by real signals, never pad.`;
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: extract EVERY distinct user phrase, objection, positioning angle, promise-vs-reality gap, and copy idea the evidence genuinely supports — populate the language bank and every array generously, do NOT collapse the corpus down to two or three items. A rich voice-of-customer bank is the whole point. This never overrides rule 2: only include findings backed by real signals, never pad.
+
+EVIDENCE CITATIONS — non-negotiable. The frontend renders an "Evidence" drawer per widget item by fetching quotes via the IDs you put in evidence_refs. An item with empty evidence_refs is, to the user, an UNCITED CLAIM they cannot verify.
+
+For EVERY widget item you emit (including each phrase in user_language_bank and each copy in copy_ideas), populate evidence_refs by copying IDs directly from the input mergedSignals pool:
+- evidence_refs.signal_ids = array of cluster \`id\` values you drew this insight from (e.g. "positioning-reddit-0", "pain-playstore-2"). At least one.
+- evidence_refs.quote_ids = array of \`evidence_id\` values from those clusters' representative_quotes and/or evidence_ids arrays. At least one.
+- evidence_refs.source_urls = [] (the pool does not carry URLs yet).
+
+Example: if a positioning_angles item is derived from positioning cluster "positioning-reddit-2" whose representative_quotes contain evidence_ids ["e_4f12","e_7a91"], emit:
+  "evidence_refs": { "signal_ids": ["positioning-reddit-2"], "quote_ids": ["e_4f12","e_7a91"], "source_urls": [] }
+
+NEVER emit a widget item with empty signal_ids AND quote_ids. If you cannot find a supporting cluster in the input, do not emit that item.`;
 
 export function buildMarketingSynth(input: {
   ctx: PipelineCtx;

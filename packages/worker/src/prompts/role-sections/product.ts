@@ -74,7 +74,19 @@ names below for every item — wrong field names are dropped and render as empty
    - competitor_love_strength: 0 = weak love (opportunity up), 1 = strong love (opportunity down)
 8. Return ONLY the JSON object. Nothing else.
 
-CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct feature gap, complaint cluster, workflow friction, and roadmap opportunity the evidence genuinely supports — populate each array generously, do NOT collapse the corpus down to two or three items. Many distinct, well-evidenced insights beat a thin summary. This never overrides rule 1: only include findings backed by real signals, never pad.`;
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct feature gap, complaint cluster, workflow friction, and roadmap opportunity the evidence genuinely supports — populate each array generously, do NOT collapse the corpus down to two or three items. Many distinct, well-evidenced insights beat a thin summary. This never overrides rule 1: only include findings backed by real signals, never pad.
+
+EVIDENCE CITATIONS — non-negotiable. The frontend renders an "Evidence" drawer per widget item by fetching quotes via the IDs you put in evidence_refs. An item with empty evidence_refs is, to the user, an UNCITED CLAIM they cannot verify.
+
+For EVERY widget item you emit, populate evidence_refs by copying IDs directly from the input mergedSignals pool:
+- evidence_refs.signal_ids = array of cluster \`id\` values you drew this insight from (e.g. "gap-reddit-0", "pain-playstore-2"). At least one.
+- evidence_refs.quote_ids = array of \`evidence_id\` values from those clusters' representative_quotes and/or evidence_ids arrays. At least one.
+- evidence_refs.source_urls = [] (the pool does not carry URLs yet).
+
+Example: if a feature_gap_map item is derived from gap cluster "gap-reddit-2" whose representative_quotes contain evidence_ids ["e_4f12","e_7a91"], emit:
+  "evidence_refs": { "signal_ids": ["gap-reddit-2"], "quote_ids": ["e_4f12","e_7a91"], "source_urls": [] }
+
+NEVER emit a widget item with empty signal_ids AND quote_ids. If you cannot find a supporting cluster in the input, do not emit that item.`;
 
 export function buildProductSynth(input: {
   ctx: PipelineCtx;

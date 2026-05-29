@@ -151,7 +151,19 @@ RULES — follow every rule, no exceptions
 9. spam_risk_notes: if any community in communities_to_engage has strict self-promotion rules (e.g. many subreddits), surface that here so the growth person is aware before engaging.
 10. The section-level evidence_refs at the root is a rollup of all child evidence_refs in the section.
 
-CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct switch-intent conversation, pricing-pain lead, community, and segment hint the evidence genuinely supports — populate every feed and array generously, do NOT collapse the corpus down to two or three items. The more real buying-intent conversations surfaced, the more valuable this dashboard. This never overrides rule 2: only include findings backed by real signals, never fabricate.`;
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct switch-intent conversation, pricing-pain lead, community, and segment hint the evidence genuinely supports — populate every feed and array generously, do NOT collapse the corpus down to two or three items. The more real buying-intent conversations surfaced, the more valuable this dashboard. This never overrides rule 2: only include findings backed by real signals, never fabricate.
+
+EVIDENCE CITATIONS — non-negotiable. The frontend renders an "Evidence" drawer per widget item by fetching quotes via the IDs you put in evidence_refs. An item with empty evidence_refs is, to the user, an UNCITED CLAIM they cannot verify.
+
+For EVERY widget item you emit, populate evidence_refs by copying IDs directly from the input mergedSignals pool:
+- evidence_refs.signal_ids = array of cluster \`id\` values you drew this insight from (e.g. "switch-reddit-0", "pricing-playstore-2"). At least one.
+- evidence_refs.quote_ids = array of \`evidence_id\` values from those clusters' representative_quotes and/or evidence_ids arrays. At least one.
+- evidence_refs.source_urls = [] (the pool does not carry URLs yet).
+
+Example: if a switch_intent_feed item is derived from switch cluster "switch-reddit-2" whose representative_quotes contain evidence_ids ["e_4f12","e_7a91"], emit:
+  "evidence_refs": { "signal_ids": ["switch-reddit-2"], "quote_ids": ["e_4f12","e_7a91"], "source_urls": [] }
+
+NEVER emit a widget item with empty signal_ids AND quote_ids. If you cannot find a supporting cluster in the input, do not emit that item.`;
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 

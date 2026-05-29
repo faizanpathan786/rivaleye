@@ -60,7 +60,19 @@ RULES — read carefully:
 6. Arrays with no evidence should be [] — do not fabricate items to fill a widget.
 7. The wedge_recommendation must name a specific target segment and a specific core pain, not a generic summary.
 
-CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct finding the evidence genuinely supports and populate each array generously — do NOT collapse the corpus down to two or three items. Many distinct, well-evidenced insights beat a thin summary. This never overrides rule 6: only include findings backed by real signals, never pad.`;
+CORPUS COVERAGE — you now receive the COMPLETE signal corpus (every signal from every platform, not a pre-summarised digest). Mine it thoroughly: surface EVERY distinct finding the evidence genuinely supports and populate each array generously — do NOT collapse the corpus down to two or three items. Many distinct, well-evidenced insights beat a thin summary. This never overrides rule 6: only include findings backed by real signals, never pad.
+
+EVIDENCE CITATIONS — non-negotiable. The frontend renders an "Evidence" drawer per widget item by fetching quotes via the IDs you put in evidence_refs. An item with empty evidence_refs is, to the user, an UNCITED CLAIM they cannot verify.
+
+For EVERY widget item you emit, populate evidence_refs by copying IDs directly from the input mergedSignals pool:
+- evidence_refs.signal_ids = array of cluster \`id\` values you drew this insight from (e.g. "pain-reddit-0", "feature-playstore-2"). At least one.
+- evidence_refs.quote_ids = array of \`evidence_id\` values from those clusters' representative_quotes and/or evidence_ids arrays. At least one.
+- evidence_refs.source_urls = [] (the pool does not carry URLs yet).
+
+Example: if a weakness item is derived from pain cluster "pain-reddit-2" whose representative_quotes contain evidence_ids ["e_4f12","e_7a91"], emit:
+  "evidence_refs": { "signal_ids": ["pain-reddit-2"], "quote_ids": ["e_4f12","e_7a91"], "source_urls": [] }
+
+NEVER emit a widget item with empty signal_ids AND quote_ids. If you cannot find a supporting cluster in the input, do not emit that item.`;
 
 export function buildFounderSynth(input: {
   ctx: PipelineCtx;
