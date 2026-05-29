@@ -37,7 +37,7 @@ function getSonarClient(): OpenRouterClient {
   return _client;
 }
 
-const SYSTEM = `You are a research assistant identifying the canonical public identifiers for a SaaS or consumer-software company. Use live web search to verify each identifier against authoritative sources (the company's own site, the App Store / Play Store listing pages, the company's LinkedIn page).
+const SYSTEM = `You are a research assistant identifying the canonical public identifiers for a SaaS or consumer-software company. You MUST actively search live web sources for every identifier independently — do not bail to null just because the first search didn't surface it. Treat null as a last resort that means "I searched and confirmed it doesn't exist", not "I didn't look hard enough".
 
 Return ONLY a single JSON object — no prose, no markdown fences, no explanation outside the JSON.`;
 
@@ -48,15 +48,22 @@ Return a JSON object with these exact keys:
 {
   "canonical_name": "the official brand name as the company writes it (e.g. \\"Notion\\", \\"Linear\\")",
   "website_url": "the official primary marketing website (https://...). NOT a Wikipedia or third-party page.",
-  "app_store_id": "the numeric Apple App Store trackId as a string, digits only (e.g. for Notion it is \\"1232780281\\"). NOT a URL. null if the company has no iOS app.",
-  "play_store_app_id": "the Google Play package id, e.g. \\"notion.id\\", \\"com.slack\\". null if the company has no Android app.",
-  "linkedin_url": "the canonical https://www.linkedin.com/company/<slug> URL. null if not found.",
-  "twitter_handle": "the X/Twitter handle WITHOUT the @ prefix, e.g. \\"NotionHQ\\". null if not found.",
+  "app_store_id": "the numeric Apple App Store trackId as a string, digits only (e.g. for Notion it is \\"1232780281\\"). NOT a URL. null ONLY if you searched the App Store and confirmed no iOS app exists.",
+  "play_store_app_id": "the Google Play package id, e.g. \\"notion.id\\", \\"com.slack\\", \\"app.linear\\". null ONLY if you searched Google Play and confirmed no Android app exists.",
+  "linkedin_url": "the canonical https://www.linkedin.com/company/<slug> URL. null only if you confirmed the company has no LinkedIn page.",
+  "twitter_handle": "the X/Twitter handle WITHOUT the @ prefix, e.g. \\"NotionHQ\\". null only if you confirmed the company has no X/Twitter presence.",
   "notes": "short caveat if any identifier is ambiguous, uncertain, or the company has multiple products. null if all confident."
 }
 
+How to search (be thorough — most companies have apps even if their first-pass search results don't show them):
+- For app_store_id: search "<name> site:apps.apple.com" — find the listing page; the URL ends with "/id<digits>"; that <digits> string is the answer.
+- For play_store_app_id: search "<name> site:play.google.com/store/apps" — find the listing page; the URL contains "?id=<package>"; that <package> is the answer.
+- For linkedin_url: search "<name> site:linkedin.com/company" — copy the canonical company-page URL.
+- For twitter_handle: check the company's website footer / contact page or search "<name> twitter".
+- Do at least one targeted search per identifier before returning null. A well-known company without an app is rare; if you can't find one, double-check.
+
 Rules:
-- Never guess. If you cannot confidently identify the company, set all id fields to null and explain in notes.
+- Never invent identifiers. If, after a targeted search, you genuinely cannot find one, return null and say so in notes.
 - The app_store_id MUST be the numeric trackId Apple uses (extract from the App Store listing URL "/id<digits>"), NOT the URL itself.
 - Verify website_url is the company's own marketing site, not a Wikipedia / Crunchbase / press page.
 - If multiple companies share the name, pick the SaaS / software one and explain in notes.
@@ -83,5 +90,23 @@ export async function discoverCompetitorIdentifiers(
   // Schema validates fields nullable + .catch(null), so parsed conforms — but
   // zod's .catch chain loses the strict generic through OpenRouterClient's
   // overloads. Validate explicitly and cast.
-  return discoveredIdsSchema.parse(res.parsed) as DiscoveredIds;
+  const parsed = discoveredIdsSchema.parse(res.parsed) as DiscoveredIds;
+  return sanitize(parsed);
+}
+
+// Apple trackIds are numeric, ≥6 digits in practice (older apps 9, newer 10).
+// Anything shorter is almost certainly a hallucination; null it rather than
+// silently scraping the wrong app.
+const APP_STORE_ID_RE = /^\d{6,}$/;
+// Google Play package ids always contain at least one dot ("notion.id",
+// "com.slack", "app.linear"). Strip anything that doesn't.
+const PLAY_STORE_ID_RE = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/i;
+
+function sanitize(d: DiscoveredIds): DiscoveredIds {
+  return {
+    ...d,
+    app_store_id: d.app_store_id && APP_STORE_ID_RE.test(d.app_store_id) ? d.app_store_id : null,
+    play_store_app_id:
+      d.play_store_app_id && PLAY_STORE_ID_RE.test(d.play_store_app_id) ? d.play_store_app_id : null,
+  };
 }
