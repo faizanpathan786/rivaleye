@@ -44,6 +44,19 @@ function candidateAppIds(name: string): string[] {
   ];
 }
 
+/**
+ * Direct lookup by Google Play package id. Skips name-based search entirely
+ * so we never match a lookalike app when Sonar discovery has handed us the
+ * exact identifier. Returns null if the package id is unknown.
+ */
+export async function lookupApp(appId: string, country = "us"): Promise<RawPlayStoreApp | null> {
+  try {
+    return (await gplay.app({ appId, lang: "en", country })) as RawPlayStoreApp;
+  } catch {
+    return null;
+  }
+}
+
 export async function searchApps(term: string, limit: number): Promise<{ apps: RawPlayStoreApp[]; country: string }> {
   try {
     // Try multiple storefronts — app may only be listed in specific regions (e.g., India).

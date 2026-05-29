@@ -14,7 +14,14 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { NormalizedPost } from "@rivaleye/scrapers";
 import { getScraper } from "@rivaleye/scrapers";
-import { LLM_MODEL, LlmSchemaError, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
+import {
+  discoverCompetitorIdentifiers,
+  LLM_MODEL,
+  LlmSchemaError,
+  OpenRouterClient,
+  readOpenRouterApiKey,
+  type DiscoveredIds,
+} from "@rivaleye/shared";
 import pino from "pino";
 import { db } from "../db";
 import { mentions } from "../../../api/src/db/schema/mentions.js";
@@ -46,6 +53,51 @@ function getLlm(): OpenRouterClient {
 }
 
 /**
+ * Resolve canonical identifiers for the competitor via Sonar discovery, if
+ * not already cached on the report row. Multiple concurrent source jobs may
+ * call this; we tolerate a small amount of redundant Sonar work in exchange
+ * for not holding a DB transaction across the (slow) LLM call. The atomic
+ * "set if NULL" guarantees only the first write wins.
+ */
+async function ensureDiscovery(
+  reportId: string,
+  competitorName: string,
+): Promise<DiscoveredIds | null> {
+  const [row0] = await db
+    .select({ d: reports.discovered_ids })
+    .from(reports)
+    .where(eq(reports.id, reportId))
+    .limit(1);
+  if (row0?.d) return row0.d;
+
+  let discovered: DiscoveredIds;
+  try {
+    log.info({ reportId, competitorName }, "Running Sonar competitor discovery");
+    discovered = await discoverCompetitorIdentifiers(competitorName);
+    log.info({ reportId, discovered }, "Sonar discovery complete");
+  } catch (err) {
+    log.warn(
+      { reportId, err: (err as Error).message },
+      "Sonar discovery failed; proceeding without identifiers",
+    );
+    return null;
+  }
+
+  // Atomic single-flight: only set if still NULL so we don't clobber a peer.
+  await db
+    .update(reports)
+    .set({ discovered_ids: discovered, updated_at: new Date() })
+    .where(and(eq(reports.id, reportId), sql`${reports.discovered_ids} IS NULL`));
+
+  const [row1] = await db
+    .select({ d: reports.discovered_ids })
+    .from(reports)
+    .where(eq(reports.id, reportId))
+    .limit(1);
+  return row1?.d ?? discovered;
+}
+
+/**
  * Exponential backoff: 30s, 2m, 5m for attempts 0, 1, 2+
  */
 function getBackoffMs(attemptCount: number): number {
@@ -66,7 +118,7 @@ function getBackoffMs(attemptCount: number): number {
  */
 export async function processSourceJob(
   job: SourceJobRow,
-  reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string; website_url?: string | null },
+  reportRow: { id: string; primary_competitor_name: string | null; category: string; audience?: string | null; goal: string; website_url?: string | null; discovered_ids?: DiscoveredIds | null },
   workerId: string,
 ): Promise<void> {
   const startedAt = Date.now();
@@ -84,9 +136,16 @@ export async function processSourceJob(
       attempt: job.attempt_count,
     });
 
-    // Step 2: Fetch from scraper
-    log.info({ jobId: job.id, platform: job.platform, competitor: reportRow.primary_competitor_name, category: reportRow.category }, "Fetching posts from scraper");
-    posts = await fetchPosts(job.platform, reportRow);
+    // Step 2a: Resolve canonical competitor identifiers (App Store trackId,
+    // Play Store package id, etc.) via Sonar before any scraper guesses from
+    // the name. Single-flight across concurrent platform jobs for the report.
+    const competitorName = reportRow.primary_competitor_name ?? reportRow.category;
+    const discovered =
+      reportRow.discovered_ids ?? (await ensureDiscovery(job.report_id, competitorName));
+
+    // Step 2b: Fetch from scraper
+    log.info({ jobId: job.id, platform: job.platform, competitor: reportRow.primary_competitor_name, category: reportRow.category, hasDiscovered: !!discovered }, "Fetching posts from scraper");
+    posts = await fetchPosts(job.platform, reportRow, discovered);
     const scores = posts.map((p) => p.score ?? 0);
     log.info({
       jobId: job.id, platform: job.platform, count: posts.length,
@@ -263,14 +322,19 @@ export async function processSourceJob(
  */
 async function fetchPosts(
   platform: string,
-  reportRow: { primary_competitor_name: string | null; category: string; website_url?: string | null }
+  reportRow: { primary_competitor_name: string | null; category: string; website_url?: string | null },
+  discovered: DiscoveredIds | null,
 ): Promise<NormalizedPost[]> {
   const scraper = getScraper(platform as any);
   const posts = await scraper.fetch({
     competitor: reportRow.primary_competitor_name ?? "",
     category: reportRow.category,
     keywords: [],
-    websiteUrl: reportRow.website_url ?? undefined,
+    websiteUrl: discovered?.website_url ?? reportRow.website_url ?? undefined,
+    appStoreId: discovered?.app_store_id ?? undefined,
+    playStoreAppId: discovered?.play_store_app_id ?? undefined,
+    linkedinUrl: discovered?.linkedin_url ?? undefined,
+    twitterHandle: discovered?.twitter_handle ?? undefined,
   });
   return posts;
 }

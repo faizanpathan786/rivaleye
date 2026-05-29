@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { DiscoveredIds } from "@rivaleye/shared";
 import { users } from "./users";
 
 export const report_status_enum = pgEnum("report_status", [
@@ -51,6 +52,10 @@ export const reports = pgTable("reports", {
   primary_competitor_name: text("primary_competitor_name"),
   primary_competitor_domain: text("primary_competitor_domain"),
   website_url: text("website_url"),
+  // Canonical public identifiers resolved by Perplexity Sonar before scrape
+  // (e.g. App Store trackId, Play Store package id) so platform scrapers can
+  // target the exact entity instead of guessing from the competitor name.
+  discovered_ids: jsonb("discovered_ids").$type<DiscoveredIds>(),
   scanned_at: timestamp("scanned_at"),
   time_range: text("time_range"),
   total_sources: integer("total_sources"),
