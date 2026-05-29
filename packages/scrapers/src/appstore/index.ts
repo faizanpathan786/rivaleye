@@ -1,6 +1,12 @@
 import type { NormalizedPost, ScrapeQuery, Scraper } from "../types";
 import { ScraperError } from "../types";
-import { fetchReviews, searchApps, type RawAppStoreReviewsFeed } from "./client";
+import {
+  fetchReviews,
+  lookupApp,
+  searchApps,
+  type RawAppStoreApp,
+  type RawAppStoreReviewsFeed,
+} from "./client";
 import { normalizeAppStorePayload } from "./normalize";
 
 const DEFAULT_APP_LIMIT = 5;
@@ -12,11 +18,28 @@ export class AppStoreScraper implements Scraper {
 
   async fetch(query: ScrapeQuery): Promise<NormalizedPost[]> {
     try {
-      const { apps, country } = await searchApps(
-        query.competitor,
-        DEFAULT_COUNTRY,
-        query.limit ?? DEFAULT_APP_LIMIT,
-      );
+      let apps: RawAppStoreApp[];
+      let country: string;
+      if (query.appStoreId) {
+        // Sonar discovery handed us the exact trackId — skip name search.
+        const app = await lookupApp(query.appStoreId);
+        if (!app) {
+          throw new ScraperError(
+            "appstore",
+            `lookup failed for appStoreId=${query.appStoreId}`,
+          );
+        }
+        apps = [app];
+        country = DEFAULT_COUNTRY;
+      } else {
+        const result = await searchApps(
+          query.competitor,
+          DEFAULT_COUNTRY,
+          query.limit ?? DEFAULT_APP_LIMIT,
+        );
+        apps = result.apps;
+        country = result.country;
+      }
       const reviewsByAppId: Record<string, RawAppStoreReviewsFeed> = {};
       await Promise.all(
         apps.map(async (a) => {

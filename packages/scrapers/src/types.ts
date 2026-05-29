@@ -30,6 +30,13 @@ export interface ScrapeQuery {
   keywords?: string[];
   limit?: number;
   websiteUrl?: string;
+  // Canonical identifiers resolved upstream (Sonar discovery). When present, a
+  // scraper should use the exact identifier instead of name-based search so
+  // we never accidentally analyse a lookalike app or wrong company.
+  appStoreId?: string;       // Apple numeric trackId (digits only)
+  playStoreAppId?: string;   // Google Play package id (e.g. "notion.id")
+  linkedinUrl?: string;
+  twitterHandle?: string;    // handle without leading @
 }
 
 export interface Scraper {

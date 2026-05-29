@@ -48,6 +48,19 @@ function appMatchesCompetitor(appName: string, competitor: string): boolean {
 
 const SEARCH_COUNTRIES = ["us", "in", "gb"];
 
+/**
+ * Direct lookup by numeric Apple trackId. Skips name-based search entirely so
+ * we never match the wrong app when Sonar discovery has handed us the exact
+ * identifier. Returns null if the trackId is unknown.
+ */
+export async function lookupApp(trackId: string): Promise<RawAppStoreApp | null> {
+  const url = `https://itunes.apple.com/lookup?id=${encodeURIComponent(trackId)}&entity=software`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = (await res.json()) as { results: RawAppStoreApp[] };
+  return data.results[0] ?? null;
+}
+
 export async function searchApps(
   term: string,
   _defaultCountry: string,
