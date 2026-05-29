@@ -45,7 +45,11 @@ function stripEvidenceIds(merged: MergedClusters): MergedClusters {
 }
 
 const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 3 };
-const LLM_OPTS_D_ROLE: LlmCallOptions = { timeoutMs: 180_000, maxAttempts: 2 };
+// Role synthesis fires 5 parallel LLM calls (one per dashboard) plus the
+// summary. A single slow OpenRouter response can take down all five at once,
+// so we give it a generous timeout and one extra attempt. Cheap to wait — we
+// never block scrape on this.
+const LLM_OPTS_D_ROLE: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 3 };
 const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
 
 let _llm: OpenRouterClient | null = null;
