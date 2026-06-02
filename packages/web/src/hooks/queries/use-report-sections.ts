@@ -7,5 +7,8 @@ export function useReportSectionsQuery(id: string | undefined) {
     queryKey: ["reports", "sections", id],
     queryFn: () => getReportSections(id as string),
     enabled: !!id,
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 30000,
   });
 }

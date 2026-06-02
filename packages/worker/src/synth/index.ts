@@ -12,11 +12,9 @@ if (engine === "postgres") {
   mainSynthOnly().catch(err => console.error("[worker-synth] Fatal error:", err));
 } else {
   console.log("[worker-synth] Starting in inngest mode (synth.run events)");
+  const server = Bun.serve({
+    port,
+    fetch: serve({ client: inngest, functions: [synthRun] }),
+  });
+  console.log(`[worker-synth] listening on :${server.port}`);
 }
-
-const server = Bun.serve({
-  port,
-  fetch: serve({ client: inngest, functions: [synthRun] }),
-});
-
-console.log(`[worker-synth] listening on :${server.port}`);

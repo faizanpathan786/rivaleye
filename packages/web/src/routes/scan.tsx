@@ -28,8 +28,8 @@ const PLATFORMS = [
   { id: "hackernews",  name: "Hacker News",   sub: "Show HN, Ask HN, comments",       live: true  },
   { id: "devto",       name: "Dev.to",        sub: "Articles & community comments",   live: true  },
   { id: "website",     name: "Website",       sub: "Marketing site, pricing, features", live: true },
-  { id: "twitter",     name: "X / Twitter",   sub: "Complaint & switching tweets",    live: false },
-  { id: "linkedin",    name: "LinkedIn",      sub: "Public posts & comments",         live: false },
+  { id: "twitter",     name: "X / Twitter",   sub: "Complaint & switching tweets",    live: true  },
+  { id: "linkedin",    name: "LinkedIn",      sub: "Public posts & comments",         live: true  },
   { id: "capterra",    name: "Capterra",      sub: "Verified buyer reviews",          live: false },
   { id: "gmaps",       name: "Google Maps",   sub: "Local & product reviews",         live: false },
 ] as const;
@@ -104,7 +104,7 @@ export function ScanPage() {
         selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
         website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
       });
-      navigate(`/reports/${res.id}`);
+      navigate(`/scan-report/${res.id}`);
     } catch {
       // surfaced via `error` below
     }

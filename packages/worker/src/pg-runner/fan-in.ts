@@ -10,7 +10,7 @@
  * Idempotent: safe to call multiple times (e.g., after each source job completes).
  */
 
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
 import { reports } from "../../../api/src/db/schema/reports.js";
@@ -29,7 +29,6 @@ import { log } from "../logger";
  * @throws Error if database operation fails (not caught; caller decides retry strategy)
  */
 export async function fanInCheck(reportId: string): Promise<void> {
-  // All decision logic runs inside a transaction with an advisory lock.
   // log() calls use a separate DB connection and are moved OUTSIDE the transaction
   // to avoid side-channel writes that commit even when the transaction rolls back.
   type Outcome =
@@ -38,9 +37,9 @@ export async function fanInCheck(reportId: string): Promise<void> {
     | { kind: "created"; id: string; completedCount: number; total: number }
     | { kind: "exists"; completedCount: number; total: number };
 
+  // Idempotency is guaranteed by the unique constraint on synthesis_jobs(report_id)
+  // combined with onConflictDoNothing — no advisory lock needed.
   const outcome = await db.transaction(async (tx): Promise<Outcome> => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${reportId}))`);
-
     const jobs = await tx
       .select({ status: report_platform_jobs.status, platform: report_platform_jobs.platform })
       .from(report_platform_jobs)

@@ -129,7 +129,7 @@ export type ReportOutput = z.infer<typeof reportOutputSchema>;
 export type LegacyReportOutput = import("../types/index").PainReportOutput;
 
 // Task 0.3 — Rewritten createReportInputSchema
-const PLATFORM_IDS = ["reddit","appstore","playstore","hackernews","producthunt","devto","website"] as const;
+const PLATFORM_IDS = ["reddit","appstore","playstore","hackernews","producthunt","devto","website","linkedin","twitter"] as const;
 
 export const createReportInputSchema = z.object({
   category: z.string().min(1),

@@ -158,11 +158,26 @@ export async function runPipeline(reportId: string): Promise<void> {
   let synth: SynthOutput;
   let roleSections: RoleSections | undefined;
   if (checkpoints.has("D")) {
-    await log(reportId, "info", "D", null, "skipping stage D (checkpoint found)");
     const cCheckpoint = checkpoints.get("D") as Record<string, unknown>;
-    // Parse through schema to strip _role_sections and other non-SynthOutput keys.
     synth = synthOutputSchema.parse(cCheckpoint);
     roleSections = cCheckpoint["_role_sections"] as RoleSections | undefined;
+
+    // Role synthesis may have failed on the first run — retry it now if sections are missing.
+    if (roleSections === undefined) {
+      await log(reportId, "info", "D", null, "D checkpoint found but role sections missing — retrying role synthesis");
+      try {
+        const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
+        roleSections = resultRole.roleSections;
+        await log(reportId, "info", "D", null, "role synthesis retry done", { sections: Object.keys(roleSections) });
+        await saveCheckpoint(reportId, "D", { ...cCheckpoint, _role_sections: roleSections } as unknown as Record<string, unknown>);
+      } catch (roleErr) {
+        await log(reportId, "warn", "D", null, "role synthesis retry also failed", {
+          error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+        });
+      }
+    } else {
+      await log(reportId, "info", "D", null, "skipping stage D (checkpoint found with role sections)");
+    }
   } else {
     await log(reportId, "info", "D", null, "running stage D: synth", {
       complaintClusters: merged.complaint_clusters.length,

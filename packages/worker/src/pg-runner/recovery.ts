@@ -225,16 +225,17 @@ async function recoverStaleSynthesisJobs(timeoutMinutes: number): Promise<void> 
  * (observed with PgBouncer transaction-mode pooler) leaving the report stuck in
  * running/scraping forever. Running every 30s ensures it self-heals within one cycle.
  */
-async function healOrphanedReports(): Promise<void> {
+export async function healOrphanedReports(): Promise<void> {
   // Find report_ids where every source job is terminal AND no synthesis job exists
   const orphaned = await db.execute<{ report_id: string }>(sql`
-    SELECT DISTINCT rpj.report_id
+    SELECT rpj.report_id
     FROM report_platform_jobs rpj
-    WHERE rpj.status IN ('completed', 'failed')
     GROUP BY rpj.report_id
-    HAVING COUNT(*) = COUNT(CASE WHEN rpj.status IN ('completed', 'failed') THEN 1 END)
-      AND EXISTS (SELECT 1 FROM report_platform_jobs WHERE report_id = rpj.report_id AND status = 'completed')
-      AND NOT EXISTS (SELECT 1 FROM synthesis_jobs WHERE report_id = rpj.report_id)
+    HAVING
+      COUNT(*) > 0
+      AND COUNT(*) = COUNT(CASE WHEN rpj.status IN ('completed', 'failed') THEN 1 END)
+      AND COUNT(CASE WHEN rpj.status = 'completed' THEN 1 END) > 0
+      AND NOT EXISTS (SELECT 1 FROM synthesis_jobs sj WHERE sj.report_id = rpj.report_id)
   `);
 
   if (orphaned.length === 0) return;

@@ -232,11 +232,6 @@ export function ReportInProgress({
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [events]);
 
-  useEffect(() => {
-    if (!done) return;
-    const t = setTimeout(() => navigate(0), 600);
-    return () => clearTimeout(t);
-  }, [done, navigate]);
 
   const elapsed = Math.max(
     0,
@@ -276,9 +271,8 @@ export function ReportInProgress({
         <button
           className="re-btn"
           onClick={() => navigate("/")}
-          disabled={done}
         >
-          <Icon name="x" size={14} /> {done ? "Opening…" : "Cancel"}
+          <Icon name="x" size={14} /> Cancel
         </button>
       </div>
 

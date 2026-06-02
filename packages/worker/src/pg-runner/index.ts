@@ -32,6 +32,7 @@ import { claimSourceJob, claimSynthesisJob } from "./claim";
 import type { WorkerConfig, SourceJobRow, SynthesisJobRow } from "./types";
 import { processSourceJob } from "./source-worker";
 import { processSynthesisJob } from "./synthesis-worker";
+import { healOrphanedReports } from "./recovery";
 
 const log = pino({ name: "pg-runner" });
 
@@ -354,6 +355,10 @@ async function recoverStaleJobs(config: WorkerConfig): Promise<void> {
         }
       }
 
+      // Heal orphaned reports: all platform jobs done but no synthesis job created
+      // (guards against fan-in failures due to transient DB errors)
+      await healOrphanedReports();
+
       // Sleep before next recovery check
       await sleep(RECOVERY_POLL_MS);
     } catch (err) {
@@ -414,7 +419,7 @@ async function main(): Promise<void> {
     workerId,
     pollIntervalMs: 1500,
     sourceJobTimeoutMinutes: 25,
-    synthesisJobTimeoutMinutes: 30,
+    synthesisJobTimeoutMinutes: 90,
   };
 
   log.info(
@@ -447,7 +452,7 @@ async function mainScrapeOnly(): Promise<void> {
     workerId,
     pollIntervalMs: 1500,
     sourceJobTimeoutMinutes: 25,
-    synthesisJobTimeoutMinutes: 30,
+    synthesisJobTimeoutMinutes: 90,
   };
   log.info({ workerId, mode: "scrape-only" }, "Starting pg-runner (scrape + recovery only)");
   try {
@@ -468,7 +473,7 @@ async function mainSynthOnly(): Promise<void> {
     workerId,
     pollIntervalMs: 1500,
     sourceJobTimeoutMinutes: 25,
-    synthesisJobTimeoutMinutes: 35,
+    synthesisJobTimeoutMinutes: 90,
   };
   log.info({ workerId, mode: "synth-only" }, "Starting pg-runner (synthesis + recovery only)");
   try {

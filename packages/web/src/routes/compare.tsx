@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -120,6 +120,17 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
   return (
     <div className="re-card" style={{ padding: 14 }}>
       <div className="re-eyebrow">SIDE B · SELECT</div>
@@ -140,7 +151,7 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
         >
           {name[0]}
         </div>
-        <div ref={wrapRef} style={{ position: "relative", flex: 1 }}>
+        <div ref={wrapRef} style={{ position: "relative", flex: 1, zIndex: 10 }}>
           <button
             type="button"
             className="re-input"
@@ -160,10 +171,6 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
           </button>
           {open && (
             <>
-              <div
-                onClick={() => setOpen(false)}
-                style={{ position: "fixed", inset: 0, zIndex: 20 }}
-              />
               <div
                 className="re-card re-card-elev"
                 style={{
@@ -386,6 +393,8 @@ export function ComparePage() {
           gridTemplateColumns: "1fr 1fr",
           gap: 16,
           marginTop: 24,
+          position: "relative",
+          zIndex: 1,
         }}
       >
         <SidePickerFixed
