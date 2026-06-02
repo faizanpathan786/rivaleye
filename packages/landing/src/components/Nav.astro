@@ -1,5 +1,6 @@
 ---
 // src/components/Nav.astro
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'http://localhost:4005';
 const navLinks = [
   { label: 'How it works', href: '#how' },
   { label: 'Report', href: '#report' },
@@ -74,7 +75,7 @@ const navLinks = [
         {/* Right side */}
         <div class="flex items-center gap-3">
           <a
-            href="#login"
+            href={`${appUrl}/signin`}
             class="hidden sm:inline-flex font-mono text-[11px] tracking-widest uppercase text-[var(--color-fg-2)] hover:text-[var(--color-fg-0)] transition-colors px-2 py-2"
           >
             Sign in
