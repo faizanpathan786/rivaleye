@@ -364,3 +364,7 @@ export async function retryPlatform(
 ): Promise<void> {
   await axios.post(endpoints.reports.retryPlatform(reportId), { platform });
 }
+
+export async function cancelReport(reportId: string): Promise<void> {
+  await axios.post(endpoints.reports.cancel(reportId));
+}

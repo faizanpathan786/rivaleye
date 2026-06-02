@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import { PlatformIcon } from "./platform-icon";
-import { retryPlatform } from "@/api/reports";
+import { retryPlatform, cancelReport } from "@/api/reports";
 import type {
   ReportProgress,
   ReportProgressEvent,
@@ -247,6 +247,13 @@ export function ReportInProgress({
     },
   });
 
+  const cancelMutation = useMutation<void, unknown, void>({
+    mutationFn: () => cancelReport(report.id),
+    onSuccess: () => {
+      navigate("/");
+    },
+  });
+
   return (
     <div style={{ padding: "20px 28px 48px", maxWidth: 1080, margin: "0 auto" }}>
       <div className="flex items-center justify-between">
@@ -270,9 +277,10 @@ export function ReportInProgress({
         </div>
         <button
           className="re-btn"
-          onClick={() => navigate("/")}
+          onClick={() => cancelMutation.mutate()}
+          disabled={cancelMutation.isPending}
         >
-          <Icon name="x" size={14} /> Cancel
+          <Icon name="x" size={14} /> {cancelMutation.isPending ? "Cancelling…" : "Cancel"}
         </button>
       </div>
 
