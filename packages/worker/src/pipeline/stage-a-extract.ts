@@ -9,6 +9,8 @@ import { buildDevToExtract } from "../prompts/platform/devto/extract";
 import { buildProductHuntExtract } from "../prompts/platform/producthunt/extract";
 import { buildRedditExtract } from "../prompts/platform/reddit/extract";
 import { buildWebsiteExtract } from "../prompts/platform/website/extract";
+import { buildLinkedInExtract } from "../prompts/platform/linkedin/extract";
+import { buildTwitterExtract } from "../prompts/platform/twitter/extract";
 
 export interface StageAInput {
   llm: OpenRouterClient;
@@ -110,6 +112,26 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             url: post.url,
             body: post.body,
+          })),
+        });
+    case "linkedin":
+      return ({ ctx, posts }) =>
+        buildLinkedInExtract({
+          ctx,
+          posts: posts.map((post) => ({
+            id: post.externalId,
+            body: post.body,
+            score: post.score,
+          })),
+        });
+    case "twitter":
+      return ({ ctx, posts }) =>
+        buildTwitterExtract({
+          ctx,
+          tweets: posts.map((post) => ({
+            id: post.externalId,
+            body: post.body,
+            score: post.score,
           })),
         });
     default:

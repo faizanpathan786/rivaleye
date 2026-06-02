@@ -298,36 +298,52 @@ export const founderMoveSchema = z.object({
 });
 export type FounderMove = z.infer<typeof founderMoveSchema>;
 
+const emptyEvidenceRefs = { signal_ids: [], quote_ids: [], source_urls: [] };
+const emptyConfidence = { score: 0.5, label: "medium" as const, basis: null };
+const emptyFounderMove = { recommendation: "", why: "", confidence: emptyConfidence, evidence_refs: emptyEvidenceRefs };
+
 // ─── Section root ─────────────────────────────────────────────────────────────
 export const founderViewSectionSchema = z.object({
   // Widget 1
-  opportunity_score: opportunityScoreSchema,
+  opportunity_score: opportunityScoreSchema.catch({
+    score: 0, label: "", explanation: "",
+    factors: { pain_frequency: 0, gap_severity: 0, switch_intent: 0, competitor_love_strength: 0, pricing_pain: 0, source_confidence: 0 },
+  }),
 
   // Widget 2
-  market_opening_summary: marketOpeningSummarySchema,
+  market_opening_summary: marketOpeningSummarySchema.catch({
+    summary: "", target_segment: "", main_opportunity: "", why_now: "",
+    confidence: emptyConfidence, evidence_refs: emptyEvidenceRefs,
+  }),
 
   // Widget 3
-  strengths_to_respect: z.array(strengthItemSchema).default([]),
+  strengths_to_respect: z.array(strengthItemSchema).catch([]),
 
   // Widget 4
-  weaknesses_to_attack: z.array(weaknessItemSchema).default([]),
+  weaknesses_to_attack: z.array(weaknessItemSchema).catch([]),
 
   // Widget 5
-  unmet_needs: z.array(unmetNeedItemSchema).default([]),
+  unmet_needs: z.array(unmetNeedItemSchema).catch([]),
 
   // Widget 6
-  wedge_recommendation: wedgeRecommendationSchema,
+  wedge_recommendation: wedgeRecommendationSchema.catch({
+    target_segment: "", core_pain: "", positioning_promise: "", why_this_wedge_exists: "",
+    evidence_strength: "low" as const, risk_level: "low" as const, evidence_refs: emptyEvidenceRefs,
+  }),
 
   // Widget 7
-  pricing_opportunity: pricingOpportunitySchema,
+  pricing_opportunity: pricingOpportunitySchema.catch({
+    pricing_pain_score: 0, main_pricing_complaint: "", affected_segment: "",
+    suggested_pricing_angle: "", risk_warning: null, evidence_refs: emptyEvidenceRefs,
+  }),
 
   // Widget 8
-  strategic_risks: z.array(strategicRiskItemSchema).default([]),
+  strategic_risks: z.array(strategicRiskItemSchema).catch([]),
 
   // Widget 9 — three moves, one per discipline
-  recommended_product_move: founderMoveSchema,
-  recommended_positioning_move: founderMoveSchema,
-  recommended_growth_move: founderMoveSchema,
+  recommended_product_move: founderMoveSchema.catch(emptyFounderMove),
+  recommended_positioning_move: founderMoveSchema.catch(emptyFounderMove),
+  recommended_growth_move: founderMoveSchema.catch(emptyFounderMove),
 
   // Top-level evidence rollup for the entire section
   evidence_refs: evidenceRefSchema,

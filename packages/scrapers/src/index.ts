@@ -58,4 +58,6 @@ export const ALL_PLATFORMS: PlatformId[] = [
   "producthunt",
   "devto",
   "website",
+  "linkedin",
+  "twitter",
 ];

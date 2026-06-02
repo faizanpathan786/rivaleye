@@ -5,8 +5,10 @@ import { db } from "@/db/client";
 import * as schema from "@/db/schema";
 
 const defaultTrustedOrigins = [
-  "http://localhost:4000",
+  "http://localhost:3001",
   "http://localhost:4004",
+  "http://localhost:4005",
+  "http://localhost:4006",
 ];
 const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
   .split(",")

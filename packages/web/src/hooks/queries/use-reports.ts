@@ -78,8 +78,10 @@ export function useReportQuery(id: string | undefined) {
     refetchInterval: (q) => {
       const status = q.state.data?.status;
       if (status && TERMINAL_STATUSES.has(status)) return false;
-      return 3000;
+      return 2000;
     },
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
@@ -101,6 +103,8 @@ export function useReportProgressQuery(id: string | undefined) {
       if (status && TERMINAL_STATUSES.has(status)) return false;
       return 2000;
     },
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
   });
 }
 

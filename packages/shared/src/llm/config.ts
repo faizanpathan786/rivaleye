@@ -8,6 +8,8 @@ export const ENABLED_PLATFORMS = [
   "producthunt",
   "devto",
   "website",
+  "linkedin",
+  "twitter",
 ] as const;
 
 export type EnabledPlatformId = (typeof ENABLED_PLATFORMS)[number];

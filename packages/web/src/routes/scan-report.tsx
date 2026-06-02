@@ -6,7 +6,8 @@ import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
-import { useReportQuery, useReportsQuery } from "@/hooks/queries/use-reports";
+import { useReportQuery, useReportProgressQuery, useReportsQuery } from "@/hooks/queries/use-reports";
+import { ReportInProgress } from "@/components/report/report-in-progress";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -109,8 +110,10 @@ export function ScanReportPage() {
   }, [id, allReports, navigate, lens]);
 
   // Live data fetch — only when :id is present in the route.
-  const { data: sections, isLoading, error } = useReportSectionsQuery(id);
   const { data: reportRow } = useReportQuery(id);
+  const progressQuery = useReportProgressQuery(id);
+  const isCompleted = reportRow?.status === "completed";
+  const { data: sections, isLoading, error } = useReportSectionsQuery(isCompleted ? id : undefined);
 
   useEffect(() => {
     const m = document.querySelector(".main");
@@ -136,6 +139,11 @@ export function ScanReportPage() {
   const exportAll = () => setPrintingAll(true);
 
   const onNav = (to: string) => navigate(to.startsWith("/") ? to : `/${to}`);
+
+  // Show in-progress UI while the report pipeline is still running.
+  if (id && reportRow && !isCompleted) {
+    return <ReportInProgress report={reportRow} progress={progressQuery.data} />;
+  }
 
   // When :id is present and we are still loading or errored, show a simple state.
   if (id && isLoading) {

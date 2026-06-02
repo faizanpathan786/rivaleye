@@ -12,13 +12,7 @@ if (engine === "postgres") {
   mainScrapeOnly().catch(err => console.error("[worker-scrape] Fatal error:", err));
 } else {
   console.log("[worker-scrape] Starting in inngest mode (scrape.fetch events)");
+  const handler = serve({ client: inngest, functions: [scrapeFetch] });
+  const server = Bun.serve({ port, fetch: handler });
+  console.log(`[worker-scrape] listening on :${server.port}`);
 }
-
-const handler = serve({ client: inngest, functions: [scrapeFetch] });
-
-const server = Bun.serve({
-  port,
-  fetch: handler,
-});
-
-console.log(`[worker-scrape] listening on :${server.port}`);

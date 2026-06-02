@@ -46,6 +46,8 @@ export const createReportHandler = new Elysia()
             t.Literal("producthunt"),
             t.Literal("devto"),
             t.Literal("website"),
+            t.Literal("linkedin"),
+            t.Literal("twitter"),
           ]),
           { minItems: 1 },
         ),
