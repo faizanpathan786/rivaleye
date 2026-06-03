@@ -112,21 +112,20 @@ export function SignInPage() {
 
   return (
     <div
+      className="grid grid-cols-1 lg:grid-cols-[1fr_460px]"
       style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 460px",
-        height: "100%",
+        minHeight: "100%",
         background: "var(--bg)",
       }}
     >
       {/* Left — pitch + visual */}
       <div
+        className="hidden lg:flex"
         style={{
           position: "relative",
           background: "var(--surface)",
           borderRight: "1px solid var(--border-soft)",
           padding: "40px 56px",
-          display: "flex",
           flexDirection: "column",
           overflow: "hidden",
         }}
@@ -143,7 +142,7 @@ export function SignInPage() {
 
         <div style={{ marginTop: 96, maxWidth: 520 }}>
           <div className="re-eyebrow">COMPETITIVE INTEL · v0.8</div>
-          <h1 className="re-h1" style={{ marginTop: 12, fontSize: 44, lineHeight: 1.05 }}>
+          <h1 className="re-h1" style={{ marginTop: 12, fontSize: "clamp(2rem, 3vw, 44px)", lineHeight: 1.05 }}>
             Find what your
             <br />
             competitor's users
@@ -262,14 +261,10 @@ export function SignInPage() {
 
       {/* Right — sign in */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 32,
-        }}
+        className="flex items-center justify-center px-4 py-8 md:p-8"
+        style={{ minHeight: "100%" }}
       >
-        <div style={{ width: "100%", maxWidth: 340 }}>
+        <div className="w-full" style={{ maxWidth: 340 }}>
           <h2 className="re-h2">{mode === "signin" ? "Sign in" : "Create account"}</h2>
           <p className="text-fg-muted" style={{ marginTop: 6, fontSize: 13 }}>
             {mode === "signin"

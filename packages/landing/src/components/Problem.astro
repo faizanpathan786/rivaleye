@@ -33,17 +33,17 @@ const unreadComplaints = [
 <section
   id="problem"
   aria-labelledby="problem-heading"
-  class="relative bg-[var(--color-bg-0)] py-24 md:py-32 overflow-hidden"
+  class="relative bg-[var(--color-bg-0)] py-16 sm:py-24 md:py-32 overflow-hidden"
 >
   {/* Atmospheric backdrop */}
   <div aria-hidden="true" class="absolute inset-0 -z-10">
     <div class="absolute inset-0 bg-grid-fine opacity-40 mask-fade-edges"></div>
   </div>
 
-  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+  <div class="mx-auto max-w-[var(--container-page)] px-4 sm:px-6 md:px-8">
     {/* Section eyebrow row */}
-    <div class="flex items-center justify-between mb-12 md:mb-20 reveal">
-      <div class="flex items-center gap-3">
+    <div class="flex items-center justify-between mb-10 sm:mb-12 md:mb-20 reveal">
+      <div class="flex items-center gap-2 sm:gap-3">
         <span
           class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]"
         >
@@ -59,18 +59,18 @@ const unreadComplaints = [
       </span>
     </div>
 
-    <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+    <div class="grid lg:grid-cols-12 gap-10 sm:gap-12 lg:gap-16 items-start">
       {/* Left — editorial */}
       <div class="lg:col-span-7 reveal-stagger">
         <h2
           id="problem-heading"
-          class="display-tight text-[var(--color-fg-0)] text-[clamp(2.75rem,6vw,5.5rem)]"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2rem,8vw,5.5rem)]"
         >
           <span class="block">You're building</span>
           <span class="block">on a <span class="text-[var(--color-lime)] glow-lime-text">hunch</span>.</span>
         </h2>
 
-        <div class="mt-10 max-w-[600px] space-y-6 text-[17px] md:text-[18px] leading-[1.6] text-[var(--color-fg-2)]">
+        <div class="mt-8 sm:mt-10 w-full max-w-[600px] space-y-6 text-[16px] sm:text-[17px] md:text-[18px] leading-[1.6] text-[var(--color-fg-2)] break-words">
           <p>
             Your team can study competitor websites, pricing, features, ads, and design. But that still does not answer the most important question: what do their users actually think?
           </p>
@@ -78,18 +78,18 @@ const unreadComplaints = [
             <span class="text-[var(--color-fg-1)]">Users already talk in public.</span>
             They praise what works. They complain about what breaks. They ask for missing features. They compare tools. They look for alternatives.
           </p>
-          <p class="text-[var(--color-fg-1)] border-l-2 border-[var(--color-lime)] pl-5 italic font-display text-[20px] md:text-[22px] leading-[1.45]">
+          <p class="text-[var(--color-fg-1)] border-l-2 border-[var(--color-lime)] pl-4 sm:pl-5 italic font-display text-[18px] sm:text-[20px] md:text-[22px] leading-[1.45]">
             Most teams find those signals too late — or not at all.
           </p>
         </div>
 
         {/* Stat callouts */}
-        <div class="mt-14 grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)]">
-          <div class="bg-[var(--color-bg-0)] p-6">
+        <div class="mt-12 sm:mt-14 grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)]">
+          <div class="bg-[var(--color-bg-0)] p-5 sm:p-6">
             <div class="label-mono mb-3">Avg. user signals read before launching</div>
             <div class="flex items-baseline gap-3">
               <span
-                class="font-display text-5xl md:text-6xl font-medium text-[var(--color-fg-0)] tracking-tight"
+                class="font-display text-4xl sm:text-5xl md:text-6xl font-medium text-[var(--color-fg-0)] tracking-tight"
                 data-counter="47">0</span>
               <span class="font-mono text-[11px] tracking-widest uppercase text-[var(--color-rose)]">
                 ▼ insufficient
@@ -99,11 +99,11 @@ const unreadComplaints = [
               Across 312 product teams we surveyed in 2025.
             </p>
           </div>
-          <div class="bg-[var(--color-bg-0)] p-6">
+          <div class="bg-[var(--color-bg-0)] p-5 sm:p-6">
             <div class="label-mono mb-3">User signals available right now</div>
             <div class="flex items-baseline gap-3">
               <span
-                class="font-display text-5xl md:text-6xl font-medium text-[var(--color-lime)] tracking-tight"
+                class="font-display text-4xl sm:text-5xl md:text-6xl font-medium text-[var(--color-lime)] tracking-tight"
                 data-counter="2417">0</span>
               <span class="font-mono text-[11px] tracking-widest uppercase text-[var(--color-fg-3)]">
                 per scan / avg
@@ -126,7 +126,7 @@ const unreadComplaints = [
             ↳ real user feedback you're missing
           </span>
         </div>
-        <div class="relative border border-[var(--color-line-1)] bg-[var(--color-bg-1)]/40 backdrop-blur-sm h-[520px] overflow-hidden">
+        <div class="relative border border-[var(--color-line-1)] bg-[var(--color-bg-1)]/40 backdrop-blur-sm h-[400px] sm:h-[460px] lg:h-[520px] overflow-hidden">
           {/* Top + bottom fade */}
           <div
             aria-hidden="true"
@@ -142,10 +142,10 @@ const unreadComplaints = [
           </div>
 
           {/* Scrolling vertical column of complaints */}
-          <div class="px-5 py-4 space-y-2 animate-marquee-y">
+          <div class="px-4 sm:px-5 py-4 space-y-2 animate-marquee-y">
             {
               [...unreadComplaints, ...unreadComplaints].map((q) => (
-                <div class="font-mono text-[12px] text-[var(--color-fg-3)] leading-relaxed">
+                <div class="font-mono text-[12px] text-[var(--color-fg-3)] leading-relaxed break-words">
                   <span class="text-[var(--color-fg-4)]">▼</span> {q}
                 </div>
               ))
@@ -154,7 +154,7 @@ const unreadComplaints = [
 
           {/* Center "missed" badge */}
           <div
-            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 border border-[var(--color-rose)]/40 bg-[var(--color-bg-0)]/95 backdrop-blur px-4 py-2 font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-rose)]"
+            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 max-w-[90%] text-center border border-[var(--color-rose)]/40 bg-[var(--color-bg-0)]/95 backdrop-blur px-3 sm:px-4 py-2 font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-rose)]"
           >
             ✕ missing from your research
           </div>

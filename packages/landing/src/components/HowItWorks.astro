@@ -44,7 +44,7 @@ const steps = [
 
   <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
     {/* Section header */}
-    <div class="mb-16 md:mb-24 reveal-stagger">
+    <div class="mb-12 sm:mb-16 md:mb-24 reveal-stagger">
       <div class="flex items-center gap-3 mb-6">
         <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]">§ 02</span>
         <span class="block w-8 h-px bg-[var(--color-line-2)]"></span>
@@ -54,7 +54,7 @@ const steps = [
       </div>
       <h2
         id="how-heading"
-        class="display-tight text-[var(--color-fg-0)] text-[clamp(2.5rem,5.5vw,5rem)] max-w-[18ch]"
+        class="display-tight text-[var(--color-fg-0)] text-[clamp(2rem,5.5vw,5rem)] max-w-[18ch]"
       >
         Three steps. <span class="text-[var(--color-lime)]">No</span>
         <span class="text-[var(--color-lime)]"> integrations</span>.
@@ -71,11 +71,11 @@ const steps = [
         <div class="h-full w-full bg-gradient-to-b from-transparent via-[var(--color-line-2)] to-transparent"></div>
       </div>
 
-      <div class="space-y-24 md:space-y-32">
+      <div class="space-y-16 sm:space-y-24 md:space-y-32">
         {
           steps.map((step, idx) => (
             <div
-              class={`relative grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center reveal-stagger ${
+              class={`relative grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center reveal-stagger ${
                 idx % 2 === 1 ? 'lg:[direction:rtl]' : ''
               }`}
             >
@@ -90,7 +90,7 @@ const steps = [
               {/* Text column */}
               <div class="lg:col-span-5 [direction:ltr]">
                 <div class="flex items-baseline gap-4 mb-6">
-                  <span class="font-display text-7xl md:text-8xl font-medium text-[var(--color-lime)] tracking-tight leading-none">
+                  <span class="font-display text-6xl sm:text-7xl md:text-8xl font-medium text-[var(--color-lime)] tracking-tight leading-none">
                     {step.n}
                   </span>
                   <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-lime)] pb-2">
@@ -127,7 +127,7 @@ const steps = [
                         ⌘ K
                       </span>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                       <label class="block label-mono mb-3">target competitor</label>
                       <div class="flex items-center gap-3 border border-[var(--color-line-3)] bg-[var(--color-bg-0)] px-4 py-4">
                         <span class="text-[var(--color-lime)] font-mono">{'>'}</span>
@@ -174,7 +174,7 @@ const steps = [
                         <span class="text-[var(--color-lime)]">live</span>
                       </span>
                     </div>
-                    <div class="p-6 grid grid-cols-2 gap-3">
+                    <div class="p-4 sm:p-6 grid grid-cols-2 gap-3">
                       {[
                         { src: 'reddit', pct: 100, found: 312 },
                         { src: 'hackernews', pct: 100, found: 48 },
@@ -218,7 +218,7 @@ const steps = [
                         ready · 04:12
                       </span>
                     </div>
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                       <div class="flex items-baseline justify-between mb-4">
                         <span class="font-display text-2xl font-medium text-[var(--color-fg-0)] tracking-tight">
                           Perception Report

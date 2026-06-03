@@ -119,6 +119,8 @@
     color: var(--color-fg-1);
     min-height: 100vh;
     overflow-x: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   /* Selection */
@@ -233,6 +235,13 @@
     font-feature-settings: 'ss01';
     line-height: 0.92;
     font-weight: 500;
+  }
+  /* On phones, display headings often wrap to multiple lines; a hair more
+     line-height prevents descenders clipping into the line below. */
+  @media (max-width: 639px) {
+    .display-tight {
+      line-height: 1;
+    }
   }
 
   /* Subtle scanlines for terminal panels */

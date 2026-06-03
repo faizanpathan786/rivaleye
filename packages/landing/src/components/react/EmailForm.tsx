@@ -28,7 +28,7 @@ export default function EmailForm() {
       <div
         role="status"
         aria-live="polite"
-        className="border border-[var(--color-lime)] bg-[var(--color-lime)]/[0.06] p-6 md:p-7"
+        className="border border-[var(--color-lime)] bg-[var(--color-lime)]/[0.06] p-5 sm:p-6 md:p-7"
       >
         <div className="flex items-center gap-2 mb-3">
           <svg
@@ -44,8 +44,8 @@ export default function EmailForm() {
             scan queued
           </span>
         </div>
-        <p className="text-[16px] leading-[1.5] text-[var(--color-fg-0)] mb-3">{state.message}</p>
-        <p className="font-mono text-[11px] text-[var(--color-fg-3)]">
+        <p className="text-[16px] leading-[1.5] text-[var(--color-fg-0)] mb-3 break-words">{state.message}</p>
+        <p className="font-mono text-[11px] text-[var(--color-fg-3)] break-words">
           {'↳ We\'ll send a magic link to start your first scan. No password needed.'}
         </p>
       </div>
@@ -57,34 +57,36 @@ export default function EmailForm() {
       <label htmlFor="email-input" className="label-mono block mb-3">
         ▼ work email
       </label>
-      <div
-        className={`flex items-stretch border bg-[var(--color-bg-0)] transition-colors ${
-          state.status === 'invalid'
-            ? 'border-[var(--color-rose)]'
-            : 'border-[var(--color-line-3)] focus-within:border-[var(--color-lime)]'
-        }`}
-      >
-        <span className="flex items-center px-4 text-[var(--color-lime)] font-mono select-none">
-          {'>'}
-        </span>
-        <input
-          id="email-input"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (state.status === 'invalid') setState({ status: 'idle' });
-          }}
-          placeholder="you@startup.co"
-          aria-invalid={state.status === 'invalid'}
-          aria-describedby={state.status === 'invalid' ? 'email-error' : undefined}
-          className="flex-1 bg-transparent border-0 outline-none py-4 font-mono text-[15px] text-[var(--color-fg-0)] placeholder:text-[var(--color-fg-4)]"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-0">
+        <div
+          className={`flex items-stretch flex-1 min-w-0 border bg-[var(--color-bg-0)] transition-colors ${
+            state.status === 'invalid'
+              ? 'border-[var(--color-rose)]'
+              : 'border-[var(--color-line-3)] focus-within:border-[var(--color-lime)]'
+          }`}
+        >
+          <span className="flex items-center px-4 text-[var(--color-lime)] font-mono select-none">
+            {'>'}
+          </span>
+          <input
+            id="email-input"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (state.status === 'invalid') setState({ status: 'idle' });
+            }}
+            placeholder="you@startup.co"
+            aria-invalid={state.status === 'invalid'}
+            aria-describedby={state.status === 'invalid' ? 'email-error' : undefined}
+            className="flex-1 min-w-0 w-full bg-transparent border-0 outline-none py-4 pr-4 font-mono text-[15px] text-[var(--color-fg-0)] placeholder:text-[var(--color-fg-4)]"
+          />
+        </div>
         <button
           type="submit"
           disabled={state.status === 'submitting'}
-          className="group relative bg-[var(--color-lime)] text-[var(--color-bg-0)] px-5 md:px-7 font-mono text-[11px] font-medium tracking-[0.22em] uppercase hover:bg-[var(--color-lime-1)] disabled:opacity-60 transition-colors whitespace-nowrap"
+          className="group relative w-full sm:w-auto min-h-[48px] flex items-center justify-center bg-[var(--color-lime)] text-[var(--color-bg-0)] px-5 md:px-7 py-3 sm:py-0 font-mono text-[11px] font-medium tracking-[0.22em] uppercase hover:bg-[var(--color-lime-1)] disabled:opacity-60 transition-colors whitespace-nowrap"
         >
           {state.status === 'submitting' ? (
             <span className="inline-flex items-center gap-2">
@@ -106,7 +108,7 @@ export default function EmailForm() {
         <p
           id="email-error"
           role="alert"
-          className="mt-3 font-mono text-[11px] tracking-wide text-[var(--color-rose)]"
+          className="mt-3 font-mono text-[11px] tracking-wide text-[var(--color-rose)] break-words"
         >
           ✕ {state.message}
         </p>

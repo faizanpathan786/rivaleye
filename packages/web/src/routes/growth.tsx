@@ -640,10 +640,10 @@ export function GrowthPage({
   if (!embedded) {
     if (reportsQuery.isLoading) {
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "48px 28px", maxWidth: 800, margin: "0 auto" }}>
-          <Skeleton style={{ height: 32, width: 240 }} />
-          <Skeleton style={{ height: 20, width: 400 }} />
-          <Skeleton style={{ height: 20, width: 320 }} />
+        <div className="px-4 py-12 md:px-7" style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 800, margin: "0 auto" }}>
+          <Skeleton className="w-[240px] max-w-full" style={{ height: 32 }} />
+          <Skeleton className="w-[400px] max-w-full" style={{ height: 20 }} />
+          <Skeleton className="w-[320px] max-w-full" style={{ height: 20 }} />
         </div>
       );
     }
@@ -681,7 +681,7 @@ export function GrowthPage({
 
   if (embedded && data === undefined) {
     return (
-      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center" }}>
         <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
           Growth analysis not available — pipeline did not produce this section for the current report.
         </p>
@@ -706,7 +706,7 @@ export function GrowthPage({
         <GrowthHeader range={range} setRange={setRange} />
       )}
 
-      <div style={{ padding: "22px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+      <div className="px-4 py-5 pb-12 md:px-7 md:py-[22px] md:pb-[60px]" style={{ maxWidth: 1440, margin: "0 auto" }}>
         <IntentSnapshot
           score={G.switchIntentScore}
           summary={G.highestOpportunitySummary}
@@ -738,7 +738,7 @@ export function GrowthPage({
           title="Users complaining about pricing — by lead quality"
           subtitle="Each card shows the team shape, budget hint, and the suggested pricing angle to lead with."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {G.pricingLeads.map((l, i) => (
             <PricingLeadCard key={i} l={l} openEvidence={openEvidence} />
           ))}
@@ -756,7 +756,7 @@ export function GrowthPage({
           title="How to engage without sounding spammy"
           subtitle="Templates anchored to live conversations. Each one tells you what to NOT say first."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           {G.replyAngles.map((r, i) => (
             <ReplyAngleCard key={i} r={r} index={i} openEvidence={openEvidence} />
           ))}
@@ -787,7 +787,7 @@ export function GrowthPage({
 
 function GrowthHeader({ range, setRange }: { range: string; setRange: (r: string) => void }) {
   return (
-    <div style={{ padding: "20px 28px 14px", borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
+    <div className="px-4 pt-5 pb-3.5 md:px-7" style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
         <div
           style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}
@@ -797,7 +797,7 @@ function GrowthHeader({ range, setRange }: { range: string; setRange: (r: string
             <h1 className="re-h1" style={{ marginTop: 6 }}>
               Growth View
             </h1>
-            <p className="text-fg-muted" style={{ marginTop: 6, fontSize: 14, maxWidth: 720 }}>
+            <p className="text-fg-muted w-full max-w-[720px]" style={{ marginTop: 6, fontSize: 14 }}>
               Find switch-intent conversations and the right angle to engage. Built for thoughtful participation, not
               lead-scraping.
             </p>
@@ -852,12 +852,12 @@ function SectionHeadGR({
         flexWrap: "wrap",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div style={{ ...eyebrow, fontSize: 10 }}>{eb}</div>
         <h2 className="re-h2" style={{ marginTop: 6, fontSize: 22 }}>
           {title}
         </h2>
-        <p className="text-fg-muted" style={{ margin: "4px 0 0", fontSize: 13, maxWidth: 680 }}>
+        <p className="text-fg-muted w-full max-w-[680px]" style={{ margin: "4px 0 0", fontSize: 13 }}>
           {subtitle}
         </p>
       </div>
@@ -881,7 +881,7 @@ function IntentSnapshot({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 0.95fr) minmax(0, 1.4fr)", gap: 14 }}>
+    <div className="grid grid-cols-1 lg:[grid-template-columns:minmax(0,0.95fr)_minmax(0,1.4fr)]" style={{ gap: 14 }}>
       {/* Score */}
       <div className="re-card re-card-elev" style={{ position: "relative", overflow: "hidden" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
@@ -890,7 +890,7 @@ function IntentSnapshot({
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
-              style={{ fontSize: 72, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: GRN }}
+              style={{ fontSize: "clamp(54px, 12vw, 72px)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: GRN }}
             >
               {score.score}
             </span>
@@ -979,7 +979,7 @@ function IntentSnapshot({
               <EngagementBadge level={topOpportunity.engagementLevel} />
             </div>
 
-            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+            <h3 className="break-words" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
               {topOpportunity.title}
             </h3>
 
@@ -1157,7 +1157,7 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
       </div>
 
       {/* Main content */}
-      <div style={{ padding: "14px 16px" }}>
+      <div className="min-w-0" style={{ padding: "14px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
           <span className="re-chip" style={{ fontSize: 10 }}>
             <span
@@ -1184,7 +1184,7 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
           </span>
         </div>
 
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500, lineHeight: 1.35 }}>{f.title}</h3>
+        <h3 className="break-words" style={{ margin: 0, fontSize: 15, fontWeight: 500, lineHeight: 1.35 }}>{f.title}</h3>
 
         <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
           <IntentTag intent={f.intentType} />
@@ -1374,7 +1374,8 @@ function PriorityTable({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div className="re-card">
+    <div className="re-card overflow-x-auto">
+      <div style={{ minWidth: 920 }}>
       <div
         style={{
           display: "grid",
@@ -1460,6 +1461,7 @@ function PriorityTable({
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -1587,7 +1589,8 @@ function CommunitiesTable({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div className="re-card">
+    <div className="re-card overflow-x-auto">
+      <div style={{ minWidth: 920 }}>
       <div
         style={{
           display: "grid",
@@ -1670,6 +1673,7 @@ function CommunitiesTable({
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -1814,7 +1818,7 @@ function SegmentHints({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
       {rows.map((r, i) => (
         <div key={i} className="re-card" style={{ padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -1894,9 +1898,9 @@ function SegChip({ children, tone }: { children: React.ReactNode; tone?: "neg" |
 function GrowthFooter({ onNav }: { onNav: (to: string) => void }) {
   return (
     <div
+      className="px-5 py-5 md:px-6 md:py-[22px]"
       style={{
         marginTop: 50,
-        padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
         background: `linear-gradient(135deg, ${GRN_BG}, rgba(0,97,177,0.04))`,
@@ -1907,13 +1911,13 @@ function GrowthFooter({ onNav }: { onNav: (to: string) => void }) {
         flexWrap: "wrap",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div style={eyebrow}>GROWTH OPERATING PRINCIPLE</div>
-        <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
+        <p className="w-full max-w-[720px]" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, fontWeight: 500 }}>
           "Find five conversations worth participating in today — and earn a reply by being useful, not loud."
         </p>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="flex flex-wrap" style={{ gap: 8 }}>
         <button type="button" className="re-btn" onClick={() => onNav("/history")}>
           <Icon name="list" size={14} /> Open full report
         </button>

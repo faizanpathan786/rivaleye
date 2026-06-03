@@ -54,7 +54,7 @@ export function ReportSectionsPage() {
 
   if (query.isLoading || (!query.data && !query.isError)) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-6 md:px-6 md:py-8">
         <Skeleton className="mb-4 h-8 w-48" />
         <Skeleton className="mb-2 h-10 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -64,7 +64,7 @@ export function ReportSectionsPage() {
 
   if (query.isError) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-6 md:px-6 md:py-8">
         <Alert variant="destructive">
           <AlertTitle>Could not load sections</AlertTitle>
           <AlertDescription>
@@ -78,25 +78,25 @@ export function ReportSectionsPage() {
   const sections = query.data;
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-6 md:px-6 md:py-8">
       <div className="mb-6">
         <div className="re-eyebrow mb-1">SECTIONS · LIVE DATA</div>
         <h1 className="re-h1">Report Sections</h1>
-        <p className="mt-1 text-fg-muted" style={{ fontSize: 13 }}>
-          Raw pipeline output for report <span className="font-mono-feat">{reportId}</span>. Phase 5 MVP — data-flow proof.
+        <p className="mt-1 break-words text-fg-muted" style={{ fontSize: 13 }}>
+          Raw pipeline output for report <span className="font-mono-feat break-all">{reportId}</span>. Phase 5 MVP — data-flow proof.
         </p>
       </div>
 
       {/* Tab bar — mirrors report.tsx custom tab style */}
       <div
-        className="flex gap-1 overflow-x-auto"
+        className="flex flex-nowrap gap-1 overflow-x-auto"
         style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg)" }}
       >
         {SECTION_TABS.map(([key, label]) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className="relative cursor-pointer border-0 bg-transparent py-3 pr-4 text-[13px]"
+            className="relative shrink-0 cursor-pointer whitespace-nowrap border-0 bg-transparent py-3 pr-4 text-[13px]"
             style={{
               color: activeTab === key ? "var(--fg)" : "var(--fg-muted)",
               fontWeight: activeTab === key ? 500 : 400,

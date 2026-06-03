@@ -8,7 +8,7 @@ export function PainClustersSection({ reportId }: { reportId: string }) {
     <section className="space-y-4">
       <h2 className="text-xl font-semibold tracking-tight">Pain Clusters</h2>
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -23,7 +23,7 @@ export function PainClustersSection({ reportId }: { reportId: string }) {
       ) : !data?.length ? (
         <p className="text-sm text-muted-foreground">No data yet</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((c) => (
             <PainClusterCard key={c.id} complaint={c} />
           ))}

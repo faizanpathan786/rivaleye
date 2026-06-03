@@ -28,6 +28,7 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
   return (
     <div
       onClick={onClose}
+      className="p-3 md:p-10"
       style={{
         position: "fixed",
         inset: 0,
@@ -37,18 +38,16 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: 40,
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="fade-up"
+        className="fade-up w-[92vw] sm:w-full"
         style={{
           background: "var(--surface)",
           borderRadius: 14,
           border: "1px solid var(--border-soft)",
           boxShadow: "var(--shadow-lg)",
-          width: "100%",
           maxWidth: 920,
           maxHeight: "90vh",
           display: "flex",
@@ -57,8 +56,8 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
         }}
       >
         <div
+          className="px-4 py-3 md:px-5 md:py-4"
           style={{
-            padding: "16px 20px",
             borderBottom: "1px solid var(--border-soft)",
             display: "flex",
             alignItems: "center",
@@ -116,12 +115,12 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
         </div>
 
         <div
+          className="p-4 md:p-6"
           style={{
             display: "flex",
             flex: 1,
             minHeight: 0,
             overflowY: "auto",
-            padding: 24,
           }}
         >
           {isLoading && (
@@ -168,6 +167,7 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
               <div
                 style={{
                   display: "flex",
+                  flexWrap: "wrap",
                   gap: 16,
                   marginBottom: 16,
                   color: "var(--fg-muted)",
@@ -186,6 +186,7 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
 
               {data.body && (
                 <p
+                  className="break-words"
                   style={{
                     marginTop: 0,
                     marginBottom: 20,
@@ -238,8 +239,8 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
                       }}
                     >
                       <span
-                        className="font-mono-feat"
-                        style={{ fontSize: 11, fontWeight: 500 }}
+                        className="font-mono-feat truncate"
+                        style={{ fontSize: 11, fontWeight: 500, minWidth: 0 }}
                       >
                         {c.author}
                       </span>
@@ -261,6 +262,7 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
                       </span>
                     </div>
                     <p
+                      className="break-words"
                       style={{
                         margin: 0,
                         fontSize: 13,

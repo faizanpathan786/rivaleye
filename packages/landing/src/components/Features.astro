@@ -45,14 +45,14 @@ const lenses = [
 <section
   id="lenses"
   aria-labelledby="lenses-heading"
-  class="relative bg-[var(--color-bg-1)] py-24 md:py-32 border-t border-[var(--color-line-1)] overflow-hidden"
+  class="relative bg-[var(--color-bg-1)] py-16 md:py-32 border-t border-[var(--color-line-1)] overflow-hidden"
 >
   {/* Backdrop */}
   <div aria-hidden="true" class="absolute inset-0 -z-10">
     <div class="absolute inset-0 bg-dots opacity-30 mask-fade-edges"></div>
   </div>
 
-  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+  <div class="mx-auto max-w-[var(--container-page)] px-4 sm:px-6 lg:px-8">
     {/* Header */}
     <div
       class="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-14 md:mb-20 reveal-stagger"
@@ -69,7 +69,7 @@ const lenses = [
         </div>
         <h2
           id="lenses-heading"
-          class="display-tight text-[var(--color-fg-0)] text-[clamp(2.5rem,5.5vw,5rem)] max-w-[14ch]"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2rem,7vw,5rem)] max-w-[14ch]"
         >
           Six signal types.
         </h2>
@@ -80,10 +80,10 @@ const lenses = [
     </div>
 
     {/* Grid */}
-    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)] reveal-stagger">
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[var(--color-line-1)] border border-[var(--color-line-1)] reveal-stagger">
       {
         lenses.map((lens) => (
-          <li class="relative bg-[var(--color-bg-0)] p-7 md:p-8 group hover:bg-[var(--color-bg-1)] transition-colors duration-300">
+          <li class="relative bg-[var(--color-bg-0)] p-6 sm:p-7 md:p-8 group hover:bg-[var(--color-bg-1)] transition-colors duration-300">
             {/* Subtle hover scan line */}
             <span
               aria-hidden="true"

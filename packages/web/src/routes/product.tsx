@@ -600,10 +600,10 @@ export function ProductPage({
   if (!embedded) {
     if (reportsQuery.isLoading) {
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "48px 28px", maxWidth: 800, margin: "0 auto" }}>
-          <Skeleton style={{ height: 32, width: 240 }} />
-          <Skeleton style={{ height: 20, width: 400 }} />
-          <Skeleton style={{ height: 20, width: 320 }} />
+        <div className="px-4 py-10 md:px-7 md:py-12" style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 800, margin: "0 auto" }}>
+          <Skeleton className="w-full max-w-[240px]" style={{ height: 32 }} />
+          <Skeleton className="w-full max-w-[400px]" style={{ height: 20 }} />
+          <Skeleton className="w-full max-w-[320px]" style={{ height: 20 }} />
         </div>
       );
     }
@@ -637,7 +637,7 @@ export function ProductPage({
 
   if (embedded && data === undefined) {
     return (
-      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+      <div className="px-4 py-10 md:px-7 md:py-12" style={{ textAlign: "center" }}>
         <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
           Product analysis not available — pipeline did not produce this section for the current report.
         </p>
@@ -656,7 +656,7 @@ export function ProductPage({
         <ProductHeader competitor={COMPETITOR} range={range} setRange={setRange} />
       )}
 
-      <div style={{ padding: "22px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+      <div className="px-4 py-4 md:px-7 md:py-6" style={{ paddingBottom: 60, maxWidth: 1440, margin: "0 auto" }}>
         <OpportunitySummary score={P.score} openEvidence={openEvidence} />
 
         <SectionHeadPM
@@ -673,7 +673,7 @@ export function ProductPage({
           subtitle="Heatmap of pain density across PM-meaningful surfaces — followed by the loudest clusters."
         />
         <ProductAreaHeatmap rows={P.productAreas} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14, marginTop: 14 }}>
           {P.clusterCards.map((c, i) => (
             <ClusterCard key={i} c={c} openEvidence={openEvidence} />
           ))}
@@ -684,7 +684,7 @@ export function ProductPage({
           title="Learn from this"
           subtitle="What users praise. Tagged Match / Learn / Differentiate / Ignore to make the decision direct."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           {P.loves.map((l, i) => (
             <LoveCard key={i} l={l} openEvidence={openEvidence} />
           ))}
@@ -702,7 +702,7 @@ export function ProductPage({
           title="Convert signals into options"
           subtitle="Each opportunity ties to a feature gap above. Impact / effort / confidence on every card."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {P.roadmap.map((r, i) => (
             <RoadmapCard key={i} r={r} openEvidence={openEvidence} />
           ))}
@@ -739,7 +739,7 @@ interface ProductHeaderProps {
 
 function ProductHeader({ competitor, range, setRange }: ProductHeaderProps) {
   return (
-    <div style={{ padding: "20px 28px 14px", borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
+    <div className="px-4 md:px-7" style={{ paddingTop: 20, paddingBottom: 14, borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
         <div
           style={{
@@ -750,9 +750,9 @@ function ProductHeader({ competitor, range, setRange }: ProductHeaderProps) {
             flexWrap: "wrap",
           }}
         >
-          <div>
+          <div className="min-w-0">
             <div style={eyebrow}>PRODUCT VIEW · ROADMAP INTELLIGENCE</div>
-            <h1 className="re-h1" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12 }}>
+            <h1 className="re-h1" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               Product View
               <span
                 style={{
@@ -766,11 +766,11 @@ function ProductHeader({ competitor, range, setRange }: ProductHeaderProps) {
                 · {competitor.name} <span style={{ color: "var(--fg-faint)" }}>{competitor.domain}</span>
               </span>
             </h1>
-            <p className="text-fg-muted" style={{ marginTop: 6, fontSize: 14, maxWidth: 720 }}>
+            <p className="text-fg-muted w-full max-w-[720px]" style={{ marginTop: 6, fontSize: 14 }}>
               Find what users want, what competitors miss, and what your roadmap can learn.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
@@ -820,12 +820,12 @@ function SectionHeadPM({
         flexWrap: "wrap",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div style={{ ...eyebrow, fontSize: 10 }}>{eb}</div>
         <h2 className="re-h2" style={{ marginTop: 6, fontSize: 22 }}>
           {title}
         </h2>
-        <p className="text-fg-muted" style={{ margin: "4px 0 0", fontSize: 13, maxWidth: 680 }}>
+        <p className="text-fg-muted w-full max-w-[680px]" style={{ margin: "4px 0 0", fontSize: 13 }}>
           {subtitle}
         </p>
       </div>
@@ -844,7 +844,10 @@ interface OpportunitySummaryProps {
 
 function OpportunitySummary({ score, openEvidence }: OpportunitySummaryProps) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.6fr)", gap: 14 }}>
+    <div
+      className="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1.6fr)]"
+      style={{ gap: 14 }}
+    >
       {/* Score */}
       <div className="re-card re-card-elev" style={{ position: "relative", overflow: "hidden" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
@@ -853,7 +856,7 @@ function OpportunitySummary({ score, openEvidence }: OpportunitySummaryProps) {
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
-              style={{ fontSize: 72, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: INDIGO }}
+              style={{ fontSize: "clamp(48px, 12vw, 72px)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: INDIGO }}
             >
               {score.value}
             </span>
@@ -1019,40 +1022,42 @@ function FeatureGapTable({
   });
 
   return (
-    <div className="re-card">
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: GAP_COLS,
-          padding: "10px 18px",
-          borderBottom: "1px solid var(--border-soft)",
-          fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 10,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: "var(--fg-faint)",
-          gap: 12,
-        }}
-      >
-        <button type="button" onClick={() => setSortBy("mentions")} style={sortBtn(sortBy === "mentions")}>
-          Feature gap ↕
-        </button>
-        <button type="button" onClick={() => setSortBy("mentions")} style={sortBtn(sortBy === "mentions")}>
-          Mentions ↕
-        </button>
-        <span>Sources</span>
-        <button type="button" onClick={() => setSortBy("severity")} style={sortBtn(sortBy === "severity")}>
-          Severity ↕
-        </button>
-        <button type="button" onClick={() => setSortBy("confidence")} style={sortBtn(sortBy === "confidence")}>
-          Confidence ↕
-        </button>
-        <span>User segment</span>
-        <span>Suggested action</span>
+    <div className="re-card overflow-x-auto">
+      <div style={{ minWidth: 880 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: GAP_COLS,
+            padding: "10px 18px",
+            borderBottom: "1px solid var(--border-soft)",
+            fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--fg-faint)",
+            gap: 12,
+          }}
+        >
+          <button type="button" onClick={() => setSortBy("mentions")} style={sortBtn(sortBy === "mentions")}>
+            Feature gap ↕
+          </button>
+          <button type="button" onClick={() => setSortBy("mentions")} style={sortBtn(sortBy === "mentions")}>
+            Mentions ↕
+          </button>
+          <span>Sources</span>
+          <button type="button" onClick={() => setSortBy("severity")} style={sortBtn(sortBy === "severity")}>
+            Severity ↕
+          </button>
+          <button type="button" onClick={() => setSortBy("confidence")} style={sortBtn(sortBy === "confidence")}>
+            Confidence ↕
+          </button>
+          <span>User segment</span>
+          <span>Suggested action</span>
+        </div>
+        {sorted.map((g, i) => (
+          <FeatureGapRow key={g.feature_gap} g={g} i={i} openEvidence={openEvidence} />
+        ))}
       </div>
-      {sorted.map((g, i) => (
-        <FeatureGapRow key={g.feature_gap} g={g} i={i} openEvidence={openEvidence} />
-      ))}
     </div>
   );
 }
@@ -1165,44 +1170,46 @@ function ProductAreaHeatmap({ rows }: { rows: HeatmapRow[] }) {
   const sorted = [...rows].sort((a, b) => b.volume + b.severity - (a.volume + a.severity));
 
   return (
-    <div className="re-card" style={{ overflow: "hidden" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: HEAT_COLS,
-          padding: "10px 18px",
-          borderBottom: "1px solid var(--border-soft)",
-          fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 10,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: "var(--fg-faint)",
-          gap: 14,
-        }}
-      >
-        <span>Product area</span>
-        {cols.map((c) => (
-          <span key={c.key}>{c.label}</span>
-        ))}
-      </div>
-      {sorted.map((r, i) => (
+    <div className="re-card overflow-x-auto">
+      <div style={{ minWidth: 560 }}>
         <div
-          key={r.area}
           style={{
             display: "grid",
             gridTemplateColumns: HEAT_COLS,
             padding: "10px 18px",
-            borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
-            alignItems: "center",
+            borderBottom: "1px solid var(--border-soft)",
+            fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--fg-faint)",
             gap: 14,
           }}
         >
-          <span style={{ fontSize: 13, fontWeight: 500 }}>{r.area}</span>
+          <span>Product area</span>
           {cols.map((c) => (
-            <HeatCell key={c.key} value={r[c.key] as number} />
+            <span key={c.key}>{c.label}</span>
           ))}
         </div>
-      ))}
+        {sorted.map((r, i) => (
+          <div
+            key={r.area}
+            style={{
+              display: "grid",
+              gridTemplateColumns: HEAT_COLS,
+              padding: "10px 18px",
+              borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 500 }}>{r.area}</span>
+            {cols.map((c) => (
+              <HeatCell key={c.key} value={r[c.key] as number} />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1431,7 +1438,8 @@ function WorkflowJourney({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div className="re-card" style={{ padding: 22 }}>
+    <div className="re-card overflow-x-auto" style={{ padding: 22 }}>
+      <div style={{ minWidth: 640 }}>
       <div style={{ position: "relative", paddingTop: 6, paddingBottom: 6 }}>
         <div
           style={{ position: "absolute", left: 22, right: 22, top: 32, height: 1, background: "var(--border-strong)", zIndex: 0 }}
@@ -1490,6 +1498,7 @@ function WorkflowJourney({
             </button>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
@@ -1646,7 +1655,7 @@ function BuildAvoidLearn({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
       <DecisionColumn
         title="Build"
         items={d.build}
@@ -1776,14 +1785,14 @@ function ProductFooter({ onNav }: { onNav: (to: string) => void }) {
         flexWrap: "wrap",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div style={eyebrow}>PM CHECKLIST</div>
-        <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
+        <p className="w-full max-w-[720px]" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, fontWeight: 500 }}>
           "I know what to build, what to skip, and which competitor strengths to respect — and every decision is anchored
           to real evidence."
         </p>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button type="button" className="re-btn" onClick={() => onNav("/history")}>
           <Icon name="list" size={14} /> Open full report
         </button>

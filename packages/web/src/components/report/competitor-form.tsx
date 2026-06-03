@@ -164,7 +164,7 @@ export function CompetitorForm() {
                       type="button"
                       onClick={() => togglePlatform(id)}
                       className={[
-                        "rounded-full border px-3 py-1 text-sm transition-colors",
+                        "min-h-[36px] max-w-full break-words rounded-full border px-3 py-1.5 text-sm transition-colors",
                         active
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground",

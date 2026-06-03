@@ -37,7 +37,7 @@ const navLinks = [
     aria-label="Primary"
   >
     <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
-      <div class="flex h-16 items-center justify-between gap-6">
+      <div class="flex h-16 items-center justify-between gap-3 sm:gap-6">
         {/* Wordmark */}
         <a href="/" class="group flex items-center gap-2.5" aria-label="RivalEye home">
           <img src="/logo.svg" alt="RivalEye logo" width="32" height="32" style="object-fit:contain;border-radius:6px;" />
@@ -73,7 +73,7 @@ const navLinks = [
         </ul>
 
         {/* Right side */}
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
           <a
             href={`${appUrl}/signin`}
             class="hidden sm:inline-flex font-mono text-[11px] tracking-widest uppercase text-[var(--color-fg-2)] hover:text-[var(--color-fg-0)] transition-colors px-2 py-2"
@@ -82,7 +82,7 @@ const navLinks = [
           </a>
           <a
             href="#cta"
-            class="group relative inline-flex items-center gap-2 bg-[var(--color-lime)] text-[var(--color-bg-0)] px-4 py-2.5 font-mono text-[11px] font-medium tracking-widest uppercase hover:bg-[var(--color-lime-1)] transition-colors"
+            class="group relative inline-flex items-center gap-1.5 sm:gap-2 bg-[var(--color-lime)] text-[var(--color-bg-0)] px-3 sm:px-4 py-2.5 min-h-[44px] font-mono text-[11px] font-medium tracking-widest uppercase hover:bg-[var(--color-lime-1)] transition-colors"
           >
             <span class="relative z-10">Run a scan</span>
             <svg
@@ -102,8 +102,10 @@ const navLinks = [
           {/* Mobile menu toggle */}
           <button
             type="button"
-            class="lg:hidden inline-flex items-center justify-center w-9 h-9 border border-[var(--color-line-2)] text-[var(--color-fg-1)]"
+            class="lg:hidden inline-flex items-center justify-center w-11 h-11 border border-[var(--color-line-2)] text-[var(--color-fg-1)]"
             aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-nav-panel"
             data-mobile-toggle
           >
             <svg viewBox="0 0 16 16" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -116,6 +118,7 @@ const navLinks = [
 
     {/* Mobile menu panel */}
     <div
+      id="mobile-nav-panel"
       class="lg:hidden hidden border-t border-[var(--color-line-1)] bg-[var(--color-bg-1)]"
       data-mobile-panel
     >
@@ -125,7 +128,7 @@ const navLinks = [
             <li>
               <a
                 href={link.href}
-                class="flex items-center gap-3 py-3 font-mono text-[12px] tracking-widest uppercase text-[var(--color-fg-1)]"
+                class="flex items-center gap-3 min-h-[44px] py-3 font-mono text-[12px] tracking-widest uppercase text-[var(--color-fg-1)]"
               >
                 <span class="text-[var(--color-fg-4)]">§{String(i + 1).padStart(2, '0')}</span>
                 <span>{link.label}</span>
@@ -133,6 +136,14 @@ const navLinks = [
             </li>
           ))
         }
+        <li class="sm:hidden border-t border-[var(--color-line-1)] mt-2 pt-2">
+          <a
+            href="#login"
+            class="flex items-center min-h-[44px] py-3 font-mono text-[12px] tracking-widest uppercase text-[var(--color-fg-1)]"
+          >
+            Sign in
+          </a>
+        </li>
       </ul>
     </div>
   </nav>
@@ -157,6 +168,16 @@ const navLinks = [
   const toggle = document.querySelector<HTMLButtonElement>('[data-mobile-toggle]');
   const panel = document.querySelector<HTMLElement>('[data-mobile-panel]');
   toggle?.addEventListener('click', () => {
-    panel?.classList.toggle('hidden');
+    const open = panel?.classList.toggle('hidden') === false;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
   });
+  // Close the panel after tapping a link inside it
+  panel?.querySelectorAll('a').forEach((a) =>
+    a.addEventListener('click', () => {
+      panel.classList.add('hidden');
+      toggle?.setAttribute('aria-expanded', 'false');
+      toggle?.setAttribute('aria-label', 'Open menu');
+    })
+  );
 </script>

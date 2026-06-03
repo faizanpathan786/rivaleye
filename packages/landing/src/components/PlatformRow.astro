@@ -43,13 +43,13 @@ const marqueeList = [...platforms, ...platforms];
     {/* Fade masks */}
     <div
       aria-hidden="true"
-      class="absolute left-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
+      class="absolute left-0 top-0 bottom-0 w-12 sm:w-20 md:w-32 z-10 pointer-events-none"
       style="background: linear-gradient(to right, var(--color-bg-1), transparent);"
     >
     </div>
     <div
       aria-hidden="true"
-      class="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
+      class="absolute right-0 top-0 bottom-0 w-12 sm:w-20 md:w-32 z-10 pointer-events-none"
       style="background: linear-gradient(to left, var(--color-bg-1), transparent);"
     >
     </div>
@@ -57,7 +57,7 @@ const marqueeList = [...platforms, ...platforms];
     <div class="flex animate-marquee">
       {
         marqueeList.map((p) => (
-          <article class="flex-shrink-0 mx-3 flex items-center gap-4 border border-[var(--color-line-1)] bg-[var(--color-bg-0)]/60 px-6 py-4 min-w-[280px] group hover:border-[var(--color-line-3)] transition-colors">
+          <article class="flex-shrink-0 mx-2 sm:mx-3 flex items-center gap-3 sm:gap-4 border border-[var(--color-line-1)] bg-[var(--color-bg-0)]/60 px-4 py-3 sm:px-6 sm:py-4 min-w-[220px] sm:min-w-[280px] group hover:border-[var(--color-line-3)] transition-colors">
             <div class="flex-shrink-0 w-9 h-9 border border-[var(--color-line-2)] bg-[var(--color-bg-2)] flex items-center justify-center text-[var(--color-lime)] group-hover:bg-[var(--color-bg-3)] transition-colors">
               {/* Abstract glyph per platform — geometric, not branded */}
               <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5">

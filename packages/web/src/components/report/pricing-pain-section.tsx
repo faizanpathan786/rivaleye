@@ -55,8 +55,10 @@ export function PricingPainSection({ reportId }: { reportId: string }) {
                   className="rounded-lg border border-border bg-card p-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-sm">{t.tier}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
+                    <span className="min-w-0 break-words font-medium text-sm">
+                      {t.tier}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                       pain {(t.pain * 100).toFixed(0)}%
                     </span>
                   </div>
@@ -77,8 +79,8 @@ export function PricingPainSection({ reportId }: { reportId: string }) {
                   key={i}
                   className="border-l-2 border-muted pl-3 text-sm text-foreground/80"
                 >
-                  <p className="italic">"{q.text}"</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="italic break-words">"{q.text}"</p>
+                  <p className="mt-1 text-xs text-muted-foreground break-words">
                     {q.who}
                     {q.sub ? ` · ${q.sub}` : ""}
                   </p>

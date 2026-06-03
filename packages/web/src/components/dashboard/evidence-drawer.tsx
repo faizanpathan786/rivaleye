@@ -87,14 +87,14 @@ export function EvidenceDrawer({
         aria-modal="true"
         aria-label="Evidence"
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col",
+          "fixed inset-y-0 right-0 z-50 flex w-[92vw] max-w-md flex-col sm:w-full",
           "bg-[var(--surface-solid)] shadow-[var(--shadow-lg)]",
           "border-l border-[var(--border-soft)]",
           className,
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-[var(--border-soft)] px-4 py-3 md:px-5">
           <span className="text-sm font-semibold text-[var(--fg)]">
             Evidence
           </span>
@@ -102,7 +102,7 @@ export function EvidenceDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close evidence drawer"
-            className="rounded-md p-1 text-[var(--fg-muted)] hover:bg-[var(--hover)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--fg-muted)] hover:bg-[var(--hover)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +123,7 @@ export function EvidenceDrawer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 md:px-5">
           {!hasEvidence ? (
             <p className="text-sm text-[var(--fg-muted)]">
               Evidence not available for this insight.
@@ -135,11 +135,11 @@ export function EvidenceDrawer({
                   key={quote.id}
                   className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-2)] p-4"
                 >
-                  <blockquote className="mb-2 text-sm italic text-[var(--fg)] leading-relaxed">
+                  <blockquote className="mb-2 text-sm italic text-[var(--fg)] leading-relaxed break-words">
                     &ldquo;{quote.text}&rdquo;
                   </blockquote>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--fg-muted)]">
-                    <span className="font-medium">{quote.source}</span>
+                    <span className="min-w-0 break-words font-medium">{quote.source}</span>
                     {quote.signal_type && (
                       <span className="rounded bg-[var(--bg-sunken)] px-1.5 py-0.5 capitalize">
                         {quote.signal_type}

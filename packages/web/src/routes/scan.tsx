@@ -114,18 +114,18 @@ export function ScanPage() {
     error instanceof Error ? error.message : error ? "Failed to start scan" : null;
 
   return (
-    <div style={{ padding: "20px 28px 60px", maxWidth: 880, margin: "0 auto" }}>
+    <div className="px-4 py-5 md:px-7 pb-16 w-full max-w-[880px] mx-auto">
       <div className="re-eyebrow">NEW SCAN</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>Run a competitor scan</h1>
-      <p className="text-fg-muted" style={{ marginTop: 8, maxWidth: 580 }}>
+      <p className="text-fg-muted w-full max-w-[580px]" style={{ marginTop: 8 }}>
         Point RivalEye at a competitor. We pull complaints, switching signals,
         feature gaps, and high-intent leads from every platform you select,
         cluster the themes, and hand you an intel report.
       </p>
 
       <Step n={1} label="Competitor">
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 10 }}>
-          <div style={{
+        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr]" style={{ gap: 10 }}>
+          <div className="min-w-0" style={{
             display: "flex", alignItems: "center", gap: 8,
             border: "1px solid var(--border-strong)",
             borderRadius: 8,
@@ -135,7 +135,7 @@ export function ScanPage() {
           }}>
             <Icon name="search" size={16} className="text-fg-faint" />
             <input
-              className="re-input"
+              className="re-input min-w-0"
               style={{
                 flex: 1, border: 0, height: "100%", padding: 0,
                 fontSize: 15, background: "transparent",
@@ -169,7 +169,7 @@ export function ScanPage() {
       </Step>
 
       <Step n={3} label="What are you trying to learn?">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5" style={{ gap: 8 }}>
           {GOALS.map((g) => {
             const active = goal === g.id;
             return (
@@ -201,7 +201,7 @@ export function ScanPage() {
       </Step>
 
       <Step n={4} label="Time range">
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-wrap" style={{ gap: 8 }}>
           {RANGES.map((r) => (
             <button
               key={r.v}
@@ -216,7 +216,7 @@ export function ScanPage() {
       </Step>
 
       <Step n={5} label="Platforms to scan">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 6 }}>
           {PLATFORMS.map((p) => {
             const on = platforms[p.id];
             const disabled = !p.live;
@@ -237,9 +237,9 @@ export function ScanPage() {
                   cursor: disabled ? "default" : "pointer",
                 }}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
+                <span className="min-w-0" style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
                   <PlatformIcon id={p.id} active={on && !disabled} />
-                  <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                  <span className="min-w-0" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                     <span style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</span>
                     <span className="text-fg-muted" style={{ fontSize: 11, fontWeight: 400 }}>
                       {disabled ? "Coming soon" : p.sub}
@@ -272,7 +272,7 @@ export function ScanPage() {
       </Step>
 
       <Step n={6} label="Analysis depth">
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-col sm:flex-row" style={{ gap: 8 }}>
           {DEPTHS.map((d) => {
             const active = depth === d.v;
             return (
@@ -321,28 +321,28 @@ export function ScanPage() {
         </div>
       )}
 
-      <div style={{
-        marginTop: 32,
-        padding: "16px 20px",
-        background: "var(--surface)",
-        border: "1px solid var(--border-soft)",
-        borderRadius: 10,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        <div>
+      <div
+        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+        style={{
+          marginTop: 32,
+          padding: "16px 20px",
+          background: "var(--surface)",
+          border: "1px solid var(--border-soft)",
+          borderRadius: 10,
+        }}
+      >
+        <div className="min-w-0">
           <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>READY TO RUN</div>
-          <div style={{ fontSize: 14, marginTop: 4 }}>
+          <div className="break-words" style={{ fontSize: 14, marginTop: 4 }}>
             <b>{name || "—"}</b> · {goalLabel} · {rangeLabel} · {selectedPlatformCount} platforms · {depth}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="re-btn" onClick={() => onNav("dashboard")} disabled={isPending}>
+        <div className="flex flex-col sm:flex-row" style={{ gap: 8 }}>
+          <button className="re-btn w-full sm:w-auto" onClick={() => onNav("dashboard")} disabled={isPending}>
             Cancel
           </button>
           <button
-            className="re-btn re-btn-accent"
+            className="re-btn re-btn-accent w-full sm:w-auto"
             onClick={start}
             disabled={!canSubmit}
             style={{ height: 36 }}

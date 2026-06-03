@@ -315,10 +315,10 @@ export function FounderPage({
   if (!embedded) {
     if (reportsQuery.isLoading) {
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "48px 28px", maxWidth: 800, margin: "0 auto" }}>
-          <Skeleton style={{ height: 32, width: 240 }} />
-          <Skeleton style={{ height: 20, width: 400 }} />
-          <Skeleton style={{ height: 20, width: 320 }} />
+        <div className="flex flex-col gap-4 px-4 py-8 md:px-7 md:py-12" style={{ maxWidth: 800, margin: "0 auto" }}>
+          <Skeleton className="h-8 w-full max-w-[240px]" />
+          <Skeleton className="h-5 w-full max-w-[400px]" />
+          <Skeleton className="h-5 w-full max-w-[320px]" />
         </div>
       );
     }
@@ -363,7 +363,7 @@ export function FounderPage({
 
   if (embedded && data === undefined) {
     return (
-      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+      <div className="px-4 py-8 md:px-7 md:py-12" style={{ textAlign: "center" }}>
         <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
           Founder analysis not available — pipeline did not produce this section for the current report.
         </p>
@@ -382,7 +382,7 @@ export function FounderPage({
         <FounderHeader competitor={COMPETITOR} range={range} setRange={setRange} />
       )}
 
-      <div style={{ padding: "22px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+      <div className="px-4 py-5 md:px-7 md:pt-[22px] md:pb-[60px]" style={{ maxWidth: 1440, margin: "0 auto" }}>
         <OpportunitySnapshot
           opportunity={F.opportunity}
           marketSummary={F.market_opening_summary}
@@ -395,7 +395,7 @@ export function FounderPage({
           title={`What users love about ${cName}`}
           subtitle="Know what not to underestimate. Match these or compete elsewhere."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {F.loves.map((s, i) => (
             <StrengthCard key={i} s={s} openEvidence={openEvidence} />
           ))}
@@ -406,7 +406,7 @@ export function FounderPage({
           title="Where users are repeatedly frustrated"
           subtitle="Severity × frequency. Each cluster is a candidate wedge."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {F.frustrations.map((f, i) => (
             <FrustrationCard key={i} f={f} openEvidence={openEvidence} />
           ))}
@@ -431,7 +431,7 @@ export function FounderPage({
           title="Why the competitor is hard to beat"
           subtitle="Don't only see the opening. See the moat."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {F.risks.map((r, i) => (
             <RiskCard key={i} r={r} />
           ))}
@@ -442,7 +442,7 @@ export function FounderPage({
           title="What to do this quarter"
           subtitle="Three moves, ranked by evidence. Each is anchored to a cluster above."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           {F.actions.map((a, i) => (
             <ActionCard key={i} a={a} index={i} openEvidence={openEvidence} />
           ))}
@@ -472,12 +472,12 @@ interface FounderHeaderProps {
 
 function FounderHeader({ competitor, range, setRange }: FounderHeaderProps) {
   return (
-    <div style={{ padding: "20px 28px 14px", borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
+    <div className="px-4 pt-5 pb-3 md:px-7 md:pt-5 md:pb-[14px]" style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24 }}>
-          <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+          <div className="min-w-0">
             <div style={eyebrow}>FOUNDER VIEW · STRATEGIC DECISION DASHBOARD</div>
-            <h1 className="re-h1" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12 }}>
+            <h1 className="re-h1 flex flex-wrap items-center" style={{ marginTop: 6, gap: 12 }}>
               Founder View
               <span
                 style={{
@@ -491,11 +491,11 @@ function FounderHeader({ competitor, range, setRange }: FounderHeaderProps) {
                 · {competitor.name} <span style={{ color: "var(--fg-faint)" }}>{competitor.domain}</span>
               </span>
             </h1>
-            <p className="text-fg-muted" style={{ marginTop: 6, fontSize: 14, maxWidth: 720 }}>
+            <p className="text-fg-muted w-full" style={{ marginTop: 6, fontSize: 14, maxWidth: 720 }}>
               Find the market opening hidden inside competitor user conversations.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div className="flex flex-wrap items-center gap-1.5">
             <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
@@ -553,7 +553,10 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
   const factorsRecord = factorsToRecord(o.factors);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,1.4fr) minmax(0,1.1fr)", gap: 14 }}>
+    <div
+      className="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1.05fr)_minmax(0,1.4fr)_minmax(0,1.1fr)]"
+      style={{ gap: 14 }}
+    >
       {/* SCORE */}
       <div className="re-card re-card-elev" style={{ overflow: "hidden", position: "relative" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none" }} />
@@ -562,7 +565,7 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
-              style={{ fontSize: 76, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: "var(--accent)" }}
+              style={{ fontSize: "clamp(56px, 14vw, 76px)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: "var(--accent)" }}
             >
               {o.score}
             </span>
@@ -667,7 +670,7 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
           </span>
         </div>
         <div style={{ padding: 18 }}>
-          <div style={{ fontSize: 18, fontWeight: 500, lineHeight: 1.3, letterSpacing: "-0.01em", fontStyle: "italic" }}>
+          <div className="break-words" style={{ fontSize: 18, fontWeight: 500, lineHeight: 1.3, letterSpacing: "-0.01em", fontStyle: "italic" }}>
             "{wedge.title}"
           </div>
 
@@ -878,7 +881,8 @@ function UnmetNeedsTable({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div className="re-card">
+    <div className="re-card overflow-x-auto">
+      <div style={{ minWidth: 690 }}>
       <div
         style={{
           display: "grid",
@@ -962,6 +966,7 @@ function UnmetNeedsTable({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -994,15 +999,15 @@ function PricingOpportunity({
 
   return (
     <div
-      className="re-card re-card-elev"
-      style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.2fr) minmax(0,1fr)", overflow: "hidden" }}
+      className="re-card re-card-elev grid grid-cols-1 md:[grid-template-columns:minmax(0,1.2fr)_minmax(0,1fr)]"
+      style={{ overflow: "hidden" }}
     >
-      <div style={{ padding: 22, borderRight: "1px solid var(--border-soft)", position: "relative" }}>
+      <div className="border-b border-[var(--border-soft)] md:border-b-0 md:border-r" style={{ padding: 22, borderRightColor: "var(--border-soft)", position: "relative" }}>
         <div style={{ ...eyebrow, fontSize: 10 }}>PRICING PAIN SCORE</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
+        <div className="flex flex-wrap items-baseline" style={{ gap: 8, marginTop: 6 }}>
           <span
             className="font-mono-feat tnum"
-            style={{ fontSize: 64, fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 0.9, color: "var(--warn)" }}
+            style={{ fontSize: "clamp(48px, 12vw, 64px)", fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 0.9, color: "var(--warn)" }}
           >
             {displayScore}
           </span>
@@ -1232,26 +1237,22 @@ function FounderFooter({ onNav, competitorName }: { onNav: (to: string) => void;
   const cName = competitorName ?? "the competitor";
   return (
     <div
+      className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between md:gap-6"
       style={{
         marginTop: 50,
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
         background: "linear-gradient(135deg, rgba(0,97,177,0.06), rgba(99,102,241,0.04))",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 24,
-        flexWrap: "wrap",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div style={eyebrow}>NORTH STAR</div>
-        <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
+        <p className="w-full" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
           {`"Now I understand where ${cName} is strong, where users are frustrated, what the market wants, and what opportunity we can attack."`}
         </p>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="flex flex-wrap gap-2">
         <button type="button" className="re-btn" onClick={() => onNav("/history")}>
           <Icon name="list" size={14} /> Open full report
         </button>

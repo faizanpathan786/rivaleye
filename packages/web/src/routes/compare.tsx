@@ -90,6 +90,7 @@ function SidePickerFixed({ fixed }: SidePickerFixedProps) {
       <div className="re-eyebrow">SIDE A · LOCKED</div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8 }}>
         <div
+          className="shrink-0"
           style={{
             width: 40,
             height: 40,
@@ -105,8 +106,8 @@ function SidePickerFixed({ fixed }: SidePickerFixedProps) {
         >
           {fixed.name[0]}
         </div>
-        <div>
-          <h3 className="re-h3" style={{ fontSize: 18 }}>{fixed.name}</h3>
+        <div className="min-w-0">
+          <h3 className="re-h3 break-words" style={{ fontSize: 18 }}>{fixed.name}</h3>
           <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
             most recent scan
           </div>
@@ -136,6 +137,7 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
       <div className="re-eyebrow">SIDE B · SELECT</div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8 }}>
         <div
+          className="shrink-0"
           style={{
             width: 40,
             height: 40,
@@ -151,7 +153,8 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
         >
           {name[0]}
         </div>
-        <div ref={wrapRef} style={{ position: "relative", flex: 1, zIndex: 10 }}>
+        <div ref={wrapRef} className="min-w-0" style={{ position: "relative", flex: 1, zIndex: 10 }}>
+
           <button
             type="button"
             className="re-input"
@@ -162,12 +165,15 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              gap: 8,
               textAlign: "left",
               cursor: "pointer",
             }}
           >
-            <span>{name}</span>
-            <Icon name="chev-down" size={14} />
+            <span className="truncate min-w-0">{name}</span>
+            <span className="shrink-0 inline-flex">
+              <Icon name="chev-down" size={14} />
+            </span>
           </button>
           {open && (
             <>
@@ -256,12 +262,12 @@ interface SideStatProps {
 
 function SideStat({ label, v, mentions, reverse }: SideStatProps) {
   return (
-    <div style={{ textAlign: reverse ? "right" : "left" }}>
-      <div className="re-eyebrow">{label}</div>
+    <div className="min-w-0" style={{ textAlign: reverse ? "right" : "left" }}>
+      <div className="re-eyebrow break-words">{label}</div>
       <div
         className="font-mono-feat tnum"
         style={{
-          fontSize: 36,
+          fontSize: "clamp(26px, 6vw, 36px)",
           fontWeight: 500,
           letterSpacing: "-0.02em",
           color: "var(--neg)",
@@ -322,8 +328,8 @@ export function ComparePage() {
   if (isLoading) {
     return (
       <div
+        className="px-4 py-5 md:px-7 md:pt-5 md:pb-[60px]"
         style={{
-          padding: "20px 28px 60px",
           maxWidth: 1440,
           margin: "0 auto",
           display: "flex",
@@ -338,8 +344,8 @@ export function ComparePage() {
   if (completed.length < 2 || !sideAReport || !rightChoice) {
     return (
       <div
+        className="px-4 py-5 md:px-7 md:pt-5 md:pb-[60px]"
         style={{
-          padding: "20px 28px 60px",
           maxWidth: 1440,
           margin: "0 auto",
           display: "flex",
@@ -378,7 +384,10 @@ export function ComparePage() {
   ];
 
   return (
-    <div style={{ padding: "20px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+    <div
+      className="px-4 py-5 md:px-7 md:pt-5 md:pb-[60px]"
+      style={{ maxWidth: 1440, margin: "0 auto" }}
+    >
       <div className="re-eyebrow">COMPARE</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>
         Compare two competitors
@@ -388,9 +397,8 @@ export function ComparePage() {
       </p>
 
       <div
+        className="grid grid-cols-1 md:grid-cols-2"
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
           gap: 16,
           marginTop: 24,
           position: "relative",
@@ -422,11 +430,9 @@ export function ComparePage() {
           </span>
         </div>
         <div
+          className="grid grid-cols-2 gap-6 md:gap-[60px]"
           style={{
             padding: "20px 24px",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 60,
           }}
         >
           <SideStat
@@ -450,14 +456,15 @@ export function ComparePage() {
             shared themes
           </span>
         </div>
+        <div className="overflow-x-auto">
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--surface-2)" }}>
               <th style={thStyle}>Theme</th>
               <th style={thStyle}>{sideA.name}</th>
               <th style={thStyle}>{rightChoice.name}</th>
-              <th style={thStyle}>Δ</th>
-              <th style={thStyle}>Winner</th>
+              <th className="hidden md:table-cell" style={thStyle}>Δ</th>
+              <th className="hidden md:table-cell" style={thStyle}>Winner</th>
             </tr>
           </thead>
           <tbody>
@@ -487,7 +494,7 @@ export function ComparePage() {
                       </div>
                     </div>
                   </td>
-                  <td style={tdStyle}>
+                  <td className="hidden md:table-cell" style={tdStyle}>
                     <span
                       className="font-mono-feat tnum"
                       style={{ color: r.a > r.b ? "var(--neg)" : "var(--pos)" }}
@@ -496,7 +503,7 @@ export function ComparePage() {
                       {Math.abs(r.a - r.b)}
                     </span>
                   </td>
-                  <td style={tdStyle}>
+                  <td className="hidden md:table-cell" style={tdStyle}>
                     <span className="re-chip re-chip-pos" style={{ fontSize: 10 }}>
                       {winnerA ? sideA.name : rightChoice.name} less pain
                     </span>
@@ -506,12 +513,12 @@ export function ComparePage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div
+        className="grid grid-cols-1 md:grid-cols-2"
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
           gap: 16,
           marginTop: 16,
         }}

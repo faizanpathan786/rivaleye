@@ -47,9 +47,9 @@ export function ScoreFactors({ factors, className }: ScoreFactorsProps) {
         const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
         return (
           <div key={key} className="flex flex-col gap-0.5">
-            <div className="flex items-center justify-between text-xs text-[var(--fg-muted)]">
-              <span>{humaniseKey(key)}</span>
-              <span className="tabular-nums font-medium text-[var(--fg)]">
+            <div className="flex items-center justify-between gap-2 text-xs text-[var(--fg-muted)]">
+              <span className="min-w-0 break-words">{humaniseKey(key)}</span>
+              <span className="shrink-0 tabular-nums font-medium text-[var(--fg)]">
                 {pct}%
               </span>
             </div>

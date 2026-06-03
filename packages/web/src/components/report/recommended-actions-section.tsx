@@ -28,8 +28,8 @@ export function RecommendedActionsSection({ reportId }: { reportId: string }) {
         <h2 className="text-xl font-semibold tracking-tight">
           Recommended Next Actions
         </h2>
-        <div className="flex items-center gap-3 text-sm text-destructive">
-          <span>{(error as Error)?.message ?? "Failed to load actions."}</span>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
+          <span className="min-w-0 break-words">{(error as Error)?.message ?? "Failed to load actions."}</span>
           <button
             onClick={() => refetch()}
             className="underline underline-offset-2"
@@ -54,13 +54,13 @@ export function RecommendedActionsSection({ reportId }: { reportId: string }) {
             <span className="font-mono text-muted-foreground shrink-0 tabular-nums">
               {i + 1}.
             </span>
-            <span className="flex-1">
+            <span className="min-w-0 flex-1 break-words">
               <span className="font-medium">{action.step}</span>
               {action.detail && (
                 <span className="text-muted-foreground"> — {action.detail}</span>
               )}
               {(action.effort || action.role) && (
-                <span className="ml-2 inline-flex gap-2 text-xs text-muted-foreground">
+                <span className="ml-2 inline-flex flex-wrap gap-2 text-xs text-muted-foreground">
                   {action.effort && (
                     <span className="font-mono uppercase">
                       {action.effort}

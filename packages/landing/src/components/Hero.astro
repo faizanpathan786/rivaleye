@@ -20,7 +20,7 @@ const clusters = [
 
 <section
   id="main"
-  class="relative isolate overflow-hidden bg-[var(--color-bg-0)] pt-10 md:pt-14 lg:pt-20 pb-24 lg:pb-32"
+  class="relative isolate overflow-hidden bg-[var(--color-bg-0)] pt-8 md:pt-14 lg:pt-20 pb-16 md:pb-24 lg:pb-32"
 >
   {/* === Atmospheric backdrop ============================================ */}
   <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
@@ -60,7 +60,7 @@ const clusters = [
     </div>
   </div>
 
-  <div class="mx-auto max-w-[var(--container-page)] px-5 md:px-8">
+  <div class="mx-auto max-w-[var(--container-page)] px-4 sm:px-5 md:px-8">
     <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
       {/* ============================================================== */}
       {/* LEFT — copy column                                              */}
@@ -81,7 +81,7 @@ const clusters = [
 
         {/* Headline */}
         <h1
-          class="display-tight text-[var(--color-fg-0)] text-[clamp(3rem,7.5vw,7.5rem)]"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2rem,9vw,7.5rem)]"
         >
           <span class="block">See what users</span>
           <span class="block">really think about</span>
@@ -112,7 +112,7 @@ const clusters = [
         <div class="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
           <a
             href="#cta"
-            class="group relative inline-flex items-center justify-center gap-2 bg-[var(--color-lime)] text-[var(--color-bg-0)] px-6 py-4 font-mono text-[12px] font-medium tracking-[0.18em] uppercase hover:bg-[var(--color-lime-1)] transition-colors glow-lime-md"
+            class="group relative inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-[var(--color-lime)] text-[var(--color-bg-0)] px-6 py-4 font-mono text-[12px] font-medium tracking-[0.18em] uppercase hover:bg-[var(--color-lime-1)] transition-colors glow-lime-md"
           >
             <span class="relative z-10">Get early access</span>
             <svg
@@ -127,7 +127,7 @@ const clusters = [
           </a>
           <a
             href="#how"
-            class="group inline-flex items-center justify-center gap-2 border border-[var(--color-line-2)] bg-[var(--color-bg-1)]/40 backdrop-blur-sm text-[var(--color-fg-1)] px-6 py-4 font-mono text-[12px] font-medium tracking-[0.18em] uppercase hover:border-[var(--color-line-3)] hover:bg-[var(--color-bg-2)] transition-colors"
+            class="group inline-flex w-full sm:w-auto items-center justify-center gap-2 border border-[var(--color-line-2)] bg-[var(--color-bg-1)]/40 backdrop-blur-sm text-[var(--color-fg-1)] px-6 py-4 font-mono text-[12px] font-medium tracking-[0.18em] uppercase hover:border-[var(--color-line-3)] hover:bg-[var(--color-bg-2)] transition-colors"
           >
             See how it works
             <span class="text-[var(--color-fg-3)] group-hover:text-[var(--color-lime)] transition-colors">↗</span>
@@ -135,22 +135,22 @@ const clusters = [
         </div>
 
         {/* Trust stats */}
-        <dl class="mt-12 md:mt-16 grid grid-cols-3 gap-6 max-w-[560px] pt-8 border-t border-[var(--color-line-1)]">
+        <dl class="mt-12 md:mt-16 grid grid-cols-3 gap-3 sm:gap-6 max-w-[560px] pt-8 border-t border-[var(--color-line-1)]">
           <div>
             <dt class="label-mono mb-2">Sources scanned</dt>
-            <dd class="font-display text-3xl md:text-4xl font-medium text-[var(--color-fg-0)] tracking-tight">
+            <dd class="font-display text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--color-fg-0)] tracking-tight">
               <span data-counter="8" data-counter-decimals="0">0</span>
             </dd>
           </div>
           <div>
             <dt class="label-mono mb-2">Avg. complaints / scan</dt>
-            <dd class="font-display text-3xl md:text-4xl font-medium text-[var(--color-fg-0)] tracking-tight">
+            <dd class="font-display text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--color-fg-0)] tracking-tight">
               <span data-counter="2417" data-counter-decimals="0">0</span>
             </dd>
           </div>
           <div>
             <dt class="label-mono mb-2">Time to first report</dt>
-            <dd class="font-display text-3xl md:text-4xl font-medium text-[var(--color-fg-0)] tracking-tight">
+            <dd class="font-display text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--color-fg-0)] tracking-tight">
               <span data-counter="4">0</span><span class="text-[var(--color-fg-3)]">m</span>
             </dd>
           </div>

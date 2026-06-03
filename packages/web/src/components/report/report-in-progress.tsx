@@ -134,7 +134,7 @@ function LiveCount({ label, v }: { label: string; v: number }) {
       </div>
       <div
         className="font-mono-feat mt-1 tabular-nums"
-        style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}
+        style={{ fontSize: "clamp(20px, 5vw, 26px)", fontWeight: 500, letterSpacing: "-0.02em" }}
       >
         {fmtNum(v)}
       </div>
@@ -255,14 +255,14 @@ export function ReportInProgress({
   });
 
   return (
-    <div style={{ padding: "20px 28px 48px", maxWidth: 1080, margin: "0 auto" }}>
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="px-4 pt-4 pb-10 md:px-7 md:pt-5 mx-auto w-full max-w-[1080px]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <div className="re-eyebrow">
             {done ? "SCAN COMPLETE" : failed ? "SCAN FAILED" : "SCAN IN PROGRESS"}
           </div>
-          <h1 className="re-h1 mt-1.5 flex items-center gap-3">
-            {name}
+          <h1 className="re-h1 mt-1.5 flex items-center gap-3 min-w-0 break-words">
+            <span className="min-w-0 break-words">{name}</span>
             {!done && !failed && (
               <span
                 className="inline-block animate-pulse rounded-full"
@@ -276,7 +276,7 @@ export function ReportInProgress({
           </h1>
         </div>
         <button
-          className="re-btn"
+          className="re-btn flex-shrink-0 self-start sm:self-auto"
           onClick={() => cancelMutation.mutate()}
           disabled={cancelMutation.isPending}
         >
@@ -284,14 +284,14 @@ export function ReportInProgress({
         </button>
       </div>
 
-      <div className="mt-7 grid grid-cols-4 gap-3">
+      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <LiveCount label="Mentions found" v={metrics.mentions} />
         <LiveCount label="Comments parsed" v={metrics.comments} />
         <LiveCount label="Quotes extracted" v={metrics.quotes} />
         <LiveCount label="Complaints clustered" v={metrics.complaints} />
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-4">
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div
           className="rounded-lg border"
           style={{ borderColor: "var(--border-soft)", background: "var(--surface)" }}
@@ -365,11 +365,10 @@ export function ReportInProgress({
           </div>
           <div
             ref={logRef}
-            className="font-mono-feat overflow-y-auto p-3.5"
+            className="font-mono-feat overflow-y-auto overflow-x-hidden p-3.5 h-60 sm:h-[360px]"
             style={{
               fontSize: 11.5,
               lineHeight: 1.6,
-              height: 360,
               color: "var(--fg-muted)",
             }}
           >
@@ -378,11 +377,11 @@ export function ReportInProgress({
             ) : (
               events.map((ev, i) => (
                 <div key={i} className="flex gap-2.5">
-                  <span style={{ color: "var(--fg-faint)" }}>
+                  <span className="flex-shrink-0" style={{ color: "var(--fg-faint)" }}>
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span
-                    className="flex-1"
+                    className="flex-1 min-w-0 break-words"
                     style={{ color: eventColor(ev) }}
                   >
                     {eventLine(ev)}
@@ -419,8 +418,8 @@ export function ReportInProgress({
             }}
           />
         </div>
-        <div className="mt-2 flex justify-between font-mono-feat text-[11px]">
-          <span className="text-fg-faint">
+        <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 font-mono-feat text-[11px]">
+          <span className="text-fg-faint flex-shrink-0">
             ELAPSED {Math.floor(elapsed / 60)}m {elapsed % 60}s
           </span>
           {done ? (
@@ -428,7 +427,7 @@ export function ReportInProgress({
               ✓ scan complete — opening report
             </span>
           ) : failed ? (
-            <span style={{ color: "var(--destructive)" }}>
+            <span className="min-w-0 break-words" style={{ color: "var(--destructive)" }}>
               ✕ pipeline failed — {report.error ?? "unknown error"}
             </span>
           ) : (

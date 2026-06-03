@@ -7,11 +7,11 @@ export function StageIndicator({ stage, status }: { stage?: Stage; status?: stri
   const activeStep = stage === "clustering" ? 2 : stage === "scraping" ? 1 : 0;
 
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
       {steps.map((step, i) => (
         <div key={step} className="flex items-center gap-2">
           <div
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-mono ${
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-mono ${
               i < activeStep
                 ? "bg-primary text-primary-foreground"
                 : i === activeStep

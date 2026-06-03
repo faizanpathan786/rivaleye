@@ -7,7 +7,7 @@ import EmailForm from '~/components/react/EmailForm';
 <section
   id="cta"
   aria-labelledby="cta-heading"
-  class="relative bg-[var(--color-bg-0)] py-28 md:py-40 border-t border-[var(--color-line-1)] overflow-hidden"
+  class="relative bg-[var(--color-bg-0)] py-16 sm:py-28 md:py-40 border-t border-[var(--color-line-1)] overflow-hidden"
 >
   {/* Atmospheric backdrop */}
   <div aria-hidden="true" class="absolute inset-0 -z-10">
@@ -22,9 +22,9 @@ import EmailForm from '~/components/react/EmailForm';
     <div class="absolute left-0 right-0 top-[65%] h-px bg-[var(--color-line-1)]"></div>
   </div>
 
-  <div class="mx-auto max-w-[900px] px-5 md:px-8">
+  <div class="mx-auto max-w-[900px] px-4 sm:px-6 lg:px-8">
     {/* Eyebrow */}
-    <div class="flex items-center justify-center gap-3 mb-10 reveal">
+    <div class="flex flex-wrap items-center justify-center gap-3 mb-8 sm:mb-10 reveal">
       <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime"></span>
       <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
         § 06 / get started
@@ -35,7 +35,7 @@ import EmailForm from '~/components/react/EmailForm';
     {/* Headline */}
     <h2
       id="cta-heading"
-      class="display-tight text-[var(--color-fg-0)] text-center text-[clamp(3rem,8vw,7rem)] mb-8 reveal"
+      class="display-tight text-[var(--color-fg-0)] text-center text-[clamp(2rem,8vw,7rem)] mb-6 sm:mb-8 reveal"
     >
       <span class="block">Find out what users</span>
       <span class="block">
@@ -47,7 +47,7 @@ import EmailForm from '~/components/react/EmailForm';
 
     {/* Subline */}
     <p
-      class="text-center text-[17px] md:text-[19px] leading-[1.55] text-[var(--color-fg-2)] max-w-[56ch] mx-auto mb-12 reveal"
+      class="text-center text-[15px] sm:text-[17px] md:text-[19px] leading-[1.55] text-[var(--color-fg-2)] max-w-[56ch] mx-auto mb-8 sm:mb-12 reveal"
     >
       Join early access and generate your first competitor perception report. No sales call required. Start with one competitor.
     </p>
@@ -82,7 +82,7 @@ import EmailForm from '~/components/react/EmailForm';
             ready
           </span>
         </div>
-        <div class="p-6 md:p-7">
+        <div class="p-4 sm:p-6 md:p-7">
           <EmailForm client:visible />
         </div>
       </div>
@@ -90,7 +90,7 @@ import EmailForm from '~/components/react/EmailForm';
 
     {/* Trust strip */}
     <ul
-      class="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-[640px] mx-auto reveal-stagger"
+      class="mt-10 sm:mt-14 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-[640px] mx-auto reveal-stagger"
     >
       {
         [
@@ -113,7 +113,7 @@ import EmailForm from '~/components/react/EmailForm';
 
     {/* Footnote */}
     <p
-      class="mt-12 text-center font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)]"
+      class="mt-10 sm:mt-12 text-center font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)] break-words"
     >
       ↳ 312 product teams scanning right now
     </p>

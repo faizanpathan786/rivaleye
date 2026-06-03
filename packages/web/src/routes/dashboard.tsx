@@ -44,16 +44,16 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
+      <div className="px-4 py-5 pb-14 md:px-7 w-full max-w-[1280px] mx-auto">
         <Skeleton style={{ height: 80, marginBottom: 20 }} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           <Skeleton style={{ height: 90 }} />
           <Skeleton style={{ height: 90 }} />
           <Skeleton style={{ height: 90 }} />
           <Skeleton style={{ height: 90 }} />
         </div>
         <Skeleton style={{ height: 280, marginBottom: 20 }} />
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4">
           <Skeleton style={{ height: 320 }} />
           <Skeleton style={{ height: 320 }} />
         </div>
@@ -63,7 +63,7 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
+      <div className="px-4 py-5 pb-14 md:px-7 w-full max-w-[1280px] mx-auto">
         <div
           className="re-card"
           style={{
@@ -90,20 +90,20 @@ export function DashboardPage() {
     stats?.avg_sentiment != null && stats.avg_sentiment < -0.15 ? "neg" : "default";
 
   return (
-    <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
+    <div className="px-4 py-5 pb-14 md:px-7 w-full max-w-[1280px] mx-auto">
       {/* Hero row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
-        <div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-5">
+        <div className="min-w-0">
           <div className="re-eyebrow">WORKSPACE / stitchworks</div>
           <h1 className="re-h1" style={{ marginTop: 8 }}>
             Good morning{user?.name ? `, ${user.name}` : ""}.
           </h1>
-          <p className="text-fg-muted" style={{ marginTop: 6, maxWidth: 600 }}>
+          <p className="text-fg-muted break-words" style={{ marginTop: 6, maxWidth: 600 }}>
             {stats?.total_competitors ?? 0} competitors analysed · {stats?.total_reports ?? 0} reports ·{" "}
             {stats?.total_radar_events ?? 0} radar events
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex gap-2 flex-wrap shrink-0">
           <button className="re-btn" onClick={() => onNav("compare")}>
             <Icon name="compare" size={14} /> Compare two
           </button>
@@ -118,12 +118,7 @@ export function DashboardPage() {
         const showRadar = (stats?.total_radar_events ?? 0) > 0;
         return (
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: showRadar ? "repeat(4, 1fr)" : "repeat(3, 1fr)",
-              gap: 12,
-              marginBottom: 20,
-            }}
+            className={`grid grid-cols-2 gap-3 mb-5 ${showRadar ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
           >
             <StatTile
               label="Competitors analysed"
@@ -159,7 +154,7 @@ export function DashboardPage() {
 
       {/* Recent reports */}
       <div className="re-card">
-        <div className="re-card-hd">
+        <div className="re-card-hd flex-wrap gap-2">
           <h3>Recent reports</h3>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button className="re-btn re-btn-ghost re-btn-sm">
@@ -171,7 +166,9 @@ export function DashboardPage() {
           </div>
         </div>
 
+        <div className="overflow-x-auto">
         <div
+          className="min-w-[720px]"
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
@@ -213,6 +210,7 @@ export function DashboardPage() {
             return (
               <div
                 key={r.id}
+                className="min-w-[720px]"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
@@ -226,10 +224,10 @@ export function DashboardPage() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                   <CompetitorAvatar name={name} />
-                  <div>
-                    <div style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="truncate" style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
                     <div className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
                       {r.status}
                     </div>
@@ -286,12 +284,13 @@ export function DashboardPage() {
             );
           })
         )}
+        </div>
       </div>
 
       {/* Two-column bottom */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16, marginTop: 20 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4 mt-5">
         <div className="re-card">
-          <div className="re-card-hd">
+          <div className="re-card-hd flex-wrap gap-2">
             <h3>
               <span className="re-dot re-dot-live" /> Radar — competitor moves
             </h3>
@@ -407,7 +406,7 @@ export function DashboardPage() {
         </div>
 
         <div className="re-card">
-          <div className="re-card-hd">
+          <div className="re-card-hd flex-wrap gap-2">
             <h3>Opportunity hopper</h3>
             <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
               cross-competitor
@@ -433,14 +432,14 @@ export function DashboardPage() {
                   border: "1px solid var(--border-soft)",
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{t}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="break-words" style={{ fontSize: 13, fontWeight: 500 }}>{t}</div>
                   <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
                     signal from {c}
                   </div>
                 </div>
                 <span
-                  className={p === "high" ? "re-chip re-chip-accent" : "re-chip"}
+                  className={`shrink-0 ${p === "high" ? "re-chip re-chip-accent" : "re-chip"}`}
                   style={{ fontSize: 10 }}
                 >
                   {p} payoff

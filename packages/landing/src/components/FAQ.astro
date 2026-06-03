@@ -90,7 +90,7 @@ const faqs = [
 
         <a
           href="mailto:hi@rivaleye.io"
-          class="inline-flex items-center gap-2 border border-[var(--color-line-2)] bg-[var(--color-bg-1)] px-4 py-3 font-mono text-[11px] font-medium tracking-[0.18em] uppercase text-[var(--color-fg-1)] hover:border-[var(--color-line-3)] hover:bg-[var(--color-bg-2)] transition-colors"
+          class="inline-flex w-full sm:w-auto items-center justify-center sm:justify-start gap-2 border border-[var(--color-line-2)] bg-[var(--color-bg-1)] px-4 py-3 font-mono text-[11px] font-medium tracking-[0.18em] uppercase text-[var(--color-fg-1)] hover:border-[var(--color-line-3)] hover:bg-[var(--color-bg-2)] transition-colors"
         >
           <span>Ask a new question</span>
           <span class="text-[var(--color-lime)]">↗</span>
@@ -103,11 +103,11 @@ const faqs = [
           {
             faqs.map((item, i) => (
               <details class="group border-b border-[var(--color-line-2)]" name="faq">
-                <summary class="flex items-start gap-4 md:gap-6 py-6 md:py-7 cursor-pointer list-none hover:bg-[var(--color-bg-1)]/40 transition-colors">
+                <summary class="flex items-start gap-3 sm:gap-4 md:gap-6 py-5 md:py-7 cursor-pointer list-none hover:bg-[var(--color-bg-1)]/40 transition-colors">
                   <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-4)] pt-1.5 whitespace-nowrap">
                     Q.{String(i + 1).padStart(2, '0')}
                   </span>
-                  <span class="font-display text-[19px] md:text-[22px] font-medium text-[var(--color-fg-0)] tracking-tight leading-[1.3] flex-1">
+                  <span class="font-display text-[17px] sm:text-[19px] md:text-[22px] font-medium text-[var(--color-fg-0)] tracking-tight leading-[1.3] flex-1 break-words">
                     {item.q}
                   </span>
                   <span
@@ -117,12 +117,12 @@ const faqs = [
                     +
                   </span>
                 </summary>
-                <div class="pl-[3.75rem] md:pl-[5rem] pr-10 pb-7 -mt-2">
-                  <div class="flex items-start gap-4 md:gap-6">
-                    <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-lime)] pt-1 whitespace-nowrap -ml-[3.75rem] md:-ml-[5rem]">
+                <div class="pl-[3.25rem] sm:pl-[3.75rem] md:pl-[5rem] pr-1 sm:pr-6 md:pr-10 pb-7 -mt-2">
+                  <div class="flex items-start gap-3 sm:gap-4 md:gap-6">
+                    <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-lime)] pt-1 whitespace-nowrap -ml-[3.25rem] sm:-ml-[3.75rem] md:-ml-[5rem]">
                       A.{String(i + 1).padStart(2, '0')}
                     </span>
-                    <p class="text-[15px] md:text-[16px] leading-[1.65] text-[var(--color-fg-2)] max-w-[64ch]">
+                    <p class="text-[15px] md:text-[16px] leading-[1.65] text-[var(--color-fg-2)] max-w-[64ch] break-words">
                       {item.a}
                     </p>
                   </div>

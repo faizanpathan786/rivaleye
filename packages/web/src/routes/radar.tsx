@@ -99,20 +99,20 @@ export function RadarPage() {
   const error = eventsQuery.error ?? competitorsQuery.error;
 
   return (
-    <div style={{ padding: "20px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+    <div className="px-4 py-5 pb-14 md:px-7 md:pb-16" style={{ maxWidth: 1440, margin: "0 auto" }}>
       {/* Hero */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 20 }}>
-        <div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between" style={{ marginBottom: 20 }}>
+        <div className="min-w-0">
           <div className="re-eyebrow" style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="re-dot re-dot-live pulse-dot" /> RADAR · LIVE
           </div>
-          <h1 className="re-h1" style={{ marginTop: 8 }}>What your competitors are doing right now</h1>
+          <h1 className="re-h1 break-words" style={{ marginTop: 8 }}>What your competitors are doing right now</h1>
           <p className="text-fg-muted" style={{ marginTop: 6, maxWidth: 600, fontSize: 13, lineHeight: 1.55 }}>
             We monitor LinkedIn, X, YouTube, Product Hunt, blogs, changelogs, Reddit, and G2 for every
             tracked competitor. Anything they ship, leak, or stumble over — you see it first.
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-wrap gap-2 md:flex-shrink-0">
           <button className="re-btn">
             <Icon name="settings" size={14} /> Alert rules
           </button>
@@ -144,7 +144,7 @@ export function RadarPage() {
           </button>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 12, marginBottom: 20 }}>
           <RadarStat label="Active monitors" value={activeMonitors} sub={`of ${competitors.length} competitors`} />
           <RadarStat label="Events this week" value={allEvents.length} sub="across all sources" trend="up" />
           <RadarStat label="Urgent" value={urgentCount} tone="neg" sub="needs response today" />
@@ -154,6 +154,7 @@ export function RadarPage() {
 
       {/* Live ribbon */}
       <div
+        className="flex-wrap"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border-soft)",
@@ -174,7 +175,7 @@ export function RadarPage() {
         </span>
         <span style={{ width: 1, height: 12, background: "var(--border-soft)", flexShrink: 0 }} />
         <span
-          className="text-fg-muted"
+          className="text-fg-muted min-w-0"
           style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         >
           watching <b style={{ color: "var(--fg)" }}>{activeMonitors}</b> competitors across{" "}
@@ -236,7 +237,7 @@ export function RadarPage() {
       </div>
 
       {/* Timeline + rail */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px]" style={{ gap: 16 }}>
         <div className="re-card" style={{ overflow: "hidden" }}>
           {isLoading && (
             <div style={{ padding: 0 }}>
@@ -424,10 +425,7 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
   const baseBg = ev.severity === "urgent" ? "rgba(220,38,38,0.02)" : "transparent";
 
   const rowStyle: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "70px 28px 1fr 90px 18px",
     gap: 14,
-    padding: "18px 20px",
     borderTop: first ? 0 : "1px solid var(--border-soft)",
     cursor: "pointer",
     position: "relative",
@@ -437,6 +435,7 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
   return (
     <div
       onClick={() => setExpanded(!expanded)}
+      className="grid grid-cols-[56px_1fr_18px] px-4 py-4 md:grid-cols-[70px_28px_1fr_90px_18px] md:px-5 md:py-[18px]"
       style={rowStyle}
       onMouseEnter={(e) => {
         if (!expanded) e.currentTarget.style.background = "var(--surface-2)";
@@ -468,13 +467,13 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
 
       {/* Competitor logo */}
       <div
+        className="hidden md:grid"
         style={{
           width: 28,
           height: 28,
           borderRadius: 6,
           background: competitor?.color ?? "#666",
           color: "#fff",
-          display: "grid",
           placeItems: "center",
           fontFamily: "var(--font-mono)",
           fontSize: 13,
@@ -594,7 +593,7 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
                 </div>
               </div>
             )}
-            <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+            <div className="flex-wrap" style={{ display: "flex", gap: 6, marginTop: 12 }}>
               <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
                 <Icon name="external" size={12} /> Open source
               </button>
@@ -617,7 +616,7 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
       </div>
 
       {/* Confidence */}
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
+      <div className="hidden md:flex" style={{ flexDirection: "column", justifyContent: "center", gap: 4 }}>
         <span
           className="font-mono-feat text-fg-faint"
           style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em" }}

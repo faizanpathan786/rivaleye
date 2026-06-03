@@ -18,10 +18,10 @@ function WordList({
         {words.map((w) => (
           <li
             key={w.word}
-            className="flex items-center justify-between text-sm"
+            className="flex items-center justify-between gap-2 text-sm"
           >
-            <span className={accent}>{w.word}</span>
-            <span className="font-mono tabular-nums text-muted-foreground">
+            <span className={`${accent} min-w-0 break-words`}>{w.word}</span>
+            <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
               {w.count}
             </span>
           </li>
@@ -88,7 +88,7 @@ export function VoiceOfCustomerSection({ reportId }: { reportId: string }) {
                     className="flex gap-2 text-sm text-muted-foreground"
                   >
                     <span className="text-border shrink-0">·</span>
-                    <span>{p}</span>
+                    <span className="min-w-0 break-words">{p}</span>
                   </li>
                 ))}
               </ul>

@@ -10,9 +10,11 @@ export function HistoryPage() {
   const { data, isLoading, isError, error } = useReportsQuery();
 
   return (
-    <div style={{ padding: "20px 28px 60px", maxWidth: 1280, margin: "0 auto" }}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <div
+      className="mx-auto w-full max-w-[1280px] px-4 py-5 pb-12 md:px-7 md:py-5 md:pb-[60px]"
+    >
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
+        <div className="min-w-0">
           <div className="re-eyebrow">HISTORY</div>
           <h1 className="re-h1" style={{ marginTop: 8 }}>
             Scan history

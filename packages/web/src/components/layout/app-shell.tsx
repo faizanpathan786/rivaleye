@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { useMeQuery } from "@/hooks/queries/use-me";
@@ -68,8 +69,17 @@ export function AppShell() {
   const meQuery = useMeQuery();
   const userInitial = initialOf(meQuery.data?.name ?? meQuery.data?.email);
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
+
   return (
-    <div className="app grid h-full" style={{ gridTemplateColumns: "212px 1fr", gridTemplateRows: "52px 1fr", position: "relative" }}>
+    <div
+      className="app relative grid h-full md:[grid-template-columns:212px_1fr] [grid-template-columns:1fr]"
+      style={{ gridTemplateRows: "52px 1fr" }}
+    >
       <div className="dot-grid-bg absolute inset-0 pointer-events-none" />
       <TopBar
         crumbs={crumbs}
@@ -77,8 +87,19 @@ export function AppShell() {
         onBrandClick={() => navigate("/")}
         onNewScan={() => navigate("/scan")}
         onAccount={() => navigate("/account")}
+        onToggleMenu={() => setDrawerOpen((v) => !v)}
       />
-      <Sidebar />
+
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setDrawerOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      <Sidebar open={drawerOpen} />
+
       <main className="main relative z-[1] overflow-y-auto overflow-x-hidden bg-transparent">
         <Outlet />
       </main>
@@ -92,17 +113,27 @@ interface TopBarProps {
   onBrandClick: () => void;
   onNewScan: () => void;
   onAccount: () => void;
+  onToggleMenu: () => void;
 }
 
-function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount }: TopBarProps) {
+function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount, onToggleMenu }: TopBarProps) {
   return (
     <header
-      className="topbar glass-blur relative z-[5] flex items-center gap-4 border-b border-soft px-4"
+      className="topbar glass-blur relative z-[5] flex items-center gap-3 md:gap-4 border-b border-soft px-4"
       style={{ gridColumn: "1 / -1", background: "var(--glass)" }}
     >
+      <button
+        className="re-btn re-btn-ghost re-btn-icon re-btn-sm md:hidden grid place-items-center"
+        style={{ minWidth: 36, minHeight: 36 }}
+        onClick={onToggleMenu}
+        title="Menu"
+        aria-label="Toggle menu"
+      >
+        <Icon name="list" size={18} />
+      </button>
       <div
-        className="brand flex items-center gap-2.5 cursor-pointer font-mono-feat font-semibold tracking-[-0.01em]"
-        style={{ width: 180, fontSize: 13 }}
+        className="brand flex items-center gap-2.5 cursor-pointer font-mono-feat font-semibold tracking-[-0.01em] md:w-[180px]"
+        style={{ fontSize: 13 }}
         onClick={onBrandClick}
       >
         <div className="logo relative grid place-items-center" style={{ width: 28, height: 28 }}>
@@ -111,24 +142,24 @@ function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount }: Top
         <span className="flex items-baseline tracking-[-0.02em]">
           Rival<span style={{ color: "var(--accent)" }}>Eye</span>
         </span>
-        <span className="re-chip" style={{ marginLeft: 6, fontSize: 10, padding: "1px 6px" }}>BETA</span>
+        <span className="re-chip hidden sm:inline" style={{ marginLeft: 6, fontSize: 10, padding: "1px 6px" }}>BETA</span>
       </div>
-      <nav className="crumbs flex items-center gap-2 flex-1 font-mono-feat text-fg-muted" style={{ fontSize: 12 }}>
+      <nav className="crumbs hidden md:flex items-center gap-2 flex-1 font-mono-feat text-fg-muted min-w-0" style={{ fontSize: 12 }}>
         {crumbs.map((c, i) => (
-          <span key={i} className="flex items-center gap-2">
+          <span key={i} className="flex items-center gap-2 min-w-0">
             {i > 0 && <span className="text-fg-faint">/</span>}
             {i === crumbs.length - 1
-              ? <b className="text-fg font-medium">{c}</b>
-              : <span>{c}</span>}
+              ? <b className="text-fg font-medium truncate">{c}</b>
+              : <span className="truncate">{c}</span>}
           </span>
         ))}
       </nav>
-      <div className="actions flex items-center gap-1.5">
-        <button className="re-btn re-btn-ghost re-btn-sm" title="Search">
+      <div className="actions flex flex-1 md:flex-none items-center justify-end gap-1.5">
+        <button className="re-btn re-btn-ghost re-btn-sm hidden md:flex" title="Search">
           <Icon name="search" size={14} />
           <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>⌘K</span>
         </button>
-        <span className="block" style={{ width: 1, height: 18, background: "var(--border-soft)" }} />
+        <span className="hidden md:block" style={{ width: 1, height: 18, background: "var(--border-soft)" }} />
         <button className="re-btn re-btn-sm" onClick={onNewScan}>
           <Icon name="plus" size={14} /> New scan
         </button>
@@ -162,7 +193,11 @@ const NAV_ITEMS: Array<{
   { to: "/history",     icon: "history", label: "History" },
 ];
 
-function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+}
+
+function Sidebar({ open }: SidebarProps) {
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
   const stats = dashboardQuery.data?.stats;
@@ -176,7 +211,9 @@ function Sidebar() {
 
   return (
     <aside
-      className="sidebar glass-blur flex flex-col gap-px overflow-y-auto border-r border-soft"
+      className={`sidebar glass-blur flex-col gap-px overflow-y-auto border-r border-soft md:flex md:static md:z-auto md:w-auto fixed inset-y-0 left-0 z-50 w-[260px] md:!flex ${
+        open ? "flex" : "hidden"
+      }`}
       style={{ background: "var(--glass)", padding: "10px 8px" }}
     >
       {NAV_ITEMS.map((item) => {

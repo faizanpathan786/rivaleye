@@ -25,11 +25,13 @@ export function SourceEvidenceSection({ reportId }: { reportId: string }) {
         <div className="w-full divide-y divide-border rounded-md border border-border">
           {data.map((thread) => (
             <details key={thread.id} className="group">
-              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 [&::-webkit-details-marker]:hidden">
-                <span className="truncate">{thread.title}</span>
-                <span className="ml-2 flex shrink-0 items-center gap-2 text-muted-foreground">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-3 text-sm font-medium hover:bg-muted/50 md:px-4 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0 flex-1 truncate">{thread.title}</span>
+                <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
                   {thread.source ? (
-                    <span className="font-mono text-xs">{thread.source}</span>
+                    <span className="hidden max-w-[120px] truncate font-mono text-xs sm:inline">
+                      {thread.source}
+                    </span>
                   ) : null}
                   <span className="font-mono tabular-nums text-xs">
                     {thread.score}
@@ -39,7 +41,7 @@ export function SourceEvidenceSection({ reportId }: { reportId: string }) {
                   </span>
                 </span>
               </summary>
-              <div className="space-y-2 px-4 pb-3 pt-1">
+              <div className="space-y-2 px-3 pb-3 pt-1 md:px-4">
                 {thread.excerpt ? (
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {thread.excerpt}
@@ -50,7 +52,7 @@ export function SourceEvidenceSection({ reportId }: { reportId: string }) {
                     href={thread.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-mono text-xs text-primary hover:underline"
+                    className="block break-all font-mono text-xs text-primary hover:underline"
                   >
                     {thread.url}
                   </a>

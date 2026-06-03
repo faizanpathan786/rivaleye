@@ -11,7 +11,7 @@ export function PainClusterCard({ complaint }: PainClusterCardProps) {
       className="rounded-xl border border-border bg-card p-5 space-y-3"
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-base leading-snug">
+        <h3 className="min-w-0 break-words font-semibold text-base leading-snug">
           {complaint.title}
         </h3>
         {complaint.tag ? (
@@ -29,13 +29,13 @@ export function PainClusterCard({ complaint }: PainClusterCardProps) {
       </div>
 
       {complaint.summary ? (
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed break-words">
           {complaint.summary}
         </p>
       ) : null}
 
       {complaint.sample ? (
-        <blockquote className="border-l-2 border-muted pl-3 text-sm text-foreground/80 italic">
+        <blockquote className="border-l-2 border-muted pl-3 text-sm text-foreground/80 italic break-words">
           "{complaint.sample}"
         </blockquote>
       ) : null}

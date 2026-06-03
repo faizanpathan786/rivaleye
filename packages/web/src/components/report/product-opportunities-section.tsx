@@ -32,8 +32,8 @@ export function ProductOpportunitiesSection({
         <h2 className="text-xl font-semibold tracking-tight">
           Product Opportunities
         </h2>
-        <div className="flex items-center gap-3 text-sm text-destructive">
-          <span>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
+          <span className="min-w-0 break-words">
             {(error as Error)?.message ?? "Failed to load opportunities."}
           </span>
           <button
@@ -60,10 +60,10 @@ export function ProductOpportunitiesSection({
             <span className="font-mono text-primary shrink-0 tabular-nums">
               {i + 1}.
             </span>
-            <div className="flex-1 space-y-1">
-              <div className="font-medium">{opp.title}</div>
-              <div className="text-sm text-muted-foreground">{opp.thesis}</div>
-              <div className="flex gap-3 text-xs text-muted-foreground font-mono uppercase">
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="font-medium break-words">{opp.title}</div>
+              <div className="text-sm text-muted-foreground break-words">{opp.thesis}</div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground font-mono uppercase">
                 {opp.effort && <span>effort: {opp.effort}</span>}
                 {opp.payoff && <span>payoff: {opp.payoff}</span>}
                 {opp.anchor_complaint_id && (

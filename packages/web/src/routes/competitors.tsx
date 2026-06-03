@@ -202,16 +202,9 @@ function Toggle({
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "120px 1fr",
-        gap: 12,
-        alignItems: "center",
-      }}
-    >
+    <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1.5 sm:gap-3 sm:items-center">
       <span style={{ fontSize: 12, color: "var(--fg-muted)" }}>{label}</span>
-      <div>{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
@@ -552,14 +545,13 @@ function CompetitorDrawer({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="fade-up"
+        className="fade-up w-[94vw] sm:w-[540px]"
         style={{
           position: "absolute",
           top: 0,
           right: 0,
           bottom: 0,
-          width: 540,
-          maxWidth: "90vw",
+          maxWidth: "100vw",
           background: "var(--surface)",
           borderLeft: "1px solid var(--border-soft)",
           display: "flex",
@@ -568,6 +560,7 @@ function CompetitorDrawer({
         }}
       >
         <div
+          className="shrink-0"
           style={{
             padding: "16px 20px",
             borderBottom: "1px solid var(--border-soft)",
@@ -608,7 +601,8 @@ function CompetitorDrawer({
         </div>
 
         <div
-          style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}
+          className="px-4 py-4 md:px-6 md:py-5"
+          style={{ flex: 1, overflowY: "auto" }}
         >
           <Section label="BASICS">
             <Row label="Name">
@@ -841,12 +835,9 @@ function CompetitorDrawer({
         </div>
 
         <div
+          className="px-4 py-3 md:px-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:items-center shrink-0"
           style={{
-            padding: "12px 24px",
             borderTop: "1px solid var(--border-soft)",
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 8,
           }}
         >
           <button
@@ -857,7 +848,7 @@ function CompetitorDrawer({
           >
             Delete competitor
           </button>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="flex gap-2 justify-end">
             <button type="button" className="re-btn" onClick={onClose}>
               Cancel
             </button>
@@ -964,9 +955,8 @@ function AddCompetitorModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="fade-up"
+        className="fade-up w-full max-w-[480px] max-h-[90vh] flex flex-col"
         style={{
-          width: 480,
           background: "var(--surface)",
           border: "1px solid var(--border-soft)",
           borderRadius: 12,
@@ -975,6 +965,7 @@ function AddCompetitorModal({
         }}
       >
         <div
+          className="shrink-0"
           style={{
             padding: "16px 20px",
             borderBottom: "1px solid var(--border-soft)",
@@ -1005,7 +996,7 @@ function AddCompetitorModal({
             <Icon name="x" size={14} />
           </button>
         </div>
-        <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="overflow-y-auto" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
           <Row label="Name *">
             <input
               className="re-input"
@@ -1092,6 +1083,7 @@ function AddCompetitorModal({
           </div>
         </div>
         <div
+          className="shrink-0"
           style={{
             padding: "12px 20px",
             borderTop: "1px solid var(--border-soft)",
@@ -1123,7 +1115,7 @@ function CompetitorsSkeleton() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))",
         gap: 12,
       }}
     >
@@ -1232,29 +1224,22 @@ export function CompetitorsPage() {
 
   return (
     <div
+      className="px-4 pt-4 pb-12 md:px-7 md:pt-5"
       style={{
-        padding: "20px 28px 60px",
         maxWidth: 1280,
         margin: "0 auto",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: 24,
-        }}
-      >
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end sm:gap-3 mb-6">
+        <div className="min-w-0">
           <div className="re-eyebrow">COMPETITORS</div>
           <h1 className="re-h1" style={{ marginTop: 8 }}>
             Tracked competitors
           </h1>
           <p
+            className="max-w-full sm:max-w-[560px]"
             style={{
               marginTop: 6,
-              maxWidth: 560,
               color: "var(--fg-muted)",
               fontSize: 13,
             }}
@@ -1265,30 +1250,22 @@ export function CompetitorsPage() {
         </div>
         <button
           type="button"
-          className="re-btn re-btn-accent"
+          className="re-btn re-btn-accent w-full sm:w-auto shrink-0"
           onClick={() => setShowAdd(true)}
         >
           <Icon name="plus" size={14} /> Add competitor
         </button>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 mb-4">
         <div
+          className="w-full md:flex-1 md:max-w-[320px]"
           style={{
             display: "flex",
             alignItems: "center",
             gap: 8,
             padding: "0 10px",
             height: 32,
-            flex: 1,
-            maxWidth: 320,
             border: "1px solid var(--border-strong)",
             borderRadius: 6,
             background: "var(--surface)",
@@ -1301,6 +1278,7 @@ export function CompetitorsPage() {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               flex: 1,
+              minWidth: 0,
               border: 0,
               background: "transparent",
               outline: "none",
@@ -1310,7 +1288,7 @@ export function CompetitorsPage() {
             }}
           />
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="flex gap-1 flex-wrap">
           {filters.map(([k, l]) => (
             <button
               key={k}
@@ -1323,9 +1301,7 @@ export function CompetitorsPage() {
             </button>
           ))}
         </div>
-        <div
-          style={{ marginLeft: "auto", display: "flex", gap: 8 }}
-        >
+        <div className="flex gap-2 md:ml-auto">
           <span
             className="font-mono-feat"
             style={{ fontSize: 11, color: "var(--fg-faint)" }}
@@ -1381,7 +1357,7 @@ export function CompetitorsPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))",
             gap: 12,
           }}
         >

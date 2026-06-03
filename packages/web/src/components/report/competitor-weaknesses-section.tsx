@@ -59,9 +59,9 @@ export function CompetitorWeaknessesSection({
             className="flex gap-2 text-sm text-muted-foreground"
           >
             <span className="text-border shrink-0">·</span>
-            <div className="flex-1 space-y-0.5">
-              <div className="text-foreground">{l.quote}</div>
-              <div className="text-xs font-mono">
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="text-foreground break-words">{l.quote}</div>
+              <div className="text-xs font-mono break-words">
                 {l.who}
                 {l.sub && ` · ${l.sub}`}
                 {l.when_label && ` · ${l.when_label}`}

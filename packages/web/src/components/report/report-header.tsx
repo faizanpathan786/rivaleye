@@ -26,8 +26,8 @@ export function ReportHeader({
   return (
     <div className="space-y-4 border-b border-border pb-6">
       {partial && failed_platforms && failed_platforms.length > 0 && (
-        <div className="flex items-center gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200">
-          <span>
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200">
+          <span className="min-w-0 break-words">
             Partial report. Missing platforms:{" "}
             <span className="font-medium">{failed_platforms.join(", ")}</span>.
           </span>
@@ -41,12 +41,14 @@ export function ReportHeader({
           )}
         </div>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-start md:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="text-xl font-semibold tracking-tight md:text-2xl break-words">
+              {name}
+            </h1>
             {domain && (
-              <span className="font-mono text-sm text-muted-foreground">
+              <span className="font-mono text-sm text-muted-foreground break-all">
                 {domain}
               </span>
             )}
@@ -72,7 +74,7 @@ export function ReportHeader({
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:w-auto">
           <Metric
             label="Sources"
             value={

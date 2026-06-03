@@ -679,10 +679,10 @@ export function MarketingPage({
   if (!embedded) {
     if (reportsQuery.isLoading) {
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "48px 28px", maxWidth: 800, margin: "0 auto" }}>
-          <Skeleton style={{ height: 32, width: 240 }} />
-          <Skeleton style={{ height: 20, width: 400 }} />
-          <Skeleton style={{ height: 20, width: 320 }} />
+        <div className="px-4 py-12 md:px-7" style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 800, margin: "0 auto" }}>
+          <Skeleton className="w-[240px] max-w-full" style={{ height: 32 }} />
+          <Skeleton className="w-[400px] max-w-full" style={{ height: 20 }} />
+          <Skeleton className="w-[320px] max-w-full" style={{ height: 20 }} />
         </div>
       );
     }
@@ -716,7 +716,7 @@ export function MarketingPage({
 
   if (embedded && data === undefined) {
     return (
-      <div style={{ padding: "48px 28px", textAlign: "center" }}>
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center" }}>
         <p style={{ color: "var(--fg-muted)", fontSize: 14 }}>
           Marketing analysis not available — pipeline did not produce this section for the current report.
         </p>
@@ -735,7 +735,7 @@ export function MarketingPage({
         <MarketingHeader competitor={COMPETITOR} range={range} setRange={setRange} />
       )}
 
-      <div style={{ padding: "22px 28px 60px", maxWidth: 1440, margin: "0 auto" }}>
+      <div className="px-4 py-4 pb-12 md:px-7 md:py-[22px] md:pb-[60px]" style={{ maxWidth: 1440, margin: "0 auto" }}>
         <MessagingSnapshot
           score={M.score}
           messaging_summary={M.messaging_summary}
@@ -779,7 +779,7 @@ export function MarketingPage({
           title="Copy-ready angles, backed by evidence"
           subtitle="Each angle ties to a real complaint cluster and lists where to deploy it."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 14 }}>
           {M.angles.map((a, i) => (
             <AngleCard key={i} a={a} index={i} openEvidence={openEvidence} />
           ))}
@@ -797,7 +797,7 @@ export function MarketingPage({
           title="The objections you'll hear — and how to answer them"
           subtitle="Frequency × suggested response. Every objection is backed by evidence."
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           {M.objections.map((o, i) => (
             <ObjectionCard key={i} o={o} openEvidence={openEvidence} />
           ))}
@@ -824,12 +824,12 @@ export function MarketingPage({
           right={
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               <input
-                className="re-input"
+                className="re-input w-full sm:w-[200px]"
                 type="text"
                 placeholder="Search quotes..."
                 value={quoteSearch}
                 onChange={(e) => setQuoteSearch(e.target.value)}
-                style={{ height: 30, fontSize: 12, width: 200 }}
+                style={{ height: 30, fontSize: 12 }}
               />
               <FilterChipMK
                 label="Filter"
@@ -871,14 +871,14 @@ interface MarketingHeaderProps {
 
 function MarketingHeader({ competitor, range, setRange }: MarketingHeaderProps) {
   return (
-    <div style={{ padding: "20px 28px 14px", borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
+    <div className="px-4 pt-5 pb-3.5 md:px-7" style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--surface)" }}>
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
         <div
-          style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6 flex-wrap"
         >
           <div>
             <div style={eyebrow}>MARKETING VIEW · POSITIONING INTELLIGENCE</div>
-            <h1 className="re-h1" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12 }}>
+            <h1 className="re-h1 flex-wrap" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12 }}>
               Marketing View
               <span
                 style={{
@@ -896,7 +896,7 @@ function MarketingHeader({ competitor, range, setRange }: MarketingHeaderProps) 
               Turn competitor user conversations into positioning, copy, and campaign angles.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div className="flex-wrap" style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
@@ -1014,7 +1014,7 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
   const factorsRecord = factorsToRecord(score.factors);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.95fr) minmax(0,1.4fr)", gap: 14 }}>
+    <div className="grid grid-cols-1 lg:[grid-template-columns:minmax(0,0.95fr)_minmax(0,1.4fr)]" style={{ gap: 14 }}>
       {/* SCORE */}
       <div className="re-card re-card-elev" style={{ position: "relative", overflow: "hidden" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
@@ -1023,7 +1023,7 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
-              style={{ fontSize: 72, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: VIO }}
+              style={{ fontSize: "clamp(48px, 12vw, 72px)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: VIO }}
             >
               {score.score}
             </span>
@@ -1080,11 +1080,12 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
             <h2
               style={{
                 margin: 0,
-                fontSize: 28,
+                fontSize: "clamp(22px, 5vw, 28px)",
                 fontWeight: 600,
                 letterSpacing: "-0.025em",
                 lineHeight: 1.1,
                 color: "var(--fg)",
+                overflowWrap: "break-word",
               }}
             >
               {bestAngle.suggested_message}
@@ -1337,8 +1338,9 @@ function PromiseRealityTable({
   openEvidence: (refs: EvidenceRef) => void;
 }) {
   return (
-    <div className="re-card" style={{ overflow: "hidden" }}>
+    <div className="re-card overflow-x-auto">
       <div
+        className="min-w-[760px]"
         style={{
           display: "grid",
           gridTemplateColumns: PR_COLS,
@@ -1361,6 +1363,7 @@ function PromiseRealityTable({
       {rows.map((r, i) => (
         <div
           key={i}
+          className="min-w-[760px]"
           style={{
             display: "grid",
             gridTemplateColumns: PR_COLS,
@@ -1491,8 +1494,8 @@ function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["compa
   return (
     <div className="re-card" style={{ overflow: "hidden" }}>
       <div
+        className="p-5 pt-12 md:p-8 md:pt-8"
         style={{
-          padding: "32px 32px 28px",
           background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
           borderBottom: "1px solid var(--border-soft)",
           position: "relative",
@@ -1510,23 +1513,24 @@ function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["compa
         <h2
           style={{
             margin: "8px 0 0",
-            fontSize: 38,
+            fontSize: "clamp(26px, 6vw, 38px)",
             fontWeight: 600,
             letterSpacing: "-0.025em",
             lineHeight: 1.1,
             maxWidth: 720,
+            overflowWrap: "break-word",
           }}
         >
           "{c.hero_angle}"
         </h2>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid var(--border-soft)" }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2" style={{ borderBottom: "1px solid var(--border-soft)" }}>
         <BuilderBlock title={`Where ${competitorName ?? "the competitor"} is strong`} tone="strong" items={c.where_competitor_is_strong} />
         <BuilderBlock title="Where users struggle" tone="weak" items={c.where_users_struggle} borderLeft />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid var(--border-soft)" }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2" style={{ borderBottom: "1px solid var(--border-soft)" }}>
         <BuilderBlock title="Choose us if..." tone="us" items={c.who_should_choose_us} />
         <BuilderBlock title="Why users look for alternatives" tone="neutral" items={c.why_users_look_for_alternatives} borderLeft />
       </div>
@@ -1657,17 +1661,16 @@ function CopyRow({
 }) {
   return (
     <div
+      className="flex flex-col lg:grid lg:[grid-template-columns:1fr_1.3fr_130px_auto_90px] lg:items-center"
       style={{
         padding: big ? "18px 18px" : "14px 18px",
         borderTop: index === 0 ? 0 : "1px solid var(--border-soft)",
-        display: "grid",
-        gridTemplateColumns: "1fr 1.3fr 130px auto 90px",
         gap: 14,
-        alignItems: "center",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div
+          className="break-words"
           style={{
             fontSize: big ? 18 : 14,
             fontWeight: big ? 600 : 500,
@@ -1751,7 +1754,7 @@ function QuoteLibrary({
           </button>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 14, gap: 12 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ padding: 14, gap: 12 }}>
         {sorted.map((q, i) => (
           <QuoteLibraryCard key={i} q={q} openEvidence={openEvidence} />
         ))}
@@ -1859,7 +1862,7 @@ function MarketingFooter({ onNav }: { onNav: (to: string) => void }) {
           quote."
         </p>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="flex-wrap" style={{ display: "flex", gap: 8 }}>
         <button type="button" className="re-btn" onClick={() => onNav("/history")}>
           <Icon name="list" size={14} /> Open full report
         </button>

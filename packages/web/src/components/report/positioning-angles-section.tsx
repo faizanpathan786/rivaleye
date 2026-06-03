@@ -34,15 +34,15 @@ export function PositioningAnglesSection({ reportId }: { reportId: string }) {
                 <span className="font-mono text-primary shrink-0 tabular-nums text-sm">
                   {i + 1}.
                 </span>
-                <h3 className="font-medium">{p.angle}</h3>
+                <h3 className="min-w-0 break-words font-medium">{p.angle}</h3>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed break-words">
                 {p.thesis}
               </p>
               {(p.audience || p.against) ? (
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground break-words">
                   {p.audience ? (
-                    <span>
+                    <span className="min-w-0 break-words">
                       <span className="font-medium text-foreground">
                         Audience:
                       </span>{" "}
@@ -50,7 +50,7 @@ export function PositioningAnglesSection({ reportId }: { reportId: string }) {
                     </span>
                   ) : null}
                   {p.against ? (
-                    <span>
+                    <span className="min-w-0 break-words">
                       <span className="font-medium text-foreground">
                         Against:
                       </span>{" "}

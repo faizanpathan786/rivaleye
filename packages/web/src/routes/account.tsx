@@ -32,27 +32,21 @@ export function AccountPage() {
   const [section, setSection] = useState<SectionKey>("profile");
 
   return (
-    <div style={{ padding: "20px 28px 60px", maxWidth: 1080, margin: "0 auto" }}>
+    <div className="w-full max-w-[1080px] mx-auto px-4 py-5 pb-14 md:px-7">
       <div className="re-eyebrow">ACCOUNT</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>
         Settings
       </h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "200px 1fr",
-          gap: 32,
-          marginTop: 20,
-        }}
-      >
-        <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-[200px_1fr] md:gap-8">
+        <nav className="flex flex-row flex-wrap gap-1 overflow-x-auto md:flex-col md:gap-0.5">
           {SECTIONS.map(([k, l]) => {
             const active = section === k;
             return (
               <button
                 key={k}
                 onClick={() => setSection(k)}
+                className="shrink-0 whitespace-nowrap md:w-full"
                 style={{
                   border: 0,
                   background: active ? "var(--hover)" : "transparent",
@@ -115,16 +109,13 @@ function Field({
 }) {
   return (
     <div
+      className="grid grid-cols-1 gap-2 sm:grid-cols-[180px_1fr] sm:items-center sm:gap-6"
       style={{
-        display: "grid",
-        gridTemplateColumns: "180px 1fr",
-        gap: 24,
-        alignItems: "center",
         padding: "12px 0",
         borderBottom: "1px solid var(--border-soft)",
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
         {hint && (
           <div className="text-fg-muted" style={{ fontSize: 11, marginTop: 2 }}>
@@ -132,7 +123,7 @@ function Field({
           </div>
         )}
       </div>
-      <div>{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
@@ -152,7 +143,7 @@ function ProfileSection() {
   return (
     <FormCard title="Profile" sub="who you are in this workspace">
       <Field label="Avatar">
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div
             style={{
               width: 44,
@@ -175,17 +166,15 @@ function ProfileSection() {
       <Field label="Name">
         <input
           key={`name-${name}`}
-          className="re-input"
+          className="re-input w-full max-w-[280px]"
           defaultValue={name}
-          style={{ width: 280 }}
         />
       </Field>
       <Field label="Email">
         <input
           key={`email-${email}`}
-          className="re-input"
+          className="re-input w-full max-w-[280px]"
           defaultValue={email}
-          style={{ width: 280 }}
           readOnly
         />
       </Field>
@@ -200,7 +189,7 @@ function ProfileSection() {
       </Field>
       <Field label="Role" hint="Used to scope what we surface in alerts">
         <Select defaultValue="pm">
-          <SelectTrigger className="re-input" style={{ width: 280 }}>
+          <SelectTrigger className="re-input w-full max-w-[280px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -239,9 +228,8 @@ function WorkspaceSection() {
     <FormCard title="Workspace" sub="stitchworks">
       <Field label="Workspace name">
         <input
-          className="re-input"
+          className="re-input w-full max-w-[280px]"
           defaultValue="Stitchworks"
-          style={{ width: 280 }}
         />
       </Field>
       <Field
@@ -263,7 +251,7 @@ function WorkspaceSection() {
       </Field>
       <Field label="Time zone">
         <Select defaultValue="America/New_York">
-          <SelectTrigger className="re-input" style={{ width: 280 }}>
+          <SelectTrigger className="re-input w-full max-w-[280px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -301,13 +289,8 @@ function BillingSection() {
   return (
     <>
       <FormCard title="Plan" sub="Studio · $49/mo">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 10,
-          }}
-        >
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+
           {tiers.map((t) => (
             <div
               key={t.n}
@@ -376,6 +359,7 @@ function BillingSection() {
       </FormCard>
       <FormCard title="Payment method">
         <div
+          className="flex-wrap"
           style={{
             display: "flex",
             alignItems: "center",
@@ -391,9 +375,10 @@ function BillingSection() {
               height: 22,
               borderRadius: 3,
               background: "var(--fg)",
+              flexShrink: 0,
             }}
           />
-          <div style={{ flex: 1 }}>
+          <div className="min-w-0" style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 500 }}>
               Visa ending 4242
             </div>
@@ -412,6 +397,7 @@ function ApiSection() {
   return (
     <FormCard title="API key" sub="programmatic access">
       <div
+        className="flex-wrap"
         style={{
           padding: 12,
           background: "var(--surface-2)",
@@ -423,7 +409,7 @@ function ApiSection() {
           gap: 12,
         }}
       >
-        <span style={{ flex: 1 }}>
+        <span className="min-w-0 break-all" style={{ flex: 1 }}>
           rk_live_••••••••••••••••••••••••••a8f4
         </span>
         <button className="re-btn re-btn-ghost re-btn-sm">Copy</button>
@@ -465,24 +451,23 @@ function DangerSection() {
   return (
     <FormCard title="Danger zone">
       <div
+        className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
         style={{
           padding: 16,
           border: "1px solid var(--neg)",
           background: "rgba(220,38,38,0.04)",
           borderRadius: "var(--r-md)",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
         }}
       >
-        <div>
+        <div className="min-w-0">
           <div style={{ fontSize: 13, fontWeight: 500 }}>Delete workspace</div>
           <div className="text-fg-muted" style={{ fontSize: 12 }}>
             This will erase all scans, reports, and alerts. Permanent.
           </div>
         </div>
         <button
-          className="re-btn"
+          className="re-btn shrink-0"
           style={{
             background: "var(--neg)",
             color: "#fff",

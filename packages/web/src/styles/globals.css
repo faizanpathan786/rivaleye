@@ -106,6 +106,13 @@
   [data-density="compact"]     { --density-row: 30px; --pad-card: 12px; --pad-card-hd: 10px 12px; --pad-page-y: 18px; }
   [data-density="comfortable"] { --density-row: 44px; --pad-card: 18px; --pad-card-hd: 16px 18px; --pad-page-y: 28px; }
 
+  @media (max-width: 1024px) {
+    :root { --pad-page-x: 20px; --pad-page-y: 18px; }
+  }
+  @media (max-width: 640px) {
+    :root { --pad-page-x: 16px; --pad-page-y: 16px; --pad-card: 12px; --pad-card-hd: 10px 12px; }
+  }
+
   * { @apply border-border; box-sizing: border-box; }
   html, body, #root { height: 100%; margin: 0; padding: 0; }
   body {
@@ -121,7 +128,10 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-wrap: anywhere;
   }
+
+  html, body { overflow-x: hidden; }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -245,8 +255,12 @@
   .re-card-elev { box-shadow: var(--shadow-md); }
   .re-card-hd {
     display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
     padding: var(--pad-card-hd);
     border-bottom: 1px solid var(--border-soft);
+  }
+  @media (max-width: 640px) {
+    .re-card-hd { flex-wrap: wrap; }
   }
   .re-card-hd h3 {
     margin: 0;
@@ -258,8 +272,8 @@
   .re-card-body { padding: var(--pad-card); }
   .re-card-body.flush { padding: 0; }
 
-  .re-h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
-  .re-h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; margin: 0; }
+  .re-h1 { font-size: clamp(22px, 6vw, 28px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
+  .re-h2 { font-size: clamp(18px, 4.5vw, 20px); font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; margin: 0; }
   .re-h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.005em; margin: 0; }
   .re-eyebrow {
     font-family: "Geist Mono", ui-monospace, monospace;

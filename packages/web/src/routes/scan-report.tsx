@@ -148,7 +148,7 @@ export function ScanReportPage() {
   // When :id is present and we are still loading or errored, show a simple state.
   if (id && isLoading) {
     return (
-      <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--fg-muted)" }}>
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
         <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>LOADING REPORT</div>
         <div style={{ fontSize: 16 }}>Fetching report sections…</div>
       </div>
@@ -157,7 +157,7 @@ export function ScanReportPage() {
 
   if (id && error) {
     return (
-      <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--neg)" }}>
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--neg)" }}>
         <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>ERROR</div>
         <div style={{ fontSize: 16 }}>Failed to load report. Please try again.</div>
       </div>
@@ -261,7 +261,7 @@ export function ScanReportPage() {
           {renderLens(lens)}
         </div>
 
-        <div style={{ height: 110 }} />
+        <div style={{ height: 140 }} />
       </div>
 
       <LensDock active={lens} onPick={goToLens} />
@@ -300,8 +300,8 @@ interface UnifiedHeaderProps {
 function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportThis, onExportAll }: UnifiedHeaderProps) {
   return (
     <div
+      className="px-4 py-4 md:px-7"
       style={{
-        padding: "18px 28px 14px",
         borderBottom: "1px solid var(--border-soft)",
         background: "var(--glass)",
         backdropFilter: "blur(18px) saturate(140%)",
@@ -312,8 +312,9 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
     >
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 0, flex: "1 1 280px" }}>
             <div
+              className="shrink-0"
               style={{
                 width: 52, height: 52, borderRadius: 12,
                 background: "#5e6ad2", color: "#fff",
@@ -325,8 +326,8 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
             >
               {c.name[0]?.toUpperCase() ?? "?"}
             </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <span className="re-eyebrow" style={{ fontSize: 10 }}>SCAN REPORT</span>
                 <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>·</span>
                 <span
@@ -340,12 +341,12 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
                   {meta.glyph} {meta.name} lens
                 </span>
               </div>
-              <h1 className="re-h1" style={{ fontSize: 24, marginTop: 4, display: "flex", alignItems: "center", gap: 10 }}>
+              <h1 className="re-h1 break-words" style={{ fontSize: "clamp(18px, 5vw, 24px)", marginTop: 4, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 {c.name}
-                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12, fontWeight: 400 }}>{c.domain}</span>
+                <span className="font-mono-feat text-fg-faint break-all" style={{ fontSize: 12, fontWeight: 400 }}>{c.domain}</span>
                 <span className="re-chip re-chip-pos" style={{ fontSize: 9 }}>FRESH</span>
               </h1>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
                 <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>SCANNED {c.scannedAt}</span>
                 <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>·</span>
                 <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
@@ -355,7 +356,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
             </div>
           </div>
 
-          <div className="no-print" style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <div className="no-print" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>RANGE</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
@@ -411,9 +412,10 @@ function ExportMenu({
           <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setOpen(false)} />
           <div
             role="menu"
+            className="w-[220px] max-w-[calc(100vw-24px)]"
             style={{
               position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50,
-              minWidth: 220, padding: 5,
+              padding: 5,
               background: "var(--surface-solid)",
               border: "1px solid var(--border-soft)",
               borderRadius: "var(--r-md)",
@@ -460,7 +462,7 @@ function ExecutiveSummary({
 }) {
   if (!data) {
     return (
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 28px 0" }}>
+      <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1280, margin: "0 auto", paddingBottom: 0 }}>
         <div className="re-card" style={{ padding: 32, textAlign: "center", color: "var(--fg-muted)" }}>
           <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>SUMMARY</div>
           <div style={{ fontSize: 16 }}>Generating executive summary…</div>
@@ -468,7 +470,7 @@ function ExecutiveSummary({
         </div>
         <div style={{ marginTop: 24 }}>
           <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 14 }}>
             {(["founder", "product", "marketing", "growth"] as const).map((id) => (
               <LensPreviewCard key={id} id={id} onPick={onPickLens} />
             ))}
@@ -482,12 +484,12 @@ function ExecutiveSummary({
   const lensColors = ["#ff5c1a", "#6366f1", "#8b5cf6"];
 
   return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 28px 0" }}>
+    <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1280, margin: "0 auto", paddingBottom: 0 }}>
       <PerceptionHero data={data} />
 
       <div style={{ marginTop: 28 }}>
         <div className="re-eyebrow" style={{ fontSize: 10 }}>EXECUTIVE MEMO</div>
-        <h2 className="re-h2" style={{ fontSize: 28, marginTop: 8, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 920 }}>
+        <h2 className="re-h2" style={{ fontSize: "clamp(20px, 5vw, 28px)", marginTop: 8, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 920 }}>
           {data.headlines.mainThesis}
         </h2>
         <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
@@ -501,7 +503,7 @@ function ExecutiveSummary({
 
       <div style={{ marginTop: 28 }}>
         <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 14 }}>
           {(["founder", "product", "marketing", "growth"] as const).map((id) => (
             <LensPreviewCard key={id} id={id} onPick={onPickLens} />
           ))}
@@ -510,14 +512,14 @@ function ExecutiveSummary({
 
       {data.topQuotes.length > 0 && (
         <div style={{ marginTop: 32 }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
             <div>
               <div className="re-eyebrow" style={{ fontSize: 10 }}>TOP QUOTES</div>
               <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>Top of mind, top of thread</h3>
             </div>
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(data.topQuotes.length, 3)}, 1fr)`, gap: 14 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
             {data.topQuotes.slice(0, 3).map((q, i) => (
               <AnchorQuote key={i} q={q} color={lensColors[i] ?? "#8b5cf6"} />
             ))}
@@ -529,7 +531,7 @@ function ExecutiveSummary({
         style={{
           marginTop: 32, padding: "22px 24px",
           background: "var(--surface)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-soft)",
-          display: "grid", gridTemplateColumns: `repeat(${2 + data.topThemes.length}, 1fr)`, gap: 24,
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 24,
         }}
       >
         <SummaryStat
@@ -573,9 +575,9 @@ function PerceptionHero({ data }: { data: SummaryData }) {
     <div className="re-card re-card-elev" style={{ overflow: "hidden", position: "relative" }}>
       <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.4 }} />
       <div
+        className="grid grid-cols-1 md:grid-cols-[auto_1fr] place-items-center md:place-items-stretch md:items-center"
         style={{
-          position: "relative", padding: 24,
-          display: "grid", gridTemplateColumns: "auto 1fr", gap: 28, alignItems: "center",
+          position: "relative", padding: 24, gap: 28,
         }}
       >
         <PerceptionRing positive={s.positive} neutral={s.neutral} negative={s.negative} index={s.overall} />
@@ -584,12 +586,12 @@ function PerceptionHero({ data }: { data: SummaryData }) {
           <div className="re-eyebrow" style={{ fontSize: 10 }}>
             WHAT USERS THINK OF {data.competitor.name.toUpperCase()}
           </div>
-          <h2 className="re-h2" style={{ fontSize: 26, marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+          <h2 className="re-h2" style={{ fontSize: "clamp(20px, 5vw, 26px)", marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             {sentimentLabel}
             {topTheme ? <>, with the loudest theme being <span style={{ color: "var(--accent)" }}>{topTheme.name.toLowerCase()}</span>.</> : "."}
           </h2>
 
-          <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4" style={{ marginTop: 18, gap: 14 }}>
             {(["founder", "product", "marketing", "growth"] as const).map((id) => {
               const m = LENS_META[id];
               return (
@@ -631,8 +633,8 @@ function PerceptionRing({ positive, neutral, negative, index }: { positive: numb
   const posLen = (positive / total) * circ;
 
   return (
-    <div style={{ position: "relative", width: 200, height: 200 }}>
-      <svg width="200" height="200" viewBox="0 0 200 200" style={{ display: "block", transform: "rotate(-90deg)" }}>
+    <div style={{ position: "relative", width: "min(200px, 60vw)", aspectRatio: "1 / 1", maxWidth: 200 }}>
+      <svg width="100%" height="100%" viewBox="0 0 200 200" style={{ display: "block", transform: "rotate(-90deg)" }}>
         <circle cx="100" cy="100" r={r} fill="none" stroke="rgba(20,16,12,0.06)" strokeWidth="16" />
         <circle cx="100" cy="100" r={r} fill="none" stroke="var(--neg)" strokeWidth="16"
           strokeDasharray={`${negLen} ${circ}`} strokeDashoffset={0} strokeLinecap="butt" />
@@ -762,9 +764,9 @@ function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => 
 
   return (
     <div
-      className="no-print"
+      className="no-print max-w-[calc(100vw-24px)] overflow-x-auto"
       style={{
-        position: "fixed", bottom: 22, left: "50%", transform: "translateX(-50%)",
+        position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)",
         zIndex: 40,
         padding: 5,
         background: "rgba(20,16,12,0.86)",
@@ -787,9 +789,9 @@ function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => 
             onMouseEnter={() => setHovered(id)}
             onMouseLeave={() => setHovered(null)}
             aria-pressed={isActive}
+            className="px-3 py-2 sm:px-3.5 shrink-0"
             style={{
               border: 0,
-              padding: "8px 14px",
               borderRadius: 99,
               cursor: "pointer",
               background: isActive ? m.color : isHov ? "rgba(255,255,255,0.08)" : "transparent",
@@ -797,6 +799,7 @@ function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => 
               display: "inline-flex", alignItems: "center", gap: 8,
               fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600,
               letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
               transition: "background 200ms, color 200ms, transform 120ms",
               transform: isActive ? "scale(1.0)" : "scale(0.98)",
             }}

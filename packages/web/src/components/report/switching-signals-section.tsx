@@ -15,10 +15,10 @@ function FlowList({
         {flows.map((flow) => (
           <li
             key={flow.partner}
-            className="flex items-center justify-between text-sm"
+            className="flex items-center justify-between gap-2 text-sm"
           >
-            <span>{flow.partner}</span>
-            <span className="font-mono tabular-nums text-muted-foreground">
+            <span className="min-w-0 break-words">{flow.partner}</span>
+            <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
               {flow.count} · {Math.round(flow.share * 100)}%
             </span>
           </li>
@@ -76,7 +76,7 @@ export function SwitchingSignalsSection({ reportId }: { reportId: string }) {
                     className="flex gap-2 text-sm text-muted-foreground"
                   >
                     <span className="text-border shrink-0">·</span>
-                    <span>{reason}</span>
+                    <span className="min-w-0 break-words">{reason}</span>
                   </li>
                 ))}
               </ul>

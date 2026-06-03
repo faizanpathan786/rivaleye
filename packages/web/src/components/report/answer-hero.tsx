@@ -11,13 +11,13 @@ export function AnswerHero({ report }: { report: ReportRow }) {
   }
 
   return (
-    <div className="space-y-4 rounded-lg border-l-4 border-primary bg-primary/5 p-6">
+    <div className="w-full min-w-0 space-y-4 rounded-lg border-l-4 border-primary bg-primary/5 p-4 md:p-6">
       {summary && (
-        <div>
+        <div className="min-w-0">
           <p className="mb-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
             What users are saying
           </p>
-          <p className="text-sm leading-relaxed">{summary}</p>
+          <p className="text-sm leading-relaxed break-words">{summary}</p>
         </div>
       )}
       {phrases.length > 0 && (
@@ -31,26 +31,26 @@ export function AnswerHero({ report }: { report: ReportRow }) {
                 <span className="shrink-0 font-mono text-primary">
                   {i + 1}→
                 </span>
-                <span className="italic">"{p}"</span>
+                <span className="min-w-0 break-words italic">"{p}"</span>
               </li>
             ))}
           </ul>
         </div>
       )}
       {wedge && (
-        <div>
+        <div className="min-w-0">
           <p className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Switching signal
           </p>
-          <p className="text-sm">{wedge}</p>
+          <p className="text-sm break-words">{wedge}</p>
         </div>
       )}
       {pricing && (
-        <div>
+        <div className="min-w-0">
           <p className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
             Pricing ask
           </p>
-          <p className="text-sm font-mono">{pricing}</p>
+          <p className="text-sm font-mono break-words">{pricing}</p>
         </div>
       )}
     </div>

@@ -44,7 +44,7 @@ export function ConfidenceIndicator({
     <span
       title={confidence.basis ?? undefined}
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium select-none",
+        "inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium select-none",
         LABEL_CLASSES[confidence.label],
         className,
       )}

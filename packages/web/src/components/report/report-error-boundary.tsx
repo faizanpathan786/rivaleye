@@ -23,23 +23,26 @@ export class ReportErrorBoundary extends React.Component<Props, State> {
   override render() {
     if (this.state.hasError) {
       return (
-        <Alert variant="destructive">
-          <AlertTitle>Something went wrong rendering the report</AlertTitle>
-          <AlertDescription className="mt-2 space-y-2">
+        <div className="mx-auto w-full max-w-[640px] px-4 py-6 md:px-0 md:py-10">
+          <Alert variant="destructive">
+            <AlertTitle className="break-words">Something went wrong rendering the report</AlertTitle>
+            <AlertDescription className="mt-2 space-y-2">
             <p className="text-sm">The report data loaded but could not be displayed.</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href).then(() => {
-                  toast.success("Link copied!");
-                }).catch(() => void 0);
-              }}
-            >
-              Copy report link
-            </Button>
-          </AlertDescription>
-        </Alert>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href).then(() => {
+                    toast.success("Link copied!");
+                  }).catch(() => void 0);
+                }}
+              >
+                Copy report link
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
       );
     }
     return this.props.children;

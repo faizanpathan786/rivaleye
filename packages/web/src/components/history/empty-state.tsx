@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 px-4 py-10 text-center md:py-16">
       <p className="text-muted-foreground">No scans yet.</p>
       <Link
         to="/scan"

@@ -50,7 +50,7 @@ export function ReportPage() {
 
   if (query.isLoading || !query.data) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <ReportSkeleton />
       </div>
     );
@@ -58,7 +58,7 @@ export function ReportPage() {
 
   if (query.isError) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         <Alert variant="destructive">
           <AlertTitle>Could not load report</AlertTitle>
           <AlertDescription>
@@ -153,7 +153,7 @@ function PainReport({
       />
 
       <div
-        className="sticky top-0 z-[4] flex flex-wrap items-center gap-2.5 border-b px-7 py-2"
+        className="sticky top-0 z-[4] flex flex-wrap items-center gap-2.5 border-b px-4 py-2 md:px-7"
         style={{ background: "var(--bg)", borderColor: "var(--border-soft)" }}
       >
         <div className="ml-auto flex gap-1.5">
@@ -170,14 +170,14 @@ function PainReport({
       </div>
 
       <div
-        className="flex gap-1 overflow-x-auto px-7"
+        className="flex gap-1 overflow-x-auto px-4 md:px-7"
         style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg)" }}
       >
         {tabs.map(([k, label]) => (
           <button
             key={k}
             onClick={() => setTab(k)}
-            className="relative cursor-pointer border-0 bg-transparent py-3 pr-4 text-[13px]"
+            className="relative cursor-pointer whitespace-nowrap border-0 bg-transparent py-3 pr-4 text-[13px]"
             style={{
               color: tab === k ? "var(--fg)" : "var(--fg-muted)",
               fontWeight: tab === k ? 500 : 400,
@@ -191,7 +191,7 @@ function PainReport({
         ))}
       </div>
 
-      <div className="mx-auto max-w-[1440px] px-7 pb-16 pt-5">
+      <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-5 md:px-7">
         {tab === "overview" && (
           <OverviewTab
             report={report}
@@ -252,7 +252,7 @@ function ReportHeader({
 
   return (
     <div
-      className="px-7 pb-3 pt-5"
+      className="px-4 pb-3 pt-5 md:px-7"
       style={{ borderBottom: "1px solid var(--border-soft)" }}
     >
       {partial && failed_platforms && failed_platforms.length > 0 && (
@@ -272,21 +272,21 @@ function ReportHeader({
         </div>
       )}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 items-center gap-4">
           <div
-            className="grid h-14 w-14 place-items-center rounded-xl font-mono-feat text-2xl font-semibold text-white shadow-soft"
+            className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl font-mono-feat text-xl font-semibold text-white shadow-soft md:h-14 md:w-14 md:text-2xl"
             style={{ background: "#5e6ad2" }}
           >
             {initial}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="re-eyebrow">
               INTELLIGENCE REPORT · {(report.category ?? "").toUpperCase()}
             </div>
-            <h1 className="re-h1 mt-1.5 flex items-center gap-3">
+            <h1 className="re-h1 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 break-words">
               {name}
               {domain && (
-                <span className="font-mono-feat text-sm font-normal text-fg-faint">
+                <span className="break-all font-mono-feat text-sm font-normal text-fg-faint">
                   {domain}
                 </span>
               )}
@@ -586,7 +586,7 @@ function ComplaintsCard({
                 onClick={() => setExpanded(isExp ? null : cp.id)}
                 className="grid w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-4 py-3.5 text-left hover:bg-hover"
                 style={{
-                  gridTemplateColumns: "24px 1fr auto auto 60px 14px",
+                  gridTemplateColumns: "24px minmax(0,1fr) auto auto 48px 14px",
                 }}
               >
                 <span
@@ -596,8 +596,8 @@ function ComplaintsCard({
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="break-words" style={{ fontSize: 14, fontWeight: 500 }}>
                       {cp.title}
                     </span>
                     {cp.tag && (
@@ -639,12 +639,7 @@ function ComplaintsCard({
               </button>
               {isExp && (
                 <div
-                  className="fade-up grid gap-4 pb-4"
-                  style={{
-                    gridTemplateColumns: "1.4fr 1fr",
-                    paddingLeft: 52,
-                    paddingRight: 16,
-                  }}
+                  className="fade-up grid grid-cols-1 gap-4 pb-4 pl-4 pr-4 md:grid-cols-[1.4fr_1fr] md:pl-[52px]"
                 >
                   <div>
                     {cp.summary && (
@@ -1021,9 +1016,9 @@ function FeatureGapsCard({ featureGaps }: { featureGaps: FeatureGap[] }) {
           <div
             key={g.id}
             className="grid items-center gap-2"
-            style={{ gridTemplateColumns: "1fr 70px 36px" }}
+            style={{ gridTemplateColumns: "minmax(0,1fr) 70px 36px" }}
           >
-            <span style={{ fontSize: 12 }}>{g.feature}</span>
+            <span className="truncate" style={{ fontSize: 12 }}>{g.feature}</span>
             <div className="re-meter">
               <i
                 style={{
@@ -1160,10 +1155,10 @@ function WordCard({
           <div
             key={w.word}
             className="grid items-center gap-2.5"
-            style={{ gridTemplateColumns: "120px 1fr 40px" }}
+            style={{ gridTemplateColumns: "minmax(80px,120px) 1fr 40px" }}
           >
             <span
-              className="font-mono-feat"
+              className="truncate font-mono-feat"
               style={{
                 fontSize: 13,
                 color: tone === "neg" ? "var(--neg)" : undefined,
@@ -1382,10 +1377,12 @@ function LeadsCard({ leads }: { leads: LeadRow[] }) {
           users actively signaling switch
         </span>
       </div>
+      <div className="overflow-x-auto">
       <div
         className="grid items-center gap-3.5 px-5 py-2.5 font-mono-feat text-[10px] uppercase text-fg-faint"
         style={{
-          gridTemplateColumns: "120px 160px 1fr 70px 110px",
+          gridTemplateColumns: "120px 160px minmax(180px,1fr) 70px 110px",
+          minWidth: 760,
           borderBottom: "1px solid var(--border-soft)",
           letterSpacing: "0.08em",
         }}
@@ -1401,7 +1398,8 @@ function LeadsCard({ leads }: { leads: LeadRow[] }) {
           key={l.id}
           className="grid cursor-pointer items-center gap-3.5 px-5 py-4 hover:bg-hover"
           style={{
-            gridTemplateColumns: "120px 160px 1fr 70px 110px",
+            gridTemplateColumns: "120px 160px minmax(180px,1fr) 70px 110px",
+            minWidth: 760,
             borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
           }}
         >
@@ -1449,6 +1447,7 @@ function LeadsCard({ leads }: { leads: LeadRow[] }) {
           </button>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -1468,9 +1467,8 @@ function PositioningCard({ positioning }: { positioning: Positioning[] }) {
         {positioning.map((p, i) => (
           <div
             key={p.id}
-            className="grid items-start gap-5 px-7 py-6"
+            className="grid grid-cols-[auto_1fr] items-start gap-x-5 gap-y-3 px-4 py-5 md:grid-cols-[auto_1fr_auto] md:px-7 md:py-6"
             style={{
-              gridTemplateColumns: "auto 1fr auto",
               borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
             }}
           >
@@ -1487,9 +1485,9 @@ function PositioningCard({ positioning }: { positioning: Positioning[] }) {
             >
               {String(i + 1).padStart(2, "0")}
             </span>
-            <div>
+            <div className="min-w-0">
               <h3
-                className="m-0"
+                className="m-0 break-words"
                 style={{
                   fontSize: 20,
                   fontWeight: 500,
@@ -1518,7 +1516,9 @@ function PositioningCard({ positioning }: { positioning: Positioning[] }) {
                 )}
               </div>
             </div>
-            <button className="re-btn re-btn-sm">Copy</button>
+            <button className="re-btn re-btn-sm col-start-2 justify-self-start md:col-start-auto md:justify-self-auto">
+              Copy
+            </button>
           </div>
         ))}
       </div>
@@ -1545,9 +1545,8 @@ function OpportunitiesCard({
         {opportunities.map((o, i) => (
           <div
             key={o.id}
-            className="grid items-center gap-5 px-6 py-5"
+            className="grid grid-cols-[40px_1fr] items-center gap-x-5 gap-y-3 px-4 py-5 md:grid-cols-[40px_1fr_220px] md:px-6"
             style={{
-              gridTemplateColumns: "40px 1fr 220px",
               borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
             }}
           >
@@ -1561,8 +1560,8 @@ function OpportunitiesCard({
             >
               {String(i + 1).padStart(2, "0")}
             </span>
-            <div>
-              <h3 className="re-h3">{o.title}</h3>
+            <div className="min-w-0">
+              <h3 className="re-h3 break-words">{o.title}</h3>
               <p
                 className="mt-1.5 text-fg-muted"
                 style={{ fontSize: 13, lineHeight: 1.55 }}
@@ -1570,7 +1569,7 @@ function OpportunitiesCard({
                 {o.thesis}
               </p>
             </div>
-            <div className="flex justify-end gap-4">
+            <div className="col-start-2 flex justify-start gap-4 md:col-start-auto md:justify-end">
               {o.effort && <StatLabel label="effort" value={o.effort} />}
               {o.payoff && (
                 <StatLabel
@@ -1631,9 +1630,8 @@ function ActionsCard({ actions }: { actions: ActionRow[] }) {
         {actions.map((a, i) => (
           <div
             key={a.id}
-            className="grid items-center gap-4 px-6 py-5"
+            className="grid grid-cols-[32px_1fr] items-center gap-x-4 gap-y-3 px-4 py-5 md:grid-cols-[32px_1fr_100px_110px_120px] md:px-6"
             style={{
-              gridTemplateColumns: "32px 1fr 100px 110px 120px",
               borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
             }}
           >
@@ -1648,8 +1646,8 @@ function ActionsCard({ actions }: { actions: ActionRow[] }) {
             >
               {i + 1}
             </span>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 500 }}>{a.step}</div>
+            <div className="min-w-0">
+              <div className="break-words" style={{ fontSize: 14, fontWeight: 500 }}>{a.step}</div>
               {a.detail && (
                 <div
                   className="mt-1 text-fg-muted"
@@ -1661,7 +1659,7 @@ function ActionsCard({ actions }: { actions: ActionRow[] }) {
             </div>
             {a.role && (
               <span
-                className="re-chip justify-self-start"
+                className="re-chip col-start-2 justify-self-start md:col-start-auto"
                 style={{ fontSize: 10 }}
               >
                 {a.role}
@@ -1669,13 +1667,13 @@ function ActionsCard({ actions }: { actions: ActionRow[] }) {
             )}
             {a.effort && (
               <span
-                className={`re-chip ${a.effort === "high" ? "re-chip-warn" : a.effort === "med" ? "" : "re-chip-pos"} justify-self-start`}
+                className={`re-chip ${a.effort === "high" ? "re-chip-warn" : a.effort === "med" ? "" : "re-chip-pos"} col-start-2 justify-self-start md:col-start-auto`}
                 style={{ fontSize: 10 }}
               >
                 effort · {a.effort}
               </span>
             )}
-            <button className="re-btn re-btn-sm justify-self-end">
+            <button className="re-btn re-btn-sm col-start-2 justify-self-start md:col-start-auto md:justify-self-end">
               + Add to plan
             </button>
           </div>
