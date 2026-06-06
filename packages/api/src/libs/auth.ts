@@ -9,6 +9,8 @@ const defaultTrustedOrigins = [
   "http://localhost:4004",
   "http://localhost:4005",
   "http://localhost:4006",
+  "https://rivaleye.app",
+  "http://rivaleye.app",
 ];
 const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
   .split(",")
