@@ -125,16 +125,16 @@ export function BillingPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 24 }}>
         <div className="re-card" style={{ padding: "16px 20px" }}>
           <div className="re-eyebrow" style={{ fontSize: 9, marginBottom: 6 }}>BALANCE</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
             {balanceLoading ? (
-              <span style={{ fontSize: 32, fontWeight: 700, color: "var(--fg-faint)" }}>—</span>
+              <span style={{ fontSize: 28, fontWeight: 700, color: "var(--fg-faint)" }}>—</span>
             ) : (
-              <span style={{ fontSize: 32, fontWeight: 700, color: "var(--fg)" }}>
+              <span style={{ fontSize: 28, fontWeight: 700, color: "var(--fg)", whiteSpace: "nowrap" }}>
                 {balance?.free_scan_used === false ? "Free" : creditsRemaining}
               </span>
             )}
-            <span style={{ fontSize: 12, color: "var(--fg-muted)" }}>
-              {balance?.free_scan_used === false ? "1 free scan available" : "credits remaining"}
+            <span style={{ fontSize: 11, color: "var(--fg-muted)", whiteSpace: "nowrap" }}>
+              {balance?.free_scan_used === false ? "free scan" : "credits"}
             </span>
           </div>
         </div>

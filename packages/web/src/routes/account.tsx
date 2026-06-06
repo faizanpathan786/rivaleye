@@ -74,7 +74,7 @@ export function AccountPage() {
         </nav>
 
         {/* Mobile nav */}
-        <div className="flex md:hidden flex-row flex-wrap gap-1 px-4 py-3 w-full shrink-0" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+        <div className="flex md:hidden flex-row gap-1 px-4 py-3 w-full shrink-0 overflow-x-auto" style={{ borderBottom: "1px solid var(--border-soft)" }}>
           {SECTIONS.map(([k, l]) => {
             const active = section === k;
             return (
