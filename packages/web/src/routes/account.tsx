@@ -41,9 +41,9 @@ export function AccountPage() {
   const [section, setSection] = useState<SectionKey>("profile");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
       {/* Body: side nav + scrollable content */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-col md:flex-row flex-1" style={{ minHeight: 0 }}>
         <nav
           className="shrink-0 hidden md:flex flex-col gap-0.5 px-3 py-4"
           style={{ width: 200, borderRight: "1px solid var(--border-soft)" }}
