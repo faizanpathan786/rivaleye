@@ -153,6 +153,7 @@ export function ReportInProgress({
   const qc = useQueryClient();
 
   useEffect(() => {
+    if (window.innerWidth < 768) return;
     const main = document.querySelector("main.main") as HTMLElement | null;
     if (!main) return;
     const prev = main.style.overflowY;
