@@ -8,8 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CreditPackCard } from "@/components/billing/credit-pack-card";
 import { useMeQuery } from "@/hooks/queries/use-me";
+import {
+  useBalanceQuery,
+  useCreditPacksQuery,
+  useTransactionsQuery,
+  useCreateOrderMutation,
+  useVerifyPaymentMutation,
+} from "@/hooks/queries/use-billing";
 import { authClient } from "@/lib/auth-client";
+import type { CreditPack } from "@/api/billing";
 
 type SectionKey =
   | "profile"
@@ -32,21 +41,20 @@ export function AccountPage() {
   const [section, setSection] = useState<SectionKey>("profile");
 
   return (
-    <div className="w-full max-w-[1080px] mx-auto px-4 py-5 pb-14 md:px-7">
-      <div className="re-eyebrow">ACCOUNT</div>
-      <h1 className="re-h1" style={{ marginTop: 8 }}>
-        Settings
-      </h1>
-
-      <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-[200px_1fr] md:gap-8">
-        <nav className="flex flex-row flex-wrap gap-1 overflow-x-auto md:flex-col md:gap-0.5">
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      {/* Body: side nav + scrollable content */}
+      <div className="flex flex-1 min-h-0">
+        <nav
+          className="shrink-0 hidden md:flex flex-col gap-0.5 px-3 py-4"
+          style={{ width: 200, borderRight: "1px solid var(--border-soft)" }}
+        >
           {SECTIONS.map(([k, l]) => {
             const active = section === k;
             return (
               <button
                 key={k}
                 onClick={() => setSection(k)}
-                className="shrink-0 whitespace-nowrap md:w-full"
+                className="w-full"
                 style={{
                   border: 0,
                   background: active ? "var(--hover)" : "transparent",
@@ -65,7 +73,33 @@ export function AccountPage() {
           })}
         </nav>
 
-        <div style={{ minWidth: 0 }}>
+        {/* Mobile nav */}
+        <div className="flex md:hidden flex-row flex-wrap gap-1 px-4 py-3 w-full shrink-0" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+          {SECTIONS.map(([k, l]) => {
+            const active = section === k;
+            return (
+              <button
+                key={k}
+                onClick={() => setSection(k)}
+                className="shrink-0 whitespace-nowrap"
+                style={{
+                  border: 0,
+                  background: active ? "var(--hover)" : "transparent",
+                  padding: "6px 10px",
+                  borderRadius: "var(--r-md)",
+                  fontSize: 12,
+                  color: active ? "var(--fg)" : "var(--fg-muted)",
+                  fontWeight: active ? 500 : 400,
+                  cursor: "pointer",
+                }}
+              >
+                {l}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 min-w-0 px-4 pt-4 pb-6 md:px-7">
           {section === "profile" && <ProfileSection />}
           {section === "workspace" && <WorkspaceSection />}
           {section === "billing" && <BillingSection />}
@@ -268,127 +302,171 @@ function WorkspaceSection() {
   );
 }
 
-type Tier = {
-  n: string;
-  p: string;
-  f: string;
-  current?: boolean;
-};
+function loadRazorpayScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.getElementById("razorpay-checkout-js")) { resolve(); return; }
+    const script = document.createElement("script");
+    script.id = "razorpay-checkout-js";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Razorpay"));
+    document.head.appendChild(script);
+  });
+}
 
 function BillingSection() {
-  const tiers: Tier[] = [
-    { n: "Solo", p: "$19", f: "10 scans · 2 competitors" },
-    {
-      n: "Studio",
-      p: "$49",
-      f: "50 scans · 10 competitors",
-      current: true,
-    },
-    { n: "Team", p: "$149", f: "Unlimited · API access" },
-  ];
+  const { data: balance, isLoading: balanceLoading } = useBalanceQuery();
+  const packsQuery = useCreditPacksQuery();
+  const { data: transactions, isLoading: txLoading } = useTransactionsQuery();
+  const createOrder = useCreateOrderMutation();
+  const verifyPayment = useVerifyPaymentMutation();
+  const [buyingPackId, setBuyingPackId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const scansUsed = transactions?.filter((t) => t.type === "debit").reduce((s, t) => s + t.amount, 0) ?? 0;
+  const creditsRemaining = balance?.balance ?? 0;
+  const totalEver = scansUsed + creditsRemaining;
+  const usagePct = totalEver > 0 ? Math.min((scansUsed / totalEver) * 100, 100) : 0;
+  const lastPurchase = transactions?.find((t) => t.type === "purchase" && t.razorpay_payment_id);
+
+  const handleBuy = async (pack: CreditPack) => {
+    setError(null);
+    setSuccessMsg(null);
+    setBuyingPackId(pack.id);
+    try {
+      await loadRazorpayScript();
+      const order = await createOrder.mutateAsync(pack.id);
+      const rzp = new window.Razorpay({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.razorpay_order_id,
+        name: "RivalEye",
+        description: `${pack.name} — ${pack.credits} credits`,
+        prefill: { email: "" },
+        theme: { color: "#0061B1" },
+        handler: async (response) => {
+          try {
+            const result = await verifyPayment.mutateAsync(response);
+            setSuccessMsg(`Payment successful! New balance: ${result.balance} credits.`);
+          } catch {
+            setError("Payment verification failed. Please contact support.");
+          }
+        },
+        modal: { ondismiss: () => setBuyingPackId(null) },
+      });
+      rzp.open();
+      setBuyingPackId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to start payment");
+      setBuyingPackId(null);
+    }
+  };
+
   return (
     <>
-      <FormCard title="Plan" sub="Studio · $49/mo">
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Row 1: Balance + Usage side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+        <div className="re-card" style={{ padding: "12px 16px" }}>
+          <div className="re-eyebrow" style={{ fontSize: 9, marginBottom: 6 }}>BALANCE</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            {balanceLoading ? (
+              <span style={{ fontSize: 26, fontWeight: 700, color: "var(--fg-faint)" }}>—</span>
+            ) : (
+              <span style={{ fontSize: 26, fontWeight: 700, color: "var(--fg)" }}>
+                {balance?.free_scan_used === false ? "Free" : (balance?.balance ?? 0)}
+              </span>
+            )}
+            <span style={{ fontSize: 11, color: "var(--fg-muted)" }}>credits</span>
+          </div>
+        </div>
 
-          {tiers.map((t) => (
-            <div
-              key={t.n}
-              style={{
-                padding: 16,
-                border: `1px solid ${t.current ? "var(--accent)" : "var(--border-soft)"}`,
-                borderRadius: "var(--r-lg)",
-                background: t.current ? "var(--accent-soft)" : "var(--surface)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                }}
-              >
-                <span style={{ fontWeight: 500, fontSize: 14 }}>{t.n}</span>
-                {t.current && (
-                  <span
-                    className="re-chip re-chip-accent"
-                    style={{ fontSize: 10 }}
-                  >
-                    CURRENT
-                  </span>
-                )}
-              </div>
-              <div
-                className="font-mono-feat tnum"
-                style={{ fontSize: 24, fontWeight: 500, marginTop: 4 }}
-              >
-                {t.p}
-                <span className="text-fg-faint" style={{ fontSize: 12 }}>
-                  {" "}
-                  /mo
+        <div className="re-card" style={{ padding: "12px 16px" }}>
+          <div className="re-eyebrow" style={{ fontSize: 9, marginBottom: 6 }}>USAGE</div>
+          {txLoading || balanceLoading ? (
+            <div style={{ fontSize: 12, color: "var(--fg-faint)" }}>Loading…</div>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <div style={{ flex: 1, height: 5, borderRadius: 99, background: "var(--surface-2)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${usagePct}%`, borderRadius: 99, background: usagePct > 80 ? "var(--neg)" : "var(--accent)", transition: "width 400ms ease" }} />
+                </div>
+                <span className="font-mono-feat tnum" style={{ fontSize: 11, color: "var(--fg-muted)", whiteSpace: "nowrap" }}>
+                  {scansUsed} / {totalEver}
                 </span>
               </div>
-              <p
-                className="text-fg-muted"
-                style={{ fontSize: 12, marginTop: 8 }}
-              >
-                {t.f}
-              </p>
-            </div>
-          ))}
+              <div style={{ fontSize: 10, color: "var(--fg-faint)" }}>{scansUsed} run · {creditsRemaining} left</div>
+            </>
+          )}
         </div>
-      </FormCard>
-      <FormCard title="Usage" sub="this month">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <span className="font-mono-feat" style={{ fontSize: 12 }}>
-            SCANS
-          </span>
-          <span className="font-mono-feat tnum" style={{ fontSize: 12 }}>
-            39 / 50
-          </span>
-        </div>
-        <div className="re-meter">
-          <i style={{ width: "78%" }} />
-        </div>
-      </FormCard>
-      <FormCard title="Payment method">
-        <div
-          className="flex-wrap"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: 12,
-            border: "1px solid var(--border-soft)",
-            borderRadius: "var(--r-md)",
-          }}
-        >
-          <div
-            style={{
-              width: 32,
-              height: 22,
-              borderRadius: 3,
-              background: "var(--fg)",
-              flexShrink: 0,
-            }}
-          />
-          <div className="min-w-0" style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>
-              Visa ending 4242
-            </div>
-            <div className="text-fg-muted" style={{ fontSize: 11 }}>
-              Expires 09/2028
-            </div>
+      </div>
+
+      <FormCard title="Buy Credits">
+        {error && (
+          <div style={{ fontSize: 12, color: "#f87171", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>
+            {error}
           </div>
-          <button className="re-btn re-btn-ghost re-btn-sm">Update</button>
-        </div>
+        )}
+        {successMsg && (
+          <div style={{ fontSize: 12, color: "#4ade80", background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>
+            {successMsg}
+          </div>
+        )}
+        {packsQuery.isLoading && (
+          <div style={{ color: "var(--fg-muted)", fontSize: 13 }}>Loading packs…</div>
+        )}
+        {packsQuery.data && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
+            {packsQuery.data.map((pack) => (
+              <CreditPackCard
+                key={pack.id}
+                pack={pack}
+                onBuy={handleBuy}
+                loading={buyingPackId === pack.id}
+              />
+            ))}
+          </div>
+        )}
       </FormCard>
+
+      <FormCard title="Payment method">
+        <Field label="Card on file">
+          {txLoading ? (
+            <div style={{ fontSize: 13, color: "var(--fg-faint)" }}>Loading…</div>
+          ) : lastPurchase ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 26,
+                  borderRadius: 4,
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border-strong)",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--fg-muted)" }}><rect x="1" y="1" width="18" height="12" rx="2"/><path d="M1 5h18"/><path d="M5 9h2"/></svg>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>Razorpay</div>
+                <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
+                  {`••••••••${lastPurchase.razorpay_payment_id?.slice(-6) ?? ""}`}
+                </div>
+              </div>
+              <button className="re-btn re-btn-sm" style={{ marginLeft: "auto" }}>Update</button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13, color: "var(--fg-muted)" }}>No payment on file</span>
+              <button className="re-btn re-btn-sm re-btn-primary" style={{ marginLeft: "auto" }}>Add payment</button>
+            </div>
+          )}
+        </Field>
+      </FormCard>
+
     </>
   );
 }

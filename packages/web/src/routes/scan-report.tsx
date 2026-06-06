@@ -8,6 +8,7 @@ import { GrowthPage } from "./growth";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
 import { useReportQuery, useReportProgressQuery, useReportsQuery } from "@/hooks/queries/use-reports";
 import { ReportInProgress } from "@/components/report/report-in-progress";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -151,6 +152,20 @@ export function ScanReportPage() {
       <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
         <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>LOADING REPORT</div>
         <div style={{ fontSize: 16 }}>Fetching report sections…</div>
+      </div>
+    );
+  }
+
+  // Sections fetched but all role sections are null — LLM analysis is still
+  // being written. Keep showing a loading state; the refetchInterval above
+  // will retry automatically every 5 seconds.
+  const hasAnySections = sections && (sections.founder ?? sections.product ?? sections.marketing ?? sections.growth ?? sections.summary);
+  if (id && sections && !hasAnySections) {
+    return (
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>GENERATING ANALYSIS</div>
+        <div style={{ fontSize: 16, marginBottom: 8 }}>AI analysis is being written…</div>
+        <div style={{ fontSize: 13, color: "var(--fg-faint)" }}>This usually takes 30–60 seconds. The page will update automatically.</div>
       </div>
     );
   }
@@ -313,19 +328,7 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 0, flex: "1 1 280px" }}>
-            <div
-              className="shrink-0"
-              style={{
-                width: 52, height: 52, borderRadius: 12,
-                background: "#5e6ad2", color: "#fff",
-                display: "grid", placeItems: "center",
-                fontSize: 22, fontWeight: 600,
-                fontFamily: "var(--font-mono)",
-                boxShadow: "var(--shadow-sm)",
-              }}
-            >
-              {c.name[0]?.toUpperCase() ?? "?"}
-            </div>
+            <CompetitorAvatar name={c.name} domain={c.domain} size={52} borderRadius={12} />
             <div style={{ minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <span className="re-eyebrow" style={{ fontSize: 10 }}>SCAN REPORT</span>

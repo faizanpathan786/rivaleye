@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import {
@@ -244,6 +244,7 @@ function ReportHeader({
   failed_platforms?: string[];
   onRetryFailed?: () => void;
 }) {
+  const navigate = useNavigate();
   const name =
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
   const domain = report.primary_competitor_domain;
@@ -309,7 +310,7 @@ function ReportHeader({
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="re-btn">
+          <button className="re-btn" onClick={() => navigate("/compare")}>
             <Icon name="compare" size={14} /> Compare
           </button>
           <button className="re-btn">

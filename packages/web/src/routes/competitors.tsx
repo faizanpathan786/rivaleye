@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Icon } from "@/components/icons";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import {
   useCompetitorsQuery,
   useCreateCompetitorMutation,
@@ -288,23 +289,7 @@ function CompetitorCard({
               minWidth: 0,
             }}
           >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background: color,
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                fontFamily: "var(--font-mono, ui-monospace, monospace)",
-                fontSize: 16,
-                fontWeight: 600,
-                flexShrink: 0,
-              }}
-            >
-              {c.name[0]}
-            </div>
+            <CompetitorAvatar name={c.name} domain={c.website} size={36} borderRadius={8} color={color} />
             <div style={{ minWidth: 0 }}>
               <div
                 style={{
@@ -569,22 +554,7 @@ function CompetitorDrawer({
             gap: 12,
           }}
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              background: c.color,
-              color: "#fff",
-              display: "grid",
-              placeItems: "center",
-              fontFamily: "var(--font-mono, ui-monospace, monospace)",
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-          >
-            {c.name[0]}
-          </div>
+          <CompetitorAvatar name={c.name} domain={c.website} size={36} borderRadius={8} color={c.color} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="re-eyebrow" style={{ fontSize: 10 }}>
               COMPETITOR

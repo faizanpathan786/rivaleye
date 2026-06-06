@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import { StatusBadge } from "@/components/report/status-badge";
 import { formatNumber, formatRelative } from "@/lib/format";
 import type { ReportRow } from "@/api/reports";
@@ -36,8 +37,11 @@ export function HistoryTable({ rows }: { rows: ReportRow[] }) {
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="max-w-[200px] truncate font-medium">
-                {row.primary_competitor_name ?? "—"}
+              <TableCell className="font-medium">
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CompetitorAvatar name={row.primary_competitor_name ?? "?"} domain={row.primary_competitor_domain} size={24} borderRadius={5} />
+                  <span className="truncate max-w-[160px]">{row.primary_competitor_name ?? "—"}</span>
+                </div>
               </TableCell>
               <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                 {row.category}

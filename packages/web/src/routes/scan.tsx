@@ -1,7 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useState, useRef, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { useCreateReportMutation } from "@/hooks/queries/use-reports";
+import { useBalanceQuery } from "@/hooks/queries/use-billing";
+import { PaywallModal } from "@/components/billing/paywall-modal";
 import type { ReportGoal } from "@rivaleye/shared";
 
 type NavTarget = "scan" | "dashboard" | "radar" | "competitors" | "compare" | "history" | "account" | "signin";
@@ -67,6 +69,7 @@ export function ScanPage() {
   const onNav = (t: NavTarget) => navigate(navPath(t));
 
   const [name, setName] = useState("");
+  const [nameFocused, setNameFocused] = useState(false);
   const [category, setCategory] = useState("");
   const [audience, setAudience] = useState("");
   const [range, setRange] = useState<string>("90d");
@@ -80,6 +83,11 @@ export function ScanPage() {
   const [depth, setDepth] = useState<string>("standard");
 
   const { mutateAsync, isPending, error } = useCreateReportMutation();
+  const { data: balance } = useBalanceQuery();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const pendingScanRef = useRef<(() => Promise<void>) | null>(null);
+
+  const needsCredits = balance !== undefined && balance.free_scan_used && balance.balance < 1;
 
   const selectedPlatformCount = PLATFORMS.filter((p) => p.live && platforms[p.id]).length;
   const goalLabel = GOALS.find((g) => g.id === goal)?.label.toLowerCase() ?? "";
@@ -92,29 +100,59 @@ export function ScanPage() {
     audience.trim().length > 0 &&
     (!platforms.website || websiteUrl.trim().length > 0);
 
+  const runScan = async () => {
+    const activePlatforms = PLATFORMS.filter((p) => p.live && platforms[p.id]).map((p) => p.id);
+    const res = await mutateAsync({
+      category: category.trim(),
+      competitors: [name.trim()],
+      target_audience: audience.trim(),
+      founder_goal: goal,
+      selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
+      website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
+    });
+    navigate(`/scan-report/${res.id}`);
+  };
+
   const start = async () => {
     if (!canSubmit) return;
+    // instant check — no round trip needed
+    if (needsCredits) {
+      pendingScanRef.current = runScan;
+      setShowPaywall(true);
+      return;
+    }
     try {
-      const activePlatforms = PLATFORMS.filter((p) => p.live && platforms[p.id]).map((p) => p.id);
-      const res = await mutateAsync({
-        category: category.trim(),
-        competitors: [name.trim()],
-        target_audience: audience.trim(),
-        founder_goal: goal,
-        selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
-        website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
-      });
-      navigate(`/scan-report/${res.id}`);
-    } catch {
-      // surfaced via `error` below
+      await runScan();
+    } catch (e) {
+      const errObj = e as { error?: string };
+      if (errObj?.error === "PAYMENT_REQUIRED") {
+        pendingScanRef.current = runScan;
+        setShowPaywall(true);
+      }
+      // other errors surfaced via `error` below
     }
   };
 
   const errorMessage =
-    error instanceof Error ? error.message : error ? "Failed to start scan" : null;
+    error instanceof Error ? error.message :
+    (error as { error?: string } | null)?.error === "PAYMENT_REQUIRED" ? null :
+    error ? "Failed to start scan" : null;
 
   return (
-    <div className="px-4 py-5 md:px-7 pb-16 w-full max-w-[880px] mx-auto">
+    <>
+    {showPaywall && (
+      <PaywallModal
+        onClose={() => setShowPaywall(false)}
+        onPurchaseSuccess={async () => {
+          setShowPaywall(false);
+          if (pendingScanRef.current) {
+            try { await pendingScanRef.current(); } catch { /* surfaced by mutation error */ }
+            pendingScanRef.current = null;
+          }
+        }}
+      />
+    )}
+    <div className="px-4 py-5 md:px-7 pb-16 w-full" style={{ maxWidth: 1280, margin: "0 auto" }}>
       <div className="re-eyebrow">NEW SCAN</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>Run a competitor scan</h1>
       <p className="text-fg-muted w-full max-w-[580px]" style={{ marginTop: 8 }}>
@@ -127,21 +165,26 @@ export function ScanPage() {
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr]" style={{ gap: 10 }}>
           <div className="min-w-0" style={{
             display: "flex", alignItems: "center", gap: 8,
-            border: "1px solid var(--border-strong)",
+            border: `1px solid ${nameFocused ? "var(--accent)" : "var(--border-strong)"}`,
             borderRadius: 8,
             background: "var(--surface)",
             padding: "0 12px",
             height: 44,
+            boxShadow: nameFocused ? "0 0 0 3px var(--accent-soft)" : "none",
+            transition: "border-color 120ms, box-shadow 120ms",
           }}>
             <Icon name="search" size={16} className="text-fg-faint" />
             <input
-              className="re-input min-w-0"
+              className="min-w-0"
               style={{
                 flex: 1, border: 0, height: "100%", padding: 0,
                 fontSize: 15, background: "transparent",
+                outline: "none", color: "var(--fg)",
               }}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onFocus={() => setNameFocused(true)}
+              onBlur={() => setNameFocused(false)}
               placeholder="Competitor name or domain (e.g. Linear)"
             />
           </div>
@@ -356,6 +399,7 @@ export function ScanPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

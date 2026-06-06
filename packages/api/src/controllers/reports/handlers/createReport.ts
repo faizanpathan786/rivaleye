@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { loggerPlugin } from "@/config/logger";
 import { authPlugin } from "@/plugins/auth";
-import { createReport } from "@/services/reports.service";
+import { createReport, PaymentRequiredError } from "@/services/reports.service";
 import { ok } from "@/utils/response";
 import { Tags } from "@/types/swagger";
 
@@ -15,6 +15,9 @@ export const createReportHandler = new Elysia()
         const report = await createReport(user!.id, body);
         return ok({ id: report.id, stage: "queued" as const });
       } catch (e) {
+        if (e instanceof PaymentRequiredError) {
+          return status(402, { message: e.message, error: "PAYMENT_REQUIRED" });
+        }
         log.error(e);
         return status(400, {
           message: "Failed to create report",

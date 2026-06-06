@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { formatRelative } from "@/lib/format";
@@ -225,7 +226,7 @@ export function DashboardPage() {
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                  <CompetitorAvatar name={name} />
+                  <CompetitorAvatar name={name} domain={r.primary_competitor_domain} size={28} borderRadius={6} />
                   <div style={{ minWidth: 0 }}>
                     <div className="truncate" style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
                     <div className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
@@ -524,33 +525,3 @@ function MiniSpark({ seed }: { seed: string }) {
   );
 }
 
-function CompetitorAvatar({ name }: { name: string }) {
-  const colors: Record<string, [string, string]> = {
-    Linear: ["#5e6ad2", "#fff"],
-    Notion: ["#000", "#fff"],
-    Figma: ["#f24e1e", "#fff"],
-    Superhuman: ["#503ce6", "#fff"],
-    Slack: ["#4a154b", "#fff"],
-    Asana: ["#f06a6a", "#fff"],
-  };
-  const [bg, fg] = colors[name] ?? ["#444", "#fff"];
-  return (
-    <div
-      style={{
-        width: 28,
-        height: 28,
-        borderRadius: 6,
-        background: bg,
-        color: fg,
-        display: "grid",
-        placeItems: "center",
-        fontSize: 12,
-        fontWeight: 600,
-        fontFamily: "var(--font-mono)",
-        flexShrink: 0,
-      }}
-    >
-      {name[0]}
-    </div>
-  );
-}

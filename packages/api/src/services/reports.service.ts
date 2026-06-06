@@ -30,6 +30,8 @@ import type { EnabledPlatformId } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
 import { getPipelineEngine } from "@/config/engine";
+import { consumeCreditForScan, PaymentRequiredError } from "./billing.service";
+export { PaymentRequiredError };
 
 let _llm: OpenRouterClient | null = null;
 
@@ -53,6 +55,7 @@ export async function listReports(owner_id: string) {
     .select({
       id: reports.id,
       primary_competitor_name: reports.primary_competitor_name,
+      primary_competitor_domain: reports.primary_competitor_domain,
       category: reports.category,
       status: reports.status,
       stage: reports.stage,
@@ -63,6 +66,19 @@ export async function listReports(owner_id: string) {
     .from(reports)
     .where(eq(reports.owner_id, owner_id))
     .orderBy(asc(reports.created_at));
+}
+
+function inferCompetitorDomain(name: string, websiteUrl?: string): string | null {
+  if (websiteUrl) {
+    try {
+      return new URL(websiteUrl).hostname.replace(/^www\./, "");
+    } catch {
+      // fall through
+    }
+  }
+  // Don't guess a .com domain — the frontend's KNOWN_DOMAINS map handles
+  // well-known SaaS tools (e.g. linear → linear.app, not linear.com).
+  return null;
 }
 
 export async function createReport(
@@ -79,6 +95,9 @@ export async function createReport(
     .where(and(eq(reports.owner_id, owner_id), gt(reports.created_at, sql`now() - interval '1 hour'`)));
   if ((recentCount[0]?.count ?? 0) >= 10) throw new Error("Rate limit exceeded: max 10 scans per hour");
 
+  // Infer competitor domain for logo display — non-fatal
+  const inferredDomain = inferCompetitorDomain(competitor, input.website_url);
+
   // Expand keywords BEFORE any DB writes — non-fatal, fall back to competitor name
   let keywords: string[];
   try {
@@ -92,8 +111,10 @@ export async function createReport(
     keywords = [competitor];
   }
 
-  // Transaction: report + jobs atomic
+  // Transaction: report + jobs atomic (credit check is inside — atomic with report insert)
   const row = await db.transaction(async (tx) => {
+    await consumeCreditForScan(owner_id, competitor, tx);
+
     const [reportRow] = await tx
       .insert(reports)
       .values({
@@ -105,6 +126,7 @@ export async function createReport(
         status: "queued",
         stage: "queued",
         primary_competitor_name: competitor,
+        primary_competitor_domain: inferredDomain,
         website_url: input.website_url ?? null,
       })
       .returning({ id: reports.id });

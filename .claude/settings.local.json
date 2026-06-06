@@ -71,7 +71,25 @@
       "PowerShell($p4000 = \\(netstat -ano | findstr \":4000 \" | findstr \"LISTENING\" | ForEach-Object { \\($_ -split '\\\\s+'\\)[-1] } | Select-Object -First 1\\); $proc = Get-Process -Id $p4000 -ErrorAction SilentlyContinue; Write-Host \"PID: $p4000 | Name: $\\($proc.Name\\) | Path: $\\($proc.Path\\)\")",
       "PowerShell($p4000 = \\(netstat -ano | findstr \":4000 \" | findstr \"LISTENING\" | ForEach-Object { \\($_ -split '\\\\s+'\\)[-1] } | Select-Object -First 1\\); $proc = Get-WmiObject Win32_Process -Filter \"ProcessId=$p4000\"; Write-Host \"Command: $\\($proc.CommandLine\\)\")",
       "Bash(sed -i 's|BETTER_AUTH_URL=http://localhost:4000|BETTER_AUTH_URL=http://localhost:3001|g' .env)",
-      "Bash(sed -i 's|VITE_API_URL=http://localhost:4000|VITE_API_URL=http://localhost:3001|g' .env)"
+      "Bash(sed -i 's|VITE_API_URL=http://localhost:4000|VITE_API_URL=http://localhost:3001|g' .env)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Lenovo\\\\Desktop\\\\rivaleye-v3\\\\packages\\\\api\\\\src\" -Recurse -Filter \"*.ts\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(git commit *)",
+      "Bash(git -C /c/Users/Lenovo/Desktop/rivaleye-v3 diff HEAD --stat)",
+      "WebFetch(domain:localhost)",
+      "Bash(pkill -f \"src/server.ts\")",
+      "Bash(pkill -f \"bun\")",
+      "Bash(export RAZORPAY_KEY_ID=rzp_test_Sxki7rI1ZVfy4c)",
+      "Bash(export RAZORPAY_KEY_SECRET=mdLjZrZi8JUeWXf9LIuPSfGi)",
+      "Bash(RAZORPAY_KEY_ID=rzp_test_Sxki7rI1ZVfy4c bun *)",
+      "Bash(netstat -tlnp)",
+      "Bash(kill -9 40330)",
+      "Bash(awk '{print $1, $2, $3, $NF}')",
+      "Bash(kill -9 43661)",
+      "Bash(RAZORPAY_KEY_ID=rzp_test_Sxki7rI1ZVfy4c RAZORPAY_KEY_SECRET=mdLjZrZi8JUeWXf9LIuPSfGi VITE_RAZORPAY_KEY_ID=rzp_test_Sxki7rI1ZVfy4c bun --env-file=/c/Users/Lenovo/Desktop/rivaleye-v3/.env /c/Users/Lenovo/Desktop/rivaleye-v3/packages/api/src/server.ts)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(r.get\\('primary_competitor_name'\\), '→', r.get\\('primary_competitor_domain'\\)\\) for r in d.get\\('data',{}\\).get\\('data',[]\\)[:5]]\")",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

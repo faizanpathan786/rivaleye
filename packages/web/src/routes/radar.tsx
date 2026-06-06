@@ -6,6 +6,7 @@ import { useCompetitorsQuery } from "@/hooks/queries/use-competitors";
 import type { RadarEvent, RadarSeverity } from "@/api/radar";
 import type { Competitor } from "@/api/competitors";
 import { formatRelative } from "@/lib/format";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 
 type Severity = "urgent" | "high" | "med" | "low";
 
@@ -347,22 +348,7 @@ export function RadarPage() {
                       gap: 10,
                     }}
                   >
-                    <div
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 5,
-                        background: c.color ?? "#666",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {c.name[0]}
-                    </div>
+                    <CompetitorAvatar name={c.name} domain={c.website} size={22} borderRadius={5} color={c.color} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 500 }}>{c.name}</div>
                       <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>

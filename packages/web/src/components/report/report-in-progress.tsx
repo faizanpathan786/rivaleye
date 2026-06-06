@@ -152,6 +152,14 @@ export function ReportInProgress({
   const navigate = useNavigate();
   const qc = useQueryClient();
 
+  useEffect(() => {
+    const main = document.querySelector("main.main") as HTMLElement | null;
+    if (!main) return;
+    const prev = main.style.overflowY;
+    main.style.overflowY = "hidden";
+    return () => { main.style.overflowY = prev; };
+  }, []);
+
   const name =
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
 
@@ -255,7 +263,7 @@ export function ReportInProgress({
   });
 
   return (
-    <div className="px-4 pt-4 pb-10 md:px-7 md:pt-5 mx-auto w-full max-w-[1080px]">
+    <div className="px-4 pt-4 pb-10 md:px-7 md:pt-5 w-full" style={{ maxWidth: 1280, margin: "0 auto" }}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="re-eyebrow">

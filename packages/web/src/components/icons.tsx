@@ -56,7 +56,7 @@ export function Icon({ name, size = 16, className, style }: IconProps) {
     case "quote":      return <svg {...props}><path d="M3 11V8a3 3 0 0 1 3-3V3M9 11V8a3 3 0 0 1 3-3V3"/></svg>;
     case "trend-up":   return <svg {...props}><path d="M2 11.5 6 7l3 2 5-5M10 4h4v4"/></svg>;
     case "alert":      return <svg {...props}><path d="M8 2 1.5 13.5h13L8 2Z"/><path d="M8 6.5v3M8 11.5v.5"/></svg>;
-    case "spinner":    return <svg {...props}><path d="M8 1.5a6.5 6.5 0 1 1-6.5 6.5"/></svg>;
+    case "spinner":    return <svg {...props} style={{ ...style, animation: "radar-sweep 0.7s linear infinite" }}><path d="M8 1.5a6.5 6.5 0 1 1-6.5 6.5"/></svg>;
     case "list":       return <svg {...props}><path d="M5 4h9M5 8h9M5 12h9M2 4h.01M2 8h.01M2 12h.01"/></svg>;
     case "logo":       return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style} className={className}>

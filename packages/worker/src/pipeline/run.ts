@@ -206,10 +206,24 @@ export async function runPipeline(reportId: string): Promise<void> {
         : roleErr instanceof Error && roleErr.cause
           ? String(roleErr.cause)
           : null;
-      await log(reportId, "warn", "D", null, "stage D role synthesis failed — continuing with legacy report", {
+      await log(reportId, "warn", "D", null, "stage D role synthesis failed — retrying once", {
         error: roleErr instanceof Error ? roleErr.message : String(roleErr),
         cause: causeMsg,
       });
+      // One automatic retry before giving up so a transient LLM timeout
+      // doesn't permanently leave all role sections missing.
+      try {
+        await new Promise((r) => setTimeout(r, 4000));
+        const retryRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
+        roleSections = retryRole.roleSections;
+        await log(reportId, "info", "D", null, "stage D role synthesis retry succeeded", {
+          sections: Object.keys(roleSections),
+        });
+      } catch (retryErr) {
+        await log(reportId, "warn", "D", null, "stage D role synthesis retry also failed — continuing without role sections", {
+          error: retryErr instanceof Error ? retryErr.message : String(retryErr),
+        });
+      }
     }
 
     // Generate cross-platform summary

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import { useMeQuery } from "@/hooks/queries/use-me";
 import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
+import { useBalanceQuery } from "@/hooks/queries/use-billing";
 import type { ReportRow } from "@/api/reports";
 
 interface CrumbConfig {
@@ -191,6 +193,7 @@ const NAV_ITEMS: Array<{
   { to: "/scan",        icon: "scan",    label: "New scan" },
   { to: "/compare",     icon: "compare", label: "Compare" },
   { to: "/history",     icon: "history", label: "History" },
+  { to: "/billing",     icon: "spark",   label: "Credits" },
 ];
 
 interface SidebarProps {
@@ -200,6 +203,7 @@ interface SidebarProps {
 function Sidebar({ open }: SidebarProps) {
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
+  const balanceQuery = useBalanceQuery();
   const stats = dashboardQuery.data?.stats;
 
   const badges: Record<"competitors" | "radar", NavBadge> = {
@@ -268,15 +272,7 @@ function Sidebar({ open }: SidebarProps) {
             }
             style={{ fontSize: 13 }}
           >
-            <span
-              className="grid place-items-center font-mono-feat font-semibold flex-shrink-0 text-fg-muted"
-              style={{
-                width: 14, height: 14, borderRadius: 3,
-                background: "var(--surface-2)",
-                border: "1px solid var(--border-soft)",
-                fontSize: 9,
-              }}
-            >{initialOf(label)}</span>
+            <CompetitorAvatar name={label} domain={r.primary_competitor_domain} size={20} borderRadius={4} />
             <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{label}</span>
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>{relativeTime(r.scanned_at ?? r.created_at)}</span>
           </NavLink>
@@ -284,29 +280,39 @@ function Sidebar({ open }: SidebarProps) {
       })}
 
       <div className="mt-auto" style={{ padding: "12px 8px" }}>
-        <div
-          className="text-fg-muted"
+        <NavLink
+          to="/billing"
+          className={({ isActive }) =>
+            `text-fg-muted block ${isActive ? "" : ""}`
+          }
           style={{
             padding: 10,
             border: "1px solid var(--border-soft)",
             borderRadius: 8,
             fontSize: 11,
             background: "var(--surface-2)",
+            textDecoration: "none",
           }}
         >
           <div className="flex items-center justify-between">
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>SCANS THIS MONTH</span>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>CREDITS</span>
           </div>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-fg" style={{ fontSize: 16, fontWeight: 600 }}>
-              {reportsQuery.data ? reportsQuery.data.length : "—"}
+              {balanceQuery.data
+                ? balanceQuery.data.free_scan_used === false
+                  ? "Free"
+                  : balanceQuery.data.balance
+                : "—"}
             </span>
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>/ 50</span>
+            {balanceQuery.data?.free_scan_used && (
+              <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>remaining</span>
+            )}
           </div>
-          <div className="re-meter mt-1.5">
-            <i style={{ width: reportsQuery.data ? `${Math.min(100, (reportsQuery.data.length / 50) * 100)}%` : "0%" }} />
+          <div style={{ fontSize: 10, color: "var(--fg-faint)", marginTop: 2 }}>
+            {balanceQuery.data?.free_scan_used === false ? "1 free scan available" : "tap to buy more"}
           </div>
-        </div>
+        </NavLink>
       </div>
     </aside>
   );

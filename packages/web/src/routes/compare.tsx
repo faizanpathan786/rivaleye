@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/components/icons";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import type { ReportRow } from "@/api/reports";
 
 const AVATAR_COLORS: Record<string, string> = {};
@@ -18,6 +19,7 @@ const avatarColor = (name: string): string => {
 interface CompareChoice {
   id: string;
   name: string;
+  domain: string | null;
   sentiment: number;
   sources: number;
   created_at: string;
@@ -72,11 +74,12 @@ const ulStyle: CSSProperties = {
 };
 
 interface SidePickerFixedProps {
-  fixed: { name: string; color: string; pain: number };
+  fixed: { name: string; domain: string | null; color: string; pain: number };
 }
 
 interface SidePickerSelectProps {
   name: string;
+  domain: string | null;
   choices: CompareChoice[];
   current: string;
   onChange: (id: string) => void;
@@ -89,23 +92,7 @@ function SidePickerFixed({ fixed }: SidePickerFixedProps) {
     <div className="re-card" style={{ padding: 14 }}>
       <div className="re-eyebrow">SIDE A · LOCKED</div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8 }}>
-        <div
-          className="shrink-0"
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 8,
-            background: fixed.color,
-            color: "#fff",
-            display: "grid",
-            placeItems: "center",
-            fontSize: 18,
-            fontWeight: 600,
-            fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          }}
-        >
-          {fixed.name[0]}
-        </div>
+        <CompetitorAvatar name={fixed.name} domain={fixed.domain} size={40} color={fixed.color} />
         <div className="min-w-0">
           <h3 className="re-h3 break-words" style={{ fontSize: 18 }}>{fixed.name}</h3>
           <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
@@ -117,7 +104,7 @@ function SidePickerFixed({ fixed }: SidePickerFixedProps) {
   );
 }
 
-function SidePickerSelect({ name, choices, current, onChange, color }: SidePickerSelectProps) {
+function SidePickerSelect({ name, domain, choices, current, onChange, color }: SidePickerSelectProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -133,26 +120,10 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
   }, [open]);
 
   return (
-    <div className="re-card" style={{ padding: 14 }}>
+    <div className="re-card" style={{ padding: 14, overflow: "visible" }}>
       <div className="re-eyebrow">SIDE B · SELECT</div>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8 }}>
-        <div
-          className="shrink-0"
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 8,
-            background: color,
-            color: "#fff",
-            display: "grid",
-            placeItems: "center",
-            fontSize: 18,
-            fontWeight: 600,
-            fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          }}
-        >
-          {name[0]}
-        </div>
+        <CompetitorAvatar name={name} domain={domain} size={40} color={color} />
         <div ref={wrapRef} className="min-w-0" style={{ position: "relative", flex: 1, zIndex: 10 }}>
 
           <button
@@ -187,6 +158,8 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
                   zIndex: 30,
                   padding: 4,
                   background: "var(--surface-solid)",
+                  maxHeight: 220,
+                  overflowY: "auto",
                 }}
               >
                 {choices.map((c) => {
@@ -222,22 +195,7 @@ function SidePickerSelect({ name, choices, current, onChange, color }: SidePicke
                       }}
                     >
                       <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span
-                          style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 4,
-                            background: avatarColor(c.name),
-                            color: "#fff",
-                            display: "grid",
-                            placeItems: "center",
-                            fontSize: 10,
-                            fontWeight: 600,
-                            fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-                          }}
-                        >
-                          {c.name[0]}
-                        </span>
+                        <CompetitorAvatar name={c.name} domain={c.domain} size={18} borderRadius={4} />
                         {c.name}
                       </span>
                       {active && <Icon name="check" size={14} />}
@@ -287,6 +245,7 @@ function toChoice(r: ReportRow): CompareChoice {
   return {
     id: r.id,
     name: r.primary_competitor_name ?? r.competitors[0] ?? r.id,
+    domain: r.primary_competitor_domain ?? null,
     sentiment: r.sentiment_overall ?? 0,
     sources: r.total_sources ?? 0,
     created_at: r.created_at,
@@ -408,12 +367,14 @@ export function ComparePage() {
         <SidePickerFixed
           fixed={{
             name: sideA.name,
+            domain: sideA.domain,
             color: avatarColor(sideA.name),
             pain: sideA.sentiment,
           }}
         />
         <SidePickerSelect
           name={rightChoice.name}
+          domain={rightChoice.domain}
           choices={choices}
           current={rightChoice.id}
           onChange={(id) => setBId(id)}
