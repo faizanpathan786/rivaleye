@@ -424,13 +424,15 @@ export function SignInPage() {
             type="button"
             className="re-btn re-btn-primary"
             onClick={handleSubmit}
+            onTouchEnd={(e) => { e.preventDefault(); handleSubmit(); }}
             disabled={busy}
             style={{
               width: "100%",
-              height: 38,
+              height: 44,
               marginTop: 10,
               justifyContent: "center",
               opacity: busy ? 0.6 : 1,
+              touchAction: "manipulation",
             }}
           >
             {busy ? "Working…" : mode === "signin" ? "Continue" : "Create account"}{" "}
