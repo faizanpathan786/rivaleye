@@ -17,4 +17,9 @@ pnpm install
 # Build one package at a time. Running vite + astro check + bun build in
 # parallel starves a small VM and the build hangs.
 pnpm exec turbo run build --concurrency=1
-pm2 restart all
+
+# Start the apps if they're not running, or zero-downtime reload if they are.
+# `pm2 restart all` fails when no processes exist (e.g. after a VM reboot), so
+# use startOrReload against the ecosystem file, then persist the process list.
+pm2 startOrReload ecosystem.config.cjs --update-env
+pm2 save
