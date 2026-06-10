@@ -1,0 +1,155 @@
+---
+// src/components/PickALens.astro
+// Section for the 4 business-focused lenses: Founder, Product, Marketing, Growth
+
+const lenses = [
+  {
+    id: 'founder',
+    number: '01',
+    title: 'Founder lens',
+    shortDesc: 'Market opening - wedge to attack',
+    summary: 'Users love your competitor for speed and reliability — but increasingly complain about pricing that punishes growth, mobile limitations, and missing executive visibility. Find the clearest wedge and the team segment most ready to leave.',
+    color: 'text-blue-400',
+    borderColor: 'border-blue-400/20',
+    bgColor: 'bg-blue-400/5',
+    icon: '<circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />',
+  },
+  {
+    id: 'product',
+    number: '02',
+    title: 'Product lens',
+    shortDesc: 'Roadmap intelligence - gaps & evidence',
+    summary: 'Which features do users ask for? What workarounds do they build? Where is the evidence strongest across sources? Prioritize your roadmap with user-backed feature requests, ranked by frequency, severity, and cross-platform confidence.',
+    color: 'text-emerald-400',
+    borderColor: 'border-emerald-400/20',
+    bgColor: 'bg-blue-400/5',
+    icon: '<polygon points="12 2 21 7 12 12 3 7 12 2" /><polyline points="3 12 12 17 21 12" /><polyline points="3 17 12 22 21 17" />',
+  },
+  {
+    id: 'marketing',
+    number: '03',
+    title: 'Marketing lens',
+    shortDesc: 'Positioning copy angles',
+    summary: 'What language do users actually use to describe your competitor? What praise sticks, what criticism do they repeat? What promise-reality gap exists? Use the exact words users choose to position and message your solution.',
+    color: 'text-purple-400',
+    borderColor: 'border-purple-400/20',
+    bgColor: 'bg-blue-400/5',
+    icon: '<path d="m3 11 16-5v12L3 13v-2z" /><path d="M11.5 15.5a3 3 0 0 1-5.6-1.3" /><line x1="19" y1="8" x2="22" y2="7" /><line x1="19" y1="13" x2="22" y2="14" />',
+  },
+  {
+    id: 'growth',
+    number: '04',
+    title: 'Growth lens',
+    shortDesc: 'Switch intent - live conversations',
+    summary: 'Who is looking for alternatives? Where are they talking? What is their pain? What is their timeline? Find the pricing threads, the comparison requests, and the "I\'m leaving" conversations — then understand how to engage thoughtfully.',
+    color: 'text-orange-400',
+    borderColor: 'border-orange-400/20',
+    bgColor: 'bg-blue-400/5',
+    icon: '<polyline points="3 17 9 11 13 15 21 7" /><polyline points="15 7 21 7 21 13" />',
+  },
+];
+---
+
+<section
+  id="pick-a-lens"
+  aria-labelledby="pick-a-lens-heading"
+  class="relative bg-[var(--color-bg-0)] py-16 md:py-32 border-t border-[var(--color-line-1)] overflow-hidden"
+>
+  {/* Backdrop */}
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-dots opacity-30 mask-fade-edges"></div>
+  </div>
+
+  <div class="mx-auto max-w-[var(--container-page)] px-4 sm:px-6 lg:px-8">
+    {/* Header */}
+    <div class="flex flex-col gap-8 mb-14 md:mb-20 reveal-stagger">
+      <div>
+        <div class="flex items-center gap-3 mb-6">
+          <span
+            class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-lime)]"
+          >
+            § 02
+          </span>
+          <span class="block w-8 h-px bg-[var(--color-line-2)]"></span>
+          <span
+            class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]"
+          >
+            Pick a lens
+          </span>
+        </div>
+        <h2
+          id="pick-a-lens-heading"
+          class="display-tight text-[var(--color-fg-0)] text-[clamp(2rem,7vw,5rem)] max-w-[14ch]"
+        >
+          Four lenses. One competitor.
+        </h2>
+      </div>
+      <p class="max-w-[420px] text-[15px] md:text-[16px] leading-[1.6] text-[var(--color-fg-2)]">
+        View the same user signals through the lens that matters to your role — founder, product, marketing, or growth.
+      </p>
+    </div>
+
+    {/* Grid */}
+    <ul
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-stagger"
+    >
+      {
+        lenses.map((lens) => (
+          <li
+            class={`relative group flex flex-col h-full border ${lens.borderColor} ${lens.bgColor} p-6 rounded-lg transition-all duration-300 hover:border-opacity-100 hover:bg-opacity-10 cursor-pointer`}
+          >
+            {/* Number/Label */}
+            <div class="flex items-start justify-between mb-4">
+              <span class="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-fg-3)]">
+                {lens.number}
+              </span>
+              <svg
+                class={`w-5 h-5 ${lens.color}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                set:html={lens.icon}
+              />
+            </div>
+
+            {/* Title */}
+            <h3 class="display-tight text-[18px] md:text-[20px] text-[var(--color-fg-0)] mb-3 leading-tight tracking-tight">
+              {lens.title}
+            </h3>
+
+            {/* Short Description (tagline) */}
+            <p class="text-[12px] leading-[1.5] text-[var(--color-fg-3)] mb-3 font-mono tracking-wide uppercase">
+              {lens.shortDesc}
+            </p>
+
+            {/* Full Summary */}
+            <p class="text-[13px] leading-[1.6] text-[var(--color-fg-2)] mb-6">
+              {lens.summary}
+            </p>
+
+            {/* CTA */}
+            <button
+              class={`mt-auto inline-flex items-center gap-1.5 text-[12px] font-mono tracking-[0.18em] uppercase text-black transition-transform duration-300 group-hover:translate-x-1`}
+              aria-label={`Enter ${lens.title}`}
+            >
+              Enter {lens.id}
+              <span class="text-[10px]">→</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  @media (prefers-reduced-motion: reduce) {
+    .group {
+      transition: none !important;
+    }
+  }
+</style>

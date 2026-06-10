@@ -1,0 +1,21 @@
+steps:
+  # Step 1: SSH into VM and deploy
+  - name: 'gcr.io/cloud-builders/ssh'
+    args:
+      - 'faizan514pathan@136.113.164.75'
+      - |-
+        cd /home/faizan514pathan/rivaleye-v3
+        git pull origin main
+        pnpm install
+        pnpm build
+        pm2 restart all
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
+
+# Timeout for the build (30 minutes)
+timeout: '1800s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'N1_HIGHCPU_8'
