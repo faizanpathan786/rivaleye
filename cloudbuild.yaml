@@ -12,7 +12,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud compute ssh faizan514pathan@rivaleye-server --zone=us-central1-a --tunnel-through-iap --quiet --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && (git checkout -- pnpm-lock.yaml package.json packages/landing/.astro/content.d.ts packages/landing/.astro/types.d.ts 2>/dev/null || true) && git pull origin main && pnpm install && pnpm build && pm2 restart all'"
+        gcloud compute ssh faizan514pathan@rivaleye-server --zone=us-central1-a --tunnel-through-iap --quiet --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && (git checkout -- pnpm-lock.yaml package.json packages/landing/.astro/content.d.ts packages/landing/.astro/types.d.ts 2>/dev/null || true) && git pull origin main && bash deploy.sh'"
 
 timeout: '1800s'
 
