@@ -13,16 +13,16 @@ export type MonitorSensitivity = Competitor["monitor_sensitivity"];
 export type CreateCompetitorInput = {
   name: string;
   slug?: string;
-  website?: string;
-  category?: string;
-  color?: string;
+  website?: string | null;
+  category?: string | null;
+  color?: string | null;
   priority?: CompetitorPriority;
   tags?: string[];
   socials?: CompetitorSocials;
   monitor_enabled?: boolean;
   monitor_sensitivity?: MonitorSensitivity;
   monitor_watch?: string[];
-  notes?: string;
+  notes?: string | null;
 };
 
 export type UpdateCompetitorInput = Partial<CreateCompetitorInput>;

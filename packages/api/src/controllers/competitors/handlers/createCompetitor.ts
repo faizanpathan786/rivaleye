@@ -14,12 +14,14 @@ const socialsSchema = t.Object({
   blog: t.Optional(t.String()),
 });
 
+const nullableString = t.Optional(t.Union([t.String(), t.Null()]));
+
 export const createCompetitorBodySchema = t.Object({
   name: t.String({ minLength: 1 }),
   slug: t.Optional(t.String()),
-  website: t.Optional(t.String()),
-  category: t.Optional(t.String()),
-  color: t.Optional(t.String()),
+  website: nullableString,
+  category: nullableString,
+  color: nullableString,
   priority: t.Optional(
     t.Union([t.Literal("primary"), t.Literal("secondary"), t.Literal("tertiary")]),
   ),
@@ -30,7 +32,7 @@ export const createCompetitorBodySchema = t.Object({
     t.Union([t.Literal("low"), t.Literal("med"), t.Literal("high")]),
   ),
   monitor_watch: t.Optional(t.Array(t.String())),
-  notes: t.Optional(t.String()),
+  notes: nullableString,
 });
 
 export const createCompetitorHandler = new Elysia()

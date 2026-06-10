@@ -39,6 +39,12 @@ const SECTIONS: ReadonlyArray<readonly [SectionKey, string]> = [
 
 export function AccountPage() {
   const [section, setSection] = useState<SectionKey>("profile");
+  const navigate = useNavigate();
+
+  function onSignOut() {
+    navigate("/signin", { replace: true, state: { signedOut: true } });
+    void authClient.signOut();
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
@@ -71,6 +77,27 @@ export function AccountPage() {
               </button>
             );
           })}
+
+          <button
+            onClick={onSignOut}
+            className="w-full mt-auto"
+            style={{
+              border: "1px solid var(--neg)",
+              background: "transparent",
+              textAlign: "left",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 10px",
+              borderRadius: "var(--r-md)",
+              fontSize: 13,
+              color: "var(--neg)",
+              cursor: "pointer",
+            }}
+          >
+            <Icon name="log-out" size={14} />
+            Sign out
+          </button>
         </nav>
 
         {/* Mobile nav */}
@@ -163,16 +190,10 @@ function Field({
 }
 
 function ProfileSection() {
-  const navigate = useNavigate();
   const { data: me } = useMeQuery();
   const name = me?.name ?? "";
   const email = me?.email ?? "";
   const initial = (name || email || "?").charAt(0).toUpperCase();
-
-  async function onSignOut() {
-    await authClient.signOut();
-    navigate("/signin", { replace: true });
-  }
 
   return (
     <FormCard title="Profile" sub="who you are in this workspace">
@@ -211,15 +232,6 @@ function ProfileSection() {
           defaultValue={email}
           readOnly
         />
-      </Field>
-      <Field label="Session">
-        <button
-          type="button"
-          className="re-btn"
-          onClick={onSignOut}
-        >
-          Sign out
-        </button>
       </Field>
       <Field label="Role" hint="Used to scope what we surface in alerts">
         <Select defaultValue="pm">

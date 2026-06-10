@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { CONFIG } from "@/global-config";
 import { useAuthContext } from "../hooks";
 
@@ -7,30 +7,22 @@ type GuestGuardProps = {
   children: React.ReactNode;
 };
 
-function Splash() {
-  return (
-    <div className="grid h-screen w-screen place-items-center bg-background text-sm text-muted-foreground">
-      Loading…
-    </div>
-  );
-}
-
 export function GuestGuard({ children }: GuestGuardProps) {
   const { loading, authenticated } = useAuthContext();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const returnTo = searchParams.get("returnTo") || CONFIG.auth.redirectPath;
-  const [isChecking, setIsChecking] = useState(true);
+  const justSignedOut =
+    (location.state as { signedOut?: boolean } | null)?.signedOut === true;
 
   useEffect(() => {
-    if (loading) return;
-    if (authenticated) {
+    // Don't bounce an authenticated visitor away mid sign-out — the session is
+    // being torn down in the background and this view should stay on the form.
+    if (!justSignedOut && !loading && authenticated) {
       window.location.href = returnTo;
-      return;
     }
-    setIsChecking(false);
-  }, [authenticated, loading, returnTo]);
+  }, [authenticated, loading, returnTo, justSignedOut]);
 
-  if (isChecking) return <Splash />;
-
+  // Always render the form immediately; no loading splash for guests.
   return <>{children}</>;
 }

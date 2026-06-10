@@ -15,7 +15,6 @@ export const ENABLED_PLATFORMS = [
 export type EnabledPlatformId = (typeof ENABLED_PLATFORMS)[number];
 
 export const LLM_MODEL = process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-v4-flash:free";
-export const LLM_TEMPERATURE = 1.0;
 
 export function readOpenRouterApiKey(): string {
   const k = process.env.OPENROUTER_API_KEY;

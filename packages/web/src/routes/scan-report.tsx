@@ -158,14 +158,33 @@ export function ScanReportPage() {
 
   // Sections fetched but all role sections are null — LLM analysis is still
   // being written. Keep showing a loading state; the refetchInterval above
-  // will retry automatically every 5 seconds.
+  // will retry automatically every 5 seconds. If it takes >10 min, something
+  // likely failed in the worker — offer to rescan.
   const hasAnySections = sections && (sections.founder ?? sections.product ?? sections.marketing ?? sections.growth ?? sections.summary);
+  const minsSinceReport = reportRow && (Date.now() - new Date(reportRow.created_at).getTime()) / (1000 * 60);
+  const isStuck = minsSinceReport && minsSinceReport > 10;
+
   if (id && sections && !hasAnySections) {
     return (
       <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>GENERATING ANALYSIS</div>
-        <div style={{ fontSize: 16, marginBottom: 8 }}>AI analysis is being written…</div>
-        <div style={{ fontSize: 13, color: "var(--fg-faint)" }}>This usually takes 30–60 seconds. The page will update automatically.</div>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
+          {isStuck ? "ANALYSIS STUCK" : "GENERATING ANALYSIS"}
+        </div>
+        <div style={{ fontSize: 16, marginBottom: 8 }}>
+          {isStuck ? "Analysis is taking longer than expected." : "AI analysis is being written…"}
+        </div>
+        <div style={{ fontSize: 13, color: "var(--fg-faint)", marginBottom: isStuck ? 16 : 0 }}>
+          {isStuck ? "This might indicate a worker error. Check the logs or try rescanning." : "This usually takes 30–60 seconds. The page will update automatically."}
+        </div>
+        {isStuck && (
+          <button
+            className="re-btn re-btn-sm"
+            onClick={() => navigate(-1)}
+            style={{ marginTop: 12 }}
+          >
+            Go back
+          </button>
+        )}
       </div>
     );
   }

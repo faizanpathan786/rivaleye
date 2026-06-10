@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CONFIG } from "@/global-config";
 import { useAuthContext } from "../hooks";
@@ -19,21 +19,19 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { authenticated, loading } = useAuthContext();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (loading) return;
-    if (!authenticated) {
-      const params = new URLSearchParams({ returnTo: location.pathname });
-      navigate(`${CONFIG.auth.signInPath}?${params.toString()}`, {
-        replace: true,
-      });
-      return;
-    }
-    setIsChecking(false);
+    if (loading || authenticated) return;
+    const params = new URLSearchParams({ returnTo: location.pathname });
+    navigate(`${CONFIG.auth.signInPath}?${params.toString()}`, {
+      replace: true,
+    });
   }, [authenticated, loading, location.pathname, navigate]);
 
-  if (isChecking) return <Splash />;
-
-  return <>{children}</>;
+  // Once the session is known (e.g. right after sign-in, where better-auth has
+  // it cached), render children immediately — no splash. The splash only shows
+  // while the session is genuinely resolving, or briefly before redirecting an
+  // unauthenticated visitor to sign-in.
+  if (authenticated) return <>{children}</>;
+  return <Splash />;
 }

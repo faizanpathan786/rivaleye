@@ -93,19 +93,31 @@ export function SignInPage() {
   };
 
   const handleProvider = async (id: ProviderId) => {
-    if (id !== "google") {
-      setError(`${id.toUpperCase()} sign-in not yet configured.`);
+    if (id === "sso") {
+      setError("SSO sign-in not yet configured.");
       return;
     }
     setError(null);
     setBusy(true);
     try {
-      await authClient.signIn.social({
-        provider: "google",
+      const result = await authClient.signIn.social({
+        provider: id,
         callbackURL: `${window.location.origin}${returnTo}`,
+        errorCallbackURL: `${window.location.origin}${CONFIG.auth.signInPath}`,
       });
+      if (result.error) {
+        setError(
+          result.error.message ??
+            `${id === "google" ? "Google" : "GitHub"} sign-in is not configured.`,
+        );
+        setBusy(false);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Google sign-in failed.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : `${id === "google" ? "Google" : "GitHub"} sign-in failed.`,
+      );
       setBusy(false);
     }
   };
@@ -114,7 +126,8 @@ export function SignInPage() {
     <div
       className="grid grid-cols-1 lg:grid-cols-[1fr_460px]"
       style={{
-        minHeight: "100%",
+        height: "100dvh",
+        overflow: "hidden",
         background: "var(--bg)",
       }}
     >

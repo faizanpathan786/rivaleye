@@ -17,6 +17,9 @@ const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+const authMountBase = `${process.env.BETTER_AUTH_URL ?? "http://localhost:4000"}/v1/auth`;
+const callbackURI = (provider: string) => `${authMountBase}/callback/${provider}`;
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:4000",
@@ -29,10 +32,24 @@ export const auth = betterAuth({
   },
   emailAndPassword: { enabled: true },
   socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-    },
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            redirectURI: callbackURI("google"),
+          },
+        }
+      : {}),
+    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+      ? {
+          github: {
+            clientId: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            redirectURI: callbackURI("github"),
+          },
+        }
+      : {}),
   },
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -62,6 +79,11 @@ export const auth = betterAuth({
     },
   },
   account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "github"],
+      requireLocalEmailVerified: false,
+    },
     fields: {
       userId: "user_id",
       accountId: "account_id",

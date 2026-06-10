@@ -6,6 +6,7 @@ import { useMeQuery } from "@/hooks/queries/use-me";
 import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { useBalanceQuery } from "@/hooks/queries/use-billing";
+import { authClient } from "@/lib/auth-client";
 import type { ReportRow } from "@/api/reports";
 
 interface CrumbConfig {
@@ -201,10 +202,19 @@ interface SidebarProps {
 }
 
 function Sidebar({ open }: SidebarProps) {
+  const navigate = useNavigate();
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
   const balanceQuery = useBalanceQuery();
   const stats = dashboardQuery.data?.stats;
+
+  function onSignOut() {
+    // Navigate first so sign-out feels instant; tear down the session in the
+    // background. The query cache is intentionally kept so signing back in as
+    // the same user shows data immediately with no loading state.
+    navigate("/signin", { replace: true, state: { signedOut: true } });
+    void authClient.signOut();
+  }
 
   const badges: Record<"competitors" | "radar", NavBadge> = {
     competitors: { count: stats?.total_competitors ?? null },
@@ -313,6 +323,16 @@ function Sidebar({ open }: SidebarProps) {
             {balanceQuery.data?.free_scan_used === false ? "1 free scan available" : "tap to buy more"}
           </div>
         </NavLink>
+
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="sb-item sb-idle flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer mt-1"
+          style={{ fontSize: 13, color: "var(--neg)" }}
+        >
+          <Icon name="log-out" size={14} className="flex-shrink-0" />
+          <span className="flex-1">Sign out</span>
+        </button>
       </div>
     </aside>
   );

@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { queryClient, queryPersister, QUERY_CACHE_MAX_AGE } from "./lib/query-client";
 import { AppShell } from "./components/layout/app-shell";
 import { DashboardPage } from "./routes/dashboard";
 import { RadarPage } from "./routes/radar";
@@ -21,8 +22,6 @@ import { NotFoundPage } from "./routes/not-found";
 import { AuthProvider } from "./auth/context/better-auth";
 import { AuthGuard, GuestGuard } from "./auth/guard";
 import { Toaster } from "@/components/ui/sonner";
-
-const queryClient = new QueryClient();
 
 function protect(Component: React.ComponentType) {
   return () => (
@@ -76,11 +75,14 @@ void protect;
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: queryPersister, maxAge: QUERY_CACHE_MAX_AGE }}
+    >
       <AuthProvider>
         <RouterProvider router={router} />
         <Toaster richColors position="bottom-right" />
       </AuthProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

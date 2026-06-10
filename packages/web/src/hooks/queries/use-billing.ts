@@ -24,6 +24,7 @@ export function useCreditPacksQuery() {
   return useQuery({
     queryKey: billingKeys.packs,
     queryFn: getCreditPacks,
+    staleTime: Infinity,
   });
 }
 

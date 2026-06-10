@@ -61,6 +61,12 @@ const PLATFORM_LETTER: Record<string, string> = {
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) return err.message;
+  // The axios interceptor rejects with the API's plain error envelope
+  // ({ message, error }), which is not an Error instance.
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string" && m.length > 0) return m;
+  }
   return fallback;
 }
 

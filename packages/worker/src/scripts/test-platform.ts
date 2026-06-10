@@ -1,6 +1,6 @@
 import { getScraper } from "@rivaleye/scrapers";
 import type { PlatformId } from "@rivaleye/scrapers";
-import { OpenRouterClient, LLM_MODEL, LLM_TEMPERATURE, readOpenRouterApiKey } from "@rivaleye/shared";
+import { OpenRouterClient, LLM_MODEL, readOpenRouterApiKey } from "@rivaleye/shared";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { toLegacyExtract } from "../pipeline/signal-adapters";
@@ -27,7 +27,7 @@ if (!platform || !competitor) {
   console.log(`[test-platform] fetched ${posts.length} posts`);
 
   const apiKey = readOpenRouterApiKey();
-  const llm = new OpenRouterClient({ apiKey, model: LLM_MODEL, temperature: LLM_TEMPERATURE });
+  const llm = new OpenRouterClient({ apiKey, model: LLM_MODEL });
 
   const ctx: PipelineCtx = {
     reportId: "smoke-test",

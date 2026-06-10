@@ -153,9 +153,12 @@ export async function runPipeline(reportId: string): Promise<void> {
     await saveCheckpoint(reportId, "C", { ...merged, _signals: mergedSignals } as unknown as Record<string, unknown>);
   }
 
-  // Stage D
+  // Stage D + E
   let synth: SynthOutput;
   let roleSections: RoleSections | undefined;
+  let refined: SynthOutput;
+  let fellBackToDraft = false;
+
   if (checkpoints.has("D")) {
     const cCheckpoint = checkpoints.get("D") as Record<string, unknown>;
     synth = synthOutputSchema.parse(cCheckpoint);
@@ -177,54 +180,73 @@ export async function runPipeline(reportId: string): Promise<void> {
     } else {
       await log(reportId, "info", "D", null, "skipping stage D (checkpoint found with role sections)");
     }
+
+    // Load E checkpoint
+    if (checkpoints.has("E")) {
+      await log(reportId, "info", "E", null, "skipping stage E (checkpoint found)");
+      refined = checkpoints.get("E") as unknown as SynthOutput;
+    } else {
+      await log(reportId, "warn", null, null, "D checkpoint exists but E is missing — this should not happen");
+      refined = synth;
+    }
   } else {
-    await log(reportId, "info", "D", null, "running stage D: synth", {
+    await log(reportId, "info", "D", null, "running stage D: synth + role sections (parallel)", {
       complaintClusters: merged.complaint_clusters.length,
       featureClusters: merged.feature_clusters.length,
     });
-    const resultD = await runStageDSynth({ llm, ctx, merged, briefs, extracts }, LLM_OPTS_D);
-    await log(reportId, "info", "D", null, "stage D done", {
+
+    // Stage D synth and role synthesis both depend only on the merged signals,
+    // not on each other — run them concurrently so the two largest LLM calls in
+    // the pipeline overlap instead of stacking. Role synthesis keeps its own
+    // isolated retry so a transient failure there never blocks the synth call.
+    const synthPromise = runStageDSynth({ llm, ctx, merged, briefs, extracts }, LLM_OPTS_D);
+    const rolePromise = (async (): Promise<RoleSections | undefined> => {
+      try {
+        const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
+        await log(reportId, "info", "D", null, "stage D role synthesis done", {
+          sections: Object.keys(resultRole.roleSections),
+          promptTokens: resultRole.usage.promptTokens,
+          completionTokens: resultRole.usage.completionTokens,
+        });
+        return resultRole.roleSections;
+      } catch (roleErr) {
+        const causeMsg = roleErr instanceof Error && roleErr.cause instanceof Error
+          ? roleErr.cause.message
+          : roleErr instanceof Error && roleErr.cause
+            ? String(roleErr.cause)
+            : null;
+        await log(reportId, "warn", "D", null, "stage D role synthesis failed — retrying once", {
+          error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+          cause: causeMsg,
+        });
+        // One automatic retry before giving up so a transient LLM timeout
+        // doesn't permanently leave all role sections missing.
+        try {
+          await new Promise((r) => setTimeout(r, 4000));
+          const retryRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
+          await log(reportId, "info", "D", null, "stage D role synthesis retry succeeded", {
+            sections: Object.keys(retryRole.roleSections),
+          });
+          return retryRole.roleSections;
+        } catch (retryErr) {
+          await log(reportId, "warn", "D", null, "stage D role synthesis retry also failed — continuing without role sections", {
+            error: retryErr instanceof Error ? retryErr.message : String(retryErr),
+          });
+          return undefined;
+        }
+      }
+    })();
+
+    const [resultD, roleResult] = await Promise.all([synthPromise, rolePromise]);
+    synth = resultD.synth;
+    roleSections = roleResult;
+    await log(reportId, "info", "D", null, "stage D synth done", {
       promptTokens: resultD.usage.promptTokens,
       completionTokens: resultD.usage.completionTokens,
       complaints: resultD.synth.complaints?.length ?? 0,
       opportunities: resultD.synth.opportunities?.length ?? 0,
       actions: resultD.synth.actions?.length ?? 0,
     });
-    synth = resultD.synth;
-
-    try {
-      const resultRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
-      roleSections = resultRole.roleSections;
-      await log(reportId, "info", "D", null, "stage D role synthesis done", {
-        sections: Object.keys(roleSections),
-        promptTokens: resultRole.usage.promptTokens,
-        completionTokens: resultRole.usage.completionTokens,
-      });
-    } catch (roleErr) {
-      const causeMsg = roleErr instanceof Error && roleErr.cause instanceof Error
-        ? roleErr.cause.message
-        : roleErr instanceof Error && roleErr.cause
-          ? String(roleErr.cause)
-          : null;
-      await log(reportId, "warn", "D", null, "stage D role synthesis failed — retrying once", {
-        error: roleErr instanceof Error ? roleErr.message : String(roleErr),
-        cause: causeMsg,
-      });
-      // One automatic retry before giving up so a transient LLM timeout
-      // doesn't permanently leave all role sections missing.
-      try {
-        await new Promise((r) => setTimeout(r, 4000));
-        const retryRole = await runRoleSynthesis({ llm, ctx, mergedSignals }, LLM_OPTS_D_ROLE);
-        roleSections = retryRole.roleSections;
-        await log(reportId, "info", "D", null, "stage D role synthesis retry succeeded", {
-          sections: Object.keys(roleSections),
-        });
-      } catch (retryErr) {
-        await log(reportId, "warn", "D", null, "stage D role synthesis retry also failed — continuing without role sections", {
-          error: retryErr instanceof Error ? retryErr.message : String(retryErr),
-        });
-      }
-    }
 
     // Generate cross-platform summary
     if (roleSections !== undefined) {
@@ -269,7 +291,7 @@ export async function runPipeline(reportId: string): Promise<void> {
               return [platformId, e];
             })
           ),
-          topQuotes: (resultD.synth.quotes ?? []).map((q) => ({
+          topQuotes: (synth.quotes ?? []).map((q) => ({
             who: q.who ?? "Unknown",
             sub: q.sub ?? q.when_label ?? "Unknown",
             when: q.when_label ?? "Unknown",
@@ -307,12 +329,7 @@ export async function runPipeline(reportId: string): Promise<void> {
   }
 
   // Stage E
-  let refined: SynthOutput;
-  let fellBackToDraft = false;
-  if (checkpoints.has("E")) {
-    await log(reportId, "info", "E", null, "skipping stage E (checkpoint found)");
-    refined = checkpoints.get("E") as unknown as SynthOutput;
-  } else {
+  if (!checkpoints.has("E")) {
     await log(reportId, "info", "E", null, "running stage E: refine", {
       complaints: synth.complaints?.length ?? 0,
       opportunities: synth.opportunities?.length ?? 0,
@@ -329,6 +346,9 @@ export async function runPipeline(reportId: string): Promise<void> {
     refined = resultE.refined;
     fellBackToDraft = resultE.fellBackToDraft;
     await saveCheckpoint(reportId, "E", refined as unknown as Record<string, unknown>);
+  } else {
+    await log(reportId, "info", "E", null, "skipping stage E (checkpoint found)");
+    refined = checkpoints.get("E") as unknown as SynthOutput;
   }
 
   const mentionRows = await db
@@ -339,8 +359,12 @@ export async function runPipeline(reportId: string): Promise<void> {
   const platformStats = computePlatformStats(mentionRows);
   const subreddits = computeSubredditStats(mentionRows);
 
+  // Ensure role sections are present for persist. If the live variable is undefined,
+  // fall back to the D checkpoint (which was saved even if the live variable is empty).
+  const roleSectsForPersist = roleSections ?? (checkpoints.get("D") as Record<string, unknown>)?._role_sections as RoleSections | undefined;
+
   await log(reportId, "info", "persist", null, "persisting report to sub-tables");
-  await persistReport({ reportId, synth: refined, platformStats, subreddits, roleSections });
+  await persistReport({ reportId, synth: refined, platformStats, subreddits, roleSections: roleSectsForPersist });
   await log(reportId, "info", "persist", null, "persist done", {
     fellBackToDraft,
   });
