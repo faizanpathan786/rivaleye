@@ -1,17 +1,19 @@
 # Deploys to the rivaleye-server Compute Engine VM over IAP-tunneled SSH.
-# Runs as the trigger's service account (Compute Engine default SA), which has
-# Compute Admin + Service Account User. If the IAP tunnel is rejected, grant
-# that SA roles/iap.tunnelResourceAccessor.
+# Runs as the trigger's service account (Compute Engine default SA), which needs
+# Compute Admin + Service Account User + IAP-secured Tunnel User.
+#
+# Before pulling we discard disposable local drift on the VM (lockfile, generated
+# .astro files, root package.json) but intentionally KEEP packages/web/src/
+# global-config.ts, which holds the prod API URL. The untracked ecosystem.config.cjs
+# (PM2 config) is never touched by git.
 steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud compute ssh faizan514pathan@rivaleye-server --zone=us-central1-a --tunnel-through-iap --quiet --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && git pull origin main && pnpm install && pnpm build && pm2 restart all'"
+        gcloud compute ssh faizan514pathan@rivaleye-server --zone=us-central1-a --tunnel-through-iap --quiet --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && (git checkout -- pnpm-lock.yaml package.json packages/landing/.astro/content.d.ts packages/landing/.astro/types.d.ts 2>/dev/null || true) && git pull origin main && pnpm install && pnpm build && pm2 restart all'"
 
-# The heavy work (pnpm install/build) runs on the VM, so the build machine
-# itself stays idle — default machine type is fine.
 timeout: '1800s'
 
 options:
