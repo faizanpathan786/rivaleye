@@ -10,6 +10,11 @@ export PATH="$HOME/.bun/bin:$HOME/.local/share/pnpm:$PATH"
 
 cd "$(dirname "$0")"
 
+# Cap Node heap so vite/astro don't get OOM-killed on a small VM.
+export NODE_OPTIONS="--max-old-space-size=2048"
+
 pnpm install
-pnpm build
+# Build one package at a time. Running vite + astro check + bun build in
+# parallel starves a small VM and the build hangs.
+pnpm exec turbo run build --concurrency=1
 pm2 restart all
