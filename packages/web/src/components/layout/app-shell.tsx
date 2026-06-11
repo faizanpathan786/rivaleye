@@ -81,7 +81,7 @@ export function AppShell() {
   return (
     <div
       className="app relative grid h-full md:[grid-template-columns:212px_1fr] [grid-template-columns:1fr]"
-      style={{ gridTemplateRows: "52px 1fr" }}
+      style={{ gridTemplateRows: "52px minmax(0, 1fr)" }}
     >
       <div className="dot-grid-bg absolute inset-0 pointer-events-none" />
       <TopBar
@@ -103,7 +103,7 @@ export function AppShell() {
 
       <Sidebar open={drawerOpen} />
 
-      <main className="main relative z-[1] overflow-y-auto overflow-x-hidden bg-transparent">
+      <main className="main relative z-[1] min-h-0 overflow-y-auto overflow-x-hidden bg-transparent">
         <Outlet />
       </main>
     </div>
@@ -158,11 +158,6 @@ function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount, onTog
         ))}
       </nav>
       <div className="actions flex flex-1 md:flex-none items-center justify-end gap-1.5">
-        <button className="re-btn re-btn-ghost re-btn-sm hidden md:flex" title="Search">
-          <Icon name="search" size={14} />
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>⌘K</span>
-        </button>
-        <span className="hidden md:block" style={{ width: 1, height: 18, background: "var(--border-soft)" }} />
         <button className="re-btn re-btn-sm" onClick={onNewScan}>
           <Icon name="plus" size={14} /> New scan
         </button>
