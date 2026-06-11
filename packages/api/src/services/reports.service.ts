@@ -65,7 +65,7 @@ export async function listReports(owner_id: string) {
     })
     .from(reports)
     .where(eq(reports.owner_id, owner_id))
-    .orderBy(asc(reports.created_at));
+    .orderBy(desc(reports.created_at));
 }
 
 function inferCompetitorDomain(name: string, websiteUrl?: string): string | null {
@@ -506,10 +506,16 @@ export async function cancelReport(
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const report = await assertReportOwned(reportId, owner_id);
   if (!report) return { ok: false, reason: "not_found" };
-  await db
-    .update(reports)
-    .set({ status: "cancelled", stage: "cancelled", updated_at: new Date() })
-    .where(eq(reports.id, reportId));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(reports)
+      .set({ status: "cancelled", stage: "cancelled", updated_at: new Date() })
+      .where(eq(reports.id, reportId));
+    await tx
+      .update(report_platform_jobs)
+      .set({ status: "cancelled" })
+      .where(eq(report_platform_jobs.report_id, reportId));
+  });
   return { ok: true };
 }
 

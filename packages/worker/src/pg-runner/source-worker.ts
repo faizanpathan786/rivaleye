@@ -31,6 +31,7 @@ import { emit } from "../events/emit";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { fanInCheck } from "./fan-in";
+import { triggerResynthesis } from "./resynthesis";
 import { PermanentError, RateLimitError } from "../errors";
 import type { SourceJobRow } from "./types";
 import type { PlatformExtract, StageAExtract } from "../prompts/shared";
@@ -125,6 +126,22 @@ export async function processSourceJob(
   let posts: NormalizedPost[] = [];
 
   try {
+    // Check if report is cancelled before processing
+    const [reportCheck] = await db.select({ status: reports.status }).from(reports).where(eq(reports.id, job.report_id)).limit(1);
+    if (reportCheck?.status === "cancelled") {
+      log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Report is cancelled; marking job as cancelled");
+      await db
+        .update(report_platform_jobs)
+        .set({
+          status: "cancelled",
+          locked_at: null,
+          locked_by: null,
+          updated_at: new Date(),
+        })
+        .where(eq(report_platform_jobs.id, job.id));
+      return;
+    }
+
     log.info({ jobId: job.id, reportId: job.report_id, platform: job.platform }, "Starting source job processing");
 
     // Step 1: Emit started event
@@ -239,6 +256,13 @@ export async function processSourceJob(
     // Step 9: Check fan-in (may trigger synthesis job creation)
     log.info({ reportId: job.report_id }, "Checking fan-in for synthesis job");
     await fanInCheck(job.report_id);
+
+    // Step 10: If a synthesis job already exists (partial report was generated),
+    // trigger a re-synthesis to incorporate this newly-completed platform data.
+    const resynth = await triggerResynthesis(job.report_id);
+    if (resynth) {
+      log.info({ reportId: job.report_id, platform: job.platform }, "Triggered resynthesis due to late platform success");
+    }
 
     log.info({ jobId: job.id, reportId: job.report_id }, "Source job completed successfully");
   } catch (err) {

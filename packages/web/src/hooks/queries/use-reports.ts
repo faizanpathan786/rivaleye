@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  cancelReport,
   createReport,
   getActions,
   getComplaints,
@@ -46,6 +47,7 @@ import type {
 const TERMINAL_STATUSES = new Set([
   "completed",
   "failed",
+  "cancelled",
   "succeeded",
   "error",
 ]);
@@ -75,13 +77,14 @@ export function useReportQuery(id: string | undefined) {
     queryKey: reportsKeys.detail(id),
     queryFn: () => getReport(id as string),
     enabled: !!id,
+    staleTime: 60000,
     refetchInterval: (q) => {
       const status = q.state.data?.status;
       if (status && TERMINAL_STATUSES.has(status)) return false;
-      return 2000;
+      return 5000;
     },
     refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -98,13 +101,14 @@ export function useReportProgressQuery(id: string | undefined) {
     queryKey: reportsKeys.section(id, "progress"),
     queryFn: () => getReportProgress(id as string),
     enabled: !!id,
+    staleTime: 60000,
     refetchInterval: (q) => {
       const status = q.state.data?.report.status;
       if (status && TERMINAL_STATUSES.has(status)) return false;
-      return 2000;
+      return 5000;
     },
     refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -113,6 +117,17 @@ export function useCreateReportMutation() {
   return useMutation<CreateReportResponse, unknown, CreateReportPayload>({
     mutationFn: (payload) => createReport(payload),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: reportsKeys.lists() });
+    },
+  });
+}
+
+export function useCancelReportMutation() {
+  const qc = useQueryClient();
+  return useMutation<void, unknown, string>({
+    mutationFn: (reportId) => cancelReport(reportId),
+    onSuccess: (_data, reportId) => {
+      qc.invalidateQueries({ queryKey: reportsKeys.detail(reportId) });
       qc.invalidateQueries({ queryKey: reportsKeys.lists() });
     },
   });

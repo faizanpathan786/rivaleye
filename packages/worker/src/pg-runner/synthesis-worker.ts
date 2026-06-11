@@ -14,7 +14,7 @@ import { eq } from "drizzle-orm";
 import pino from "pino";
 import { db } from "../db";
 import { reports } from "../../../api/src/db/schema/reports.js";
-import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
+import { report_platform_jobs, synthesis_jobs, report_pipeline_checkpoints } from "../../../api/src/db/schema/pipeline.js";
 import { emit } from "../events/emit";
 import { runPipeline } from "../pipeline/run";
 import { PermanentError } from "../errors";
@@ -58,6 +58,22 @@ export async function processSynthesisJob(
       { jobId: job.id, reportId: job.report_id },
       "Starting synthesis job processing"
     );
+
+    // Check if report is cancelled before processing
+    const [reportCheck] = await db.select({ status: reports.status }).from(reports).where(eq(reports.id, job.report_id)).limit(1);
+    if (reportCheck?.status === "cancelled") {
+      log.info({ jobId: job.id, reportId: job.report_id }, "Report is cancelled; marking synthesis job as cancelled");
+      await db
+        .update(synthesis_jobs)
+        .set({
+          status: "cancelled",
+          locked_at: null,
+          locked_by: null,
+          updated_at: new Date(),
+        })
+        .where(eq(synthesis_jobs.id, job.id));
+      return;
+    }
 
     // Step 1: Emit started event
     await emit({
@@ -164,7 +180,43 @@ export async function processSynthesisJob(
       })
       .where(eq(reports.id, job.report_id));
 
-    // Step 5: Mark job completed
+    // Step 5: Check if a re-synthesis was requested due to late platform success
+    if (job.rerun_requested) {
+      log.info(
+        { jobId: job.id, reportId: job.report_id },
+        "Re-synthesis requested; clearing checkpoints and re-queuing job"
+      );
+
+      await db.transaction(async (tx) => {
+        // Clear all checkpoints so synthesis re-runs from scratch over updated briefs
+        await tx
+          .delete(report_pipeline_checkpoints)
+          .where(eq(report_pipeline_checkpoints.report_id, job.report_id));
+
+        // Re-queue the synthesis job for another run
+        await tx
+          .update(synthesis_jobs)
+          .set({
+            status: "queued",
+            run_after: new Date(),
+            attempt_count: 0,
+            rerun_requested: false,
+            locked_at: null,
+            locked_by: null,
+            last_error: null,
+            updated_at: new Date(),
+          })
+          .where(eq(synthesis_jobs.id, job.id));
+      });
+
+      log.info(
+        { jobId: job.id, reportId: job.report_id },
+        "Synthesis job re-queued for full rebuild with updated platform data"
+      );
+      return; // Exit early; don't emit completed
+    }
+
+    // Step 5b: Mark job completed (if no rerun requested)
     const durationMs = Date.now() - startedAt;
     log.info({ jobId: job.id, durationMs }, "Marking synthesis job completed");
     await db

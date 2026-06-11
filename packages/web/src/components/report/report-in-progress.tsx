@@ -155,15 +155,6 @@ export function ReportInProgress({
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  useEffect(() => {
-    if (window.innerWidth < 768) return;
-    const main = document.querySelector("main.main") as HTMLElement | null;
-    if (!main) return;
-    const prev = main.style.overflowY;
-    main.style.overflowY = "hidden";
-    return () => { main.style.overflowY = prev; };
-  }, []);
-
   const name =
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
 
@@ -180,6 +171,7 @@ export function ReportInProgress({
   const status = progress?.report.status ?? report.status ?? "queued";
   const done = status === "completed";
   const failed = status === "failed";
+  const cancelled = status === "cancelled";
 
   const counts = useMemo(() => {
     return platforms.reduce(
@@ -200,9 +192,10 @@ export function ReportInProgress({
   const stepStates = useMemo(() => {
     const completedCount = counts["completed"] ?? 0;
     const failedCount = counts["failed"] ?? 0;
+    const cancelledCount = counts["cancelled"] ?? 0;
     const finishedScrape =
       platforms.length > 0 &&
-      completedCount + failedCount >= platforms.length;
+      completedCount + failedCount + cancelledCount >= platforms.length;
     return PIPELINE_STEPS.map((step) => {
       let state: "done" | "active" | "pending" = "pending";
       if (step.id === "queued") {
@@ -222,7 +215,7 @@ export function ReportInProgress({
         state =
           stage === "done" || done
             ? "done"
-            : stage === "clustering" || (finishedScrape && !done && !failed)
+            : stage === "clustering" || (finishedScrape && !done && !failed && !cancelled)
               ? "active"
               : "pending";
       } else if (step.id === "done") {
@@ -230,12 +223,12 @@ export function ReportInProgress({
       }
       return { ...step, state };
     });
-  }, [platforms, counts, stage, status, done, failed]);
+  }, [platforms, counts, stage, status, done, failed, cancelled]);
 
   const totalSteps = PIPELINE_STEPS.length;
   const doneSteps = stepStates.filter((s) => s.state === "done").length;
   const activeIdx = stepStates.findIndex((s) => s.state === "active");
-  const progressFrac = done
+  const progressFrac = done || cancelled
     ? 1
     : Math.min(1, (doneSteps + (activeIdx >= 0 ? 0.5 : 0)) / totalSteps);
 
@@ -303,11 +296,11 @@ export function ReportInProgress({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="re-eyebrow">
-            {done ? "SCAN COMPLETE" : failed ? "SCAN FAILED" : "SCAN IN PROGRESS"}
+            {done ? "SCAN COMPLETE" : failed ? "SCAN FAILED" : cancelled ? "SCAN CANCELLED" : "SCAN IN PROGRESS"}
           </div>
           <h1 className="re-h1 mt-1.5 flex items-center gap-3 min-w-0 break-words">
             <span className="min-w-0 break-words">{name}</span>
-            {!done && !failed && (
+            {!done && !failed && !cancelled && (
               <span
                 className="inline-block animate-pulse rounded-full"
                 style={{
@@ -332,7 +325,7 @@ export function ReportInProgress({
           <button
             className="re-btn"
             onClick={() => cancelMutation.mutate()}
-            disabled={cancelMutation.isPending}
+            disabled={cancelMutation.isPending || done || failed || cancelled}
           >
             <Icon name="x" size={14} /> {cancelMutation.isPending ? "Cancelling…" : "Cancel"}
           </button>
@@ -444,7 +437,7 @@ export function ReportInProgress({
                 </div>
               ))
             )}
-            {!done && !failed && (
+            {!done && !failed && !cancelled && (
               <div className="flex gap-2.5">
                 <span style={{ color: "var(--fg-faint)" }}>
                   {String(events.length + 1).padStart(2, "0")}

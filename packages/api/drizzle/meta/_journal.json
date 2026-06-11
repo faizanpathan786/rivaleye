@@ -92,6 +92,20 @@
       "when": 1780603546618,
       "tag": "0012_young_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1780603600000,
+      "tag": "0013_dry_grey_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1781190500000,
+      "tag": "0014_add_job_status_cancelled",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -31,6 +32,7 @@ export const report_platform_job_status_enum = pgEnum("report_platform_job_statu
   "running",
   "completed",
   "failed",
+  "cancelled",
 ]);
 
 export const report_platform_jobs = pgTable(
@@ -89,6 +91,7 @@ export const synthesis_jobs = pgTable(
     started_at: timestamp("started_at"),
     completed_at: timestamp("completed_at"),
     last_error: text("last_error"),
+    rerun_requested: boolean("rerun_requested").notNull().default(false),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
   },
