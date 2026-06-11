@@ -2,7 +2,12 @@ import { and, avg, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { competitors, type Competitor } from "@/db/schema/competitors";
 import { radar_events, type RadarEvent } from "@/db/schema/radar";
-import { reports, type Report } from "@/db/schema/reports";
+import {
+  reports,
+  report_opportunities,
+  type Report,
+  type ReportOpportunity,
+} from "@/db/schema/reports";
 import { users, type User } from "@/db/schema/users";
 
 export type DashboardStats = {
@@ -42,12 +47,18 @@ export type DashboardCompetitorSummary = Pick<
   | "last_activity_at"
 >;
 
+export type DashboardOpportunity = Pick<
+  ReportOpportunity,
+  "id" | "title" | "payoff"
+> & { report_id: string; competitor_name: string | null };
+
 export type DashboardPayload = {
   user: { name: User["name"]; email: User["email"] };
   stats: DashboardStats;
   recent_reports: DashboardRecentReport[];
   recent_radar_events: DashboardRecentRadarEvent[];
   competitors_summary: DashboardCompetitorSummary[];
+  opportunities: DashboardOpportunity[];
 };
 
 export async function getDashboard(userId: string): Promise<DashboardPayload | null> {
@@ -71,6 +82,7 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
     recentReports,
     recentRadarEvents,
     competitorsSummary,
+    opportunities,
   ] = await Promise.all([
     db
       .select({ value: count() })
@@ -146,6 +158,22 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
       .from(competitors)
       .where(eq(competitors.owner_id, userId))
       .orderBy(sql`${competitors.last_activity_at} desc nulls last`),
+    db
+      .select({
+        id: report_opportunities.id,
+        title: report_opportunities.title,
+        payoff: report_opportunities.payoff,
+        report_id: report_opportunities.report_id,
+        competitor_name: reports.primary_competitor_name,
+      })
+      .from(report_opportunities)
+      .innerJoin(reports, eq(report_opportunities.report_id, reports.id))
+      .where(eq(reports.owner_id, userId))
+      .orderBy(
+        sql`case ${report_opportunities.payoff} when 'high' then 0 when 'med' then 1 else 2 end`,
+        report_opportunities.sort_order,
+      )
+      .limit(6),
   ]);
 
   // Prefer competitors.stat_sentiment; fall back to reports.sentiment_overall when competitors table is empty
@@ -166,5 +194,6 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
     recent_reports: recentReports,
     recent_radar_events: recentRadarEvents,
     competitors_summary: competitorsSummary,
+    opportunities,
   };
 }

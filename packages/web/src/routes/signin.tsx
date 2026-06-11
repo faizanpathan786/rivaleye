@@ -4,12 +4,11 @@ import { Icon } from "@/components/icons";
 import { authClient } from "@/lib/auth-client";
 import { CONFIG } from "@/global-config";
 
-type ProviderId = "google" | "github" | "sso";
+type ProviderId = "google" | "github";
 
 const PROVIDERS: { id: ProviderId; label: string }[] = [
   { id: "google", label: "Continue with Google" },
   { id: "github", label: "Continue with GitHub" },
-  { id: "sso", label: "Continue with SSO" },
 ];
 
 function ProviderIcon({ name }: { name: ProviderId }) {
@@ -36,14 +35,11 @@ function ProviderIcon({ name }: { name: ProviderId }) {
       </svg>
     );
   }
-  if (name === "github") {
-    return (
-      <svg viewBox="0 0 16 16" style={s} fill="currentColor">
-        <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.39v-1.4c-2.22.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.5-1.08-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.13 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.11.16 1.93.08 2.13.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.55.74.55 1.49v2.21c0 .22.14.47.55.39A8 8 0 0 0 8 0Z" />
-      </svg>
-    );
-  }
-  return <Icon name="user" size={14} />;
+  return (
+    <svg viewBox="0 0 16 16" style={s} fill="currentColor">
+      <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.39v-1.4c-2.22.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.5-1.08-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.13 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.11.16 1.93.08 2.13.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.55.74.55 1.49v2.21c0 .22.14.47.55.39A8 8 0 0 0 8 0Z" />
+    </svg>
+  );
 }
 
 const SAMPLE_ROWS: [string, number, number][] = [
@@ -93,10 +89,6 @@ export function SignInPage() {
   };
 
   const handleProvider = async (id: ProviderId) => {
-    if (id === "sso") {
-      setError("SSO sign-in not yet configured.");
-      return;
-    }
     setError(null);
     setBusy(true);
     try {
@@ -254,22 +246,6 @@ export function SignInPage() {
           </div>
         </div>
 
-        <div
-          style={{
-            position: "absolute",
-            bottom: 24,
-            left: 56,
-            right: 56,
-            display: "flex",
-            justifyContent: "space-between",
-            color: "var(--fg-faint)",
-            fontSize: 11,
-            fontFamily: "var(--font-mono)",
-          }}
-        >
-          <span>SOC 2 Type II · GDPR compliant</span>
-          <span>Built in Brooklyn</span>
-        </div>
       </div>
 
       {/* Right — sign in */}

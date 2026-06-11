@@ -31,7 +31,7 @@ const PLATFORMS = [
   { id: "devto",       name: "Dev.to",        sub: "Articles & community comments",   live: true  },
   { id: "website",     name: "Website",       sub: "Marketing site, pricing, features", live: true },
   { id: "twitter",     name: "X / Twitter",   sub: "Complaint & switching tweets",    live: true  },
-  { id: "linkedin",    name: "LinkedIn",      sub: "Public posts & comments",         live: true  },
+  { id: "linkedin",    name: "LinkedIn",      sub: "Public posts & comments",         live: false },
   { id: "capterra",    name: "Capterra",      sub: "Verified buyer reviews",          live: false },
   { id: "gmaps",       name: "Google Maps",   sub: "Local & product reviews",         live: false },
 ] as const;
@@ -47,23 +47,6 @@ const GOALS: { id: ReportGoal; label: string; hint: string }[] = [
   { id: "find_user_pain",      label: "Find user pain",           hint: "Surface verbatim complaints" },
 ];
 
-// TODO(backend): time range is not part of CreateReportPayload yet — kept
-// as a UI suggestion until the worker supports a time-window filter.
-const RANGES = [
-  { v: "30d", l: "30 days" },
-  { v: "90d", l: "90 days" },
-  { v: "1y",  l: "1 year" },
-  { v: "all", l: "All time" },
-] as const;
-
-// TODO(backend): analysis depth is not part of CreateReportPayload — kept
-// as a UI suggestion until the worker supports tiered LLM passes.
-const DEPTHS = [
-  { v: "fast",     l: "Fast",     d: "Sentiment + top complaints" },
-  { v: "standard", l: "Standard", d: "+ feature gaps & switching" },
-  { v: "deep",     l: "Deep",     d: "+ quote extraction, threading" },
-] as const;
-
 export function ScanPage() {
   const navigate = useNavigate();
   const onNav = (t: NavTarget) => navigate(navPath(t));
@@ -72,7 +55,6 @@ export function ScanPage() {
   const [nameFocused, setNameFocused] = useState(false);
   const [category, setCategory] = useState("");
   const [audience, setAudience] = useState("");
-  const [range, setRange] = useState<string>("90d");
   const [platforms, setPlatforms] = useState<Record<PlatformId, boolean>>({
     reddit: true, producthunt: true, appstore: true, playstore: true,
     hackernews: true, devto: true, website: false,
@@ -80,7 +62,6 @@ export function ScanPage() {
   });
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [goal, setGoal] = useState<ReportGoal>("find_weaknesses");
-  const [depth, setDepth] = useState<string>("standard");
 
   const { mutateAsync, isPending, error } = useCreateReportMutation();
   const { data: balance } = useBalanceQuery();
@@ -91,7 +72,6 @@ export function ScanPage() {
 
   const selectedPlatformCount = PLATFORMS.filter((p) => p.live && platforms[p.id]).length;
   const goalLabel = GOALS.find((g) => g.id === goal)?.label.toLowerCase() ?? "";
-  const rangeLabel = RANGES.find((r) => r.v === range)?.l ?? "";
 
   const canSubmit =
     !isPending &&
@@ -243,22 +223,7 @@ export function ScanPage() {
         </div>
       </Step>
 
-      <Step n={4} label="Time range">
-        <div className="flex flex-wrap" style={{ gap: 8 }}>
-          {RANGES.map((r) => (
-            <button
-              key={r.v}
-              className={`re-btn ${range === r.v ? "re-btn-primary" : ""}`}
-              onClick={() => setRange(r.v)}
-              style={{ height: 36 }}
-            >
-              {r.l}
-            </button>
-          ))}
-        </div>
-      </Step>
-
-      <Step n={5} label="Platforms to scan">
+      <Step n={4} label="Platforms to scan">
         <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 6 }}>
           {PLATFORMS.map((p) => {
             const on = platforms[p.id];
@@ -294,9 +259,6 @@ export function ScanPage() {
             );
           })}
         </div>
-        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 8 }}>
-          ESTIMATED {selectedPlatformCount * 220}+ items · cost ≈ {selectedPlatformCount} scan credits
-        </div>
         {platforms.website && (
           <div style={{ marginTop: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 6 }}>
@@ -312,39 +274,6 @@ export function ScanPage() {
             />
           </div>
         )}
-      </Step>
-
-      <Step n={6} label="Analysis depth">
-        <div className="flex flex-col sm:flex-row" style={{ gap: 8 }}>
-          {DEPTHS.map((d) => {
-            const active = depth === d.v;
-            return (
-              <button
-                key={d.v}
-                onClick={() => setDepth(d.v)}
-                className="re-btn"
-                style={{
-                  flex: 1,
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  padding: 14,
-                  height: "auto",
-                  gap: 4,
-                  borderColor: active ? "var(--fg)" : "var(--border-strong)",
-                  background: active ? "var(--surface-2)" : "var(--surface)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                  <span style={{ fontSize: 14, fontWeight: 500 }}>{d.l}</span>
-                  {active && <div style={{ width: 10, height: 10, borderRadius: 99, background: "var(--accent)" }} />}
-                </div>
-                <span className="text-fg-muted" style={{ fontSize: 11, fontWeight: 400, textAlign: "left", lineHeight: 1.4 }}>
-                  {d.d}
-                </span>
-              </button>
-            );
-          })}
-        </div>
       </Step>
 
       {errorMessage && (
@@ -377,7 +306,7 @@ export function ScanPage() {
         <div className="min-w-0">
           <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>READY TO RUN</div>
           <div className="break-words" style={{ fontSize: 14, marginTop: 4 }}>
-            <b>{name || "—"}</b> · {goalLabel} · {rangeLabel} · {selectedPlatformCount} platforms · {depth}
+            <b>{name || "—"}</b> · {goalLabel} · {selectedPlatformCount} platforms
           </div>
         </div>
         <div className="flex flex-col sm:flex-row" style={{ gap: 8 }}>

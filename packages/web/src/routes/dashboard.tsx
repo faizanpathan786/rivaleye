@@ -82,6 +82,7 @@ export function DashboardPage() {
   const data = dashboardQuery.data;
   const reports: ReportRow[] = data?.recent_reports ?? reportsQuery.data ?? [];
   const radarEvents: RadarEvent[] = data?.recent_radar_events ?? [];
+  const opportunities = data?.opportunities ?? [];
   const stats = data?.stats;
   const user = data?.user;
 
@@ -414,39 +415,44 @@ export function DashboardPage() {
             </span>
           </div>
           <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-            {(
-              [
-                ["Native time tracking", "Linear · Asana", "high"],
-                ["Customer-facing roadmap", "Linear · Notion", "med"],
-                ["Bulk mobile triage", "Linear · Jira", "med"],
-              ] as const
-            ).map(([t, c, p], i) => (
+            {opportunities.length === 0 ? (
               <div
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: 12,
-                  background: "var(--surface-2)",
-                  borderRadius: "var(--r-md, 8px)",
-                  border: "1px solid var(--border-soft)",
-                }}
+                className="font-mono-feat"
+                style={{ fontSize: 12, color: "var(--fg-faint)", textAlign: "center", padding: "12px 0" }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="break-words" style={{ fontSize: 13, fontWeight: 500 }}>{t}</div>
-                  <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                    signal from {c}
-                  </div>
-                </div>
-                <span
-                  className={`shrink-0 ${p === "high" ? "re-chip re-chip-accent" : "re-chip"}`}
-                  style={{ fontSize: 10 }}
-                >
-                  {p} payoff
-                </span>
+                Opportunities appear here after your first scan.
               </div>
-            ))}
+            ) : (
+              opportunities.map((o) => (
+                <div
+                  key={o.id}
+                  onClick={() => navigate(`/scan-report/${o.report_id}`)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: 12,
+                    background: "var(--surface-2)",
+                    borderRadius: "var(--r-md, 8px)",
+                    border: "1px solid var(--border-soft)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="break-words" style={{ fontSize: 13, fontWeight: 500 }}>{o.title}</div>
+                    <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
+                      signal from {o.competitor_name ?? "competitor"}
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 ${o.payoff === "high" ? "re-chip re-chip-accent" : "re-chip"}`}
+                    style={{ fontSize: 10 }}
+                  >
+                    {o.payoff} payoff
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

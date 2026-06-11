@@ -96,6 +96,39 @@ export function RadarPage() {
     return a;
   }, {});
 
+  const digest = useMemo(() => {
+    if (allEvents.length === 0) return null;
+    const urgent = allEvents.filter((e) => e.severity === "urgent");
+    const high = allEvents.filter((e) => e.severity === "high");
+    const priority = urgent.length > 0 ? urgent : high.length > 0 ? high : allEvents;
+
+    const nameOf = (e: RadarEvent) =>
+      e.competitor_name ?? competitorById.get(e.competitor_id)?.name ?? "a competitor";
+
+    const byComp = new Map<string, number>();
+    for (const e of priority) {
+      const n = nameOf(e);
+      byComp.set(n, (byComp.get(n) ?? 0) + 1);
+    }
+    const topComp = [...byComp.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    const typeLabels = [
+      ...new Set(
+        priority
+          .slice(0, 3)
+          .map((e) => (EVENT_TYPE_META[e.type]?.label ?? e.type).toLowerCase()),
+      ),
+    ];
+
+    return {
+      count: priority.length,
+      severityWord: urgent.length > 0 ? "urgent" : high.length > 0 ? "high-priority" : "",
+      topComp,
+      onlyOneComp: byComp.size === 1,
+      typeLabels,
+    };
+  }, [allEvents, competitorById]);
+
   const isLoading = eventsQuery.isLoading || competitorsQuery.isLoading;
   const error = eventsQuery.error ?? competitorsQuery.error;
 
@@ -292,22 +325,39 @@ export function RadarPage() {
               <span className="text-fg-faint" style={{ fontSize: 11 }}>today</span>
             </div>
             <div style={{ padding: 14 }}>
-              <p className="text-fg-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
-                Two urgent moves today, both from <b style={{ color: "var(--fg)" }}>Linear</b>. A leaked
-                time-tracking feature and a quiet pricing change. Either could blunt our wedge —
-                recommend a fast internal sync.
-              </p>
-              <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-                <button className="re-btn re-btn-sm">
-                  <Icon name="share" size={12} /> Slack team
-                </button>
-                <button
-                  className="re-btn re-btn-sm"
-                  style={{ background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}
-                >
-                  <Icon name="quote" size={12} /> Brief CEO
-                </button>
-              </div>
+              {digest ? (
+                <>
+                  <p className="text-fg-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+                    {digest.count}{" "}
+                    {digest.severityWord ? `${digest.severityWord} ` : ""}
+                    move{digest.count === 1 ? "" : "s"} detected
+                    {digest.topComp ? (
+                      <>
+                        {digest.onlyOneComp ? ", all from " : ", led by "}
+                        <b style={{ color: "var(--fg)" }}>{digest.topComp}</b>
+                      </>
+                    ) : null}
+                    {digest.typeLabels.length > 0
+                      ? ` — ${digest.typeLabels.join(", ")}.`
+                      : "."}
+                  </p>
+                  <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                    <button className="re-btn re-btn-sm">
+                      <Icon name="share" size={12} /> Slack team
+                    </button>
+                    <button
+                      className="re-btn re-btn-sm"
+                      style={{ background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}
+                    >
+                      <Icon name="quote" size={12} /> Brief CEO
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-fg-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+                  No competitor moves detected yet. Track competitors or run a scan to start populating your radar.
+                </p>
+              )}
             </div>
           </div>
 
@@ -348,7 +398,7 @@ export function RadarPage() {
                       gap: 10,
                     }}
                   >
-                    <CompetitorAvatar name={c.name} domain={c.website} size={22} borderRadius={5} color={c.color} />
+                    <CompetitorAvatar name={c.name} domain={c.website ?? undefined} size={22} borderRadius={5} color={c.color ?? undefined} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 500 }}>{c.name}</div>
                       <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>

@@ -25,12 +25,21 @@ export type CompetitorSummary = Pick<
   | "last_activity_at"
 >;
 
+export type DashboardOpportunity = {
+  id: string;
+  title: string;
+  payoff: "low" | "med" | "high";
+  report_id: string;
+  competitor_name: string | null;
+};
+
 export type DashboardData = {
   user: { name: string | null; email: string };
   stats: DashboardStats;
   recent_reports: ReportRow[];
   recent_radar_events: RadarEvent[];
   competitors_summary: CompetitorSummary[];
+  opportunities: DashboardOpportunity[];
 };
 
 export async function getDashboard(): Promise<DashboardData> {
