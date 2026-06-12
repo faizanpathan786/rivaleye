@@ -89,7 +89,21 @@
       "Bash(kill -9 43661)",
       "Bash(RAZORPAY_KEY_ID=rzp_test_Sxki7rI1ZVfy4c RAZORPAY_KEY_SECRET=mdLjZrZi8JUeWXf9LIuPSfGi VITE_RAZORPAY_KEY_ID=rzp_test_Sxki7rI1ZVfy4c bun --env-file=/c/Users/Lenovo/Desktop/rivaleye-v3/.env /c/Users/Lenovo/Desktop/rivaleye-v3/packages/api/src/server.ts)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(r.get\\('primary_competitor_name'\\), '→', r.get\\('primary_competitor_domain'\\)\\) for r in d.get\\('data',{}\\).get\\('data',[]\\)[:5]]\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "PowerShell(Get-CimInstance *)",
+      "Bash(pkill -f \"bun\\\\|node\")",
+      "Bash(tee -a dev.log)",
+      "PowerShell(pnpm db:migrate *)",
+      "PowerShell(pnpm *)",
+      "Bash(grep -vi \"google\\\\|goal\\\\b.*//\\\\|googl\")",
+      "Bash(gcloud builds *)",
+      "Skill(run)",
+      "Bash(tee /tmp/rivaleye-dev.log)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Get-Content *)",
+      "Bash(python -c \"import json;d=json.load\\(open\\('0014_snapshot.json'\\)\\);print\\(json.dumps\\(d['tables']['public.users'],indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json;d=json.load\\(open\\('0014_snapshot.json'\\)\\);print\\(json.dumps\\(d['tables']['public.users'],indent=2\\)\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

@@ -7,6 +7,7 @@ export type Me = {
   email: string;
   name: string | null;
   image: string | null;
+  role: string | null;
   email_verified: boolean;
   created_at: string;
 };
@@ -14,6 +15,7 @@ export type Me = {
 export type UpdateMePayload = {
   name?: string;
   image?: string;
+  role?: string;
 };
 
 export async function getMe(): Promise<Me> {

@@ -4,12 +4,13 @@ import { users, type User } from "@/db/schema/users";
 
 export type MeProfile = Pick<
   User,
-  "id" | "email" | "name" | "image" | "email_verified" | "created_at"
+  "id" | "email" | "name" | "image" | "role" | "email_verified" | "created_at"
 >;
 
 export type UpdateMeInput = {
   name?: string | null;
   image?: string | null;
+  role?: string | null;
 };
 
 function toProfile(row: User): MeProfile {
@@ -18,6 +19,7 @@ function toProfile(row: User): MeProfile {
     email: row.email,
     name: row.name,
     image: row.image,
+    role: row.role,
     email_verified: row.email_verified,
     created_at: row.created_at,
   };

@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { billingKeys } from "@/hooks/queries/use-billing";
+import { applyScanStart } from "@/lib/credits";
+import type { Balance } from "@/api/billing";
 import {
   cancelReport,
   createReport,
@@ -117,7 +120,14 @@ export function useCreateReportMutation() {
   return useMutation<CreateReportResponse, unknown, CreateReportPayload>({
     mutationFn: (payload) => createReport(payload),
     onSuccess: () => {
+      // The server consumed the credit inside the create transaction — show
+      // the deduction immediately, then let the refetch confirm it.
+      qc.setQueryData<Balance>(billingKeys.balance, (prev) =>
+        prev ? applyScanStart(prev) : prev,
+      );
       qc.invalidateQueries({ queryKey: reportsKeys.lists() });
+      qc.invalidateQueries({ queryKey: billingKeys.balance });
+      qc.invalidateQueries({ queryKey: billingKeys.transactions });
     },
   });
 }

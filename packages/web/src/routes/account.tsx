@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import {
@@ -9,7 +9,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditPackCard } from "@/components/billing/credit-pack-card";
-import { useMeQuery } from "@/hooks/queries/use-me";
+import { toast } from "sonner";
+import { useMeQuery, useUpdateMeMutation } from "@/hooks/queries/use-me";
+import { fileToAvatarDataUrl, MAX_AVATAR_FILE_BYTES } from "@/lib/avatar";
+
+const ROLE_OPTIONS = [
+  { value: "founder", label: "Founder" },
+  { value: "pm", label: "Product / PM" },
+  { value: "growth", label: "Growth / Marketing" },
+  { value: "design", label: "Design" },
+  { value: "other", label: "Other" },
+] as const;
 import {
   useBalanceQuery,
   useCreditPacksQuery,
@@ -191,38 +201,136 @@ function Field({
 
 function ProfileSection() {
   const { data: me } = useMeQuery();
+  const updateMe = useUpdateMeMutation();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [avatarAction, setAvatarAction] = useState<"upload" | "remove" | null>(null);
   const name = me?.name ?? "";
   const email = me?.email ?? "";
+  const image = me?.image ?? "";
   const initial = (name || email || "?").charAt(0).toUpperCase();
+
+  const role = me?.role ?? "";
+  const [nameInput, setNameInput] = useState(name);
+  const [roleInput, setRoleInput] = useState(role);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setNameInput(name);
+  }, [name]);
+  useEffect(() => {
+    setRoleInput(role);
+  }, [role]);
+  const dirty = nameInput.trim() !== name || roleInput !== role;
+
+  const handleSave = async () => {
+    if (!dirty || saving) return;
+    setSaving(true);
+    try {
+      await updateMe.mutateAsync({ name: nameInput.trim(), role: roleInput });
+      toast.success("Profile saved");
+    } catch {
+      toast.error("Couldn’t save your profile. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAvatarError(null);
+    const file = e.target.files?.[0];
+    e.target.value = ""; // let the same file be re-picked after an error
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image file.");
+      return;
+    }
+    if (file.size > MAX_AVATAR_FILE_BYTES) {
+      setAvatarError("Image must be under 5 MB.");
+      return;
+    }
+    setAvatarAction("upload");
+    try {
+      const dataUrl = await fileToAvatarDataUrl(file);
+      await updateMe.mutateAsync({ image: dataUrl });
+    } catch {
+      setAvatarError("Could not process that image. Try another one.");
+    } finally {
+      setAvatarAction(null);
+    }
+  };
+
+  const handleRemove = async () => {
+    setAvatarError(null);
+    setAvatarAction("remove");
+    try {
+      await updateMe.mutateAsync({ image: "" });
+    } catch {
+      setAvatarError("Could not remove the avatar. Try again.");
+    } finally {
+      setAvatarAction(null);
+    }
+  };
 
   return (
     <FormCard title="Profile" sub="who you are in this workspace">
       <Field label="Avatar">
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 99,
-              background: "linear-gradient(135deg,#1080D0,#5aaee0)",
-              color: "#fff",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 18,
-              fontWeight: 600,
-            }}
+          {image ? (
+            <img
+              src={image}
+              alt="Your avatar"
+              style={{ width: 44, height: 44, borderRadius: 99, objectFit: "cover" }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 99,
+                background: "linear-gradient(135deg,#1080D0,#5aaee0)",
+                color: "#fff",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 18,
+                fontWeight: 600,
+              }}
+            >
+              {initial}
+            </div>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleFile}
+          />
+          <button
+            className="re-btn re-btn-sm"
+            onClick={() => fileRef.current?.click()}
+            disabled={updateMe.isPending}
           >
-            {initial}
-          </div>
-          <button className="re-btn re-btn-sm">Upload</button>
-          <button className="re-btn re-btn-ghost re-btn-sm">Remove</button>
+            {avatarAction === "upload" ? "Uploading…" : "Upload"}
+          </button>
+          <button
+            className="re-btn re-btn-ghost re-btn-sm"
+            onClick={handleRemove}
+            disabled={updateMe.isPending || !image}
+          >
+            {avatarAction === "remove" ? "Removing…" : "Remove"}
+          </button>
         </div>
+        {avatarError && (
+          <div className="text-neg" style={{ fontSize: 12, marginTop: 8 }}>
+            {avatarError}
+          </div>
+        )}
       </Field>
       <Field label="Name">
         <input
-          key={`name-${name}`}
           className="re-input w-full max-w-[280px]"
-          defaultValue={name}
+          value={nameInput}
+          onChange={(e) => setNameInput(e.target.value)}
         />
       </Field>
       <Field label="Email">
@@ -234,16 +342,16 @@ function ProfileSection() {
         />
       </Field>
       <Field label="Role" hint="Used to scope what we surface in alerts">
-        <Select defaultValue="pm">
-          <SelectTrigger className="re-input w-full max-w-[280px]">
-            <SelectValue />
+        <Select value={roleInput || undefined} onValueChange={setRoleInput}>
+          <SelectTrigger className="w-full max-w-[280px] h-[34px] rounded-lg bg-[var(--surface-solid)] border-[var(--border-strong)] text-[var(--fg)]">
+            <SelectValue placeholder="Select a role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="founder">Founder</SelectItem>
-            <SelectItem value="pm">Product / PM</SelectItem>
-            <SelectItem value="growth">Growth / Marketing</SelectItem>
-            <SelectItem value="design">Design</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+            {ROLE_OPTIONS.map((r) => (
+              <SelectItem key={r.value} value={r.value}>
+                {r.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </Field>
@@ -251,12 +359,28 @@ function ProfileSection() {
         style={{
           marginTop: 16,
           display: "flex",
+          alignItems: "center",
           justifyContent: "flex-end",
           gap: 8,
         }}
       >
-        <button className="re-btn">Cancel</button>
-        <button className="re-btn re-btn-primary">Save changes</button>
+        <button
+          className="re-btn"
+          onClick={() => {
+            setNameInput(name);
+            setRoleInput(role);
+          }}
+          disabled={!dirty || saving}
+        >
+          Cancel
+        </button>
+        <button
+          className="re-btn re-btn-primary"
+          onClick={handleSave}
+          disabled={!dirty || saving}
+        >
+          {saving ? "Saving…" : "Save changes"}
+        </button>
       </div>
     </FormCard>
   );
@@ -297,7 +421,7 @@ function WorkspaceSection() {
       </Field>
       <Field label="Time zone">
         <Select defaultValue="America/New_York">
-          <SelectTrigger className="re-input w-full max-w-[280px]">
+          <SelectTrigger className="w-full max-w-[280px] h-[34px] rounded-lg bg-[var(--surface-solid)] border-[var(--border-strong)] text-[var(--fg)]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

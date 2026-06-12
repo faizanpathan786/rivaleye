@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { authClient } from "@/lib/auth-client";
+import { writeSessionHint } from "@/auth/session-hint";
 import { CONFIG } from "@/global-config";
 
 type ProviderId = "google" | "github";
@@ -81,6 +82,9 @@ export function SignInPage() {
         setBusy(false);
         return;
       }
+      // Seed the hint so the guarded app renders immediately on arrival
+      // instead of waiting for useSession to re-resolve.
+      if (result.data?.user) writeSessionHint(result.data.user);
       navigate(returnTo);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Authentication failed.");

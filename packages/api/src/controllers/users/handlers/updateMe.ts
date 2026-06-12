@@ -8,6 +8,7 @@ import { Tags } from "@/types/swagger";
 export const updateMeBodySchema = t.Object({
   name: t.Optional(t.Union([t.String(), t.Null()])),
   image: t.Optional(t.Union([t.String(), t.Null()])),
+  role: t.Optional(t.Union([t.String(), t.Null()])),
 });
 
 export const updateMeHandler = new Elysia()

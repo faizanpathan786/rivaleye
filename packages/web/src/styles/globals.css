@@ -93,7 +93,7 @@
     --secondary-foreground: 24 14% 8%;
     --muted: 36 18% 92%;
     --muted-foreground: 30 8% 33%;
-    --accent-hsl: 211 100% 35%;
+    --accent-hsl: 211 100% 35%;          /* #0061B1 brand blue */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;

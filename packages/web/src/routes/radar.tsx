@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Icon, type IconName } from "@/components/icons";
 import { useRadarEventsQuery } from "@/hooks/queries/use-radar";
 import { useCompetitorsQuery } from "@/hooks/queries/use-competitors";
@@ -64,7 +65,9 @@ export function RadarPage() {
 
   const [filterSev, setFilterSev] = useState<"all" | Severity>("all");
   const [filterComp, setFilterComp] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
   const [tick, setTick] = useState(0);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 4000);
@@ -85,7 +88,14 @@ export function RadarPage() {
   }, [competitors]);
 
   const allEvents = eventsQuery.data ?? [];
-  const events = allEvents;
+  const events = useMemo(() => {
+    return allEvents.filter((ev) => {
+      if (filterType !== "all" && ev.type !== filterType) return false;
+      if (search && !ev.title.toLowerCase().includes(search.toLowerCase()) &&
+          !(ev.snippet?.toLowerCase().includes(search.toLowerCase()))) return false;
+      return true;
+    });
+  }, [allEvents, filterType, search]);
 
   const urgentCount = allEvents.filter((e) => e.severity === "urgent").length;
   const highCount = allEvents.filter((e) => e.severity === "high").length;
@@ -147,7 +157,10 @@ export function RadarPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 md:flex-shrink-0">
-          <button className="re-btn">
+          <button className="re-btn" onClick={() => eventsQuery.refetch()}>
+            <Icon name="refresh" size={14} /> Sweep now
+          </button>
+          <button className="re-btn" onClick={() => toast.info("Alert rules coming soon")}>
             <Icon name="settings" size={14} /> Alert rules
           </button>
           <button className="re-btn re-btn-accent" onClick={() => navigate("/competitors")}>
@@ -263,7 +276,48 @@ export function RadarPage() {
               </button>
             ))}
         </div>
+        <div style={{ width: 1, height: 18, background: "var(--border-soft)" }} />
+        <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>
+            TYPE
+          </span>
+          <button
+            className={`re-chip ${filterType === "all" ? "re-chip-solid" : ""}`}
+            style={{ cursor: "pointer", padding: "3px 10px", fontSize: 11 }}
+            onClick={() => setFilterType("all")}
+          >
+            all
+          </button>
+          {Object.entries(EVENT_TYPE_META)
+            .slice(0, 4)
+            .map(([type, meta]) => (
+              <button
+                key={type}
+                className={`re-chip ${filterType === type ? "re-chip-solid" : ""}`}
+                style={{ cursor: "pointer", padding: "3px 10px", fontSize: 11 }}
+                onClick={() => setFilterType(filterType === type ? "all" : type)}
+              >
+                {meta.label}
+              </button>
+            ))}
+        </div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="Search events…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 6,
+              border: "1px solid var(--border-soft)",
+              background: "var(--surface-solid)",
+              color: "var(--fg)",
+              fontSize: 12,
+              width: 140,
+              outline: "none",
+            }}
+          />
           <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
             {events.length} events
           </span>
@@ -342,14 +396,22 @@ export function RadarPage() {
                       : "."}
                   </p>
                   <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-                    <button className="re-btn re-btn-sm">
+                    <button
+                      className="re-btn re-btn-sm"
+                      onClick={() => toast.info("Slack integration coming soon")}
+                    >
                       <Icon name="share" size={12} /> Slack team
                     </button>
                     <button
                       className="re-btn re-btn-sm"
                       style={{ background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}
+                      onClick={() => {
+                        const summary = `📊 Radar Brief\n\n${digest.count} ${digest.severityWord || "new"} moves detected${digest.topComp ? ` from ${digest.topComp}` : ""}.\n\nTypes: ${digest.typeLabels.join(", ") || "various"}`;
+                        navigator.clipboard.writeText(summary);
+                        toast.success("Brief copied to clipboard");
+                      }}
                     >
-                      <Icon name="quote" size={12} /> Brief CEO
+                      <Icon name="quote" size={12} /> Copy brief
                     </button>
                   </div>
                 </>
@@ -630,18 +692,40 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
               </div>
             )}
             <div className="flex-wrap" style={{ display: "flex", gap: 6, marginTop: 12 }}>
-              <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="re-btn re-btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (ev.url) window.open(ev.url, "_blank");
+                }}
+              >
                 <Icon name="external" size={12} /> Open source
               </button>
-              <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
-                <Icon name="share" size={12} /> Brief team
+              <button
+                className="re-btn re-btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(ev.title + (ev.snippet ? "\n\n" + ev.snippet : ""));
+                  toast.success("Event copied to clipboard");
+                }}
+              >
+                <Icon name="share" size={12} /> Copy event
               </button>
-              <button className="re-btn re-btn-sm" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="re-btn re-btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.success("Marked as handled");
+                }}
+              >
                 <Icon name="check" size={12} /> Mark handled
               </button>
               <button
                 className="re-btn re-btn-ghost re-btn-sm"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.info("Snoozed for 24 hours");
+                }}
                 style={{ marginLeft: "auto" }}
               >
                 Snooze

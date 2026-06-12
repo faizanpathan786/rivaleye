@@ -4,10 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Icon } from "@/components/icons";
 import { PlatformIcon } from "./platform-icon";
-import { retryPlatform, cancelReport, createReport } from "@/api/reports";
+import { retryPlatform, cancelReport } from "@/api/reports";
+import { useCreateReportMutation } from "@/hooks/queries/use-reports";
 import type {
   CreateReportPayload,
-  CreateReportResponse,
   ReportProgress,
   ReportProgressEvent,
   ReportProgressPlatform,
@@ -259,37 +259,37 @@ export function ReportInProgress({
     },
   });
 
-  const rescanMutation = useMutation<CreateReportResponse, unknown, void>({
-    mutationFn: () => {
-      const scanPlatforms =
-        platforms.length > 0
-          ? platforms.map((p) => p.platform)
-          : report.failed_platforms;
-      const payload: CreateReportPayload = {
-        category: report.category,
-        competitors: report.competitors,
-        target_audience: report.audience ?? "",
-        founder_goal: report.goal,
-        selected_platforms: scanPlatforms,
-        ...(report.primary_competitor_domain
-          ? { website_url: report.primary_competitor_domain }
-          : {}),
-      };
-      return createReport(payload);
-    },
-    onSuccess: (res) => {
-      void qc.invalidateQueries({ queryKey: ["reports"] });
-      navigate(`/scan-report/${res.id}`);
-    },
-    onError: (err) => {
-      const message = err && typeof err === "object" && "message" in err
-        ? String((err as Record<string, unknown>).message)
-        : err instanceof Error
-          ? err.message
-          : String(err);
-      toast.error(message || "Failed to start rescan. Please try again.");
-    },
-  });
+  const rescanMutation = useCreateReportMutation();
+
+  const startRescan = () => {
+    const scanPlatforms =
+      platforms.length > 0
+        ? platforms.map((p) => p.platform)
+        : report.failed_platforms;
+    const payload: CreateReportPayload = {
+      category: report.category,
+      competitors: report.competitors,
+      target_audience: report.audience ?? "",
+      founder_goal: report.goal,
+      selected_platforms: scanPlatforms,
+      ...(report.primary_competitor_domain
+        ? { website_url: report.primary_competitor_domain }
+        : {}),
+    };
+    rescanMutation.mutate(payload, {
+      onSuccess: (res) => {
+        navigate(`/scan-report/${res.id}`);
+      },
+      onError: (err) => {
+        const message = err && typeof err === "object" && "message" in err
+          ? String((err as Record<string, unknown>).message)
+          : err instanceof Error
+            ? err.message
+            : String(err);
+        toast.error(message || "Failed to start rescan. Please try again.");
+      },
+    });
+  };
 
   return (
     <div className="px-4 pt-4 pb-10 md:px-7 md:pt-5 w-full" style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -316,7 +316,7 @@ export function ReportInProgress({
           {failed && (
             <button
               className="re-btn"
-              onClick={() => rescanMutation.mutate()}
+              onClick={startRescan}
               disabled={rescanMutation.isPending}
             >
               <Icon name="refresh" size={14} /> {rescanMutation.isPending ? "Starting…" : "Rescan"}

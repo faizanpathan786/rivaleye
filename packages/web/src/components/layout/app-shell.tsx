@@ -7,6 +7,8 @@ import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
 import { useBalanceQuery } from "@/hooks/queries/use-billing";
 import { authClient } from "@/lib/auth-client";
+import { clearSessionHint } from "@/auth/session-hint";
+import { clearQueryCache } from "@/lib/query-client";
 import type { ReportRow } from "@/api/reports";
 
 interface CrumbConfig {
@@ -71,6 +73,7 @@ export function AppShell() {
   const crumbs = deriveCrumbs(location.pathname, reportsForCrumbs.data ?? []);
   const meQuery = useMeQuery();
   const userInitial = initialOf(meQuery.data?.name ?? meQuery.data?.email);
+  const userImage = meQuery.data?.image ?? null;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -87,6 +90,7 @@ export function AppShell() {
       <TopBar
         crumbs={crumbs}
         userInitial={userInitial}
+        userImage={userImage}
         onBrandClick={() => navigate("/")}
         onNewScan={() => navigate("/scan")}
         onAccount={() => navigate("/account")}
@@ -113,13 +117,14 @@ export function AppShell() {
 interface TopBarProps {
   crumbs: string[];
   userInitial: string;
+  userImage: string | null;
   onBrandClick: () => void;
   onNewScan: () => void;
   onAccount: () => void;
   onToggleMenu: () => void;
 }
 
-function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount, onToggleMenu }: TopBarProps) {
+function TopBar({ crumbs, userInitial, userImage, onBrandClick, onNewScan, onAccount, onToggleMenu }: TopBarProps) {
   return (
     <header
       className="topbar glass-blur relative z-[5] flex items-center gap-3 md:gap-4 border-b border-soft px-4"
@@ -162,10 +167,18 @@ function TopBar({ crumbs, userInitial, onBrandClick, onNewScan, onAccount, onTog
           <Icon name="plus" size={14} /> New scan
         </button>
         <button className="re-btn re-btn-ghost re-btn-icon re-btn-sm" onClick={onAccount} title="Account">
-          <span
-            className="grid place-items-center text-white font-semibold"
-            style={{ width: 22, height: 22, borderRadius: 99, background: "linear-gradient(135deg,#004d8f,#0061B1)", fontSize: 11 }}
-          >{userInitial}</span>
+          {userImage ? (
+            <img
+              src={userImage}
+              alt="Account"
+              style={{ width: 22, height: 22, borderRadius: 99, objectFit: "cover" }}
+            />
+          ) : (
+            <span
+              className="grid place-items-center text-white font-semibold"
+              style={{ width: 22, height: 22, borderRadius: 99, background: "linear-gradient(135deg,#004d8f,#0061B1)", fontSize: 11 }}
+            >{userInitial}</span>
+          )}
         </button>
       </div>
     </header>
@@ -205,8 +218,11 @@ function Sidebar({ open }: SidebarProps) {
 
   function onSignOut() {
     // Navigate first so sign-out feels instant; tear down the session in the
-    // background. The query cache is intentionally kept so signing back in as
-    // the same user shows data immediately with no loading state.
+    // background. Clear the cached query data too — otherwise signing in as a
+    // different account briefly shows the previous user's name, reports, and
+    // credits until every query refetches under the new session cookie.
+    clearSessionHint();
+    void clearQueryCache();
     navigate("/signin", { replace: true, state: { signedOut: true } });
     void authClient.signOut();
   }
