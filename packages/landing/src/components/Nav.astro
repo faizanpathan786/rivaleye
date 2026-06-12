@@ -1,6 +1,6 @@
 ---
 // src/components/Nav.astro
-const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'http://localhost:4005';
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'http://localhost:4004';
 const navLinks = [
   { label: 'How it works', href: '#how' },
   { label: 'Report', href: '#report' },
@@ -19,15 +19,6 @@ const navLinks = [
         <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime"></span>
         Live · scanning 8 sources
       </span>
-      <span class="text-[var(--color-fg-4)]">/</span>
-      <span>SIG_v0.2.4-beta</span>
-      <span class="text-[var(--color-fg-4)]">/</span>
-      <span data-clock>—— UTC</span>
-    </div>
-    <div class="flex items-center gap-4 font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]">
-      <span>NODE.atl-03</span>
-      <span class="text-[var(--color-fg-4)]">·</span>
-      <span class="text-[var(--color-lime)]">ONLINE</span>
     </div>
   </div>
 
@@ -46,10 +37,6 @@ const navLinks = [
               class="font-display text-[19px] font-medium tracking-tight text-[var(--color-fg-0)]"
               >Rival<span class="text-[var(--color-lime)]">Eye</span></span
             >
-            <span
-              class="hidden sm:inline font-mono text-[10px] tracking-widest uppercase text-[var(--color-fg-3)]"
-              >/ intel</span
-            >
           </span>
         </a>
 
@@ -62,9 +49,6 @@ const navLinks = [
                   href={link.href}
                   class="group relative inline-flex items-center gap-2 px-3 py-2 font-mono text-[11px] tracking-widest uppercase text-[var(--color-fg-2)] hover:text-[var(--color-fg-0)] transition-colors duration-200"
                 >
-                  <span class="text-[var(--color-fg-4)] group-hover:text-[var(--color-lime)] transition-colors duration-200">
-                    §{String(i + 1).padStart(2, '0')}
-                  </span>
                   <span>{link.label}</span>
                 </a>
               </li>
@@ -75,13 +59,7 @@ const navLinks = [
         {/* Right side */}
         <div class="flex items-center gap-2 sm:gap-3">
           <a
-            href={`${appUrl}/signin`}
-            class="hidden sm:inline-flex font-mono text-[11px] tracking-widest uppercase text-[var(--color-fg-2)] hover:text-[var(--color-fg-0)] transition-colors px-2 py-2"
-          >
-            Sign in
-          </a>
-          <a
-            href="#cta"
+            href={appUrl}
             class="group relative inline-flex items-center gap-1.5 sm:gap-2 bg-[var(--color-lime)] text-[var(--color-bg-0)] px-3 sm:px-4 py-2.5 min-h-[44px] font-mono text-[11px] font-medium tracking-widest uppercase hover:bg-[var(--color-lime-1)] transition-colors"
           >
             <span class="relative z-10">Run a scan</span>
@@ -130,20 +108,11 @@ const navLinks = [
                 href={link.href}
                 class="flex items-center gap-3 min-h-[44px] py-3 font-mono text-[12px] tracking-widest uppercase text-[var(--color-fg-1)]"
               >
-                <span class="text-[var(--color-fg-4)]">§{String(i + 1).padStart(2, '0')}</span>
                 <span>{link.label}</span>
               </a>
             </li>
           ))
         }
-        <li class="sm:hidden border-t border-[var(--color-line-1)] mt-2 pt-2">
-          <a
-            href={`${appUrl}/signin`}
-            class="flex items-center min-h-[44px] py-3 font-mono text-[12px] tracking-widest uppercase text-[var(--color-fg-1)]"
-          >
-            Sign in
-          </a>
-        </li>
       </ul>
     </div>
   </nav>

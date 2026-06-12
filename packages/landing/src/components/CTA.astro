@@ -27,7 +27,7 @@ import EmailForm from '~/components/react/EmailForm';
     <div class="flex flex-wrap items-center justify-center gap-3 mb-8 sm:mb-10 reveal">
       <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime"></span>
       <span class="font-mono text-[11px] tracking-[0.22em] uppercase text-[var(--color-fg-2)]">
-        § 06 / get started
+        06 / get started
       </span>
       <span class="inline-block w-1.5 h-1.5 bg-[var(--color-lime)] rounded-full animate-pulse-lime"></span>
     </div>
@@ -52,40 +52,9 @@ import EmailForm from '~/components/react/EmailForm';
       Join early access and generate your first competitor perception report. No sales call required. Start with one competitor.
     </p>
 
-    {/* Email form (terminal-framed) */}
-    <div class="relative max-w-[600px] mx-auto reveal">
-      {/* Offset frame */}
-      <div
-        aria-hidden="true"
-        class="absolute -inset-2 border border-[var(--color-line-1)] translate-x-2 translate-y-2"
-      >
-      </div>
-      <div
-        aria-hidden="true"
-        class="absolute inset-0 bg-[var(--color-lime)] opacity-[0.05] blur-3xl"
-      ></div>
-
-      <div class="relative border border-[var(--color-line-2)] bg-[var(--color-bg-1)] scanlines">
-        {/* Window chrome */}
-        <div
-          class="flex items-center justify-between border-b border-[var(--color-line-1)] px-4 py-2.5 bg-[var(--color-bg-2)]"
-        >
-          <div class="flex items-center gap-2">
-            <span class="block w-2 h-2 rounded-full bg-[var(--color-fg-4)]"></span>
-            <span class="block w-2 h-2 rounded-full bg-[var(--color-fg-4)]"></span>
-            <span class="block w-2 h-2 rounded-full bg-[var(--color-lime)]"></span>
-          </div>
-          <span class="font-mono text-[10px] tracking-[0.18em] uppercase text-[var(--color-fg-3)]">
-            rivaleye / sign-in
-          </span>
-          <span class="font-mono text-[10px] tracking-widest uppercase text-[var(--color-lime)]">
-            ready
-          </span>
-        </div>
-        <div class="p-4 sm:p-6 md:p-7">
-          <EmailForm client:visible />
-        </div>
-      </div>
+    {/* CTA Button */}
+    <div class="reveal">
+      <EmailForm client:visible />
     </div>
 
     {/* Trust strip */}

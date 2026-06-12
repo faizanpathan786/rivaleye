@@ -146,7 +146,6 @@ export function SignInPage() {
         </div>
 
         <div style={{ marginTop: 96, maxWidth: 520 }}>
-          <div className="re-eyebrow">COMPETITIVE INTEL · v0.8</div>
           <h1 className="re-h1" style={{ marginTop: 12, fontSize: "clamp(2rem, 3vw, 44px)", lineHeight: 1.05 }}>
             Find what your
             <br />
@@ -222,8 +221,8 @@ export function SignInPage() {
             style={{
               position: "absolute",
               right: 40,
-              top: 80,
-              width: 240,
+              top: 20,
+              width: 280,
               boxShadow: "var(--shadow-lg)",
               transform: "rotate(2deg)",
             }}
@@ -232,7 +231,7 @@ export function SignInPage() {
               <div className="re-eyebrow" style={{ fontSize: 9 }}>
                 VERBATIM · r/SaaS
               </div>
-              <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5 }}>
+              <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5, whiteSpace: "normal" }}>
                 "Once we hit 22 people I started begging finance for a flat tier.
                 Linear's pricing scales <i>linearly</i> with us — that's the problem."
               </p>
