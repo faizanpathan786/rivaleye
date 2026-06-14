@@ -157,6 +157,7 @@ pnpm lint                             # eslint across workspace
 10. **Api never runs scrapers or LLM calls.** Api validates input + enqueues to pg-boss + reads report status/output. All long work happens in `@rivaleye/worker`. If you're tempted to call a scraper from an api handler, stop — enqueue a job.
 11. **`@rivaleye/scrapers` outputs `NormalizedPost` only.** No platform-specific fields leak past the scraper boundary. See `packages/scrapers/CLAUDE.md`.
 12. **Hostile platforms = buy, never DIY.** LinkedIn, G2, Capterra, Gmaps reviews are routed through 3rd-party providers (Apify et al.) inside the scraper class. No headless-browser farms in this repo.
+13. **CRITICAL: Always ask permission before any destructive operation on production data.** Before running ANY command that could delete, truncate, or modify database data (especially seed scripts, migrations, truncates), **STOP and ask the user explicitly**. Never assume. Never run destructive operations without written confirmation. This includes: database resets, seed scripts, truncate commands, schema migrations on live data. **Always warn about consequences first, then ask: "Do you want me to proceed? YES/NO"** — wait for explicit permission before executing.
 
 ---
 
