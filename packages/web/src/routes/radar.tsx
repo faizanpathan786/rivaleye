@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Icon, type IconName } from "@/components/icons";
@@ -66,13 +66,7 @@ export function RadarPage() {
   const [filterSev, setFilterSev] = useState<"all" | Severity>("all");
   const [filterComp, setFilterComp] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
-  const [tick, setTick] = useState(0);
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 4000);
-    return () => clearInterval(id);
-  }, []);
 
   const competitorsQuery = useCompetitorsQuery();
   const eventsQuery = useRadarEventsQuery({
@@ -198,40 +192,6 @@ export function RadarPage() {
           <RadarStat label="High priority" value={highCount} tone="warn" sub="watch this week" />
         </div>
       )}
-
-      {/* Live ribbon */}
-      <div
-        className="flex-wrap"
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border-soft)",
-          borderRadius: 8,
-          padding: "10px 14px",
-          marginBottom: 16,
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-          fontSize: 12,
-          overflow: "hidden",
-        }}
-      >
-        <span className="re-dot re-dot-live pulse-dot" style={{ flexShrink: 0 }} />
-        <span className="font-mono-feat" style={{ color: "var(--fg)", flexShrink: 0 }}>LIVE</span>
-        <span className="font-mono-feat text-fg-faint" style={{ flexShrink: 0 }}>
-          last sweep {(tick * 4) % 60}s ago
-        </span>
-        <span style={{ width: 1, height: 12, background: "var(--border-soft)", flexShrink: 0 }} />
-        <span
-          className="text-fg-muted min-w-0"
-          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-        >
-          watching <b style={{ color: "var(--fg)" }}>{activeMonitors}</b> competitors across{" "}
-          <b style={{ color: "var(--fg)" }}>8</b> platforms — next sweep in {60 - ((tick * 4) % 60)}s
-        </span>
-        <button className="re-btn re-btn-ghost re-btn-sm" style={{ marginLeft: "auto", flexShrink: 0 }}>
-          <Icon name="spark" size={12} /> Sweep now
-        </button>
-      </div>
 
       {/* Filter bar */}
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>

@@ -47,7 +47,8 @@ while (true) {
   const [report] = await db.select().from(reports).where(eq(reports.id, reportId)).limit(1);
   const jobs = await db.select().from(report_platform_jobs).where(eq(report_platform_jobs.report_id, reportId));
   const synthJobs = await db.select().from(synthesis_jobs).where(eq(synthesis_jobs.report_id, reportId));
-  const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(mentions).where(eq(mentions.report_id, reportId));
+  const countRows = await db.select({ count: sql<number>`count(*)` }).from(mentions).where(eq(mentions.report_id, reportId));
+  const count = countRows[0]?.count ?? 0;
 
   const jobSummary = jobs.map(j => `${j.platform}:${j.status}(${j.attempt_count}/${j.max_attempts})`).join(" | ");
   const synth = synthJobs[0];

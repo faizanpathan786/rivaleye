@@ -77,7 +77,16 @@ export function App() {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister: queryPersister, maxAge: QUERY_CACHE_MAX_AGE }}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: QUERY_CACHE_MAX_AGE,
+        dehydrateOptions: {
+          // Persist only successful queries, and never the current user's
+          // profile ("me") — keep PII out of localStorage.
+          shouldDehydrateQuery: (query) =>
+            query.state.status === "success" && query.queryKey[0] !== "me",
+        },
+      }}
     >
       <AuthProvider>
         <RouterProvider router={router} />

@@ -11,6 +11,11 @@ export const authPlugin = new Elysia({ name: "auth" })
     };
   })
   .macro({
+    // Authentication only. There is no role/permission store yet, so this macro
+    // does NOT enforce a `permissions` allow-list — object-level access is
+    // enforced per-resource in the service layer (assertReportOwned / owner_id
+    // scoping). Do not pass a `permissions` arg expecting enforcement; when RBAC
+    // lands, resolve the user's effective permissions here and 403 on mismatch.
     auth: (_config: { permissions?: Permission[] } = {}) => ({
       beforeHandle: async ({ session, user, status }) => {
         if (!session || !user)

@@ -1,4 +1,5 @@
-import { boolean, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { users } from "./users";
 
 export const creditTransactionTypeEnum = pgEnum("credit_transaction_type", ["purchase", "debit"]);
@@ -19,17 +20,26 @@ export const user_credits = pgTable("user_credits", {
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const credit_transactions = pgTable("credit_transactions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  user_id: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  type: creditTransactionTypeEnum("type").notNull(),
-  amount: integer("amount").notNull(),
-  pack_id: uuid("pack_id").references(() => credit_packs.id),
-  razorpay_order_id: text("razorpay_order_id"),
-  razorpay_payment_id: text("razorpay_payment_id"),
-  description: text("description").notNull(),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-});
+export const credit_transactions = pgTable(
+  "credit_transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    type: creditTransactionTypeEnum("type").notNull(),
+    amount: integer("amount").notNull(),
+    pack_id: uuid("pack_id").references(() => credit_packs.id),
+    razorpay_order_id: text("razorpay_order_id"),
+    razorpay_payment_id: text("razorpay_payment_id"),
+    description: text("description").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    // Backstop against double-crediting one payment, even if app-level idempotency is bypassed.
+    razorpayPaymentIdUnique: uniqueIndex("credit_transactions_razorpay_payment_id_key")
+      .on(t.razorpay_payment_id)
+      .where(sql`${t.razorpay_payment_id} is not null`),
+  }),
+);
 
 export type CreditPack = typeof credit_packs.$inferSelect;
 export type UserCredits = typeof user_credits.$inferSelect;

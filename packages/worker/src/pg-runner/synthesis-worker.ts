@@ -10,7 +10,7 @@
  * On error: retry with exponential backoff until max_attempts exceeded.
  */
 
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import pino from "pino";
 import { db } from "../db";
 import { reports } from "../../../api/src/db/schema/reports.js";
@@ -167,7 +167,9 @@ export async function processSynthesisJob(
 
     await runPipeline(job.report_id);
 
-    // Step 4: Update report status to mark synthesis complete
+    // Step 4: Update report status to mark synthesis complete.
+    // Guard on status != 'cancelled' so a cancellation that landed while the
+    // pipeline was running is never silently overwritten.
     log.info({ reportId: job.report_id }, "Updating report status to completed");
     await db
       .update(reports)
@@ -178,7 +180,7 @@ export async function processSynthesisJob(
         failed_platforms: failedPlatforms,
         updated_at: new Date(),
       })
-      .where(eq(reports.id, job.report_id));
+      .where(and(eq(reports.id, job.report_id), ne(reports.status, "cancelled")));
 
     // Step 5: Check if a re-synthesis was requested due to late platform success
     if (job.rerun_requested) {
@@ -320,7 +322,7 @@ export async function processSynthesisJob(
         })
         .where(eq(synthesis_jobs.id, job.id));
 
-      // Also mark report as failed
+      // Also mark report as failed (unless the user cancelled it mid-run)
       await db
         .update(reports)
         .set({
@@ -329,7 +331,7 @@ export async function processSynthesisJob(
           error: fullError,
           updated_at: new Date(),
         })
-        .where(eq(reports.id, job.report_id));
+        .where(and(eq(reports.id, job.report_id), ne(reports.status, "cancelled")));
     }
 
     // Re-throw so caller knows job failed

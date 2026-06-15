@@ -182,5 +182,6 @@ export async function claimSynthesisJob(
     started_at: claimedJob.started_at,
     completed_at: claimedJob.completed_at,
     last_error: claimedJob.last_error,
+    rerun_requested: claimedJob.rerun_requested,
   };
 }

@@ -114,6 +114,9 @@ export type SynthesisJobRow = {
 
   /** Error message from last failure (null if no error) */
   last_error: string | null;
+
+  /** Set when a late platform success requests a full re-synthesis of this report */
+  rerun_requested: boolean;
 };
 
 /**

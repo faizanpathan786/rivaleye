@@ -11,7 +11,7 @@
  * On error: retry with exponential backoff until max_attempts exceeded.
  */
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import type { NormalizedPost } from "@rivaleye/scrapers";
 import { getScraper } from "@rivaleye/scrapers";
 import {
@@ -183,7 +183,7 @@ export async function processSourceJob(
       .where(
         and(
           eq(reports.id, job.report_id),
-          sql`${reports.status} NOT IN ('completed', 'failed')`,
+          sql`${reports.status} NOT IN ('completed', 'failed', 'cancelled')`,
         )
       );
 
@@ -201,7 +201,7 @@ export async function processSourceJob(
           locked_by: null,
           updated_at: new Date(),
         })
-        .where(eq(report_platform_jobs.id, job.id));
+        .where(and(eq(report_platform_jobs.id, job.id), ne(report_platform_jobs.status, "cancelled")));
       await emit({
         reportId: job.report_id,
         platform: job.platform,
@@ -240,7 +240,7 @@ export async function processSourceJob(
         locked_by: null,
         updated_at: new Date(),
       })
-      .where(eq(report_platform_jobs.id, job.id));
+      .where(and(eq(report_platform_jobs.id, job.id), ne(report_platform_jobs.status, "cancelled")));
 
     // Step 8: Emit completed event
     await emit({
@@ -461,12 +461,17 @@ async function runStageAExtractionStep(
     batches.map(async (batch, batchIdx) => {
       log.info({ reportId, platform, batchIdx: batchIdx + 1, totalBatches: batches.length, batchSize: batch.length }, "Stage A: running batch");
       try {
-        return await runStageAExtract({
-          llm: getLlm(),
-          ctx,
-          platform: platform as any,
-          posts: batch,
-        });
+        return await runStageAExtract(
+          {
+            llm: getLlm(),
+            ctx,
+            platform: platform as any,
+            posts: batch,
+          },
+          // Bound each LLM call so a hung OpenRouter request can't wedge the job
+          // (and its concurrency slot) until the 25-min stale sweep.
+          { timeoutMs: 90_000, maxAttempts: 2 },
+        );
       } catch (err) {
         if (err instanceof LlmSchemaError) {
           log.error({ reportId, platform, batchIdx, issues: err.issues, rawJson: JSON.stringify(err.raw).slice(0, 2000) }, "Stage A: LLM batch failed schema validation");
@@ -524,12 +529,15 @@ async function runStageBSummarizationStep(
   };
 
   log.info({ reportId, platform, complaints: legacyExtract.complaints.length }, "Stage B: running LLM summarization");
-  const stageBResult = await runStageBSummarize({
-    llm: getLlm(),
-    ctx,
-    platform: platform as any,
-    extract: legacyExtract,
-  });
+  const stageBResult = await runStageBSummarize(
+    {
+      llm: getLlm(),
+      ctx,
+      platform: platform as any,
+      extract: legacyExtract,
+    },
+    { timeoutMs: 90_000, maxAttempts: 2 },
+  );
 
   log.info({
     reportId, platform,

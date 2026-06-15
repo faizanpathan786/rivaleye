@@ -92,7 +92,7 @@ async function crawlSinglePage(
 
     const title = await page.title().catch(() => null);
     const description = await page
-      .$eval('meta[name="description"]', (el) => el.getAttribute("content"))
+      .$eval('meta[name="description"]', (el: Element) => el.getAttribute("content"))
       .catch(() => null);
     const markdown = await extractMarkdown(page);
 

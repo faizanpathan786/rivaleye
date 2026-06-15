@@ -16,14 +16,14 @@ interface CrumbConfig {
 }
 
 const CRUMB_MAP: CrumbConfig = {
-  "/": ["Stitchworks", "Overview"],
-  "/radar": ["Stitchworks", "Radar"],
-  "/competitors": ["Stitchworks", "Competitors"],
-  "/scan": ["Stitchworks", "New scan"],
-  "/compare": ["Stitchworks", "Compare"],
-  "/scan-report": ["Stitchworks", "Scan Report"],
-  "/history": ["Stitchworks", "History"],
-  "/account": ["Stitchworks", "Settings"],
+  "/": ["RivalEye", "Overview"],
+  "/radar": ["RivalEye", "Radar"],
+  "/competitors": ["RivalEye", "Competitors"],
+  "/scan": ["RivalEye", "New scan"],
+  "/compare": ["RivalEye", "Compare"],
+  "/scan-report": ["RivalEye", "Scan Report"],
+  "/history": ["RivalEye", "History"],
+  "/account": ["RivalEye", "Settings"],
 };
 
 function deriveCrumbs(pathname: string, reports?: ReportRow[]): string[] {
@@ -31,15 +31,15 @@ function deriveCrumbs(pathname: string, reports?: ReportRow[]): string[] {
     const id = pathname.split("/")[2];
     const report = reports?.find((r) => r.id === id);
     const name = report?.primary_competitor_name ?? report?.competitors?.[0] ?? "Report";
-    return ["Stitchworks", "Reports", name];
+    return ["RivalEye", "Reports", name];
   }
   if (pathname.startsWith("/scan-report/")) {
     const id = pathname.split("/")[2];
     const report = reports?.find((r) => r.id === id);
     const name = report?.primary_competitor_name ?? report?.competitors?.[0] ?? "Scan Report";
-    return ["Stitchworks", "Scan Report", name];
+    return ["RivalEye", "Scan Report", name];
   }
-  return CRUMB_MAP[pathname] ?? ["Stitchworks"];
+  return CRUMB_MAP[pathname] ?? ["RivalEye"];
 }
 
 function initialOf(value: string | null | undefined): string {
@@ -218,13 +218,14 @@ function Sidebar({ open }: SidebarProps) {
 
   function onSignOut() {
     // Navigate first so sign-out feels instant; tear down the session in the
-    // background. Clear the cached query data too — otherwise signing in as a
-    // different account briefly shows the previous user's name, reports, and
-    // credits until every query refetches under the new session cookie.
+    // background. Clear the session hint immediately and the query cache (memory
+    // + persisted localStorage) after sign-out so the next account on this
+    // machine can never see the previous user's name, reports, or credits.
     clearSessionHint();
-    void clearQueryCache();
     navigate("/signin", { replace: true, state: { signedOut: true } });
-    void authClient.signOut();
+    void authClient.signOut().finally(() => {
+      void clearQueryCache();
+    });
   }
 
   const badges: Record<"competitors" | "radar", NavBadge> = {

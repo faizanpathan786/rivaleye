@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db } from "../db";
 import {
   competitors,
@@ -283,7 +283,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
           scanned_at: new Date(),
           updated_at: new Date(),
         })
-        .where(eq(reports.id, reportId));
+        .where(and(eq(reports.id, reportId), ne(reports.status, "cancelled")));
     });
   } catch (err) {
     if (err instanceof PipelineError) throw err;

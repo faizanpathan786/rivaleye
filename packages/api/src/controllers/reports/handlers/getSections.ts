@@ -1,7 +1,6 @@
 import { Elysia, t } from "elysia";
 import { loggerPlugin } from "@/config/logger";
 import { authPlugin } from "@/plugins/auth";
-import { PERMISSIONS } from "@/types/permissions";
 import { getReportSections } from "@/services/reports.service";
 import { ok } from "@/utils/response";
 import { Tags } from "@/types/swagger";
@@ -11,9 +10,11 @@ export const getSectionsHandler = new Elysia()
   .use(authPlugin)
   .get(
     "/:id/sections",
-    async ({ log, params, status }) => {
+    async ({ log, params, user, status }) => {
       try {
-        const data = await getReportSections(params.id);
+        const data = await getReportSections(params.id, user!.id);
+        if (!data)
+          return status(404, { message: "Report not found", error: "REPORT_NOT_FOUND" });
         return ok(data);
       } catch (e) {
         log.error(e);
@@ -24,7 +25,7 @@ export const getSectionsHandler = new Elysia()
       }
     },
     {
-      auth: { permissions: [PERMISSIONS.REPORTS_VIEW] },
+      auth: {},
       params: t.Object({ id: t.String({ format: "uuid" }) }),
       detail: { tags: [Tags.REPORTS], summary: "Get report role sections" },
     },

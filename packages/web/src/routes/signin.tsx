@@ -53,10 +53,10 @@ export function SignInPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") ?? CONFIG.auth.redirectPath;
-  const [email, setEmail] = useState("test@rivaleye.local");
-  const [password, setPassword] = useState("testpass1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [name, setName] = useState("Demo Founder");
+  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [hoverProvider, setHoverProvider] = useState<ProviderId | null>(null);

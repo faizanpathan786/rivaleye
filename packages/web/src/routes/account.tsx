@@ -28,6 +28,7 @@ import {
   useVerifyPaymentMutation,
 } from "@/hooks/queries/use-billing";
 import { authClient } from "@/lib/auth-client";
+import { clearQueryCache } from "@/lib/query-client";
 import type { CreditPack } from "@/api/billing";
 
 type SectionKey =
@@ -38,12 +39,13 @@ type SectionKey =
   | "notifications"
   | "danger";
 
+// Only sections backed by real data/actions are exposed. Workspace, API &
+// webhooks, and Notifications were placeholder/mock UI (fake API key, fake
+// webhook URL, static toggles) and are hidden until the backends exist, so we
+// never present fabricated data as real.
 const SECTIONS: ReadonlyArray<readonly [SectionKey, string]> = [
   ["profile", "Profile"],
-  ["workspace", "Workspace"],
   ["billing", "Billing"],
-  ["api", "API & webhooks"],
-  ["notifications", "Notifications"],
   ["danger", "Danger zone"],
 ];
 
@@ -53,7 +55,9 @@ export function AccountPage() {
 
   function onSignOut() {
     navigate("/signin", { replace: true, state: { signedOut: true } });
-    void authClient.signOut();
+    void authClient.signOut().finally(() => {
+      void clearQueryCache();
+    });
   }
 
   return (

@@ -14,6 +14,12 @@ cd "$(dirname "$0")"
 export NODE_OPTIONS="--max-old-space-size=2048"
 
 pnpm install
+
+# Gate: type-check the whole workspace before building/reloading. `set -e` aborts
+# the deploy here on any type error, so the currently-running pm2 processes keep
+# serving and broken code never reaches production.
+pnpm exec turbo run type-check --concurrency=1
+
 # Build one package at a time. Running vite + astro check + bun build in
 # parallel starves a small VM and the build hangs.
 pnpm exec turbo run build --concurrency=1

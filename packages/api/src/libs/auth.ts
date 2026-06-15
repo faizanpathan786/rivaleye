@@ -20,8 +20,16 @@ const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
 const authMountBase = `${process.env.BETTER_AUTH_URL ?? "http://localhost:4000"}/v1/auth`;
 const callbackURI = (provider: string) => `${authMountBase}/callback/${provider}`;
 
+const PLACEHOLDER_SECRETS = new Set(["change-me-in-prod", "your-secret-key-here"]);
+const authSecret = process.env.BETTER_AUTH_SECRET;
+if (!authSecret || PLACEHOLDER_SECRETS.has(authSecret) || authSecret.length < 32) {
+  throw new Error(
+    "BETTER_AUTH_SECRET must be set to a strong value (>=32 chars, not a placeholder). Generate one with `openssl rand -hex 32`.",
+  );
+}
+
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: authSecret,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:4000",
   basePath: "/",
   trustedOrigins: [...defaultTrustedOrigins, ...envTrustedOrigins],

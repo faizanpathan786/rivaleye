@@ -18,7 +18,7 @@ import {
   report_thread_messages,
   type Report,
 } from "@/db/schema/reports";
-import { report_platform_jobs } from "@/db/schema/pipeline";
+import { report_platform_jobs, synthesis_jobs } from "@/db/schema/pipeline";
 import { report_logs } from "@/db/schema/logs";
 import { pipeline_events } from "@/db/schema/pipeline-events";
 import { mentions } from "@/db/schema/mentions";
@@ -515,11 +515,17 @@ export async function cancelReport(
       .update(report_platform_jobs)
       .set({ status: "cancelled" })
       .where(eq(report_platform_jobs.report_id, reportId));
+    // Also cancel any queued/in-flight synthesis job so resynthesis/recovery
+    // doesn't keep working (or resurrect) a cancelled report.
+    await tx
+      .update(synthesis_jobs)
+      .set({ status: "cancelled" })
+      .where(eq(synthesis_jobs.report_id, reportId));
   });
   return { ok: true };
 }
 
-export async function getReportSections(reportId: string): Promise<{
+export async function getReportSections(reportId: string, owner_id: string): Promise<{
   overview: unknown | null;
   summary: unknown | null;
   founder: unknown | null;
@@ -527,7 +533,10 @@ export async function getReportSections(reportId: string): Promise<{
   marketing: unknown | null;
   growth: unknown | null;
   evidence: unknown | null;
-}> {
+} | null> {
+  const owned = await assertReportOwned(reportId, owner_id);
+  if (!owned) return null;
+
   const rows = await db
     .select()
     .from(report_role_sections)
