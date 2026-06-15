@@ -17,13 +17,17 @@ import { reports } from "../../../api/src/db/schema/reports.js";
 import { log } from "../logger";
 
 /**
- * Check if all source jobs for a report are terminal.
- * If yes and at least one succeeded, create a synthesis job.
+ * Partial Report Generation: Fan-In with Early Synthesis Trigger
  *
- * Uses pg_advisory_xact_lock(hashtext(reportId)) to prevent race conditions:
- * - Only one worker acquires the lock at a time
- * - Locked worker reads job statuses and decides whether to create synthesis job
- * - Uses onConflictDoNothing on synthesis_jobs insert for idempotency
+ * Triggers synthesis job creation as soon as we have enough successful platforms,
+ * rather than waiting for all platforms to complete. Failed platforms continue
+ * retrying in the background and will trigger resynthesis when they succeed.
+ *
+ * Triggers synthesis when:
+ * - At least 2 platforms succeeded, OR
+ * - All platforms are terminal and at least 1 succeeded
+ *
+ * Marks report as "partial: true" until all platforms are complete.
  *
  * @param reportId - UUID of the report
  * @throws Error if database operation fails (not caught; caller decides retry strategy)
@@ -32,9 +36,9 @@ export async function fanInCheck(reportId: string): Promise<void> {
   // log() calls use a separate DB connection and are moved OUTSIDE the transaction
   // to avoid side-channel writes that commit even when the transaction rolls back.
   type Outcome =
-    | { kind: "not-ready"; terminalCount: number; total: number }
+    | { kind: "not-ready"; completedCount: number; total: number }
     | { kind: "all-failed"; failedPlatforms: string[] }
-    | { kind: "created"; id: string; completedCount: number; total: number }
+    | { kind: "created"; id: string; completedCount: number; total: number; isPartial: boolean }
     | { kind: "exists"; completedCount: number; total: number };
 
   // Idempotency is guaranteed by the unique constraint on synthesis_jobs(report_id)
@@ -45,17 +49,22 @@ export async function fanInCheck(reportId: string): Promise<void> {
       .from(report_platform_jobs)
       .where(eq(report_platform_jobs.report_id, reportId));
 
-    const allTerminal =
-      jobs.length > 0 &&
-      jobs.every((j) => j.status === "completed" || j.status === "failed");
+    const completedCount = jobs.filter((j) => j.status === "completed").length;
+    const failedCount = jobs.filter((j) => j.status === "failed").length;
+    const pendingCount = jobs.length - completedCount - failedCount;
+    const allTerminal = pendingCount === 0;
 
-    if (!allTerminal) {
-      const terminalCount = jobs.filter((j) => j.status === "completed" || j.status === "failed").length;
-      return { kind: "not-ready", terminalCount, total: jobs.length };
+    // Trigger synthesis if:
+    // 1. At least 2 platforms succeeded (partial generation), OR
+    // 2. All platforms are terminal with at least 1 success (complete generation)
+    const shouldTrigger = completedCount >= 2 || (allTerminal && completedCount > 0);
+
+    if (!shouldTrigger) {
+      return { kind: "not-ready", completedCount, total: jobs.length };
     }
 
-    const hasCompletedJob = jobs.some((j) => j.status === "completed");
-    if (!hasCompletedJob) {
+    // If all platforms failed, mark report as failed
+    if (allTerminal && completedCount === 0) {
       const failedPlatforms = jobs.map((j) => j.platform ?? "unknown");
       await tx
         .update(reports)
@@ -71,7 +80,20 @@ export async function fanInCheck(reportId: string): Promise<void> {
       return { kind: "all-failed", failedPlatforms };
     }
 
-    const completedCount = jobs.filter((j) => j.status === "completed").length;
+    // Mark report as partial if we still have pending platforms
+    const isPartial = pendingCount > 0;
+    if (isPartial) {
+      await tx
+        .update(reports)
+        .set({
+          partial: true,
+          failed_platforms: jobs
+            .filter((j) => j.status === "failed")
+            .map((j) => j.platform ?? "unknown"),
+          updated_at: new Date(),
+        })
+        .where(eq(reports.id, reportId));
+    }
 
     const result = await tx
       .insert(synthesis_jobs)
@@ -86,7 +108,7 @@ export async function fanInCheck(reportId: string): Promise<void> {
       .returning();
 
     if (result.length > 0) {
-      return { kind: "created", id: result[0]!.id, completedCount, total: jobs.length };
+      return { kind: "created", id: result[0]!.id, completedCount, total: jobs.length, isPartial };
     }
     return { kind: "exists", completedCount, total: jobs.length };
   });
@@ -94,17 +116,17 @@ export async function fanInCheck(reportId: string): Promise<void> {
   // Log outcomes after the transaction commits so log entries are never ghost-created
   switch (outcome.kind) {
     case "not-ready":
-      await log(reportId, "info", "fan-in", null, `Not all source jobs are terminal (${outcome.terminalCount}/${outcome.total}); skipping synthesis job creation`);
+      await log(reportId, "info", "fan-in", null, `Waiting for more successful platforms (${outcome.completedCount}/${outcome.total} completed); synthesis requires minimum 2 successes`);
       break;
     case "all-failed":
       await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);
       break;
     case "created":
-      await log(reportId, "info", "fan-in", null, `All source jobs terminal with at least one success (${outcome.completedCount}/${outcome.total}); creating synthesis job`);
+      const status = outcome.isPartial ? `partial (${outcome.completedCount}/${outcome.total} completed, retrying remainder)` : `complete (all ${outcome.completedCount} platforms succeeded)`;
+      await log(reportId, "info", "fan-in", null, `Synthesis triggered with ${status}; creating synthesis job`);
       await log(reportId, "info", "fan-in", null, `Synthesis job created: ${outcome.id}`);
       break;
     case "exists":
-      await log(reportId, "info", "fan-in", null, `All source jobs terminal with at least one success (${outcome.completedCount}/${outcome.total}); creating synthesis job`);
       await log(reportId, "info", "fan-in", null, "Synthesis job already exists (insert was no-op)");
       break;
   }
