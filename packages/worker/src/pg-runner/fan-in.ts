@@ -55,9 +55,10 @@ export async function fanInCheck(reportId: string): Promise<void> {
     const allTerminal = pendingCount === 0;
 
     // Trigger synthesis if:
-    // 1. At least 1 platform succeeded (generate report even if others pending/failed), OR
-    // 2. All platforms are terminal with at least 1 success (complete generation)
-    const shouldTrigger = completedCount >= 1 || (allTerminal && completedCount > 0);
+    // 1. At least 2 platforms succeeded (enough data for clustering), OR
+    // 2. All platforms are terminal with at least 1 success (fallback for complete generation)
+    // Key: ignore failed platforms - only count what succeeded
+    const shouldTrigger = completedCount >= 2 || (allTerminal && completedCount > 0);
 
     if (!shouldTrigger) {
       return { kind: "not-ready", completedCount, total: jobs.length };
@@ -116,7 +117,7 @@ export async function fanInCheck(reportId: string): Promise<void> {
   // Log outcomes after the transaction commits so log entries are never ghost-created
   switch (outcome.kind) {
     case "not-ready":
-      await log(reportId, "info", "fan-in", null, `Waiting for first successful platform (${outcome.completedCount}/${outcome.total} completed); will generate report with ≥1 success`);
+      await log(reportId, "info", "fan-in", null, `Waiting for sufficient successful platforms (${outcome.completedCount}/${outcome.total} completed); need ≥2 successes for clustering`);
       break;
     case "all-failed":
       await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);
