@@ -297,7 +297,6 @@ export async function createReport(
         primary_competitor_name: competitor,
         primary_competitor_domain: inferredDomain,
         website_url: input.website_url ?? null,
-        selected_platforms: input.selected_platforms,
       })
       .returning({ id: reports.id });
 
