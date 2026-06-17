@@ -80,13 +80,14 @@ export function useReportQuery(id: string | undefined) {
     queryKey: reportsKeys.detail(id),
     queryFn: () => getReport(id as string),
     enabled: !!id,
-    staleTime: 1000000, // Very long cache - stop refetching for completed reports
+    staleTime: 5 * 60 * 1000, // 5 min - data stays fresh, load from cache instantly
+    gcTime: 30 * 60 * 1000, // 30 min - keep in cache long term
     refetchInterval: (q) => {
       const status = q.state.data?.status;
-      if (!status || TERMINAL_STATUSES.has(status)) return false;
-      return 5000;
+      if (!status || TERMINAL_STATUSES.has(status)) return false; // Never refetch completed reports
+      return 5000; // Refetch in-progress reports every 5 sec
     },
-    refetchIntervalInBackground: false, // Don't refetch in background
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
   });
 
@@ -104,13 +105,14 @@ export function useReportProgressQuery(id: string | undefined) {
     queryKey: reportsKeys.section(id, "progress"),
     queryFn: () => getReportProgress(id as string),
     enabled: !!id,
-    staleTime: 1000000, // Very long cache - stop refetching for completed reports
+    staleTime: 5 * 60 * 1000, // 5 min - data stays fresh, load from cache instantly
+    gcTime: 30 * 60 * 1000, // 30 min - keep in cache long term
     refetchInterval: (q) => {
       const status = q.state.data?.report.status;
-      if (!status || TERMINAL_STATUSES.has(status)) return false;
-      return 5000;
+      if (!status || TERMINAL_STATUSES.has(status)) return false; // Never refetch completed reports
+      return 5000; // Refetch in-progress reports every 5 sec
     },
-    refetchIntervalInBackground: false, // Don't refetch in background
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
   });
 }

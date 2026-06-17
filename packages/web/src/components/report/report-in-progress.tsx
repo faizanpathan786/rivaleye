@@ -264,14 +264,8 @@ export function ReportInProgress({
   const startRescan = () => {
     // Only rescan failed platforms, reuse successful data
     const failedPlatforms = report.failed_platforms ?? [];
-    // If no failed platforms, rescan all original platforms from the report
-    const allPlatforms = report.selected_platforms ?? [];
-    const scanPlatforms =
-      failedPlatforms.length > 0
-        ? failedPlatforms
-        : allPlatforms.length > 0
-          ? allPlatforms
-          : [];
+    // If no failed platforms specified, rescan nothing (user must specify which platforms)
+    const scanPlatforms = failedPlatforms.length > 0 ? failedPlatforms : [];
 
     const payload: CreateReportPayload & { resume_from_report_id?: string } = {
       category: report.category,

@@ -31,7 +31,6 @@ export type ReportRow = {
   switching_reasons_out: string[];
   partial: boolean;
   failed_platforms: string[];
-  selected_platforms: string[];
   created_at: string;
   updated_at: string;
 };

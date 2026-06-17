@@ -1,1 +1,1 @@
-ALTER TABLE "reports" ADD COLUMN "selected_platforms" text[] DEFAULT '{}' NOT NULL;
+ALTER TABLE "reports" ADD COLUMN "selected_platforms" text[] DEFAULT '{}';

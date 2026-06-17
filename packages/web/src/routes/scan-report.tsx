@@ -182,7 +182,7 @@ export function ScanReportPage() {
   const reportRow = reportQuery.data;
   const reportIsLoading = reportQuery.isLoading;
   const progressQuery = useReportProgressQuery(id);
-  const isCompleted = reportRow?.status === "completed";
+  const isCompleted = reportRow?.status === "completed" || reportRow?.stage === "done";
   const { data: sections, isLoading, error } = useReportSectionsQuery(isCompleted ? id : undefined);
 
   // Fetch all report sections for Summary tabs
@@ -248,14 +248,8 @@ export function ScanReportPage() {
     return <ReportInProgress report={reportRow} progress={progressQuery.data} />;
   }
 
-  // If report ID exists but data is still loading, show loading state
-  if (id && reportIsLoading) {
-    return (
-      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div style={{ fontSize: 16 }}>Loading scan…</div>
-      </div>
-    );
-  }
+  // Don't show "Loading scan..." - it's confusing for existing reports
+  // Just let the report render below once data loads
 
 
   // Sections fetched but all role sections are null — LLM analysis is still
@@ -291,14 +285,8 @@ export function ScanReportPage() {
     );
   }
 
-  if (id && error) {
-    return (
-      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--neg)" }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>ERROR</div>
-        <div style={{ fontSize: 16 }}>Failed to load report. Please try again.</div>
-      </div>
-    );
-  }
+  // If sections query fails but report exists, continue with empty sections
+  // (old reports might not have section data yet)
 
   // Run all four adapters when live sections are available.
   // Each section comes back as `unknown | null`. If null → pass `data: undefined`
@@ -1182,9 +1170,9 @@ function FlowList({
         {eyebrow}
       </div>
       <div className="flex flex-col gap-2">
-        {flows.map((s) => (
+        {flows.map((s, idx) => (
           <div
-            key={s[field]}
+            key={`${s[field]}-${idx}`}
             className="grid items-center gap-2"
             style={{ gridTemplateColumns: "70px 1fr 36px" }}
           >
