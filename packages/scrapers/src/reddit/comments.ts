@@ -37,7 +37,7 @@ export async function getComments(
     if (child.kind !== "t1") continue;
     const c = child.data;
     if (!c.body || c.body === "[deleted]" || c.body === "[removed]") continue;
-    if (!c.author || c.author === "AutoModerator" || c.author === "[deleted]" || c.author.trim().length === 0) continue;
+    if (c.author === "AutoModerator") continue;
     results.push(c);
     if (results.length >= maxComments) break;
   }

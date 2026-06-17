@@ -38,9 +38,7 @@ export async function searchPosts(
     { q: term, type: "link", sort, t: time, limit },
     config,
   );
-  const results = listing.data.children
-    .map((c) => c.data)
-    .filter((p) => p.author && p.author !== "[deleted]" && p.author.trim().length > 0);
+  const results = listing.data.children.map((c) => c.data);
   log.info({ term, returned: results.length, durationMs: Date.now() - t0 }, "Search complete");
   return results;
 }
