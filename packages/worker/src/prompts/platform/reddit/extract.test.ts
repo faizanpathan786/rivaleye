@@ -23,7 +23,7 @@ describe("buildRedditExtract", () => {
   });
 
   it("user message keeps the relevance filter and competitor", () => {
-    const built = buildRedditExtract({ ctx, posts: [{ id: "p1", score: 5, body: "hi" }] });
+    const built = buildRedditExtract({ ctx, posts: [{ id: "p1", score: 5, body: "hi", author: null }] });
     expect(built.user).toContain("RELEVANCE FILTER");
     expect(built.user).toContain("Twilio");
     expect(built.user).toContain("id=p1");

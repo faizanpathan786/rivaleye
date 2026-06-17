@@ -20,7 +20,7 @@ describe("buildDevToExtract", () => {
   });
 
   it("user message id-labels posts", () => {
-    const built = buildDevToExtract({ ctx, posts: [{ id: "d1", score: 3, body: "hi" }] });
+    const built = buildDevToExtract({ ctx, posts: [{ id: "d1", score: 3, body: "hi", author: null }] });
     expect(built.user).toContain("id=d1");
     expect(built.user).toContain("Twilio");
   });
