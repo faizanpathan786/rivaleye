@@ -20,7 +20,7 @@ describe("buildPlayStoreExtract", () => {
   });
 
   it("user message id-labels reviews with rating", () => {
-    const built = buildPlayStoreExtract({ ctx, reviews: [{ id: "g1", rating: 4, body: "ok" }] });
+    const built = buildPlayStoreExtract({ ctx, reviews: [{ id: "g1", rating: 4, body: "ok", author: null }] });
     expect(built.user).toContain("id=g1");
     expect(built.user).toContain("rating=4/5");
   });

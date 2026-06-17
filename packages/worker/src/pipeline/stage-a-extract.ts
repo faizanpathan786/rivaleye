@@ -52,6 +52,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             rating: post.score ?? 0,
             body: `${post.title ?? ""}\n${post.body}`,
+            author: post.author ?? null,
           })),
         });
     case "playstore":
@@ -62,6 +63,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             rating: post.score ?? 0,
             body: post.body,
+            author: post.author ?? null,
           })),
         });
     case "hackernews":
@@ -72,6 +74,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             score: post.score,
             body: `${post.title ?? ""}\n${post.body}`,
+            author: post.author ?? null,
           })),
         });
     case "devto":
@@ -82,6 +85,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             score: post.score,
             body: `${post.title ?? ""}\n${post.body}`,
+            author: post.author ?? null,
           })),
         });
     case "producthunt":
@@ -92,6 +96,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             rating: post.score ?? 0,
             body: `${post.title ?? ""}\n${post.body}`,
+            author: post.author ?? null,
           })),
         });
     case "reddit":
@@ -102,6 +107,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             score: post.score,
             body: `${post.title ?? ""}\n${post.body}`,
+            author: post.author ?? null,
           })),
         });
     case "website":
@@ -122,6 +128,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             body: post.body,
             score: post.score,
+            author: post.author ?? null,
           })),
         });
     case "twitter":
@@ -132,6 +139,7 @@ function pickBuilder(p: PlatformId): Builder {
             id: post.externalId,
             body: post.body,
             score: post.score,
+            author: post.author ?? null,
           })),
         });
     default:

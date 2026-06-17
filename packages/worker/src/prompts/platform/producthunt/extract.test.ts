@@ -20,7 +20,7 @@ describe("buildProductHuntExtract", () => {
   });
 
   it("user message id-labels items with votes", () => {
-    const built = buildProductHuntExtract({ ctx, reviews: [{ id: "ph1", rating: 12, body: "nice" }] });
+    const built = buildProductHuntExtract({ ctx, reviews: [{ id: "ph1", rating: 12, body: "nice", author: null }] });
     expect(built.user).toContain("id=ph1");
     expect(built.user).toContain("votes=12");
   });

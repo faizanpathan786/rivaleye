@@ -76,6 +76,7 @@ export const reports = pgTable("reports", {
 
   partial: boolean("partial").notNull().default(false),
   failed_platforms: text("failed_platforms").array().notNull().default([]),
+  selected_platforms: text("selected_platforms").array().notNull().default([]),
 
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),

@@ -20,7 +20,7 @@ describe("buildHackerNewsExtract", () => {
   });
 
   it("user message id-labels posts", () => {
-    const built = buildHackerNewsExtract({ ctx, posts: [{ id: "h1", score: 10, body: "hi" }] });
+    const built = buildHackerNewsExtract({ ctx, posts: [{ id: "h1", score: 10, body: "hi", author: null }] });
     expect(built.user).toContain("id=h1");
     expect(built.user).toContain("Twilio");
   });
