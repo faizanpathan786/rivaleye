@@ -15,7 +15,7 @@ const SYSTEM = BASE_SYSTEM + LINKEDIN_CONTEXT;
 
 export interface LinkedInExtractInput {
   ctx: PipelineCtx;
-  posts: Array<{ id: string; body: string; score?: number | null }>;
+  posts: Array<{ id: string; body: string; score?: number | null; author: string | null }>;
 }
 
 export function buildLinkedInExtract(input: LinkedInExtractInput): {
@@ -24,7 +24,7 @@ export function buildLinkedInExtract(input: LinkedInExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | ${truncate(p.body, 1500)}`)
+    .map((p) => `- id=${p.id}${p.author ? ` | author=${p.author}` : ""} | ${truncate(p.body, 1500)}`)
     .join("\n");
   const user = `RELEVANCE FILTER: Only extract signals from posts discussing ${input.ctx.competitor} as a product or company. Skip posts about unrelated topics.
 

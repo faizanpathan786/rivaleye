@@ -262,23 +262,31 @@ export function ReportInProgress({
   const rescanMutation = useCreateReportMutation();
 
   const startRescan = () => {
+    // Only rescan failed platforms, reuse successful data
+    const failedPlatforms = report.failed_platforms ?? [];
+    // If no failed platforms, rescan all original platforms from the report
+    const allPlatforms = report.selected_platforms ?? [];
     const scanPlatforms =
-      platforms.length > 0
-        ? platforms.map((p) => p.platform)
-        : report.failed_platforms;
-    const payload: CreateReportPayload = {
+      failedPlatforms.length > 0
+        ? failedPlatforms
+        : allPlatforms.length > 0
+          ? allPlatforms
+          : [];
+
+    const payload: CreateReportPayload & { resume_from_report_id?: string } = {
       category: report.category,
       competitors: report.competitors,
       target_audience: report.audience ?? "",
       founder_goal: report.goal,
       selected_platforms: scanPlatforms,
+      resume_from_report_id: report.id,
       ...(report.primary_competitor_domain
         ? { website_url: report.primary_competitor_domain }
         : {}),
     };
     rescanMutation.mutate(payload, {
       onSuccess: (res) => {
-        navigate(`/scan-report/${res.id}`);
+        navigate(`/scan-report/${res.id}/summary`, { replace: true });
       },
       onError: (err) => {
         const message = err && typeof err === "object" && "message" in err
@@ -313,7 +321,7 @@ export function ReportInProgress({
           </h1>
         </div>
         <div className="flex flex-shrink-0 gap-2 self-start sm:self-auto">
-          {failed && (
+          {(failed || cancelled) && (
             <button
               className="re-btn"
               onClick={startRescan}
@@ -322,13 +330,15 @@ export function ReportInProgress({
               <Icon name="refresh" size={14} /> {rescanMutation.isPending ? "Starting…" : "Rescan"}
             </button>
           )}
-          <button
-            className="re-btn"
-            onClick={() => cancelMutation.mutate()}
-            disabled={cancelMutation.isPending || done || failed || cancelled}
-          >
-            <Icon name="x" size={14} /> {cancelMutation.isPending ? "Cancelling…" : "Cancel"}
-          </button>
+          {!done && !failed && !cancelled && (
+            <button
+              className="re-btn"
+              onClick={() => cancelMutation.mutate()}
+              disabled={cancelMutation.isPending}
+            >
+              <Icon name="x" size={14} /> {cancelMutation.isPending ? "Cancelling…" : "Cancel"}
+            </button>
+          )}
         </div>
       </div>
 

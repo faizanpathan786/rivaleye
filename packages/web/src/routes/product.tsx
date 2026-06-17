@@ -584,12 +584,14 @@ export function ProductPage({
   range: propRange,
   evidenceSection,
   competitorName,
+  reportId,
 }: {
   embedded?: boolean;
   data?: ProductViewProps;
   range?: string;
   evidenceSection?: EvidenceSection | null;
   competitorName?: string;
+  reportId?: string;
 }) {
   const navigate = useNavigate();
   const reportsQuery = useReportsQuery();
@@ -649,6 +651,7 @@ export function ProductPage({
   const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
+  const openInReport = reportId ? () => navigate(`/reports/${reportId}`) : undefined;
 
   return (
     <div>
@@ -657,7 +660,7 @@ export function ProductPage({
       )}
 
       <div className="px-4 py-4 md:px-7 md:py-6" style={{ paddingBottom: 60, maxWidth: 1440, margin: "0 auto" }}>
-        <OpportunitySummary score={P.score} openEvidence={openEvidence} />
+        <OpportunitySummary score={P.score} evidenceRefs={P.evidence_refs} openEvidence={openEvidence} onOpenInReport={openInReport} />
 
         <SectionHeadPM
           eyebrow="01 · Feature gap map"
@@ -839,10 +842,12 @@ function SectionHeadPM({
 
 interface OpportunitySummaryProps {
   score: ProductViewProps["score"];
+  evidenceRefs: EvidenceRef;
   openEvidence: (refs: EvidenceRef) => void;
+  onOpenInReport?: () => void;
 }
 
-function OpportunitySummary({ score, openEvidence }: OpportunitySummaryProps) {
+function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport }: OpportunitySummaryProps) {
   return (
     <div
       className="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1.6fr)]"
@@ -900,13 +905,19 @@ function OpportunitySummary({ score, openEvidence }: OpportunitySummaryProps) {
             <button
               type="button"
               className="re-btn re-btn-sm"
-              onClick={() => openEvidence(EMPTY_REFS)}
+              onClick={() => openEvidence(evidenceRefs)}
             >
               <Icon name="quote" size={12} /> View signals
             </button>
-            <button type="button" className="re-btn re-btn-ghost re-btn-sm">
-              <Icon name="external" size={12} /> Open in full report
-            </button>
+            {onOpenInReport && (
+              <button
+                type="button"
+                className="re-btn re-btn-ghost re-btn-sm"
+                onClick={onOpenInReport}
+              >
+                <Icon name="external" size={12} /> Open in full report
+              </button>
+            )}
           </div>
         </div>
       </div>

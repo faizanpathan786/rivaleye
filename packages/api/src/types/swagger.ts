@@ -6,4 +6,5 @@ export enum Tags {
   RADAR = "Radar",
   REPORTS = "Reports",
   DASHBOARD = "Dashboard",
+  OUTREACH = "Outreach",
 }

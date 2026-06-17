@@ -15,7 +15,7 @@ const SYSTEM = BASE_SYSTEM + DEVTO_CONTEXT;
 
 export interface DevToExtractInput {
   ctx: PipelineCtx;
-  posts: Array<{ id: string; score: number | null; body: string }>;
+  posts: Array<{ id: string; score: number | null; body: string; author: string | null }>;
 }
 
 export function buildDevToExtract(input: DevToExtractInput): {
@@ -24,7 +24,7 @@ export function buildDevToExtract(input: DevToExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | score=${p.score ?? "n/a"} | ${oneLine(p.body)}`)
+    .map((p) => `- id=${p.id} | score=${p.score ?? "n/a"}${p.author ? ` | author=${p.author}` : ""} | ${oneLine(p.body)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}

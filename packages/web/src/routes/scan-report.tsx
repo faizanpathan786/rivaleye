@@ -1,14 +1,56 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useMemo, useEffect, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@/components/icons";
+import { formatRelative } from "@/lib/format";
+import { useAddPlannedActionMutation } from "@/hooks/queries/use-planned-actions";
 import { FounderPage } from "./founder";
 import { ProductPage } from "./product";
 import { MarketingPage } from "./marketing";
 import { GrowthPage } from "./growth";
+import {
+  ComplaintsCard,
+  VoiceTab,
+  PricingTab,
+  SwitchingTab,
+  QuotesCard,
+  LeadsCard,
+  PositioningCard,
+  OpportunitiesCard,
+  ActionsCard,
+} from "./report";
 import { useReportSectionsQuery } from "@/hooks/queries/use-report-sections";
-import { useReportQuery, useReportProgressQuery, useReportsQuery } from "@/hooks/queries/use-reports";
+import {
+  useReportQuery,
+  useReportProgressQuery,
+  useReportsQuery,
+  useReportComplaintsQuery,
+  useReportVoiceQuery,
+  useReportPricingQuery,
+  useReportSwitchingQuery,
+  useReportQuotesQuery,
+  useReportLeadsQuery,
+  useReportPositioningQuery,
+  useReportOpportunitiesQuery,
+  useReportActionsQuery,
+  useReportPlatformsQuery,
+  useReportSentimentSeriesQuery,
+  useReportFeatureGapsQuery,
+} from "@/hooks/queries/use-reports";
 import { ReportInProgress } from "@/components/report/report-in-progress";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
+import type {
+  Complaint,
+  VoiceResponse,
+  PricingResponse,
+  SwitchingResponse,
+  QuoteRow,
+  LeadRow,
+  Positioning,
+  Opportunity,
+  ActionRow,
+  PlatformStat,
+  FeatureGap,
+} from "@/api/reports";
 import type { EvidenceSection } from "@/lib/dashboard-helpers";
 import {
   toFounderViewProps,
@@ -26,6 +68,28 @@ import {
   toGrowthViewProps,
   type GrowthViewSection,
 } from "@/lib/dashboard-adapters/growth";
+
+// The pipeline stores each evidence quote's text under the key `quote`, but the
+// EvidenceDrawer reads `text`. Normalize the shape (and tolerate either key) so
+// quotes render instead of showing empty.
+function normalizeEvidenceSection(raw: unknown): EvidenceSection | null {
+  if (raw == null || typeof raw !== "object") return null;
+  const quotes = (raw as { quotes?: unknown[] }).quotes;
+  if (!Array.isArray(quotes)) return { quotes: [] };
+  return {
+    quotes: quotes.map((q) => {
+      const obj = (q ?? {}) as Record<string, unknown>;
+      return {
+        id: String(obj.id ?? ""),
+        text: String(obj.text ?? obj.quote ?? ""),
+        source: String(obj.source ?? ""),
+        source_url: (obj.source_url as string | null) ?? null,
+        sentiment: typeof obj.sentiment === "number" ? obj.sentiment : null,
+        signal_type: (obj.signal_type as EvidenceSection["quotes"][number]["signal_type"]) ?? null,
+      };
+    }),
+  };
+}
 
 // Scan Report v2 — one scan, five lenses. UI only.
 // TODO(backend): replace SCAN_DATA with the scan-synthesis endpoint payload.
@@ -83,6 +147,8 @@ interface SummaryData {
   headlines: { mainThesis: string; insights: string };
   topThemes: { name: string; mentions: number; trend: string }[];
   topQuotes: { who: string; sub: string | null; when: string; score: number; sentiment: number; text: string; theme: string }[];
+  platformBreakdown?: Array<{ id: string; name: string; posts: number; sentiment: number; contexts: string[] }>;
+  intelligence?: { brief: string | null; summary: string | null };
 }
 
 // ----------------------------------------------------------------------------
@@ -97,8 +163,9 @@ export function ScanReportPage() {
   const meta = LENS_META[lens];
 
   const goToLens = (next: LensId) => {
-    if (!id) return;
-    navigate(`/scan-report/${id}/${next}`);
+    const reportId = id || window.location.pathname.split("/")[3];
+    if (!reportId) return;
+    navigate(`/scan-report/${reportId}/${next}`);
   };
 
   // When no :id, redirect to the most recent report (preserving the lens).
@@ -108,13 +175,29 @@ export function ScanReportPage() {
     if (!id && first) {
       navigate(`/scan-report/${first.id}/${lens}`, { replace: true });
     }
-  }, [id, allReports, navigate, lens]);
+  }, [id, lens, navigate]);
 
   // Live data fetch — only when :id is present in the route.
-  const { data: reportRow } = useReportQuery(id);
+  const reportQuery = useReportQuery(id);
+  const reportRow = reportQuery.data;
+  const reportIsLoading = reportQuery.isLoading;
   const progressQuery = useReportProgressQuery(id);
   const isCompleted = reportRow?.status === "completed";
   const { data: sections, isLoading, error } = useReportSectionsQuery(isCompleted ? id : undefined);
+
+  // Fetch all report sections for Summary tabs
+  const complaints = useReportComplaintsQuery(isCompleted ? id : undefined).data ?? [];
+  const voice = useReportVoiceQuery(isCompleted ? id : undefined).data;
+  const pricing = useReportPricingQuery(isCompleted ? id : undefined).data;
+  const switching = useReportSwitchingQuery(isCompleted ? id : undefined).data;
+  const quotes = useReportQuotesQuery(isCompleted ? id : undefined).data ?? [];
+  const leads = useReportLeadsQuery(isCompleted ? id : undefined).data ?? [];
+  const positioning = useReportPositioningQuery(isCompleted ? id : undefined).data ?? [];
+  const opportunities = useReportOpportunitiesQuery(isCompleted ? id : undefined).data ?? [];
+  const actions = useReportActionsQuery(isCompleted ? id : undefined).data ?? [];
+  const platforms = useReportPlatformsQuery(isCompleted ? id : undefined).data ?? [];
+  const sentimentSeries = useReportSentimentSeriesQuery(isCompleted ? id : undefined).data ?? [];
+  const featureGaps = useReportFeatureGapsQuery(isCompleted ? id : undefined).data ?? [];
 
   useEffect(() => {
     const m = document.querySelector(".main");
@@ -141,20 +224,48 @@ export function ScanReportPage() {
 
   const onNav = (to: string) => navigate(to.startsWith("/") ? to : `/${to}`);
 
+  // Show cancelled state if scan was cancelled
+  if (id && reportRow?.status === "cancelled") {
+    return (
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>SCAN CANCELLED</div>
+        <div style={{ fontSize: 16, marginBottom: 8 }}>This scan was cancelled</div>
+        <div style={{ fontSize: 13, marginBottom: 24 }}>You can start a new scan anytime</div>
+        <button
+          className="re-btn"
+          onClick={() => navigate("/")}
+          style={{ marginRight: 8 }}
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   // Show in-progress UI while the report pipeline is still running.
+  // Show progress page once we have report data and it's not completed yet.
   if (id && reportRow && !isCompleted) {
     return <ReportInProgress report={reportRow} progress={progressQuery.data} />;
   }
 
-  // When :id is present and we are still loading or errored, show a simple state.
-  if (id && isLoading) {
+  // While report data is loading for a new scan, show progress page placeholder
+  if (id && !reportRow && reportIsLoading && !isCompleted) {
     return (
       <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>LOADING REPORT</div>
-        <div style={{ fontSize: 16 }}>Fetching report sections…</div>
+        <div style={{ fontSize: 16 }}>Starting scan…</div>
       </div>
     );
   }
+
+  // If report ID exists but data hasn't loaded yet (report completed), show loading
+  if (id && reportIsLoading) {
+    return (
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
+        <div style={{ fontSize: 16 }}>Loading scan…</div>
+      </div>
+    );
+  }
+
 
   // Sections fetched but all role sections are null — LLM analysis is still
   // being written. Keep showing a loading state; the refetchInterval above
@@ -225,7 +336,7 @@ export function ScanReportPage() {
 
   const evidenceSection: EvidenceSection | null =
     sections?.evidence != null
-      ? (sections.evidence as EvidenceSection)
+      ? normalizeEvidenceSection(sections.evidence)
       : null;
 
   const liveCompetitor: ScanCompetitor | undefined = reportRow
@@ -245,7 +356,15 @@ export function ScanReportPage() {
       }
     : undefined;
 
-  const summaryData: SummaryData | null = sections?.summary != null ? (sections.summary as SummaryData) : null;
+  const summaryData: SummaryData | null = sections?.summary != null
+    ? {
+        ...(sections.summary as SummaryData),
+        intelligence: {
+          brief: reportRow?.executive_brief ?? null,
+          summary: reportRow?.voice_summary ?? null,
+        }
+      }
+    : null;
 
   const competitorData: ScanCompetitor = liveCompetitor ?? summaryData?.competitor ?? {
     name: "—", domain: "", scannedAt: "", sources: 0, platforms: [],
@@ -255,15 +374,34 @@ export function ScanReportPage() {
   const renderLens = (l: LensId) => {
     switch (l) {
       case "summary":
-        return <ExecutiveSummary data={summaryData} competitor={competitorData} onPickLens={goToLens} />;
+        return (
+          <ExecutiveSummary
+            data={summaryData}
+            competitor={competitorData}
+            onPickLens={goToLens}
+            reportId={id!}
+            complaints={complaints}
+            voice={voice}
+            pricing={pricing}
+            switching={switching}
+            quotes={quotes}
+            leads={leads}
+            positioning={positioning}
+            opportunities={opportunities}
+            actions={actions}
+            platforms={platforms}
+            sentimentSeries={sentimentSeries}
+            featureGaps={featureGaps}
+          />
+        );
       case "founder":
-        return <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
+        return <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} reportId={id} />;
       case "product":
-        return <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
+        return <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} reportId={id} />;
       case "marketing":
         return <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
       case "growth":
-        return <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} />;
+        return <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} reportId={id} />;
     }
   };
 
@@ -379,19 +517,6 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
           </div>
 
           <div className="no-print" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginRight: 4 }}>RANGE</span>
-            {["30d", "90d", "1y", "all"].map((r) => (
-              <button
-                key={r}
-                className={`re-chip ${range === r ? "re-chip-solid" : ""}`}
-                style={{ cursor: "pointer", padding: "3px 10px" }}
-                aria-pressed={range === r}
-                onClick={() => setRange(r)}
-              >
-                {r}
-              </button>
-            ))}
-            <div style={{ width: 1, height: 18, background: "var(--border-soft)", margin: "0 6px" }} />
             <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("/compare")}>
               <Icon name="compare" size={14} /> Compare
             </button>
@@ -477,14 +602,43 @@ function ExecutiveSummary({
   data,
   competitor,
   onPickLens,
+  reportId,
+  complaints,
+  voice,
+  pricing,
+  switching,
+  quotes,
+  leads,
+  positioning,
+  opportunities,
+  actions,
+  platforms,
+  sentimentSeries,
+  featureGaps,
 }: {
   data: SummaryData | null;
   competitor: ScanCompetitor;
   onPickLens: (id: LensId) => void;
+  reportId: string;
+  complaints: Complaint[];
+  voice: VoiceResponse | undefined;
+  pricing: PricingResponse | undefined;
+  switching: SwitchingResponse | undefined;
+  quotes: QuoteRow[];
+  leads: LeadRow[];
+  positioning: Positioning[];
+  opportunities: Opportunity[];
+  actions: ActionRow[];
+  platforms: PlatformStat[];
+  sentimentSeries: number[];
+  featureGaps: FeatureGap[];
 }) {
+  type SummaryTabId = "overview" | "complaints" | "voice" | "pricing" | "switching" | "quotes" | "leads" | "positioning" | "opportunities" | "actions";
+  const [tab, setTab] = useState<SummaryTabId>("overview");
+
   if (!data) {
     return (
-      <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1280, margin: "0 auto", paddingBottom: 0 }}>
+      <div className="px-4 py-8 md:px-7" style={{ paddingBottom: 0 }}>
         <div className="re-card" style={{ padding: 32, textAlign: "center", color: "var(--fg-muted)" }}>
           <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>SUMMARY</div>
           <div style={{ fontSize: 16 }}>Generating executive summary…</div>
@@ -503,10 +657,23 @@ function ExecutiveSummary({
   }
 
   const c = data.competitor;
-  const lensColors = ["#ff5c1a", "#6366f1", "#8b5cf6"];
+
+  const tabsData: Array<[SummaryTabId, string]> = [
+    ["overview", "Overview"],
+    ["complaints", `Complaints (${complaints.length})`],
+    ["voice", "Voice of customer"],
+    ["pricing", "Pricing"],
+    ["switching", "Switching"],
+    ["quotes", `Verbatim (${quotes.length})`],
+    ["leads", `Leads (${leads.length})`],
+    ["positioning", "Positioning"],
+    ["opportunities", `Opportunities (${opportunities.length})`],
+    ["actions", "Recommended actions"],
+  ];
 
   return (
-    <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1280, margin: "0 auto", paddingBottom: 0 }}>
+    <div className="px-4 py-8 md:px-7" style={{ paddingBottom: 0 }}>
+      {/* SUMMARY CONTENT FIRST - ALL DETAILS */}
       <PerceptionHero data={data} />
 
       <div style={{ marginTop: 28 }}>
@@ -518,8 +685,7 @@ function ExecutiveSummary({
           {data.headlines.insights}
         </p>
         <p style={{ marginTop: 12, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
-          Switch a lens below to read the same evidence through a specific role — founder strategy, product
-          roadmap, marketing copy, or growth conversations.
+          Switch a lens below to read the same evidence through a specific role — founder strategy, product roadmap, marketing copy, or growth conversations.
         </p>
       </div>
 
@@ -542,9 +708,32 @@ function ExecutiveSummary({
             <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
-            {data.topQuotes.slice(0, 3).map((q, i) => (
-              <AnchorQuote key={i} q={q} color={lensColors[i] ?? "#8b5cf6"} />
-            ))}
+            {data.topQuotes.map((q, i) => {
+              const lensColors = ["#ff5c1a", "#6366f1", "#8b5cf6"];
+              const color = lensColors[i % lensColors.length];
+              return (
+                <div
+                  key={i}
+                  className="rounded-lg border border-border bg-card"
+                  style={{
+                    borderTop: `4px solid ${color}`,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{ padding: 16 }}>
+                    <div className="re-eyebrow" style={{ fontSize: 10, color, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      {q.theme}
+                    </div>
+                    <p style={{ margin: 0, fontStyle: "italic", fontSize: 14, lineHeight: 1.65, color: "var(--fg)" }}>
+                      "{q.text}"
+                    </p>
+                    <p style={{ margin: "12px 0 0 0", fontSize: 11, color: "var(--fg-faint)" }}>
+                      {q.who} · {q.when}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -567,6 +756,77 @@ function ExecutiveSummary({
           <SummaryStat key={t.name} label={t.name} value={String(t.mentions)} tone="warn" sub={t.trend} />
         ))}
       </div>
+
+      {data.platformBreakdown && data.platformBreakdown.length > 0 && (
+        <PlatformBreakdownCard platforms={data.platformBreakdown} />
+      )}
+
+      {/* TABS AT THE END */}
+      <div style={{ marginTop: 48 }}>
+        <div
+          className="flex gap-1 overflow-x-auto px-4 md:px-7"
+          style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg)", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}
+        >
+          {tabsData.map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              className="relative cursor-pointer whitespace-nowrap border-0 bg-transparent py-3 pr-4 text-[13px]"
+              style={{
+                color: tab === k ? "var(--fg)" : "var(--fg-muted)",
+                fontWeight: tab === k ? 500 : 400,
+                borderBottom:
+                  tab === k ? "2px solid var(--accent)" : "2px solid transparent",
+                marginBottom: -1,
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="px-4 pb-16 pt-5 md:px-7">
+          <div style={{ width: "100%" }}>
+            {tab === "overview" && (
+              <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+                <div className="flex flex-col gap-4">
+                  <ScanExecutiveBriefCard brief={data.intelligence?.brief ?? null} />
+                  <ScanSummaryCard data={data} complaints={complaints} />
+                  <ComplaintsCard
+                    complaints={complaints.slice(0, 5)}
+                    totalCount={complaints.length}
+                    showViewAll
+                    onOpenThread={() => {}}
+                  />
+                  {sentimentSeries.length > 1 && (
+                    <ScanSentimentCard series={sentimentSeries} />
+                  )}
+                  {switching && <ScanSwitchingSummary switching={switching} />}
+                </div>
+                <div className="flex flex-col gap-4">
+                  {platforms.length > 0 && <ScanPlatformBreakdown platforms={platforms} />}
+                  <ScanVerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} onViewAll={() => setTab("quotes")} />
+                  {featureGaps.length > 0 && (
+                    <ScanFeatureGapsCard featureGaps={featureGaps.slice(0, 6)} />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {tab === "complaints" && (
+              <ComplaintsCard complaints={complaints} onOpenThread={() => {}} />
+            )}
+            {tab === "voice" && <VoiceTab voice={voice} competitorName={c.name} />}
+            {tab === "pricing" && <PricingTab pricing={pricing} />}
+            {tab === "switching" && <SwitchingTab switching={switching} />}
+            {tab === "quotes" && <QuotesCard quotes={quotes} />}
+            {tab === "leads" && <LeadsCard leads={leads} />}
+            {tab === "positioning" && <PositioningCard positioning={positioning} />}
+            {tab === "opportunities" && <OpportunitiesCard opportunities={opportunities} />}
+            {tab === "actions" && <ActionsCard actions={actions} reportId={reportId} />}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -581,6 +841,59 @@ function SummaryStat({ label, value, tone, sub }: { label: string; value: string
         {value}
       </div>
       <div style={{ fontSize: 11, color, marginTop: 2 }}>{sub}</div>
+    </div>
+  );
+}
+
+function PlatformBreakdownCard({ platforms }: { platforms: Array<{ id: string; name: string; posts: number; sentiment: number; contexts: string[] }> }) {
+  const total = platforms.reduce((a, b) => a + b.posts, 0) || 1;
+  return (
+    <div className="re-card" style={{ marginTop: 28 }}>
+      <div className="re-card-hd">
+        <h3>Platform breakdown</h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          {total} items
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5 px-4 py-3">
+        {platforms.map((p) => {
+          const pct = (p.posts / total) * 100;
+          return (
+            <div key={p.id}>
+              <div className="mb-1 flex justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2" style={{ fontSize: 12 }}>
+                  <span style={{ fontWeight: 500 }}>{p.name}</span>
+                  <span className="truncate font-mono-feat text-[10px] text-fg-faint">
+                    {p.contexts.slice(0, 2).join(" · ")}
+                  </span>
+                </span>
+                <span
+                  className="flex-shrink-0 font-mono-feat tnum text-fg-muted"
+                  style={{ fontSize: 11 }}
+                >
+                  {p.posts}{" "}
+                  <span className="text-fg-faint">·</span>{" "}
+                  <span
+                    style={{
+                      color:
+                        (p.sentiment ?? 0) < -0.35
+                          ? "var(--neg)"
+                          : "var(--fg-muted)",
+                    }}
+                  >
+                    {(p.sentiment ?? 0).toFixed(2)}
+                  </span>
+                </span>
+              </div>
+              <div className="re-meter">
+                <i
+                  style={{ width: `${pct}%`, background: "var(--fg)" }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -843,6 +1156,386 @@ function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => 
           </button>
         );
       })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// OVERVIEW TAB HELPER COMPONENTS
+
+function FlowList({
+  eyebrow,
+  tone,
+  flows,
+  max,
+  field,
+}: {
+  eyebrow: string;
+  tone: "pos" | "neg";
+  flows: Array<{ partner: string; count: number }>;
+  max: number;
+  field: "partner";
+}) {
+  return (
+    <div>
+      <div className="re-eyebrow mb-2" style={{ fontSize: 10 }}>
+        <Icon
+          name="arrow-right"
+          size={10}
+          style={{
+            display: "inline",
+            verticalAlign: "middle",
+            color: tone === "pos" ? "var(--pos)" : "var(--neg)",
+          }}
+        />{" "}
+        {eyebrow}
+      </div>
+      <div className="flex flex-col gap-2">
+        {flows.map((s) => (
+          <div
+            key={s[field]}
+            className="grid items-center gap-2"
+            style={{ gridTemplateColumns: "70px 1fr 36px" }}
+          >
+            <span style={{ fontSize: 13 }}>{s[field]}</span>
+            <div className={`re-meter ${tone}`}>
+              <i style={{ width: `${(s.count / max) * 100}%` }} />
+            </div>
+            <span
+              className="font-mono-feat tnum text-right text-fg-faint"
+              style={{ fontSize: 11 }}
+            >
+              {s.count}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScanExecutiveBriefCard({ brief }: { brief: string | null }) {
+  if (!brief) return null;
+  return (
+    <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--accent)", borderWidth: 1.5 }}>
+      <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+        Intelligence Brief
+      </div>
+      <p className="text-sm leading-relaxed" style={{ color: "var(--fg)" }}>
+        {brief}
+      </p>
+    </div>
+  );
+}
+
+function ScanSummaryCard({
+  data,
+  complaints,
+}: {
+  data: SummaryData | null;
+  complaints: Complaint[];
+}) {
+  const topTags = useMemo(() => {
+    const seen = new Set<string>();
+    for (const c of complaints) {
+      if (c.tag && !seen.has(c.tag)) seen.add(c.tag);
+      if (seen.size >= 4) break;
+    }
+    return Array.from(seen);
+  }, [complaints]);
+
+  const summary = data?.intelligence?.summary;
+
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>
+          <Icon name="alert" size={14} /> Executive summary
+        </h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          auto · {data?.competitor.scannedAt ? formatRelative(data.competitor.scannedAt) : "1d ago"}
+        </span>
+      </div>
+      <div className="re-card-body">
+        {summary ? (
+          <p
+            className="m-0 text-fg-muted"
+            style={{ fontSize: 14, lineHeight: 1.65 }}
+          >
+            {summary}
+          </p>
+        ) : (
+          <p className="m-0 text-fg-faint" style={{ fontSize: 13 }}>
+            Summary not yet generated.
+          </p>
+        )}
+        {topTags.length > 0 && (
+          <div className="mt-3.5 flex flex-wrap gap-2">
+            {topTags.map((t, i) => (
+              <span
+                key={t}
+                className={`re-chip ${i === 0 ? "re-chip-accent" : ""}`}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ScanSentimentCard({ series }: { series: number[] }) {
+  const w = 600;
+  const h = 160;
+  const pad = 24;
+  const minY = Math.min(...series, -0.45);
+  const maxY = Math.max(...series, 0);
+  const x = (i: number) =>
+    pad + (i / Math.max(series.length - 1, 1)) * (w - pad * 2);
+  const y = (v: number) =>
+    pad + ((maxY - v) / (maxY - minY || 1)) * (h - pad * 2);
+  const linePath = series
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(v)}`)
+    .join(" ");
+  const areaPath = `${linePath} L ${x(series.length - 1)} ${h - pad} L ${x(0)} ${h - pad} Z`;
+
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>Sentiment over time</h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          weekly · 90d
+        </span>
+      </div>
+      <div style={{ padding: 12 }}>
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          className="block h-auto w-full"
+        >
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--neg)" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="var(--neg)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill="url(#sg)" />
+          <path
+            d={linePath}
+            fill="none"
+            stroke="var(--neg)"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          {series.map((v, i) => (
+            <circle
+              key={i}
+              cx={x(i)}
+              cy={y(v)}
+              r={i === series.length - 1 ? 3.5 : 1.6}
+              fill={
+                i === series.length - 1 ? "var(--neg)" : "var(--surface)"
+              }
+              stroke="var(--neg)"
+              strokeWidth="1.4"
+            />
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function ScanSwitchingSummary({ switching }: { switching: SwitchingResponse }) {
+  const maxIn = Math.max(...switching.inbound.map((s) => s.count), 1);
+  const maxOut = Math.max(...switching.outbound.map((s) => s.count), 1);
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>Switching signals</h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          {switching.net_signal ?? ""}
+        </span>
+      </div>
+      <div className="grid gap-6 p-4 sm:grid-cols-2">
+        <FlowList
+          eyebrow="INBOUND"
+          tone="pos"
+          flows={switching.inbound}
+          max={maxIn}
+          field="partner"
+        />
+        <FlowList
+          eyebrow="OUTBOUND"
+          tone="neg"
+          flows={switching.outbound}
+          max={maxOut}
+          field="partner"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ScanPlatformBreakdown({ platforms }: { platforms: PlatformStat[] }) {
+  const total = platforms.reduce((a, b) => a + (b.posts ?? 0), 0) || 1;
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>Platform breakdown</h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          {total} items
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5 px-4 py-3">
+        {platforms.map((p) => {
+          const pct = ((p.posts ?? 0) / total) * 100;
+          return (
+            <div key={p.id}>
+              <div className="mb-1 flex justify-between gap-2">
+                <span style={{ fontSize: 13 }}>{p.name}</span>
+                <span
+                  className="flex-shrink-0 font-mono-feat tnum text-fg-muted"
+                  style={{ fontSize: 11 }}
+                >
+                  {p.posts}{" "}
+                  <span className="text-fg-faint">·</span>{" "}
+                  <span
+                    style={{
+                      color:
+                        (p.sentiment ?? 0) < -0.35
+                          ? "var(--neg)"
+                          : "var(--fg-muted)",
+                    }}
+                  >
+                    {(p.sentiment ?? 0).toFixed(2)}
+                  </span>
+                </span>
+              </div>
+              <div className="re-meter">
+                <i
+                  style={{ width: `${pct}%`, background: "var(--fg)" }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ScanVerbatimCard({
+  quotes,
+  totalCount,
+  onViewAll,
+}: {
+  quotes: QuoteRow[];
+  totalCount: number;
+  onViewAll?: () => void;
+}) {
+  if (quotes.length === 0) {
+    return (
+      <div className="re-card">
+        <div className="re-card-hd">
+          <h3>
+            <Icon name="quote" size={14} /> Verbatim feed
+          </h3>
+        </div>
+        <div className="re-card-body">
+          <p className="m-0 text-fg-faint" style={{ fontSize: 13 }}>
+            No quotes yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>
+          <Icon name="quote" size={14} /> Verbatim feed
+        </h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">live</span>
+      </div>
+      <div className="flex flex-col gap-3 px-4 py-3">
+        {quotes.map((q) => (
+          <div key={q.id}>
+            <div className="flex items-baseline gap-1.5">
+              <span
+                className="font-mono-feat text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
+                style={{ color: "var(--accent)" }}
+              >
+                {q.who}
+              </span>
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{
+                  background:
+                    q.sentiment > 0
+                      ? "var(--pos)"
+                      : q.sentiment < -0.5
+                        ? "var(--neg)"
+                        : "var(--warn)",
+                }}
+              />
+            </div>
+            <p className="m-0 mt-1" style={{ fontSize: 13, lineHeight: 1.55 }}>
+              "{q.text}"
+            </p>
+          </div>
+        ))}
+      </div>
+      {totalCount > quotes.length && (
+        <div
+          className="px-4 py-2.5 text-center"
+          style={{ borderTop: "1px solid var(--border-soft)" }}
+        >
+          <button onClick={onViewAll} className="re-btn re-btn-ghost re-btn-sm">
+            View all {totalCount}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScanFeatureGapsCard({ featureGaps }: { featureGaps: FeatureGap[] }) {
+  const max = Math.max(...featureGaps.map((g) => g.votes), 1);
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>Feature gaps</h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          requests · 90d
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5 px-4 py-3">
+        {featureGaps.map((g) => (
+          <div
+            key={g.id}
+            className="grid items-center gap-2"
+            style={{ gridTemplateColumns: "minmax(0,1fr) 70px 36px" }}
+          >
+            <span className="truncate" style={{ fontSize: 12 }}>{g.feature}</span>
+            <div className="re-meter">
+              <i
+                style={{
+                  width: `${(g.votes / max) * 100}%`,
+                  background: "var(--fg)",
+                }}
+              />
+            </div>
+            <span
+              className="font-mono-feat tnum text-right text-fg-faint"
+              style={{ fontSize: 11 }}
+            >
+              {g.votes}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

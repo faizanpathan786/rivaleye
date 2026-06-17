@@ -23,6 +23,7 @@ const CRUMB_MAP: CrumbConfig = {
   "/compare": ["RivalEye", "Compare"],
   "/scan-report": ["RivalEye", "Scan Report"],
   "/history": ["RivalEye", "History"],
+  "/my-plan": ["RivalEye", "My Plan"],
   "/account": ["RivalEye", "Settings"],
 };
 
@@ -163,10 +164,10 @@ function TopBar({ crumbs, userInitial, userImage, onBrandClick, onNewScan, onAcc
         ))}
       </nav>
       <div className="actions flex flex-1 md:flex-none items-center justify-end gap-1.5">
-        <button className="re-btn re-btn-sm" onClick={onNewScan}>
+        <button type="button" className="re-btn re-btn-sm" onClick={onNewScan}>
           <Icon name="plus" size={14} /> New scan
         </button>
-        <button className="re-btn re-btn-ghost re-btn-icon re-btn-sm" onClick={onAccount} title="Account">
+        <button type="button" className="re-btn re-btn-ghost re-btn-icon re-btn-sm" onClick={onAccount} title="Account">
           {userImage ? (
             <img
               src={userImage}

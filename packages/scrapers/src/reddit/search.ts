@@ -9,7 +9,7 @@ export interface RawRedditPost {
   name: string;
   title: string;
   selftext: string;
-  author: string;
+  author: string | null;
   subreddit: string;
   score: number;
   num_comments: number;
@@ -40,7 +40,7 @@ export async function searchPosts(
   );
   const results = listing.data.children
     .map((c) => c.data)
-    .filter((p) => p.author !== "[deleted]");
+    .filter((p) => p.author && p.author !== "[deleted]" && p.author.trim().length > 0);
   log.info({ term, returned: results.length, durationMs: Date.now() - t0 }, "Search complete");
   return results;
 }

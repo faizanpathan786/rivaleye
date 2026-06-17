@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +36,8 @@ type Tone = "neg" | "warn" | "pos" | "default";
 export function DashboardPage() {
   const navigate = useNavigate();
   const onNav = (key: NavKey) => navigate(ROUTE_MAP[key]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
@@ -81,6 +83,9 @@ export function DashboardPage() {
 
   const data = dashboardQuery.data;
   const reports: ReportRow[] = data?.recent_reports ?? reportsQuery.data ?? [];
+  const filteredReports = statusFilter
+    ? reports.filter((r) => r.status === statusFilter)
+    : reports;
   const radarEvents: RadarEvent[] = data?.recent_radar_events ?? [];
   const opportunities = data?.opportunities ?? [];
   const stats = data?.stats;
@@ -158,17 +163,86 @@ export function DashboardPage() {
       <div className="re-card">
         <div className="re-card-hd flex-wrap gap-2">
           <h3>Recent reports</h3>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="re-btn re-btn-ghost re-btn-sm">
-              <Icon name="filter" size={14} /> Filter
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto", position: "relative" }}>
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
+              style={{ opacity: statusFilter ? 1 : 0.6 }}
+            >
+              <Icon name="filter" size={14} />
             </button>
+            {filterOpen && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: 4,
+                background: "var(--surface-solid)",
+                border: "1px solid var(--border-soft)",
+                borderRadius: "var(--r-md)",
+                padding: 8,
+                zIndex: 10,
+                minWidth: 150,
+              }}>
+                <button
+                  onClick={() => { setStatusFilter(null); setFilterOpen(false); }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    fontSize: 12,
+                    border: "none",
+                    background: statusFilter === null ? "var(--hover)" : "transparent",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    marginBottom: 4,
+                  }}
+                >
+                  All ({reports.length})
+                </button>
+                <button
+                  onClick={() => { setStatusFilter("completed"); setFilterOpen(false); }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    fontSize: 12,
+                    border: "none",
+                    background: statusFilter === "completed" ? "var(--hover)" : "transparent",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    marginBottom: 4,
+                  }}
+                >
+                  Completed
+                </button>
+                <button
+                  onClick={() => { setStatusFilter("failed"); setFilterOpen(false); }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    fontSize: 12,
+                    border: "none",
+                    background: statusFilter === "failed" ? "var(--hover)" : "transparent",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                  }}
+                >
+                  Failed
+                </button>
+              </div>
+            )}
             <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-              {reports.length} recent
+              {filteredReports.length} reports
             </span>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ maxHeight: 400, overflowY: "auto" }}>
         <div
           className="min-w-[720px]"
           style={{
@@ -194,7 +268,7 @@ export function DashboardPage() {
           <span />
         </div>
 
-        {reports.length === 0 ? (
+        {filteredReports.length === 0 ? (
           <div
             style={{
               padding: 24,
@@ -203,10 +277,10 @@ export function DashboardPage() {
               fontSize: 13,
             }}
           >
-            No reports yet.
+            {statusFilter ? "No reports match this filter." : "No reports yet."}
           </div>
         ) : (
-          reports.map((r, i) => {
+          filteredReports.map((r, i) => {
             const name = r.primary_competitor_name ?? "Untitled";
             const sentiment = r.sentiment_overall;
             return (
@@ -217,7 +291,7 @@ export function DashboardPage() {
                   display: "grid",
                   gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
                   padding: "14px 16px",
-                  borderBottom: i === reports.length - 1 ? "0" : "1px solid var(--border-soft)",
+                  borderBottom: i === filteredReports.length - 1 ? "0" : "1px solid var(--border-soft)",
                   alignItems: "center",
                   gap: 12,
                   cursor: "pointer",

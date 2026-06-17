@@ -14,7 +14,7 @@ const SYSTEM = BASE_SYSTEM + RATING_CALIBRATION;
 
 export interface AppStoreExtractInput {
   ctx: PipelineCtx;
-  reviews: Array<{ id: string; rating: number; body: string }>;
+  reviews: Array<{ id: string; rating: number; body: string; author: string | null }>;
 }
 
 export function buildAppStoreExtract(input: AppStoreExtractInput): {
@@ -23,7 +23,7 @@ export function buildAppStoreExtract(input: AppStoreExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const reviewBlock = input.reviews
-    .map((r) => `- id=${r.id} | rating=${r.rating}/5 | ${oneLine(r.body)}`)
+    .map((r) => `- id=${r.id} | rating=${r.rating}/5${r.author ? ` | author=${r.author}` : ""} | ${oneLine(r.body)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}

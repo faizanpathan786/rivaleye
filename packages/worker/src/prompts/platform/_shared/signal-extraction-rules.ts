@@ -33,7 +33,7 @@ Rules:
 - sentiment: -1 (very negative) to 1 (very positive). strength_or_severity: 0 (weak) to 1 (intense).
 - evidence_ids: use ONLY the id labels provided; never invent ids. The array length is the true mention count — never truncate or sample.
 - representative_quotes: 1-3 verbatim user quotes, under 200 chars each. Real user text, never a paraphrase.
-- evidence_quotes: a BALANCED pool of the most telling verbatim quotes across all signal types — capture love quotes as well as pain quotes.
+- evidence_quotes: a BALANCED pool of the most telling verbatim quotes across all signal types — capture love quotes as well as pain quotes. For author: if an author name/username is provided in the metadata, use it. If NO author metadata is provided, try to infer the author from the quote context (e.g., "I did this..." → infer "anon" or "user"; if truly impossible, use "Anonymous").
 - voice_phrases: 1-3 word phrases users actually typed. Authentic language only — no paraphrasing.
 - related_features / user_segment: fill only when stated in the source; otherwise [] / null.
 - If a section has no signal, return an empty array — never omit the key. Never invent data.

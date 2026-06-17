@@ -417,7 +417,7 @@ async function main(): Promise<void> {
 
   const config: WorkerConfig = {
     workerId,
-    pollIntervalMs: 1500,
+    pollIntervalMs: 500,
     sourceJobTimeoutMinutes: 25,
     synthesisJobTimeoutMinutes: 90,
   };
@@ -450,7 +450,7 @@ async function mainScrapeOnly(): Promise<void> {
   const workerId = generateWorkerId();
   const config: WorkerConfig = {
     workerId,
-    pollIntervalMs: 1500,
+    pollIntervalMs: 500,
     sourceJobTimeoutMinutes: 25,
     synthesisJobTimeoutMinutes: 90,
   };
@@ -471,7 +471,7 @@ async function mainSynthOnly(): Promise<void> {
   const workerId = generateWorkerId();
   const config: WorkerConfig = {
     workerId,
-    pollIntervalMs: 1500,
+    pollIntervalMs: 500,
     sourceJobTimeoutMinutes: 25,
     synthesisJobTimeoutMinutes: 90,
   };

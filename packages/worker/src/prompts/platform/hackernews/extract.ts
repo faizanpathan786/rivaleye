@@ -14,7 +14,7 @@ const SYSTEM = BASE_SYSTEM + HN_CONTEXT;
 
 export interface HackerNewsExtractInput {
   ctx: PipelineCtx;
-  posts: Array<{ id: string; score: number | null; body: string }>;
+  posts: Array<{ id: string; score: number | null; body: string; author: string | null }>;
 }
 
 export function buildHackerNewsExtract(input: HackerNewsExtractInput): {
@@ -23,7 +23,7 @@ export function buildHackerNewsExtract(input: HackerNewsExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | ${oneLine(p.body)}`)
+    .map((p) => `- id=${p.id}${p.author ? ` | author=${p.author}` : ""} | ${oneLine(p.body)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}

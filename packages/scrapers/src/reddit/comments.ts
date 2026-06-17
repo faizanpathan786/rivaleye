@@ -7,7 +7,7 @@ const log = pino({ name: "reddit-comments" });
 export interface RawRedditComment {
   id: string;
   body: string;
-  author: string;
+  author: string | null;
   score: number;
   permalink: string;
   created_utc: number;
@@ -37,7 +37,7 @@ export async function getComments(
     if (child.kind !== "t1") continue;
     const c = child.data;
     if (!c.body || c.body === "[deleted]" || c.body === "[removed]") continue;
-    if (c.author === "AutoModerator") continue;
+    if (!c.author || c.author === "AutoModerator" || c.author === "[deleted]" || c.author.trim().length === 0) continue;
     results.push(c);
     if (results.length >= maxComments) break;
   }

@@ -24,7 +24,7 @@ import { log } from "../logger";
  * retrying in the background and will trigger resynthesis when they succeed.
  *
  * Triggers synthesis when:
- * - At least 2 platforms succeeded, OR
+ * - At least 2 platforms succeeded (partial generation), OR
  * - All platforms are terminal and at least 1 succeeded
  *
  * Marks report as "partial: true" until all platforms are complete.
@@ -55,8 +55,9 @@ export async function fanInCheck(reportId: string): Promise<void> {
     const allTerminal = pendingCount === 0;
 
     // Trigger synthesis if:
-    // 1. At least 2 platforms succeeded (partial generation), OR
-    // 2. All platforms are terminal with at least 1 success (complete generation)
+    // 1. At least 2 platforms succeeded (enough data for clustering), OR
+    // 2. All platforms are terminal with at least 1 success (fallback for complete generation)
+    // Key: ignore failed platforms - only count what succeeded
     const shouldTrigger = completedCount >= 2 || (allTerminal && completedCount > 0);
 
     if (!shouldTrigger) {
@@ -116,7 +117,7 @@ export async function fanInCheck(reportId: string): Promise<void> {
   // Log outcomes after the transaction commits so log entries are never ghost-created
   switch (outcome.kind) {
     case "not-ready":
-      await log(reportId, "info", "fan-in", null, `Waiting for more successful platforms (${outcome.completedCount}/${outcome.total} completed); synthesis requires minimum 2 successes`);
+      await log(reportId, "info", "fan-in", null, `Waiting for sufficient successful platforms (${outcome.completedCount}/${outcome.total} completed); need ≥2 successes for clustering`);
       break;
     case "all-failed":
       await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);

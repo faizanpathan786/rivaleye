@@ -126,8 +126,7 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
       })
       .from(reports)
       .where(eq(reports.owner_id, userId))
-      .orderBy(desc(reports.created_at))
-      .limit(10),
+      .orderBy(desc(reports.created_at)),
     db
       .select({
         id: radar_events.id,

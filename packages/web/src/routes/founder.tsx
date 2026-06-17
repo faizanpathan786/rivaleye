@@ -300,12 +300,14 @@ export function FounderPage({
   evidenceSection,
   range: propRange,
   competitorName,
+  reportId,
 }: {
   embedded?: boolean;
   data?: FounderViewProps;
   evidenceSection?: EvidenceSection | null;
   range?: string;
   competitorName?: string;
+  reportId?: string;
 }) {
   const navigate = useNavigate();
   const reportsQuery = useReportsQuery();
@@ -375,6 +377,7 @@ export function FounderPage({
   const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
+  const openInReport = reportId ? () => navigate(`/reports/${reportId}`) : undefined;
 
   return (
     <div>
@@ -388,6 +391,7 @@ export function FounderPage({
           marketSummary={F.market_opening_summary}
           wedge={F.wedge}
           openEvidence={openEvidence}
+          onOpenInReport={openInReport}
         />
 
         <SectionHead
@@ -547,9 +551,10 @@ interface OpportunitySnapshotProps {
   marketSummary: FounderViewProps["market_opening_summary"];
   wedge: FounderViewProps["wedge"];
   openEvidence: (refs: EvidenceRef) => void;
+  onOpenInReport?: () => void;
 }
 
-function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidence }: OpportunitySnapshotProps) {
+function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidence, onOpenInReport }: OpportunitySnapshotProps) {
   const factorsRecord = factorsToRecord(o.factors);
 
   return (
@@ -620,9 +625,15 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
             >
               <Icon name="quote" size={12} /> View evidence
             </button>
-            <button type="button" className="re-btn re-btn-ghost re-btn-sm">
-              <Icon name="external" size={12} /> Open in report
-            </button>
+            {onOpenInReport && (
+              <button
+                type="button"
+                className="re-btn re-btn-ghost re-btn-sm"
+                onClick={onOpenInReport}
+              >
+                <Icon name="external" size={12} /> Open in report
+              </button>
+            )}
           </div>
         </div>
       </div>

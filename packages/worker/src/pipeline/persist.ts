@@ -266,6 +266,7 @@ export async function persistReport(input: PersistInput): Promise<void> {
         .set({
           status: "completed",
           stage: "done",
+          error: null,
           sentiment_overall: meta.sentiment_overall,
           sentiment_positive: meta.sentiment_positive,
           sentiment_neutral: meta.sentiment_neutral,

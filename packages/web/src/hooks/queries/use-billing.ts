@@ -17,6 +17,7 @@ export function useBalanceQuery() {
   return useQuery({
     queryKey: billingKeys.balance,
     queryFn: getBalance,
+    staleTime: 60000,
   });
 }
 
@@ -32,6 +33,7 @@ export function useTransactionsQuery() {
   return useQuery({
     queryKey: billingKeys.transactions,
     queryFn: getTransactions,
+    staleTime: 60000,
   });
 }
 
