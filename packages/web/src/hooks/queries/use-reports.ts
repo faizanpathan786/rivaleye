@@ -80,13 +80,13 @@ export function useReportQuery(id: string | undefined) {
     queryKey: reportsKeys.detail(id),
     queryFn: () => getReport(id as string),
     enabled: !!id,
-    staleTime: 60000,
+    staleTime: 1000000, // Very long cache - stop refetching for completed reports
     refetchInterval: (q) => {
       const status = q.state.data?.status;
-      if (status && TERMINAL_STATUSES.has(status)) return false;
+      if (!status || TERMINAL_STATUSES.has(status)) return false;
       return 5000;
     },
-    refetchIntervalInBackground: true,
+    refetchIntervalInBackground: false, // Don't refetch in background
     refetchOnWindowFocus: false,
   });
 
@@ -104,13 +104,13 @@ export function useReportProgressQuery(id: string | undefined) {
     queryKey: reportsKeys.section(id, "progress"),
     queryFn: () => getReportProgress(id as string),
     enabled: !!id,
-    staleTime: 60000,
+    staleTime: 1000000, // Very long cache - stop refetching for completed reports
     refetchInterval: (q) => {
       const status = q.state.data?.report.status;
-      if (status && TERMINAL_STATUSES.has(status)) return false;
+      if (!status || TERMINAL_STATUSES.has(status)) return false;
       return 5000;
     },
-    refetchIntervalInBackground: true,
+    refetchIntervalInBackground: false, // Don't refetch in background
     refetchOnWindowFocus: false,
   });
 }
