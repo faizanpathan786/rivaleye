@@ -248,16 +248,7 @@ export function ScanReportPage() {
     return <ReportInProgress report={reportRow} progress={progressQuery.data} />;
   }
 
-  // While report data is loading for a new scan, show progress page placeholder
-  if (id && !reportRow && reportIsLoading && !isCompleted) {
-    return (
-      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div style={{ fontSize: 16 }}>Starting scan…</div>
-      </div>
-    );
-  }
-
-  // If report ID exists but data hasn't loaded yet (report completed), show loading
+  // If report ID exists but data is still loading, show loading state
   if (id && reportIsLoading) {
     return (
       <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
