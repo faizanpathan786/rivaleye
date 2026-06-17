@@ -8,6 +8,8 @@ export * from "./pipeline";
 export * from "./logs";
 export * from "./pipeline-events";
 export * from "./report-role-sections";
+export * from "./outreach";
+export * from "./planned-actions";
 
 // Type exports from pipeline enums for cross-package use
 export type {

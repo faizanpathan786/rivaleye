@@ -18,13 +18,13 @@ import {
   report_thread_messages,
   type Report,
 } from "@/db/schema/reports";
-import { report_platform_jobs, synthesis_jobs } from "@/db/schema/pipeline";
+import { report_platform_jobs, report_platform_briefs, synthesis_jobs } from "@/db/schema/pipeline";
 import { report_logs } from "@/db/schema/logs";
 import { pipeline_events } from "@/db/schema/pipeline-events";
 import { mentions } from "@/db/schema/mentions";
 import { report_role_sections } from "@/db/schema/report-role-sections";
 import { inngest } from "@/libs/inngest";
-import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
 import type { EnabledPlatformId } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
@@ -81,9 +81,133 @@ function inferCompetitorDomain(name: string, websiteUrl?: string): string | null
   return null;
 }
 
+/**
+ * Smart rescan: Check for existing successful platform data for a competitor.
+ * Returns platforms that already have data (don't need to rescrape).
+ */
+async function findExistingPlatformData(
+  owner_id: string,
+  competitor: string,
+): Promise<{ platform: string; reportId: string; mentionCount: number }[]> {
+  const recentReports = await db
+    .select({ id: reports.id })
+    .from(reports)
+    .where(
+      and(
+        eq(reports.owner_id, owner_id),
+        eq(reports.primary_competitor_name, competitor),
+        gt(reports.created_at, sql`now() - interval '30 days'`),
+      ),
+    )
+    .orderBy(desc(reports.created_at))
+    .limit(5);
+
+  if (recentReports.length === 0) return [];
+
+  // reportIds are ordered most-recent-first; we use that order to pick the
+  // freshest report when a platform has data in more than one past report.
+  const reportIds = recentReports.map((r) => r.id);
+
+  const platformData = await db
+    .select({
+      platform: report_platform_jobs.platform,
+      reportId: report_platform_jobs.report_id,
+      mentionCount: sql<number>`count(${mentions.id})::int`,
+    })
+    .from(report_platform_jobs)
+    .innerJoin(
+      mentions,
+      and(
+        eq(report_platform_jobs.report_id, mentions.report_id),
+        eq(report_platform_jobs.platform, mentions.platform),
+      ),
+    )
+    .where(
+      and(
+        inArray(report_platform_jobs.report_id, reportIds),
+        eq(report_platform_jobs.status, "completed"),
+        // Only reuse a platform that also has a Stage A/B brief — synthesis
+        // (Stage C) merges briefs, not raw mentions. Reusing a platform without
+        // a brief would make Stage C fail with "no platform briefs found".
+        sql`EXISTS (SELECT 1 FROM ${report_platform_briefs} b WHERE b.report_id = ${report_platform_jobs.report_id} AND b.platform = ${report_platform_jobs.platform})`,
+      ),
+    )
+    .groupBy(report_platform_jobs.platform, report_platform_jobs.report_id)
+    .having(sql`count(${mentions.id}) > 0`);
+
+  // Dedupe to one entry per platform, keeping the most recent report (reportIds
+  // is ordered most-recent-first). Prevents duplicate report_platform_jobs rows.
+  const reportRank = new Map(reportIds.map((id, idx) => [id, idx]));
+  const bestByPlatform = new Map<string, { platform: string; reportId: string; mentionCount: number }>();
+  for (const row of platformData) {
+    const existing = bestByPlatform.get(row.platform);
+    if (!existing || (reportRank.get(row.reportId) ?? Infinity) < (reportRank.get(existing.reportId) ?? Infinity)) {
+      bestByPlatform.set(row.platform, row);
+    }
+  }
+
+  return [...bestByPlatform.values()];
+}
+
+/**
+ * Copy a platform's data (mentions + Stage A/B brief) from a previous successful
+ * scan into a new report, so synthesis can run without re-scraping or re-running
+ * the per-platform LLM stages.
+ */
+async function copyPlatformDataFromPreviousScan(
+  newReportId: string,
+  previousReportId: string,
+  platform: string,
+  tx: any,
+): Promise<number> {
+  const { randomUUID } = await import("node:crypto");
+
+  // Copy the Stage A/B brief — Stage C (merge) reads briefs, not raw mentions.
+  const previousBriefs = await tx
+    .select()
+    .from(report_platform_briefs)
+    .where(
+      and(
+        eq(report_platform_briefs.report_id, previousReportId),
+        eq(report_platform_briefs.platform, platform),
+      ),
+    );
+
+  if (previousBriefs.length > 0) {
+    await tx.insert(report_platform_briefs).values(
+      previousBriefs.map((b: any) => ({
+        ...b,
+        id: randomUUID(),
+        report_id: newReportId,
+        created_at: new Date(),
+      })),
+    );
+  }
+
+  // Copy raw mentions so the report's source-evidence views still resolve.
+  const previousMentions = await tx
+    .select()
+    .from(mentions)
+    .where(and(eq(mentions.report_id, previousReportId), eq(mentions.platform, platform)));
+
+  if (previousMentions.length > 0) {
+    await tx.insert(mentions).values(
+      previousMentions.map((m: any) => ({
+        ...m,
+        id: randomUUID(),
+        report_id: newReportId,
+        created_at: new Date(),
+      })),
+    );
+  }
+
+  return previousMentions.length;
+}
+
 export async function createReport(
   owner_id: string,
   input: CreateReportInput,
+  resumeFromReportId?: string,
 ): Promise<{ id: string }> {
   const engine = getPipelineEngine();
   const competitor = input.competitors[0] ?? input.category;
@@ -111,6 +235,51 @@ export async function createReport(
     keywords = [competitor];
   }
 
+  // If resuming from a previous scan, copy successful platform data and only rescan failed ones
+  let existingData = [] as Array<{ platform: string; reportId: string }>;
+  if (resumeFromReportId) {
+    const previousReport = await db
+      .select({
+        id: reports.id,
+      })
+      .from(reports)
+      .where(and(eq(reports.id, resumeFromReportId), eq(reports.owner_id, owner_id)))
+      .limit(1);
+
+    if (previousReport.length === 0) {
+      throw new Error("Resume report not found or unauthorized");
+    }
+
+    // Get failed platforms from the previous report
+    const failedPlatforms = await db
+      .select({ platform: report_platform_jobs.platform })
+      .from(report_platform_jobs)
+      .where(and(
+        eq(report_platform_jobs.report_id, resumeFromReportId),
+        ne(report_platform_jobs.status, "completed" as const),
+      ));
+
+    // Get completed platforms from the previous report to copy data from
+    const completedPlatforms = await db
+      .select({ platform: report_platform_jobs.platform })
+      .from(report_platform_jobs)
+      .where(and(
+        eq(report_platform_jobs.report_id, resumeFromReportId),
+        eq(report_platform_jobs.status, "completed" as const),
+      ));
+
+    existingData = completedPlatforms.map((p) => ({
+      platform: p.platform,
+      reportId: resumeFromReportId,
+    }));
+  } else {
+    // Smart rescan: check for existing platform data from any successful previous scan
+    existingData = await findExistingPlatformData(owner_id, competitor);
+  }
+
+  const platformsWithData = new Set(existingData.map((p) => p.platform));
+  const platformsToScan = input.selected_platforms.filter((p) => !platformsWithData.has(p));
+
   // Transaction: report + jobs atomic (credit check is inside — atomic with report insert)
   const row = await db.transaction(async (tx) => {
     await consumeCreditForScan(owner_id, competitor, tx);
@@ -133,36 +302,56 @@ export async function createReport(
 
     if (!reportRow) throw new Error("Failed to insert report");
 
+    // Copy mentions from previous successful scans for platforms with existing data
+    for (const { platform, reportId } of existingData) {
+      await copyPlatformDataFromPreviousScan(reportRow.id, reportId, platform, tx);
+      await tx.insert(report_platform_jobs).values({
+        report_id: reportRow.id,
+        platform,
+        status: "completed" as const,
+        stage: "done" as const,
+        completed_at: new Date(),
+      });
+    }
+
     if (engine === "postgres") {
-      await tx.insert(report_platform_jobs).values(
-        input.selected_platforms.map((platform) => ({
-          report_id: reportRow.id,
-          platform,
-          status: "queued" as const,
-        })),
-      );
+      if (platformsToScan.length > 0) {
+        await tx.insert(report_platform_jobs).values(
+          platformsToScan.map((platform) => ({
+            report_id: reportRow.id,
+            platform,
+            status: "queued" as const,
+            // No retries: a failed platform is final and the report proceeds
+            // with whatever platforms succeeded, instead of retrying and stalling.
+            max_attempts: 1,
+          })),
+        );
+      }
     } else if (engine === "inngest") {
       // Keep existing behavior: all platforms via Inngest
-      await tx.insert(report_platform_jobs).values(
-        input.selected_platforms.map((platform) => ({
-          report_id: reportRow.id,
-          platform,
-          status: "queued" as const,
-        })),
-      );
-
-      await inngest.send(
-        input.selected_platforms.map((platform) => ({
-          name: "scrape.fetch" as const,
-          data: {
-            reportId: reportRow.id,
+      if (platformsToScan.length > 0) {
+        await tx.insert(report_platform_jobs).values(
+          platformsToScan.map((platform) => ({
+            report_id: reportRow.id,
             platform,
-            competitor,
-            category: input.category,
-            keywords,
-          },
-        })),
-      );
+            status: "queued" as const,
+            max_attempts: 1,
+          })),
+        );
+
+        await inngest.send(
+          platformsToScan.map((platform) => ({
+            name: "scrape.fetch" as const,
+            data: {
+              reportId: reportRow.id,
+              platform,
+              competitor,
+              category: input.category,
+              keywords,
+            },
+          })),
+        );
+      }
     }
 
     return reportRow;

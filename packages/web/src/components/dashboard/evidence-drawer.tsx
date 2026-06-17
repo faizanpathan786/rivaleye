@@ -29,6 +29,7 @@
  */
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { EvidenceRef, EvidenceSection } from "@/lib/dashboard-helpers";
 import { cn } from "@/lib/utils";
 
@@ -47,14 +48,20 @@ export function EvidenceDrawer({
   evidenceSection,
   className,
 }: EvidenceDrawerProps) {
-  // Close on Escape key.
+  // Close on Escape key + lock background scroll while the drawer is open so
+  // the page behind it doesn't move under the overlay.
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handler);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -72,7 +79,10 @@ export function EvidenceDrawer({
 
   const hasEvidence = resolvedQuotes.length > 0;
 
-  return (
+  // Render through a portal to document.body so the fixed-position overlay is
+  // anchored to the viewport, not to any transformed/filtered ancestor (which
+  // would otherwise force the user to scroll to reach the drawer).
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -176,6 +186,7 @@ export function EvidenceDrawer({
           )}
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

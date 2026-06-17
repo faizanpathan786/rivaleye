@@ -103,39 +103,43 @@ export async function processSynthesisJob(
       (j) => j.status !== "completed" && j.status !== "failed"
     );
 
-    if (pendingPlatforms.length > 0) {
-      // Not all source jobs are done; defer synthesis
-      const errorMsg = `Fan-in not ready: ${pendingPlatforms.length} platforms still pending`;
-      log.warn(
-        {
-          jobId: job.id,
-          reportId: job.report_id,
-          pendingCount: pendingPlatforms.length,
-          pendingPlatforms: pendingPlatforms.map((j) => j.platform),
-        },
-        errorMsg
-      );
-
-      // Reset to queued and wait for source jobs to finish
-      const backoffMs = 5000; // 5 seconds, shorter backoff for pending case
-      await db
-        .update(synthesis_jobs)
-        .set({
-          status: "queued",
-          run_after: new Date(Date.now() + backoffMs),
-          locked_at: null,
-          locked_by: null,
-          last_error: errorMsg,
-          updated_at: new Date(),
-        })
-        .where(eq(synthesis_jobs.id, job.id));
-
-      // Re-throw as transient error (retriable)
-      throw new Error(errorMsg);
-    }
-
+    // Partial generation: proceed with whatever platforms have completed.
+    // The fan-in only creates this synthesis job once enough platforms have
+    // succeeded, so we do NOT block on platforms that are still pending — they
+    // keep running in the background. We only need to bail if we genuinely have
+    // no data to synthesize yet.
     if (completedPlatforms.length === 0) {
-      // All source jobs failed; permanent failure
+      if (pendingPlatforms.length > 0) {
+        // No data available yet, but platforms are still working. Defer briefly
+        // rather than fail — this is a transient state.
+        const errorMsg = `No completed platforms yet; ${pendingPlatforms.length} still pending`;
+        log.warn(
+          {
+            jobId: job.id,
+            reportId: job.report_id,
+            pendingCount: pendingPlatforms.length,
+            pendingPlatforms: pendingPlatforms.map((j) => j.platform),
+          },
+          errorMsg
+        );
+
+        const backoffMs = 5000;
+        await db
+          .update(synthesis_jobs)
+          .set({
+            status: "queued",
+            run_after: new Date(Date.now() + backoffMs),
+            locked_at: null,
+            locked_by: null,
+            last_error: errorMsg,
+            updated_at: new Date(),
+          })
+          .where(eq(synthesis_jobs.id, job.id));
+
+        throw new Error(errorMsg);
+      }
+
+      // All source jobs are terminal and none succeeded; permanent failure.
       const errorMsg = `All source jobs failed; no data to synthesize`;
       log.error(
         {
@@ -147,6 +151,20 @@ export async function processSynthesisJob(
       );
 
       throw new PermanentError(errorMsg);
+    }
+
+    if (pendingPlatforms.length > 0) {
+      // We have enough completed platforms to generate a useful report. Generate
+      // now with available data; pending platforms continue in the background.
+      log.info(
+        {
+          jobId: job.id,
+          reportId: job.report_id,
+          completedCount: completedPlatforms.length,
+          pendingCount: pendingPlatforms.length,
+        },
+        `Generating partial report with ${completedPlatforms.length} completed platforms (${pendingPlatforms.length} still pending)`
+      );
     }
 
     // Step 3: Update report stage to "clustering" before running pipeline

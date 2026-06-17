@@ -16,7 +16,7 @@ const SYSTEM = BASE_SYSTEM + TWITTER_CONTEXT;
 
 export interface TwitterExtractInput {
   ctx: PipelineCtx;
-  tweets: Array<{ id: string; body: string; score?: number | null }>;
+  tweets: Array<{ id: string; body: string; score?: number | null; author: string | null }>;
 }
 
 export function buildTwitterExtract(input: TwitterExtractInput): {
@@ -25,7 +25,7 @@ export function buildTwitterExtract(input: TwitterExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const tweetBlock = input.tweets
-    .map((t) => `- id=${t.id} | ${truncate(t.body, 1000)}`)
+    .map((t) => `- id=${t.id}${t.author ? ` | author=${t.author}` : ""} | ${truncate(t.body, 1000)}`)
     .join("\n");
   const user = `RELEVANCE FILTER: Only extract signals from tweets discussing ${input.ctx.competitor} as a software product in the ${input.ctx.category} category. Skip unrelated mentions.
 

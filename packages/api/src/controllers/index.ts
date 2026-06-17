@@ -6,6 +6,8 @@ import { meController } from "./users";
 import { dashboardController } from "./dashboard";
 import { billingController } from "./billing";
 import { logoController } from "./logo";
+import { outreachController } from "./outreach";
+import { plannedActionsController } from "./planned-actions";
 
 export const controllers = new Elysia({ prefix: "/v1" })
   .use(reportsController)
@@ -14,4 +16,6 @@ export const controllers = new Elysia({ prefix: "/v1" })
   .use(meController)
   .use(dashboardController)
   .use(billingController)
-  .use(logoController);
+  .use(logoController)
+  .use(outreachController)
+  .use(plannedActionsController);

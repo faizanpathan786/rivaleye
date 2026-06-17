@@ -12,7 +12,7 @@ export const createReportHandler = new Elysia()
     "/",
     async ({ log, body, user, status }) => {
       try {
-        const report = await createReport(user!.id, body);
+        const report = await createReport(user!.id, body, body.resume_from_report_id);
         return ok({ id: report.id, stage: "queued" as const });
       } catch (e) {
         if (e instanceof PaymentRequiredError) {
@@ -40,6 +40,7 @@ export const createReportHandler = new Elysia()
           t.Literal("find_weaknesses"),
         ]),
         website_url: t.Optional(t.String({ format: "uri" })),
+        resume_from_report_id: t.Optional(t.String({ format: "uuid" })),
         selected_platforms: t.Array(
           t.Union([
             t.Literal("reddit"),

@@ -14,7 +14,7 @@ const SYSTEM = BASE_SYSTEM + REDDIT_CONTEXT;
 
 export interface RedditExtractInput {
   ctx: PipelineCtx;
-  posts: Array<{ id: string; score: number | null; body: string }>;
+  posts: Array<{ id: string; score: number | null; body: string; author: string | null }>;
 }
 
 export function buildRedditExtract(input: RedditExtractInput): {
@@ -23,7 +23,7 @@ export function buildRedditExtract(input: RedditExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const postBlock = input.posts
-    .map((p) => `- id=${p.id} | ${truncate(p.body, 1500)}`)
+    .map((p) => `- id=${p.id}${p.author ? ` | author=${p.author}` : ""} | ${truncate(p.body, 1500)}`)
     .join("\n");
   const user = `RELEVANCE FILTER: Only extract signals from posts discussing ${input.ctx.competitor} as a software product in the ${input.ctx.category} category. If a post uses the competitor name as a generic word or discusses an unrelated product, person, or topic, skip that post entirely — extract no signals from it.
 

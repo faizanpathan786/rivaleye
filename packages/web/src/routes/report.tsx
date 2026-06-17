@@ -18,6 +18,7 @@ import {
   useReportSwitchingQuery,
   useReportVoiceQuery,
 } from "@/hooks/queries/use-reports";
+import { useAddPlannedActionMutation } from "@/hooks/queries/use-planned-actions";
 import { retryPlatform } from "@/api/reports";
 import { formatRelative } from "@/lib/format";
 import { ReportErrorBoundary } from "@/components/report/report-error-boundary";
@@ -152,22 +153,6 @@ function PainReport({
         }
       />
 
-      <div
-        className="sticky top-0 z-[4] flex flex-wrap items-center gap-2.5 border-b px-4 py-2 md:px-7"
-        style={{ background: "var(--bg)", borderColor: "var(--border-soft)" }}
-      >
-        <div className="ml-auto flex gap-1.5">
-          <button className="re-btn re-btn-ghost re-btn-sm re-btn-icon">
-            <Icon name="filter" size={14} />
-          </button>
-          <button className="re-btn re-btn-ghost re-btn-sm">
-            <Icon name="download" size={14} /> Export
-          </button>
-          <button className="re-btn re-btn-ghost re-btn-sm">
-            <Icon name="share" size={14} /> Share
-          </button>
-        </div>
-      </div>
 
       <div
         className="flex gap-1 overflow-x-auto px-4 md:px-7"
@@ -219,7 +204,7 @@ function PainReport({
         {tab === "opportunities" && (
           <OpportunitiesCard opportunities={opportunities} />
         )}
-        {tab === "actions" && <ActionsCard actions={actions} />}
+        {tab === "actions" && <ActionsCard actions={actions} reportId={reportId} />}
       </div>
 
       <ThreadModal
@@ -533,7 +518,7 @@ function SummaryCard({
   );
 }
 
-function ComplaintsCard({
+export function ComplaintsCard({
   complaints,
   totalCount,
   showViewAll,
@@ -1044,7 +1029,7 @@ function FeatureGapsCard({ featureGaps }: { featureGaps: FeatureGap[] }) {
 // ─────────────────────────────────────────────────────────────────────────
 // VOICE OF CUSTOMER
 
-function VoiceTab({
+export function VoiceTab({
   voice,
   competitorName,
 }: {
@@ -1186,7 +1171,7 @@ function WordCard({
 // ─────────────────────────────────────────────────────────────────────────
 // PRICING
 
-function PricingTab({ pricing }: { pricing: PricingResponse | undefined }) {
+export function PricingTab({ pricing }: { pricing: PricingResponse | undefined }) {
   if (!pricing) return <EmptyTab label="Pricing analysis not yet generated." />;
 
   return (
@@ -1311,7 +1296,7 @@ function PricingTab({ pricing }: { pricing: PricingResponse | undefined }) {
 // ─────────────────────────────────────────────────────────────────────────
 // SWITCHING
 
-function SwitchingTab({
+export function SwitchingTab({
   switching,
 }: {
   switching: SwitchingResponse | undefined;
@@ -1357,11 +1342,11 @@ function SwitchingTab({
 // ─────────────────────────────────────────────────────────────────────────
 // QUOTES / LEADS / POSITIONING / OPPORTUNITIES / ACTIONS
 
-function QuotesCard({ quotes }: { quotes: QuoteRow[] }) {
+export function QuotesCard({ quotes }: { quotes: QuoteRow[] }) {
   return <VerbatimCard quotes={quotes} totalCount={quotes.length} />;
 }
 
-function LeadsCard({ leads }: { leads: LeadRow[] }) {
+export function LeadsCard({ leads }: { leads: LeadRow[] }) {
   if (leads.length === 0)
     return <EmptyTab label="No high-intent leads yet." />;
   const signalColors: Record<string, string> = {
@@ -1453,7 +1438,7 @@ function LeadsCard({ leads }: { leads: LeadRow[] }) {
   );
 }
 
-function PositioningCard({ positioning }: { positioning: Positioning[] }) {
+export function PositioningCard({ positioning }: { positioning: Positioning[] }) {
   if (positioning.length === 0)
     return <EmptyTab label="No positioning angles yet." />;
   return (
@@ -1527,7 +1512,7 @@ function PositioningCard({ positioning }: { positioning: Positioning[] }) {
   );
 }
 
-function OpportunitiesCard({
+export function OpportunitiesCard({
   opportunities,
 }: {
   opportunities: Opportunity[];
@@ -1616,7 +1601,24 @@ function StatLabel({
   );
 }
 
-function ActionsCard({ actions }: { actions: ActionRow[] }) {
+export function ActionsCard({ actions, reportId }: { actions: ActionRow[]; reportId: string }) {
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const { mutate: addToPlan } = useAddPlannedActionMutation();
+
+  const handleAddToPlan = (action: ActionRow) => {
+    setAddingId(action.id);
+    addToPlan({
+      report_id: reportId,
+      title: action.step,
+      description: action.detail || undefined,
+      role: action.role || undefined,
+      effort: action.effort || undefined,
+    }, {
+      onSuccess: () => setAddingId(null),
+      onError: () => setAddingId(null),
+    });
+  };
+
   if (actions.length === 0)
     return <EmptyTab label="No recommended actions yet." />;
   return (
@@ -1674,8 +1676,12 @@ function ActionsCard({ actions }: { actions: ActionRow[] }) {
                 effort · {a.effort}
               </span>
             )}
-            <button className="re-btn re-btn-sm col-start-2 justify-self-start md:col-start-auto md:justify-self-end">
-              + Add to plan
+            <button
+              onClick={() => handleAddToPlan(a)}
+              disabled={addingId === a.id}
+              className="re-btn re-btn-sm col-start-2 justify-self-start md:col-start-auto md:justify-self-end"
+            >
+              {addingId === a.id ? "Adding..." : "+ Add to plan"}
             </button>
           </div>
         ))}

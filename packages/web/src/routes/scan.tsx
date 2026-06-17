@@ -90,7 +90,7 @@ export function ScanPage() {
       selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
       website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
     });
-    navigate(`/scan-report/${res.id}`);
+    navigate(`/scan-report/${res.id}/summary`);
   };
 
   const start = async () => {
@@ -310,7 +310,12 @@ export function ScanPage() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row" style={{ gap: 8 }}>
-          <button className="re-btn w-full sm:w-auto" onClick={() => onNav("dashboard")} disabled={isPending}>
+          <button
+            className="re-btn w-full sm:w-auto"
+            onClick={() => onNav("dashboard")}
+            disabled={isPending}
+            style={{ height: 36 }}
+          >
             Cancel
           </button>
           <button

@@ -14,7 +14,7 @@ const SYSTEM = BASE_SYSTEM + PH_CONTEXT;
 
 export interface ProductHuntExtractInput {
   ctx: PipelineCtx;
-  reviews: Array<{ id: string; rating: number; body: string }>;
+  reviews: Array<{ id: string; rating: number; body: string; author: string | null }>;
 }
 
 export function buildProductHuntExtract(input: ProductHuntExtractInput): {
@@ -23,7 +23,7 @@ export function buildProductHuntExtract(input: ProductHuntExtractInput): {
   schema: typeof stageAExtractSchema;
 } {
   const reviewBlock = input.reviews
-    .map((r) => `- id=${r.id} | ${oneLine(r.body)}`)
+    .map((r) => `- id=${r.id}${r.author ? ` | author=${r.author}` : ""} | ${oneLine(r.body)}`)
     .join("\n");
   const user = `Competitor: ${input.ctx.competitor}
 Category: ${input.ctx.category}

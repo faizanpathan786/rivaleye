@@ -37,6 +37,16 @@ export const endpoints = {
   },
   me: "/v1/me",
   dashboard: "/v1/dashboard",
+  outreach: {
+    list: "/v1/outreach",
+    add: "/v1/outreach",
+    remove: (id: string) => `/v1/outreach/${id}`,
+  },
+  plannedActions: {
+    list: "/v1/planned-actions",
+    add: "/v1/planned-actions",
+    remove: (id: string) => `/v1/planned-actions/${id}`,
+  },
   competitors: {
     list: "/v1/competitors",
     detail: (id: string) => `/v1/competitors/${id}`,

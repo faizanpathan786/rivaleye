@@ -37,29 +37,31 @@ function TransactionHistory() {
   }
 
   return (
-    <div className="re-card" style={{ overflow: "hidden" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--surface-2)" }}>
-            <th style={{ textAlign: "left", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Date</th>
-            <th style={{ textAlign: "left", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Description</th>
-            <th style={{ textAlign: "right", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Credits</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((tx) => (
-            <tr key={tx.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
-              <td style={{ padding: "10px 16px", color: "var(--fg-muted)" }}>
-                {new Date(tx.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-              </td>
-              <td style={{ padding: "10px 16px", color: "var(--fg)" }}>{tx.description}</td>
-              <td style={{ padding: "10px 16px", textAlign: "right", color: tx.type === "purchase" ? "var(--pos)" : "var(--fg-muted)", fontWeight: 600 }}>
-                {tx.type === "purchase" ? "+" : "-"}{tx.amount}
-              </td>
+    <div className="re-card" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ overflowY: "auto", maxHeight: 400 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead style={{ position: "sticky", top: 0, background: "var(--surface-2)", zIndex: 1 }}>
+            <tr style={{ borderBottom: "1px solid var(--border-soft)" }}>
+              <th style={{ textAlign: "left", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Date</th>
+              <th style={{ textAlign: "left", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Description</th>
+              <th style={{ textAlign: "right", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Credits</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((tx) => (
+              <tr key={tx.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
+                <td style={{ padding: "10px 16px", color: "var(--fg-muted)" }}>
+                  {new Date(tx.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                </td>
+                <td style={{ padding: "10px 16px", color: "var(--fg)" }}>{tx.description}</td>
+                <td style={{ padding: "10px 16px", textAlign: "right", color: tx.type === "purchase" ? "var(--pos)" : "var(--fg-muted)", fontWeight: 600 }}>
+                  {tx.type === "purchase" ? "+" : "-"}{tx.amount}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
