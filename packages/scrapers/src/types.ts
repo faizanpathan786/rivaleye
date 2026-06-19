@@ -1,6 +1,8 @@
 export type PlatformId =
   | "reddit"
   | "capterra"
+  | "g2"
+  | "trustpilot"
   | "twitter"
   | "linkedin"
   | "producthunt"

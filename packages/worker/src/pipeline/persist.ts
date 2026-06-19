@@ -287,6 +287,8 @@ export async function persistReport(input: PersistInput): Promise<void> {
         .where(and(eq(reports.id, reportId), ne(reports.status, "cancelled")));
     });
   } catch (err) {
+    const cause = err instanceof Error ? err.message : String(err);
+    console.error(`[persist] transaction failed for report ${reportId}: ${cause}`, err);
     if (err instanceof PipelineError) throw err;
     throw new PipelineError("persist", "transaction failed", err);
   }

@@ -563,8 +563,8 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
       style={{ gap: 14 }}
     >
       {/* SCORE */}
-      <div className="re-card re-card-elev" style={{ overflow: "hidden", position: "relative" }}>
-        <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none" }} />
+      <div className="re-card re-card-elev" style={{ position: "relative" }}>
+        <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none", overflow: "hidden", borderRadius: "inherit" }} />
         <div style={{ position: "relative", padding: 18 }}>
           <div style={{ ...eyebrow, fontSize: 10 }}>OPPORTUNITY SCORE</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
@@ -603,7 +603,7 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
         <div style={{ padding: 18, display: "flex", flexDirection: "column", height: "calc(100% - 41px)" }}>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--fg)" }}>{marketSummary.summary}</p>
 
-          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "100px 1fr", gap: 8, rowGap: 8 }}>
+          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "clamp(60px, 15vw, 100px) 1fr", gap: 8, rowGap: 8 }}>
             <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>TARGET</span>
             <span style={{ fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.5 }}>{marketSummary.target}</span>
             <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>OPPORTUNITY</span>

@@ -1,4 +1,10 @@
 import { z } from "zod";
+
+// Coerces a factor value to 0–1: if LLM returns 0–100 scale, divides by 100.
+function to01(v: number): number {
+  if (v > 1) return Math.min(1, v / 100);
+  return Math.max(0, Math.min(1, v));
+}
 import {
   signalTypeSchema,
   roleSchema,
@@ -187,13 +193,20 @@ export const opportunityScoreSchema = z.object({
   label: z.string().default(""),
   explanation: z.string().default(""),
   factors: z.object({
-    pain_frequency: z.number().min(0).max(1).default(0),
-    gap_severity: z.number().min(0).max(1).default(0),
-    switch_intent: z.number().min(0).max(1).default(0),
-    competitor_love_strength: z.number().min(0).max(1).default(0),
-    pricing_pain: z.number().min(0).max(1).default(0),
-    source_confidence: z.number().min(0).max(1).default(0),
-  }).catch({ pain_frequency: 0, gap_severity: 0, switch_intent: 0, competitor_love_strength: 0, pricing_pain: 0, source_confidence: 0 }),
+    pain_frequency: z.number().min(0).default(0),
+    gap_severity: z.number().min(0).default(0),
+    switch_intent: z.number().min(0).default(0),
+    competitor_love_strength: z.number().min(0).default(0),
+    pricing_pain: z.number().min(0).default(0),
+    source_confidence: z.number().min(0).default(0),
+  }).transform(f => ({
+    pain_frequency: to01(f.pain_frequency),
+    gap_severity: to01(f.gap_severity),
+    switch_intent: to01(f.switch_intent),
+    competitor_love_strength: to01(f.competitor_love_strength),
+    pricing_pain: to01(f.pricing_pain),
+    source_confidence: to01(f.source_confidence),
+  })).catch({ pain_frequency: 0, gap_severity: 0, switch_intent: 0, competitor_love_strength: 0, pricing_pain: 0, source_confidence: 0 }),
 });
 export type OpportunityScore = z.infer<typeof opportunityScoreSchema>;
 
@@ -359,7 +372,7 @@ export type FounderViewSection = z.infer<typeof founderViewSectionSchema>;
 // 1. Product Opportunity Score
 // ──────────────────────────────────────────────
 // factors are 0..1 intensity weights derived from signal corpus
-const zeroToOne = z.number().min(0).max(1);
+const zeroToOne = z.number().min(0);
 const defaultFactors = {
   feature_gap_frequency: 0,
   pain_severity: 0,
@@ -378,7 +391,13 @@ export const productOpportunityScoreSchema = z.object({
     source_spread: zeroToOne.default(0),
     user_urgency: zeroToOne.default(0),
     competitor_love_strength: zeroToOne.default(0),
-  }).catch(defaultFactors),
+  }).transform(f => ({
+    feature_gap_frequency: to01(f.feature_gap_frequency),
+    pain_severity: to01(f.pain_severity),
+    source_spread: to01(f.source_spread),
+    user_urgency: to01(f.user_urgency),
+    competitor_love_strength: to01(f.competitor_love_strength),
+  })).catch(defaultFactors),
 });
 export type ProductOpportunityScore = z.infer<typeof productOpportunityScoreSchema>;
 
@@ -554,13 +573,20 @@ export const messagingOpportunityScoreSchema = z.object({
   label: z.string().default(""),
   explanation: z.string().default(""),
   factors: z.object({
-    repeated_user_language_strength: z.number().min(0).max(1).default(0),
-    pain_clarity: z.number().min(0).max(1).default(0),
-    promise_reality_gap: z.number().min(0).max(1).default(0),
-    objection_frequency: z.number().min(0).max(1).default(0),
-    quote_quality: z.number().min(0).max(1).default(0),
-    source_confidence: z.number().min(0).max(1).default(0),
-  }).catch({ repeated_user_language_strength: 0, pain_clarity: 0, promise_reality_gap: 0, objection_frequency: 0, quote_quality: 0, source_confidence: 0 }),
+    repeated_user_language_strength: z.number().min(0).default(0),
+    pain_clarity: z.number().min(0).default(0),
+    promise_reality_gap: z.number().min(0).default(0),
+    objection_frequency: z.number().min(0).default(0),
+    quote_quality: z.number().min(0).default(0),
+    source_confidence: z.number().min(0).default(0),
+  }).transform(f => ({
+    repeated_user_language_strength: to01(f.repeated_user_language_strength),
+    pain_clarity: to01(f.pain_clarity),
+    promise_reality_gap: to01(f.promise_reality_gap),
+    objection_frequency: to01(f.objection_frequency),
+    quote_quality: to01(f.quote_quality),
+    source_confidence: to01(f.source_confidence),
+  })).catch({ repeated_user_language_strength: 0, pain_clarity: 0, promise_reality_gap: 0, objection_frequency: 0, quote_quality: 0, source_confidence: 0 }),
 });
 
 export type MessagingOpportunityScore = z.infer<
@@ -757,13 +783,20 @@ export const switchIntentScoreSchema = z.object({
   label: z.string().default(""),
   explanation: z.string().default(""),
   factors: z.object({
-    alternative_seeking_posts: z.number().min(0).max(1).default(0),
-    pricing_complaints: z.number().min(0).max(1).default(0),
-    explicit_competitor_frustration: z.number().min(0).max(1).default(0),
-    recency: z.number().min(0).max(1).default(0),
-    engagement_level: z.number().min(0).max(1).default(0),
-    source_quality: z.number().min(0).max(1).default(0),
-  }).catch({ alternative_seeking_posts: 0, pricing_complaints: 0, explicit_competitor_frustration: 0, recency: 0, engagement_level: 0, source_quality: 0 }),
+    alternative_seeking_posts: z.number().min(0).default(0),
+    pricing_complaints: z.number().min(0).default(0),
+    explicit_competitor_frustration: z.number().min(0).default(0),
+    recency: z.number().min(0).default(0),
+    engagement_level: z.number().min(0).default(0),
+    source_quality: z.number().min(0).default(0),
+  }).transform(f => ({
+    alternative_seeking_posts: to01(f.alternative_seeking_posts),
+    pricing_complaints: to01(f.pricing_complaints),
+    explicit_competitor_frustration: to01(f.explicit_competitor_frustration),
+    recency: to01(f.recency),
+    engagement_level: to01(f.engagement_level),
+    source_quality: to01(f.source_quality),
+  })).catch({ alternative_seeking_posts: 0, pricing_complaints: 0, explicit_competitor_frustration: 0, recency: 0, engagement_level: 0, source_quality: 0 }),
 });
 export type SwitchIntentScore = z.infer<typeof switchIntentScoreSchema>;
 

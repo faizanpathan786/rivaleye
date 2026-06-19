@@ -18,7 +18,7 @@ import {
   report_thread_messages,
   type Report,
 } from "@/db/schema/reports";
-import { report_platform_jobs, report_platform_briefs, synthesis_jobs } from "@/db/schema/pipeline";
+import { report_platform_jobs, report_platform_briefs, synthesis_jobs, report_pipeline_checkpoints } from "@/db/schema/pipeline";
 import { report_logs } from "@/db/schema/logs";
 import { pipeline_events } from "@/db/schema/pipeline-events";
 import { mentions } from "@/db/schema/mentions";
@@ -685,6 +685,80 @@ export async function retryPlatform(
     });
   }
   // postgres mode: job is queued in DB; worker will claim it
+
+  return { ok: true };
+}
+
+export async function retrySynthesis(
+  owner_id: string,
+  reportId: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const report = await assertReportOwned(reportId, owner_id);
+  if (!report) return { ok: false, reason: "not_found" };
+
+  // Find an existing synthesis job in a terminal or stuck state.
+  const [job] = await db
+    .select()
+    .from(synthesis_jobs)
+    .where(eq(synthesis_jobs.report_id, reportId))
+    .limit(1);
+
+  if (job) {
+    // Block retry only if the job is actively running AND was locked recently
+    // (i.e. genuinely in-flight). A queued job or a running job that has been
+    // locked for >15 min is considered stuck and should be force-retried.
+    const STUCK_THRESHOLD_MS = 15 * 60 * 1000;
+    const lockedRecently =
+      job.locked_at !== null &&
+      Date.now() - new Date(job.locked_at).getTime() < STUCK_THRESHOLD_MS;
+
+    if (job.status === "running" && lockedRecently) {
+      return { ok: false, reason: "already_running" };
+    }
+
+    // Reset queued/stuck-running/failed/cancelled job back to queued.
+    await db
+      .update(synthesis_jobs)
+      .set({
+        status: "queued",
+        run_after: new Date(),
+        locked_at: null,
+        locked_by: null,
+        last_error: null,
+        attempt_count: 0,
+        updated_at: new Date(),
+      })
+      .where(eq(synthesis_jobs.id, job.id));
+  } else {
+    // No synthesis job exists yet — create one so the worker can run it.
+    await db.insert(synthesis_jobs).values({
+      report_id: reportId,
+      status: "queued",
+      run_after: new Date(),
+      attempt_count: 0,
+      max_attempts: 3,
+    });
+  }
+
+  // Clear D and E checkpoints so the synthesis stages re-run completely fresh.
+  // Role synthesis failure is silently swallowed by the pipeline, meaning the
+  // D checkpoint can be saved with no _role_sections — every retry would then
+  // re-enter the same failure loop. Deleting these checkpoints forces a clean
+  // re-run of stages C→D→E from the already-saved B briefs.
+  await db
+    .delete(report_pipeline_checkpoints)
+    .where(
+      and(
+        eq(report_pipeline_checkpoints.report_id, reportId),
+        inArray(report_pipeline_checkpoints.stage, ["C", "D", "E"]),
+      ),
+    );
+
+  // Ensure the report itself is back in a running state.
+  await db
+    .update(reports)
+    .set({ status: "running", stage: "clustering", updated_at: new Date() })
+    .where(eq(reports.id, reportId));
 
   return { ok: true };
 }

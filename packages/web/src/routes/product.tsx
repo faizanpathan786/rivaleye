@@ -666,7 +666,6 @@ export function ProductPage({
           eyebrow="01 · Feature gap map"
           title={`What users want that ${cName} doesn't solve`}
           subtitle="Ranked by evidence × severity. Click any row for quotes and context."
-          right={<FiltersStrip filters={filters} setFilters={setFilters} />}
         />
         <FeatureGapTable rows={P.gaps} openEvidence={openEvidence} />
 
@@ -718,7 +717,6 @@ export function ProductPage({
         />
         <BuildAvoidLearn d={P.decisions} openEvidence={openEvidence} />
 
-        <ProductFooter onNav={(to) => navigate(to)} />
       </div>
 
       <EvidenceDrawer

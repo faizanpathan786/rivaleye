@@ -149,7 +149,9 @@ export function EvidenceDrawer({
                     &ldquo;{quote.text}&rdquo;
                   </blockquote>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--fg-muted)]">
-                    <span className="min-w-0 break-words font-medium">{quote.source}</span>
+                    {quote.author ? (
+                      <span className="min-w-0 break-words font-medium text-[var(--accent)]">@{quote.author}</span>
+                    ) : null}
                     {quote.signal_type && (
                       <span className="rounded bg-[var(--bg-sunken)] px-1.5 py-0.5 capitalize">
                         {quote.signal_type}

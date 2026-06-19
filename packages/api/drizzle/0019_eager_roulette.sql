@@ -1,0 +1,1 @@
+ALTER TABLE "report_complaints" ADD COLUMN "sample_author" text;

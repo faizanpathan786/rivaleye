@@ -33,6 +33,7 @@ const draft: SynthOutput = {
       summary: "sync breaks daily",
       threads: 3,
       sample: null,
+      sample_author: null,
     },
   ],
   feature_gaps: [],

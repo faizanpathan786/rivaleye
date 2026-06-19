@@ -363,10 +363,28 @@ export async function runPipeline(reportId: string): Promise<void> {
   // fall back to the D checkpoint (which was saved even if the live variable is empty).
   const roleSectsForPersist = roleSections ?? (checkpoints.get("D") as Record<string, unknown>)?._role_sections as RoleSections | undefined;
 
-  await log(reportId, "info", "persist", null, "persisting report to sub-tables");
+  await log(reportId, "info", "persist", null, "persisting report to sub-tables", {
+    hasRoleSections: roleSectsForPersist !== undefined,
+    roleSectionKeys: roleSectsForPersist ? Object.keys(roleSectsForPersist) : [],
+  });
   await persistReport({ reportId, synth: refined, platformStats, subreddits, roleSections: roleSectsForPersist });
+
+  // Verify the transaction actually committed: if total_sources is still null after
+  // persist, the transaction silently rolled back (e.g. pooler timeout). Fail loudly
+  // so the synthesis worker retries rather than marking the job completed with empty data.
+  const [postPersistCheck] = await db
+    .select({ total_sources: reports.total_sources })
+    .from(reports)
+    .where(eq(reports.id, reportId))
+    .limit(1);
+
+  if (postPersistCheck?.total_sources === null) {
+    throw new PipelineError("persist", "transaction appeared to succeed but total_sources is still null — rolled back silently");
+  }
+
   await log(reportId, "info", "persist", null, "persist done", {
     fellBackToDraft,
+    total_sources: postPersistCheck?.total_sources ?? null,
   });
 
   await log(reportId, "info", null, null, "pipeline done");

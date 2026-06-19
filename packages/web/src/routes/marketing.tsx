@@ -820,25 +820,7 @@ export function MarketingPage({
         <SectionHeadMK
           eyebrow="07 · Quote library"
           title="The verbatim bank"
-          subtitle="Searchable, filterable, copy-ready. Every quote scored on copy-usefulness."
-          right={
-            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                className="re-input w-full sm:w-[200px]"
-                type="text"
-                placeholder="Search quotes..."
-                value={quoteSearch}
-                onChange={(e) => setQuoteSearch(e.target.value)}
-                style={{ height: 30, fontSize: 12 }}
-              />
-              <FilterChipMK
-                label="Filter"
-                value={quoteFilter}
-                opts={["all", "pricing", "gap", "switch", "love", "pain", "feature", "positioning"]}
-                onChange={setQuoteFilter}
-              />
-            </div>
-          }
+          subtitle="Every quote scored on copy-usefulness."
         />
         <QuoteLibrary
           quotes={M.quoteLib}
@@ -847,7 +829,6 @@ export function MarketingPage({
           openEvidence={openEvidence}
         />
 
-        <MarketingFooter onNav={(to) => navigate(to)} />
       </div>
 
       <EvidenceDrawer
@@ -1699,9 +1680,6 @@ function CopyRow({
           onClick={() => openEvidence(item.evidence_refs)}
         >
           <Icon name="quote" size={12} />
-        </button>
-        <button type="button" className="re-btn re-btn-ghost re-btn-sm re-btn-icon" title="Copy">
-          <Icon name="download" size={12} />
         </button>
       </div>
     </div>

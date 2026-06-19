@@ -35,6 +35,7 @@ import {
   useReportPlatformsQuery,
   useReportSentimentSeriesQuery,
   useReportFeatureGapsQuery,
+  useRetrySynthesisMutation,
 } from "@/hooks/queries/use-reports";
 import { ReportInProgress } from "@/components/report/report-in-progress";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
@@ -83,6 +84,7 @@ function normalizeEvidenceSection(raw: unknown): EvidenceSection | null {
         id: String(obj.id ?? ""),
         text: String(obj.text ?? obj.quote ?? ""),
         source: String(obj.source ?? ""),
+        author: (obj.author_or_context as string | null) ?? (obj.author as string | null) ?? null,
         source_url: (obj.source_url as string | null) ?? null,
         sentiment: typeof obj.sentiment === "number" ? obj.sentiment : null,
         signal_type: (obj.signal_type as EvidenceSection["quotes"][number]["signal_type"]) ?? null,
@@ -242,14 +244,29 @@ export function ScanReportPage() {
     );
   }
 
+  // Show a neutral placeholder while either the report row OR sections are loading.
+  // Without this guard, a cached-but-stale reportRow can make isCompleted=true before
+  // sections arrive, causing the full page to flash with empty content.
+  // Use different copy: "Loading scan…" only for brand-new in-flight scans;
+  // "Loading report…" when opening an existing completed report.
+  const sectionsLoading = isCompleted && isLoading;
+  const isKnownReport = !!reportRow; // initialData seeds this from list cache instantly
+  const loadingLabel = isKnownReport || isCompleted ? "Loading report…" : "Loading scan…";
+  if (id && ((reportIsLoading && !reportRow) || (sectionsLoading && !sections))) {
+    return (
+      <div
+        className="px-4 py-16 md:px-7"
+        style={{ textAlign: "center", color: "var(--fg-muted)" }}
+      >
+        <div style={{ fontSize: 16 }}>{loadingLabel}</div>
+      </div>
+    );
+  }
+
   // Show in-progress UI while the report pipeline is still running.
-  // Show progress page once we have report data and it's not completed yet.
   if (id && reportRow && !isCompleted) {
     return <ReportInProgress report={reportRow} progress={progressQuery.data} />;
   }
-
-  // Don't show "Loading scan..." - it's confusing for existing reports
-  // Just let the report render below once data loads
 
 
   // Sections fetched but all role sections are null — LLM analysis is still
@@ -261,28 +278,7 @@ export function ScanReportPage() {
   const isStuck = minsSinceReport && minsSinceReport > 10;
 
   if (id && sections && !hasAnySections) {
-    return (
-      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
-          {isStuck ? "ANALYSIS STUCK" : "GENERATING ANALYSIS"}
-        </div>
-        <div style={{ fontSize: 16, marginBottom: 8 }}>
-          {isStuck ? "Analysis is taking longer than expected." : "AI analysis is being written…"}
-        </div>
-        <div style={{ fontSize: 13, color: "var(--fg-faint)", marginBottom: isStuck ? 16 : 0 }}>
-          {isStuck ? "This might indicate a worker error. Check the logs or try rescanning." : "This usually takes 30–60 seconds. The page will update automatically."}
-        </div>
-        {isStuck && (
-          <button
-            className="re-btn re-btn-sm"
-            onClick={() => navigate(-1)}
-            style={{ marginTop: 12 }}
-          >
-            Go back
-          </button>
-        )}
-      </div>
-    );
+    return <StuckAnalysisState id={id} isStuck={!!isStuck} onBack={() => navigate(-1)} />;
   }
 
   // If sections query fails but report exists, continue with empty sections
@@ -323,8 +319,8 @@ export function ScanReportPage() {
         name: reportRow.primary_competitor_name ?? reportRow.competitors[0] ?? reportRow.category,
         domain: reportRow.primary_competitor_domain ?? "",
         scannedAt: reportRow.scanned_at ?? reportRow.updated_at,
-        sources: reportRow.total_threads ?? reportRow.total_sources ?? 0,
-        platforms: [],
+        sources: reportRow.total_sources || reportRow.total_threads || platforms.reduce((s, p) => s + (p.posts ?? 0), 0),
+        platforms: platforms.map((p) => ({ id: p.platform_id, name: p.name })),
         sentiment: {
           overall: reportRow.sentiment_overall ?? 0,
           positive: reportRow.sentiment_positive ?? 0,
@@ -743,8 +739,8 @@ function ExecutiveSummary({
       {/* TABS AT THE END */}
       <div style={{ marginTop: 48 }}>
         <div
-          className="flex gap-1 overflow-x-auto px-4 md:px-7"
-          style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg)", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}
+          className="flex gap-1 overflow-x-auto px-4 md:px-7 scrollbar-none [&::-webkit-scrollbar]:hidden"
+          style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg)", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16, scrollbarWidth: "none" }}
         >
           {tabsData.map(([k, label]) => (
             <button
@@ -775,6 +771,7 @@ function ExecutiveSummary({
                     complaints={complaints.slice(0, 5)}
                     totalCount={complaints.length}
                     showViewAll
+                    onViewAll={() => setTab("complaints")}
                     onOpenThread={() => {}}
                   />
                   {sentimentSeries.length > 1 && (
@@ -1473,6 +1470,64 @@ function ScanVerbatimCard({
         >
           <button onClick={onViewAll} className="re-btn re-btn-ghost re-btn-sm">
             View all {totalCount}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StuckAnalysisState({
+  id,
+  isStuck,
+  onBack,
+}: {
+  id: string;
+  isStuck: boolean;
+  onBack: () => void;
+}) {
+  const { mutate, isPending, isSuccess } = useRetrySynthesisMutation();
+
+  if (isSuccess) {
+    return (
+      <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>RETRYING</div>
+        <div style={{ fontSize: 16, marginBottom: 8 }}>Analysis re-queued.</div>
+        <div style={{ fontSize: 13, color: "var(--fg-faint)" }}>
+          The worker will resume from where it left off. This page will update automatically.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
+      <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
+        {isStuck ? "ANALYSIS STUCK" : "GENERATING ANALYSIS"}
+      </div>
+      <div style={{ fontSize: 16, marginBottom: 8 }}>
+        {isStuck ? "Analysis is taking longer than expected." : "AI analysis is being written…"}
+      </div>
+      <div style={{ fontSize: 13, color: "var(--fg-faint)", marginBottom: isStuck ? 16 : 0 }}>
+        {isStuck
+          ? "The synthesis job may have failed. Retry to resume from the last checkpoint — no re-scraping needed."
+          : "This usually takes 30–60 seconds. The page will update automatically."}
+      </div>
+      {isStuck && (
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
+          <button
+            className="re-btn re-btn-sm"
+            onClick={onBack}
+            disabled={isPending}
+          >
+            Go back
+          </button>
+          <button
+            className="re-btn re-btn-sm re-btn-accent"
+            onClick={() => mutate(id)}
+            disabled={isPending}
+          >
+            {isPending ? "Retrying…" : "Retry analysis"}
           </button>
         </div>
       )}

@@ -77,6 +77,7 @@ export const endpoints = {
     thread: (id: string, threadId: string) =>
       `/v1/reports/${id}/threads/${threadId}`,
     retryPlatform: (id: string) => `/v1/reports/${id}/retry-platform`,
+    retrySynthesis: (id: string) => `/v1/reports/${id}/retry-synthesis`,
     cancel: (id: string) => `/v1/reports/${id}/cancel`,
     sections: (id: string) => `/v1/reports/${id}/sections`,
   },

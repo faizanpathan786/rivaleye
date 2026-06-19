@@ -21,6 +21,7 @@ import {
 import { useAddPlannedActionMutation } from "@/hooks/queries/use-planned-actions";
 import { retryPlatform } from "@/api/reports";
 import { formatRelative } from "@/lib/format";
+import { CompetitorAvatar } from "@/components/competitor-avatar";
 import { ReportErrorBoundary } from "@/components/report/report-error-boundary";
 import { ReportInProgress } from "@/components/report/report-in-progress";
 import { ReportSkeleton } from "@/components/report/report-skeleton";
@@ -187,6 +188,7 @@ function PainReport({
             sentimentSeries={sentimentSeries}
             featureGaps={featureGaps}
             onOpenThread={setOpenThread}
+            onSwitchTab={setTab}
           />
         )}
         {tab === "complaints" && (
@@ -234,8 +236,6 @@ function ReportHeader({
     report.primary_competitor_name ?? report.competitors[0] ?? "Report";
   const domain = report.primary_competitor_domain;
   const sentiment = report.sentiment_overall;
-  const initial = name.charAt(0).toUpperCase();
-
   return (
     <div
       className="px-4 pb-3 pt-5 md:px-7"
@@ -259,12 +259,7 @@ function ReportHeader({
       )}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          <div
-            className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl font-mono-feat text-xl font-semibold text-white shadow-soft md:h-14 md:w-14 md:text-2xl"
-            style={{ background: "#5e6ad2" }}
-          >
-            {initial}
-          </div>
+          <CompetitorAvatar name={name} domain={domain} size={52} borderRadius={12} />
           <div className="min-w-0">
             <div className="re-eyebrow">
               INTELLIGENCE REPORT · {(report.category ?? "").toUpperCase()}
@@ -359,7 +354,7 @@ function BigStat({
   const color = toneColor(tone);
   return (
     <div
-      className="rounded-[10px] border p-3.5"
+      className="rounded-[10px] border p-3"
       style={{
         background: "var(--surface)",
         borderColor: "var(--border-soft)",
@@ -372,9 +367,10 @@ function BigStat({
         <span
           className="font-mono-feat tnum"
           style={{
-            fontSize: 28,
-            fontWeight: 500,
-            letterSpacing: "-0.02em",
+            fontSize: value.length > 6 ? 13 : 22,
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            lineHeight: 2,
             color: painted ? color : "var(--fg)",
           }}
         >
@@ -382,7 +378,7 @@ function BigStat({
         </span>
       </div>
       {sub && (
-        <div className="mt-0.5" style={{ fontSize: 11, color }}>
+        <div className="mt-0.5 line-clamp-2" style={{ fontSize: 11, color }}>
           {sub}
         </div>
       )}
@@ -409,6 +405,7 @@ function OverviewTab({
   sentimentSeries,
   featureGaps,
   onOpenThread,
+  onSwitchTab,
 }: {
   report: ReportRow;
   complaints: Complaint[];
@@ -418,6 +415,7 @@ function OverviewTab({
   sentimentSeries: number[];
   featureGaps: FeatureGap[];
   onOpenThread: (id: string) => void;
+  onSwitchTab: (tab: TabKey) => void;
 }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
@@ -437,7 +435,7 @@ function OverviewTab({
       </div>
       <div className="flex flex-col gap-4">
         {platforms.length > 0 && <PlatformBreakdown platforms={platforms} />}
-        <VerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} />
+        <VerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} onViewAll={() => onSwitchTab("quotes")} />
         {featureGaps.length > 0 && (
           <FeatureGapsCard featureGaps={featureGaps.slice(0, 6)} />
         )}
@@ -522,11 +520,13 @@ export function ComplaintsCard({
   complaints,
   totalCount,
   showViewAll,
+  onViewAll,
   onOpenThread,
 }: {
   complaints: Complaint[];
   totalCount?: number;
   showViewAll?: boolean;
+  onViewAll?: () => void;
   onOpenThread: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState<string | null>(
@@ -654,9 +654,11 @@ export function ComplaintsCard({
                         borderLeft: "2px solid var(--accent)",
                       }}
                     >
-                      <div className="re-eyebrow mb-1.5" style={{ fontSize: 10 }}>
-                        SAMPLE VERBATIM
-                      </div>
+                      {cp.sample_author && (
+                        <div className="re-eyebrow mb-1.5" style={{ fontSize: 10 }}>
+                          @{cp.sample_author}
+                        </div>
+                      )}
                       <p
                         className="m-0 italic"
                         style={{ fontSize: 13, lineHeight: 1.55 }}
@@ -676,7 +678,7 @@ export function ComplaintsCard({
           className="px-4 py-2.5 text-center"
           style={{ borderTop: "1px solid var(--border-soft)" }}
         >
-          <button className="re-btn re-btn-ghost re-btn-sm">
+          <button className="re-btn re-btn-ghost re-btn-sm" onClick={onViewAll}>
             View all {totalCount} <Icon name="arrow-right" size={12} />
           </button>
         </div>
@@ -897,9 +899,11 @@ function PlatformBreakdown({ platforms }: { platforms: PlatformStat[] }) {
 function VerbatimCard({
   quotes,
   totalCount,
+  onViewAll,
 }: {
   quotes: QuoteRow[];
   totalCount: number;
+  onViewAll?: () => void;
 }) {
   if (quotes.length === 0) {
     return (
@@ -978,7 +982,7 @@ function VerbatimCard({
           className="px-4 py-2.5 text-center"
           style={{ borderTop: "1px solid var(--border-soft)" }}
         >
-          <button className="re-btn re-btn-ghost re-btn-sm">
+          <button className="re-btn re-btn-ghost re-btn-sm" onClick={onViewAll}>
             View all {totalCount}
           </button>
         </div>

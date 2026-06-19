@@ -139,6 +139,7 @@ const SYNTH_FIXTURE: SynthOutput = {
       summary: "Users consistently report unacceptable load times across large datasets",
       threads: 8,
       sample: "This is painfully slow on large datasets",
+      sample_author: null,
     },
     {
       external_id: "complaint-crash",
@@ -150,6 +151,7 @@ const SYNTH_FIXTURE: SynthOutput = {
       summary: "The export feature crashes for a significant subset of users",
       threads: 5,
       sample: null,
+      sample_author: null,
     },
   ],
   feature_gaps: [

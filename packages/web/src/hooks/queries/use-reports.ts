@@ -6,6 +6,7 @@ import { applyScanStart } from "@/lib/credits";
 import type { Balance } from "@/api/billing";
 import {
   cancelReport,
+  retrySynthesis,
   createReport,
   getActions,
   getComplaints,
@@ -76,16 +77,29 @@ export function useReportsQuery() {
 }
 
 export function useReportQuery(id: string | undefined) {
+  const qc = useQueryClient();
   const query = useQuery<ReportRow>({
     queryKey: reportsKeys.detail(id),
     queryFn: () => getReport(id as string),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 min - data stays fresh, load from cache instantly
-    gcTime: 30 * 60 * 1000, // 30 min - keep in cache long term
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    // Seed from the reports list so opening a known report is instant — no
+    // loading flash. The list query always has the latest row for every report
+    // the user has already seen, so this is safe to use as initial data.
+    initialData: () => {
+      if (!id) return undefined;
+      const list = qc.getQueryData<ReportRow[]>(reportsKeys.list());
+      return list?.find((r) => r.id === id);
+    },
+    initialDataUpdatedAt: () => {
+      const state = qc.getQueryState(reportsKeys.list());
+      return state?.dataUpdatedAt;
+    },
     refetchInterval: (q) => {
       const status = q.state.data?.status;
-      if (!status || TERMINAL_STATUSES.has(status)) return false; // Never refetch completed reports
-      return 5000; // Refetch in-progress reports every 5 sec
+      if (!status || TERMINAL_STATUSES.has(status)) return false;
+      return 5000;
     },
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
@@ -139,6 +153,21 @@ export function useCancelReportMutation() {
   return useMutation<void, unknown, string>({
     mutationFn: (reportId) => cancelReport(reportId),
     onSuccess: (_data, reportId) => {
+      qc.invalidateQueries({ queryKey: reportsKeys.detail(reportId) });
+      qc.invalidateQueries({ queryKey: reportsKeys.lists() });
+    },
+  });
+}
+
+export function useRetrySynthesisMutation() {
+  const qc = useQueryClient();
+  return useMutation<void, unknown, string>({
+    mutationFn: (reportId) => retrySynthesis(reportId),
+    onSuccess: (_data, reportId) => {
+      // Remove the stale sections cache immediately so the stuck-state condition
+      // clears before the report query refetches (prevents the screen from
+      // flashing back to "stuck" before transitioning to in-progress).
+      qc.removeQueries({ queryKey: ["reports", "sections", reportId] });
       qc.invalidateQueries({ queryKey: reportsKeys.detail(reportId) });
       qc.invalidateQueries({ queryKey: reportsKeys.lists() });
     },

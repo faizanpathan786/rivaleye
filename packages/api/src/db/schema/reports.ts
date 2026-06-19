@@ -119,6 +119,7 @@ export const report_complaints = pgTable("report_complaints", {
   summary: text("summary"),
   threads: integer("threads").notNull().default(0),
   sample: text("sample"),
+  sample_author: text("sample_author"),
   sort_order: integer("sort_order").notNull().default(0),
 });
 
