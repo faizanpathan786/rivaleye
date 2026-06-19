@@ -51,6 +51,7 @@ export type EvidenceQuote = {
   id: string;
   text: string;
   source: string;
+  author: string | null;
   source_url: string | null;
   sentiment: number | null;
   signal_type: SignalType | null;

@@ -36,8 +36,6 @@ type Tone = "neg" | "warn" | "pos" | "default";
 export function DashboardPage() {
   const navigate = useNavigate();
   const onNav = (key: NavKey) => navigate(ROUTE_MAP[key]);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
@@ -83,9 +81,6 @@ export function DashboardPage() {
 
   const data = dashboardQuery.data;
   const reports: ReportRow[] = data?.recent_reports ?? reportsQuery.data ?? [];
-  const filteredReports = statusFilter
-    ? reports.filter((r) => r.status === statusFilter)
-    : reports;
   const radarEvents: RadarEvent[] = data?.recent_radar_events ?? [];
   const opportunities = data?.opportunities ?? [];
   const stats = data?.stats;
@@ -159,208 +154,33 @@ export function DashboardPage() {
         );
       })()}
 
-      {/* Recent reports */}
-      <div className="re-card">
-        <div className="re-card-hd flex-wrap gap-2">
-          <h3>Recent reports</h3>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto", position: "relative" }}>
-            <button
-              onClick={() => setFilterOpen(!filterOpen)}
-              className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
-              style={{ opacity: statusFilter ? 1 : 0.6 }}
-            >
-              <Icon name="filter" size={14} />
+      {/* Recent reports — card grid */}
+      <div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600 }}>Recent reports</h3>
+          <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("history")}>
+            View all <Icon name="arrow-right" size={12} />
+          </button>
+        </div>
+
+        {reports.length === 0 ? (
+          <div className="re-card" style={{ padding: 32, textAlign: "center", color: "var(--fg-faint)", fontSize: 13 }}>
+            No reports yet.{" "}
+            <button className="re-btn re-btn-ghost re-btn-sm" style={{ display: "inline", padding: "0 4px", fontSize: 13 }} onClick={() => onNav("scan")}>
+              Run your first scan
             </button>
-            {filterOpen && (
-              <div style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                marginTop: 4,
-                background: "var(--surface-solid)",
-                border: "1px solid var(--border-soft)",
-                borderRadius: "var(--r-md)",
-                padding: 8,
-                zIndex: 10,
-                minWidth: 150,
-              }}>
-                <button
-                  onClick={() => { setStatusFilter(null); setFilterOpen(false); }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "6px 10px",
-                    textAlign: "left",
-                    fontSize: 12,
-                    border: "none",
-                    background: statusFilter === null ? "var(--hover)" : "transparent",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                    marginBottom: 4,
-                  }}
-                >
-                  All ({reports.length})
-                </button>
-                <button
-                  onClick={() => { setStatusFilter("completed"); setFilterOpen(false); }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "6px 10px",
-                    textAlign: "left",
-                    fontSize: 12,
-                    border: "none",
-                    background: statusFilter === "completed" ? "var(--hover)" : "transparent",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                    marginBottom: 4,
-                  }}
-                >
-                  Completed
-                </button>
-                <button
-                  onClick={() => { setStatusFilter("failed"); setFilterOpen(false); }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "6px 10px",
-                    textAlign: "left",
-                    fontSize: 12,
-                    border: "none",
-                    background: statusFilter === "failed" ? "var(--hover)" : "transparent",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                  }}
-                >
-                  Failed
-                </button>
-              </div>
-            )}
-            <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-              {filteredReports.length} reports
-            </span>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto" style={{ maxHeight: 400, overflowY: "auto" }}>
-        <div
-          className="min-w-[720px]"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
-            padding: "10px 16px",
-            borderBottom: "1px solid var(--border-soft)",
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--fg-faint)",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <span>Competitor</span>
-          <span>Category</span>
-          <span>Sentiment</span>
-          <span>Sources</span>
-          <span>Stage</span>
-          <span>Last run</span>
-          <span />
-        </div>
-
-        {filteredReports.length === 0 ? (
-          <div
-            style={{
-              padding: 24,
-              textAlign: "center",
-              color: "var(--fg-faint)",
-              fontSize: 13,
-            }}
-          >
-            {statusFilter ? "No reports match this filter." : "No reports yet."}
           </div>
         ) : (
-          filteredReports.map((r, i) => {
-            const name = r.primary_competitor_name ?? "Untitled";
-            const sentiment = r.sentiment_overall;
-            return (
-              <div
-                key={r.id}
-                className="min-w-[720px]"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(180px,1.4fr) 1fr .9fr .9fr 1.2fr .9fr auto",
-                  padding: "14px 16px",
-                  borderBottom: i === filteredReports.length - 1 ? "0" : "1px solid var(--border-soft)",
-                  alignItems: "center",
-                  gap: 12,
-                  cursor: "pointer",
-                }}
-                onClick={() => navigate(`/scan-report/${r.id}`)}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                  <CompetitorAvatar name={name} domain={r.primary_competitor_domain} size={28} borderRadius={6} />
-                  <div style={{ minWidth: 0 }}>
-                    <div className="truncate" style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
-                    <div className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
-                      {r.status}
-                    </div>
-                  </div>
+          <div style={{ overflowX: "auto", paddingBottom: 8 }}>
+            <div style={{ display: "flex", gap: 12, width: "max-content", alignItems: "stretch" }}>
+              {reports.map((r) => (
+                <div key={r.id} style={{ width: 260, flexShrink: 0, display: "flex" }}>
+                  <ReportCard report={r} onClick={() => navigate(`/scan-report/${r.id}`)} />
                 </div>
-                <div className="text-fg-muted" style={{ fontSize: 12 }}>
-                  {r.category}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span
-                    className="font-mono-feat tnum"
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color:
-                        sentiment == null
-                          ? "var(--fg-faint)"
-                          : sentiment < -0.3
-                          ? "var(--neg)"
-                          : sentiment < -0.15
-                          ? "var(--warn)"
-                          : "var(--fg-muted)",
-                    }}
-                  >
-                    {sentiment != null ? sentiment.toFixed(2) : "—"}
-                  </span>
-                  {sentiment != null && (
-                    <div className="re-meter neg" style={{ width: 36 }}>
-                      <i style={{ width: `${Math.abs(sentiment) * 100}%` }} />
-                    </div>
-                  )}
-                </div>
-                <div className="font-mono-feat tnum" style={{ fontSize: 13 }}>
-                  {(r.total_sources ?? 0).toLocaleString()}
-                </div>
-                <div>
-                  <MiniSpark seed={r.id} />
-                </div>
-                <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                  {formatRelative(r.created_at)}
-                </div>
-                <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                  <button
-                    className="re-btn re-btn-ghost re-btn-icon re-btn-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/scan-report/${r.id}`);
-                    }}
-                  >
-                    <Icon name="chev-right" size={14} />
-                  </button>
-                </div>
-              </div>
-            );
-          })
+              ))}
+            </div>
+          </div>
         )}
-        </div>
       </div>
 
       {/* Two-column bottom */}
@@ -602,6 +422,110 @@ function MiniSpark({ seed }: { seed: string }) {
       <path d={path} fill="none" stroke={color} strokeWidth="1.2" strokeLinejoin="round" />
       <circle cx={w} cy={h - last * (h - 2) - 1} r="2" fill={color} />
     </svg>
+  );
+}
+
+function ReportCard({ report: r, onClick }: { report: ReportRow; onClick: () => void }) {
+  const name = r.primary_competitor_name ?? "Untitled";
+  const sentiment = r.sentiment_overall;
+  const isCompleted = r.status === "completed";
+  const isRunning = r.status === "running" || r.status === "queued";
+
+  const statusColor = isCompleted
+    ? "var(--pos)"
+    : isRunning
+    ? "#6366f1"
+    : r.status === "failed"
+    ? "var(--neg)"
+    : "var(--fg-faint)";
+  const statusLabel = isCompleted ? "Completed" : isRunning ? "Scanning…" : r.status === "failed" ? "Failed" : r.status;
+
+  const sentimentTone =
+    sentiment == null ? null : sentiment < -0.3 ? "neg" : sentiment < -0.15 ? "warn" : null;
+  const sentimentColor =
+    sentimentTone === "neg" ? "var(--neg)" : sentimentTone === "warn" ? "var(--warn)" : "var(--fg)";
+
+  return (
+    <div
+      className="re-card"
+      onClick={onClick}
+      style={{ cursor: "pointer", transition: "border-color 100ms, box-shadow 100ms", width: "100%", display: "flex", flexDirection: "column" }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--border-strong)";
+        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--border-soft)";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      {/* Header */}
+      <div style={{ padding: 14 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <CompetitorAvatar name={name} domain={r.primary_competitor_domain} size={36} borderRadius={8} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.005em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {name}
+              </div>
+              <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {r.primary_competitor_domain ?? ""}
+              </div>
+            </div>
+          </div>
+          <span
+            className="re-chip"
+            style={{ fontSize: 10, color: statusColor, background: `color-mix(in srgb, ${statusColor} 12%, transparent)`, flexShrink: 0 }}
+          >
+            {statusLabel.toUpperCase()}
+          </span>
+        </div>
+
+        <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+          {r.category && <span className="re-chip" style={{ fontSize: 10 }}>{r.category}</span>}
+          {r.goal && <span className="re-chip" style={{ fontSize: 10 }}>{r.goal.replace(/_/g, " ")}</span>}
+        </div>
+      </div>
+
+      <hr style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: 0 }} />
+
+      {/* Stats */}
+      <div style={{ padding: "10px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, flex: 1 }}>
+        <div>
+          <div className="font-mono-feat" style={{ fontSize: 9, color: "var(--fg-faint)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Sentiment</div>
+          <div className="font-mono-feat tnum" style={{ fontSize: 14, fontWeight: 500, marginTop: 2, color: sentimentColor }}>
+            {sentiment != null ? sentiment.toFixed(2) : "—"}
+          </div>
+        </div>
+        <div>
+          <div className="font-mono-feat" style={{ fontSize: 9, color: "var(--fg-faint)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Mentions</div>
+          <div className="font-mono-feat tnum" style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>
+            {(r.total_sources ?? 0).toLocaleString()}
+          </div>
+        </div>
+        <div>
+          <div className="font-mono-feat" style={{ fontSize: 9, color: "var(--fg-faint)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stage</div>
+          <div className="font-mono-feat tnum" style={{ fontSize: 10, fontWeight: 500, marginTop: 2, color: "var(--fg-muted)" }}>
+            {r.stage ?? "—"}
+          </div>
+        </div>
+      </div>
+
+      <hr style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: 0 }} />
+
+      {/* Footer */}
+      <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
+          last run {formatRelative(r.created_at)}
+        </span>
+        <button
+          className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+        >
+          <Icon name="chev-right" size={14} />
+        </button>
+      </div>
+    </div>
   );
 }
 

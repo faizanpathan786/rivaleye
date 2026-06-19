@@ -11,7 +11,7 @@ const SYSTEM = `You are a senior competitive-intelligence analyst. A founder wil
 Return ONE JSON object with EXACTLY these top-level keys (all required, never omit, never rename):
 {
   "executive_brief": "2-3 sentence synthesis: main wedge against competitor, best target persona, and window of opportunity. This is what gets shared in Slack. Be specific — cite the dominant pain and the positioning angle. Example: 'Twilio's pricing opacity is the dominant pain — founders describe feeling deceived, not just overcharged. Solo developers and early-stage SaaS are worst hit because Twilio's fraud operations cut off small accounts with no recourse. The switching market is fragmented (Plivo, Voco, OpenBSP) with no clear winner yet.'",
-  "complaints": [{ "external_id": "slug-of-title", "title": "3-5 word cluster title", "tag": "UX|Pricing|Support|Reliability|Onboarding|API|Billing|null", "mentions": 0, "delta": null, "severity": 0.0, "summary": "1-2 sentence description of the specific pain. What exactly breaks? Who is affected? Give a concrete example.", "threads": 0, "sample": "verbatim user phrase from the cluster, under 120 chars" }],
+  "complaints": [{ "external_id": "slug-of-title", "title": "3-5 word cluster title", "tag": "UX|Pricing|Support|Reliability|Onboarding|API|Billing|null", "mentions": 0, "delta": null, "severity": 0.0, "summary": "1-2 sentence description of the specific pain. What exactly breaks? Who is affected? Give a concrete example.", "threads": 0, "sample": "verbatim user phrase from the cluster, under 120 chars", "sample_author": "username of the person who said it, from notable quotes, or null" }],
   "feature_gaps": [{ "feature": "specific feature the product lacks, phrased as capability e.g. 'Transparent per-message pricing breakdown'", "votes": 0, "signal": 0.0 }],
   "pricing_tiers": [{ "tier": "name of pricing tier or 'General'", "pain": 0.0, "note": "specific price or range users mentioned, e.g. '$0.0079/msg + undisclosed carrier surcharges'" }],
   "pricing_quotes": [{ "who": "username or handle", "sub": "subreddit or platform context", "text": "verbatim price complaint under 200 chars" }],
@@ -42,7 +42,7 @@ Rules:
 1. ALL 14 top-level keys are required — never omit any. Use [] for empty arrays.
 2. external_id in complaints: kebab-case slug of the title. Must be unique.
 3. complaints[].summary: must be specific, not generic. Bad: "Users are unhappy". Good: "Solo devs report Twilio Fraud Ops suspending accounts without warning at 2am, leaving their products dark with no support path."
-4. complaints[].sample: a verbatim phrase from the evidence — short, punchy, real.
+4. complaints[].sample: a verbatim phrase from the evidence — short, punchy, real. Prefer picking from the notable quotes list. Set sample_author to the username of the person who said it; null if unknown.
 5. positioning[]: produce at minimum 2 angles even from thin data. Every wedge against the competitor is a positioning angle.
 6. opportunities[].thesis: must reference a real complaint. Don't invent pain.
 7. actions[]: produce at minimum 2 actions. Actions must be founder-executable in the next 2 weeks.

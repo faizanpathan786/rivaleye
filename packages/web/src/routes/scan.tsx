@@ -90,7 +90,7 @@ export function ScanPage() {
       selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
       website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
     });
-    navigate(`/scan-report/${res.id}/summary`);
+    navigate(`/scan-report/${res.id}/summary`, { replace: true });
   };
 
   const start = async () => {
@@ -117,6 +117,23 @@ export function ScanPage() {
     error instanceof Error ? error.message :
     (error as { error?: string } | null)?.error === "PAYMENT_REQUIRED" ? null :
     error ? "Failed to start scan" : null;
+
+  if (isPending) {
+    return (
+      <div
+        className="px-4 py-16 md:px-7"
+        style={{ textAlign: "center", color: "var(--fg-muted)", maxWidth: 1280, margin: "0 auto" }}
+      >
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 16 }}>LAUNCHING SCAN</div>
+        <div style={{ fontSize: 22, fontWeight: 500, color: "var(--fg)", marginBottom: 8 }}>
+          Starting your scan…
+        </div>
+        <div style={{ fontSize: 14, color: "var(--fg-muted)" }}>
+          Setting up intelligence report for <b style={{ color: "var(--fg)" }}>{name}</b>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

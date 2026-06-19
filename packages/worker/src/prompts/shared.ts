@@ -325,6 +325,7 @@ export const synthOutputSchema = z.object({
       summary: z.string().nullable().default(null),
       threads: z.number().int().nonnegative().default(0),
       sample: z.string().nullable().default(null),
+      sample_author: z.string().nullable().default(null),
     }),
   ).catch([]),
   feature_gaps: z.array(

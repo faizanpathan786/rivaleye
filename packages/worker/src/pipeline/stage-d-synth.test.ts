@@ -48,6 +48,7 @@ function baseSynth(): SynthOutput {
         summary: null,
         threads: 0,
         sample: null,
+        sample_author: null,
       },
     ],
     feature_gaps: [],

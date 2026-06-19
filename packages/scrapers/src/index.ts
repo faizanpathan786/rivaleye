@@ -1,6 +1,8 @@
 export * from "./types";
 export { RedditScraper } from "./reddit";
+export { G2Scraper } from "./g2";
 export { CapterraScraper } from "./capterra";
+export { TrustpilotScraper } from "./trustpilot";
 export { TwitterScraper } from "./twitter";
 export { LinkedInScraper } from "./linkedin";
 export { ProductHuntScraper } from "./producthunt";
@@ -12,7 +14,9 @@ export { DevToScraper } from "./devto";
 export { WebsiteScraper } from "./website";
 import type { Scraper, PlatformId } from "./types";
 import { RedditScraper } from "./reddit";
+import { G2Scraper } from "./g2";
 import { CapterraScraper } from "./capterra";
+import { TrustpilotScraper } from "./trustpilot";
 import { TwitterScraper } from "./twitter";
 import { LinkedInScraper } from "./linkedin";
 import { ProductHuntScraper } from "./producthunt";
@@ -27,8 +31,12 @@ export function getScraper(platform: PlatformId): Scraper {
   switch (platform) {
     case "reddit":
       return new RedditScraper();
+    case "g2":
+      return new G2Scraper();
     case "capterra":
       return new CapterraScraper();
+    case "trustpilot":
+      return new TrustpilotScraper();
     case "twitter":
       return new TwitterScraper();
     case "linkedin":

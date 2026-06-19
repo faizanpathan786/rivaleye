@@ -47,6 +47,7 @@ export type Complaint = {
   summary: string | null;
   threads: number;
   sample: string | null;
+  sample_author: string | null;
   sort_order: number;
 };
 
@@ -363,6 +364,10 @@ export async function retryPlatform(
   platform: string,
 ): Promise<void> {
   await axios.post(endpoints.reports.retryPlatform(reportId), { platform });
+}
+
+export async function retrySynthesis(reportId: string): Promise<void> {
+  await axios.post(endpoints.reports.retrySynthesis(reportId));
 }
 
 export async function cancelReport(reportId: string): Promise<void> {

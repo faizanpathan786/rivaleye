@@ -27,6 +27,7 @@ const SYNTH_FIXTURE: SynthOutput = {
       summary: "Users report frequent crashes when exporting large files.",
       threads: 3,
       sample: "The app crashed again when I tried to export.",
+      sample_author: null,
     },
   ],
   feature_gaps: [
