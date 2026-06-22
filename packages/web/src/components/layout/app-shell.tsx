@@ -106,7 +106,7 @@ export function AppShell() {
         />
       )}
 
-      <Sidebar open={drawerOpen} />
+      <Sidebar open={drawerOpen} pathname={location.pathname} />
 
       <main className="main relative z-[1] min-h-0 overflow-y-auto overflow-x-hidden bg-transparent">
         <Outlet />
@@ -208,9 +208,10 @@ const NAV_ITEMS: Array<{
 
 interface SidebarProps {
   open: boolean;
+  pathname: string;
 }
 
-function Sidebar({ open }: SidebarProps) {
+function Sidebar({ open, pathname }: SidebarProps) {
   const navigate = useNavigate();
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
@@ -277,6 +278,17 @@ function Sidebar({ open }: SidebarProps) {
           </NavLink>
         );
       })}
+
+      <NavLink
+        to="/pain-opps"
+        className={({ isActive }) =>
+          `sb-item flex items-center gap-2.5 rounded-md px-2.5 py-1.5 w-full text-left border-0 cursor-pointer ${isActive ? "sb-active" : "sb-idle"}`
+        }
+        style={{ fontSize: 13 }}
+      >
+        <Icon name="alert" size={14} className="sb-icon flex-shrink-0" />
+        <span className="flex-1">Pain & Opps</span>
+      </NavLink>
 
       <div className="font-mono-feat text-fg-faint uppercase" style={{ fontSize: 10, letterSpacing: "0.08em", padding: "10px 10px 4px" }}>
         Recent scans

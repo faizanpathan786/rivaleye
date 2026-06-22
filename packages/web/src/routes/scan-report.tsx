@@ -100,7 +100,7 @@ function normalizeEvidenceSection(raw: unknown): EvidenceSection | null {
 // data lands, lift `range` and thread it as a prop into the lens pages so the
 // header control actually filters each lens.
 
-type LensId = "summary" | "founder" | "product" | "marketing" | "growth";
+type LensId = "summary" | "founder" | "product" | "marketing" | "growth" | "pain";
 
 interface LensMeta {
   name: string;
@@ -116,6 +116,7 @@ const LENS_META: Record<LensId, LensMeta> = {
   product:   { name: "Product",   color: "#6366f1", bg: "rgba(99,102,241,0.10)", glyph: "⊞", role: "Roadmap intelligence · gaps & evidence" },
   marketing: { name: "Marketing", color: "#8b5cf6", bg: "rgba(139,92,246,0.10)", glyph: "❝", role: "Positioning · copy · angles" },
   growth:    { name: "Growth",    color: "#16a34a", bg: "rgba(22,163,74,0.10)",  glyph: "↗", role: "Switch intent · live conversations" },
+  pain:      { name: "Pain & Opps", color: "#dc2626", bg: "rgba(220,38,38,0.08)", glyph: "⚡", role: "Complaints · opportunities to win" },
 };
 
 const LENS_ORDER: LensId[] = ["summary", "founder", "product", "marketing", "growth"];
@@ -159,7 +160,8 @@ export function ScanReportPage() {
   const navigate = useNavigate();
   const { id, lens: lensParam } = useParams<{ id?: string; lens?: string }>();
   // Lens is driven by the route so each dashboard is its own deep-linkable URL.
-  const lens: LensId = LENS_ORDER.includes(lensParam as LensId) ? (lensParam as LensId) : "summary";
+  const ALL_LENSES = [...LENS_ORDER, "pain"] as LensId[];
+  const lens: LensId = ALL_LENSES.includes(lensParam as LensId) ? (lensParam as LensId) : "summary";
   const [range, setRange] = useState("90d");
   const [printingAll, setPrintingAll] = useState(false);
   const meta = LENS_META[lens];
@@ -377,6 +379,8 @@ export function ScanReportPage() {
         return <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range={range} competitorName={competitorData.name} />;
       case "growth":
         return <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range={range} reportId={id} />;
+      case "pain":
+        return <PainAndOppsPage complaints={complaints} opportunities={opportunities} competitorName={competitorData.name} />;
     }
   };
 
@@ -1529,6 +1533,194 @@ function StuckAnalysisState({
           >
             {isPending ? "Retrying…" : "Retry analysis"}
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// PAIN & OPPS FULL PAGE
+
+function PainAndOppsPage({
+  complaints,
+  opportunities,
+  competitorName,
+}: {
+  complaints: Complaint[];
+  opportunities: Opportunity[];
+  competitorName: string;
+}) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const oppByComplaint = useMemo(() => {
+    const map = new Map<string, Opportunity[]>();
+    for (const o of opportunities) {
+      if (!o.anchor_complaint_id) continue;
+      const list = map.get(o.anchor_complaint_id) ?? [];
+      list.push(o);
+      map.set(o.anchor_complaint_id, list);
+    }
+    return map;
+  }, [opportunities]);
+
+  const selectedComplaint = complaints.find((c) => c.id === selected) ?? null;
+  const linkedOpps = selected ? (oppByComplaint.get(selected) ?? []) : [];
+  const standaloneOpps = opportunities.filter((o) => !o.anchor_complaint_id);
+
+  return (
+    <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1400, margin: "0 auto" }}>
+      <div style={{ marginBottom: 24 }}>
+        <div className="re-eyebrow" style={{ fontSize: 10, color: "var(--neg)" }}>⚡ PAIN & OPPORTUNITIES</div>
+        <h2 className="re-h2" style={{ fontSize: "clamp(18px,4vw,24px)", marginTop: 6, letterSpacing: "-0.02em" }}>
+          What {competitorName}'s users complain about — and where you can win
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--fg-muted)", marginTop: 6 }}>
+          {complaints.length} complaints · {opportunities.length} opportunities
+        </p>
+      </div>
+
+      <div
+        className="grid gap-5"
+        style={{ gridTemplateColumns: selectedComplaint ? "1fr 1fr" : "1fr" }}
+      >
+        {/* LEFT: complaints list */}
+        <div className="flex flex-col gap-3">
+          <div className="re-eyebrow" style={{ fontSize: 10, padding: "0 0 4px" }}>
+            COMPLAINTS <span className="font-mono-feat text-fg-faint">({complaints.length})</span>
+          </div>
+          {complaints.length === 0 ? (
+            <div className="re-card px-5 py-10 text-center" style={{ color: "var(--fg-faint)", fontSize: 13 }}>
+              No complaints recorded for this report yet.
+            </div>
+          ) : (
+            complaints.map((cp) => {
+              const isSelected = selected === cp.id;
+              const linkedCount = oppByComplaint.get(cp.id)?.length ?? 0;
+              return (
+                <button
+                  key={cp.id}
+                  onClick={() => setSelected(isSelected ? null : cp.id)}
+                  className="re-card w-full cursor-pointer border-0 text-left"
+                  style={{
+                    padding: "14px 16px",
+                    borderLeft: `3px solid ${isSelected ? "var(--neg)" : "var(--border-soft)"}`,
+                    background: isSelected ? "color-mix(in srgb, var(--neg) 6%, var(--surface))" : "var(--surface)",
+                    transition: "border-color 150ms, background 150ms",
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="font-mono-feat tnum mt-0.5 shrink-0"
+                      style={{ fontSize: 11, color: "var(--neg)", minWidth: 18 }}
+                    >
+                      {cp.mentions ?? ""}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
+                        {cp.title}
+                      </div>
+                      {cp.summary && (
+                        <p style={{ margin: "5px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                          {cp.summary}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {cp.tag && (
+                          <span className="re-chip" style={{ fontSize: 10 }}>{cp.tag}</span>
+                        )}
+                        {linkedCount > 0 && (
+                          <span className="re-chip re-chip-accent" style={{ fontSize: 10 }}>
+                            {linkedCount} opp{linkedCount > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Icon
+                      name="chev-right"
+                      size={13}
+                      className="shrink-0 mt-0.5"
+                      style={{ color: isSelected ? "var(--neg)" : "var(--fg-faint)", transition: "color 150ms", transform: isSelected ? "rotate(90deg)" : "none" }}
+                    />
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* RIGHT: opportunities panel — shown when a complaint is selected */}
+        {selectedComplaint && (
+          <div className="flex flex-col gap-3">
+            <div className="re-eyebrow" style={{ fontSize: 10, padding: "0 0 4px" }}>
+              OPPORTUNITIES FOR "{selectedComplaint.title.toUpperCase()}"
+            </div>
+            {linkedOpps.length === 0 ? (
+              <div className="re-card px-5 py-8 text-center" style={{ color: "var(--fg-faint)", fontSize: 13 }}>
+                No opportunities linked to this complaint yet.
+              </div>
+            ) : (
+              linkedOpps.map((opp, i) => (
+                <div
+                  key={opp.id ?? i}
+                  className="re-card"
+                  style={{ padding: "14px 16px", borderLeft: "3px solid var(--pos)" }}
+                >
+                  <div className="re-eyebrow" style={{ fontSize: 9, color: "var(--pos)", marginBottom: 6 }}>
+                    OPPORTUNITY
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
+                    {opp.title}
+                  </div>
+                  {opp.thesis && (
+                    <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                      {opp.thesis}
+                    </p>
+                  )}
+                  {opp.effort && (
+                    <div className="mt-2">
+                      <span className="re-chip" style={{ fontSize: 10 }}>Effort: {opp.effort}</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Standalone opportunities not linked to a specific complaint */}
+      {standaloneOpps.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
+            ALL OPPORTUNITIES <span className="font-mono-feat text-fg-faint">({standaloneOpps.length})</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {standaloneOpps.map((opp, i) => (
+              <div
+                key={opp.id ?? i}
+                className="re-card"
+                style={{ padding: "14px 16px", borderTop: "2px solid var(--pos)" }}
+              >
+                <div className="re-eyebrow" style={{ fontSize: 9, color: "var(--pos)", marginBottom: 6 }}>
+                  OPPORTUNITY
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
+                  {opp.title}
+                </div>
+                {opp.thesis && (
+                  <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                    {opp.thesis}
+                  </p>
+                )}
+                {opp.effort && (
+                  <div className="mt-2">
+                    <span className="re-chip" style={{ fontSize: 10 }}>Effort: {opp.effort}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

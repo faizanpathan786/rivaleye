@@ -18,6 +18,7 @@ import { ScanReportPage } from "./routes/scan-report";
 import { AccountPage } from "./routes/account";
 import { BillingPage } from "./routes/billing";
 import { PlannedActionsPage } from "./routes/planned-actions";
+import { PainOppsPage } from "./routes/pain-opps";
 import { SignInPage } from "./routes/signin";
 import { NotFoundPage } from "./routes/not-found";
 import { AuthProvider } from "./auth/context/better-auth";
@@ -68,6 +69,7 @@ const router = createBrowserRouter([
       { path: "account", Component: AccountPage },
       { path: "billing", Component: BillingPage },
       { path: "my-plan", Component: PlannedActionsPage },
+      { path: "pain-opps", Component: PainOppsPage },
     ],
   },
   { path: "*", Component: NotFoundPage },
