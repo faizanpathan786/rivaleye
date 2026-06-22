@@ -449,8 +449,6 @@ export function FounderPage({
             <ActionCard key={i} a={a} index={i} openEvidence={openEvidence} />
           ))}
         </div>
-
-        <FounderFooter onNav={(to) => navigate(to)} competitorName={cName} />
       </div>
 
       <EvidenceDrawer
@@ -852,9 +850,6 @@ function FrustrationCard({
         </div>
 
         <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 6 }}>
-          <button type="button" className="re-btn re-btn-ghost re-btn-sm">
-            Compare to ours
-          </button>
           <button
             type="button"
             className="re-btn re-btn-sm"
@@ -1225,30 +1220,3 @@ function ActionCard({
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER STRIP
 
-function FounderFooter({ onNav, competitorName }: { onNav: (to: string) => void; competitorName?: string }) {
-  const cName = competitorName ?? "the competitor";
-  return (
-    <div
-      className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between md:gap-6"
-      style={{
-        marginTop: 50,
-        padding: "22px 24px",
-        borderRadius: 10,
-        border: "1px solid var(--border-soft)",
-        background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), rgba(99,102,241,0.05))",
-      }}
-    >
-      <div className="min-w-0">
-        <div style={eyebrow}>North star</div>
-        <p className="w-full" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.6, maxWidth: 720, fontWeight: 500 }}>
-          {`"Now I understand where ${cName} is strong, where users are frustrated, what the market wants, and what opportunity we can attack."`}
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className="re-btn re-btn-accent" onClick={() => onNav("/compare")}>
-          <Icon name="compare" size={14} /> Compare to us
-        </button>
-      </div>
-    </div>
-  );
-}

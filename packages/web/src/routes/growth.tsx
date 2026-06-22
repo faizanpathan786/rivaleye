@@ -770,8 +770,6 @@ export function GrowthPage({
           subtitle="Soft inferences from post content. Confidence-scored. Use as background, not as fact."
         />
         <SegmentHints rows={G.segmentHints} openEvidence={openEvidence} />
-
-        <GrowthFooter reportId={reportId} />
       </div>
 
       <EvidenceDrawer
@@ -1894,51 +1892,3 @@ function SegChip({ children, tone }: { children: React.ReactNode; tone?: "neg" |
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER
 
-function GrowthFooter({ reportId }: { reportId?: string }) {
-  const handleExport = () => {
-    if (!reportId) return;
-    const data = { report_id: reportId, exported_at: new Date().toISOString() };
-    const csv = "Report ID,Exported At\n" + reportId + "," + new Date().toISOString();
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `growth-shortlist-${new Date().getTime()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <div
-      className="px-5 py-5 md:px-6 md:py-[22px]"
-      style={{
-        marginTop: 50,
-        borderRadius: 10,
-        border: "1px solid var(--border-soft)",
-        background: `linear-gradient(135deg, ${GRN_BG}, color-mix(in srgb, var(--accent) 4%, transparent))`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 24,
-        flexWrap: "wrap",
-      }}
-    >
-      <div className="min-w-0">
-        <div style={{ ...eyebrow, letterSpacing: "0.02em" }}>Growth operating principle</div>
-        <p className="w-full max-w-[720px]" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.6, fontWeight: 500 }}>
-          "Find five conversations worth participating in today — and earn a reply by being useful, not loud."
-        </p>
-      </div>
-      <div className="flex flex-wrap" style={{ gap: 8 }}>
-        <button
-          type="button"
-          className="re-btn"
-          style={{ background: GRN, color: "#fff", borderColor: GRN }}
-          onClick={handleExport}
-        >
-          <Icon name="download" size={14} /> Export today's shortlist
-        </button>
-      </div>
-    </div>
-  );
-}
