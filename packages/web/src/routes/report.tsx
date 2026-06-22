@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icons";
 import {
@@ -105,6 +105,17 @@ function PainReport({
 }) {
   const [tab, setTab] = useState<TabKey>("overview");
   const [openThread, setOpenThread] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sidebarOpen = searchParams.get("panel") === "pain";
+
+  function setSidebarOpen(open: boolean) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (open) next.set("panel", "pain");
+      else next.delete("panel");
+      return next;
+    });
+  }
   const queryClient = useQueryClient();
 
   const onRetryFailed = async () => {
@@ -129,7 +140,7 @@ function PainReport({
 
   const tabs: Array<[TabKey, string]> = [
     ["overview", "Overview"],
-    ["complaints", `Complaints (${complaints.length})`],
+    ["complaints", `Pain (${complaints.length})`],
     ["voice", "Voice of customer"],
     ["pricing", "Pricing"],
     ["switching", "Switching"],
@@ -147,6 +158,8 @@ function PainReport({
         platformsCount={platforms.length}
         partial={report.partial}
         failed_platforms={report.failed_platforms}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         onRetryFailed={
           report.partial && report.failed_platforms.length > 0
             ? onRetryFailed
@@ -177,36 +190,50 @@ function PainReport({
         ))}
       </div>
 
-      <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-5 md:px-7">
-        {tab === "overview" && (
-          <OverviewTab
-            report={report}
+      <div className="mx-auto flex max-w-[1440px] items-start gap-0">
+        {/* Main content */}
+        <div className="min-w-0 flex-1 px-4 pb-16 pt-5 md:px-7">
+          {tab === "overview" && (
+            <OverviewTab
+              report={report}
+              complaints={complaints}
+              quotes={quotes}
+              platforms={platforms}
+              switching={switching}
+              sentimentSeries={sentimentSeries}
+              featureGaps={featureGaps}
+              onOpenThread={setOpenThread}
+              onSwitchTab={setTab}
+            />
+          )}
+          {tab === "complaints" && (
+            <PainCard
+              complaints={complaints}
+              opportunities={opportunities}
+              onOpenThread={setOpenThread}
+            />
+          )}
+          {tab === "voice" && <VoiceTab voice={voice} competitorName={report.primary_competitor_name ?? "Competitor"} />}
+          {tab === "pricing" && <PricingTab pricing={pricing} />}
+          {tab === "switching" && <SwitchingTab switching={switching} />}
+          {tab === "quotes" && <QuotesCard quotes={quotes} />}
+          {tab === "leads" && <LeadsCard leads={leads} />}
+          {tab === "positioning" && <PositioningCard positioning={positioning} />}
+          {tab === "opportunities" && (
+            <OpportunitiesCard opportunities={opportunities} />
+          )}
+          {tab === "actions" && <ActionsCard actions={actions} reportId={reportId} />}
+        </div>
+
+        {/* Pain & Opportunities sidebar */}
+        {sidebarOpen && (
+          <PainSidebar
             complaints={complaints}
-            quotes={quotes}
-            platforms={platforms}
-            switching={switching}
-            sentimentSeries={sentimentSeries}
-            featureGaps={featureGaps}
+            opportunities={opportunities}
             onOpenThread={setOpenThread}
-            onSwitchTab={setTab}
+            onGoToPain={() => setTab("complaints")}
           />
         )}
-        {tab === "complaints" && (
-          <ComplaintsCard
-            complaints={complaints}
-            onOpenThread={setOpenThread}
-          />
-        )}
-        {tab === "voice" && <VoiceTab voice={voice} competitorName={report.primary_competitor_name ?? "Competitor"} />}
-        {tab === "pricing" && <PricingTab pricing={pricing} />}
-        {tab === "switching" && <SwitchingTab switching={switching} />}
-        {tab === "quotes" && <QuotesCard quotes={quotes} />}
-        {tab === "leads" && <LeadsCard leads={leads} />}
-        {tab === "positioning" && <PositioningCard positioning={positioning} />}
-        {tab === "opportunities" && (
-          <OpportunitiesCard opportunities={opportunities} />
-        )}
-        {tab === "actions" && <ActionsCard actions={actions} reportId={reportId} />}
       </div>
 
       <ThreadModal
@@ -223,12 +250,16 @@ function ReportHeader({
   platformsCount,
   partial,
   failed_platforms,
+  sidebarOpen,
+  onToggleSidebar,
   onRetryFailed,
 }: {
   report: ReportRow;
   platformsCount: number;
   partial?: boolean;
   failed_platforms?: string[];
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
   onRetryFailed?: () => void;
 }) {
   const navigate = useNavigate();
@@ -290,6 +321,18 @@ function ReportHeader({
           </div>
         </div>
         <div className="flex gap-2">
+          <button
+            className="re-btn re-btn-ghost"
+            onClick={onToggleSidebar}
+            style={{
+              color: sidebarOpen ? "var(--accent)" : undefined,
+              background: sidebarOpen ? "color-mix(in srgb, var(--accent) 10%, transparent)" : undefined,
+            }}
+          >
+            <Icon name="list" size={14} />
+            Pain & Opps
+            <Icon name={sidebarOpen ? "chev-right" : "chev-left"} size={12} />
+          </button>
           <button className="re-btn" onClick={() => navigate("/compare")}>
             <Icon name="compare" size={14} /> Compare
           </button>
@@ -687,6 +730,211 @@ export function ComplaintsCard({
   );
 }
 
+function PainSidebar({
+  complaints,
+  opportunities,
+  onOpenThread,
+  onGoToPain,
+}: {
+  complaints: Complaint[];
+  opportunities: Opportunity[];
+  onOpenThread: (id: string) => void;
+  onGoToPain: () => void;
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const oppByComplaint = useMemo(() => {
+    const map = new Map<string, Opportunity[]>();
+    for (const o of opportunities) {
+      if (!o.anchor_complaint_id) continue;
+      const list = map.get(o.anchor_complaint_id) ?? [];
+      list.push(o);
+      map.set(o.anchor_complaint_id, list);
+    }
+    return map;
+  }, [opportunities]);
+
+  return (
+    <div
+      className="hidden lg:flex"
+      style={{
+        width: 300,
+        flexShrink: 0,
+        flexDirection: "column",
+        borderLeft: "1px solid var(--border-soft)",
+        position: "sticky",
+        top: 0,
+        height: "100vh",
+        overflowY: "auto",
+      }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-4 py-3"
+        style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg)" , position: "sticky", top: 0, zIndex: 1 }}
+      >
+        <div>
+          <div className="font-mono-feat" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--fg-faint)" }}>
+            Pain & Opportunities
+          </div>
+          <div style={{ fontSize: 11, color: "var(--fg-muted)", marginTop: 2 }}>
+            {complaints.length} complaints · {opportunities.length} opportunities
+          </div>
+        </div>
+        <button className="re-btn re-btn-ghost re-btn-sm" onClick={onGoToPain}>
+          Full view <Icon name="chev-right" size={11} />
+        </button>
+      </div>
+
+      {/* Complaint list */}
+      {complaints.length === 0 ? (
+        <div className="px-4 py-8 text-center" style={{ fontSize: 12, color: "var(--fg-faint)" }}>
+          No pain signals yet
+        </div>
+      ) : (
+        <div style={{ flex: 1 }}>
+          {complaints.map((cp, i) => {
+            const isExp = expanded === cp.id;
+            const linked = oppByComplaint.get(cp.id) ?? [];
+            return (
+              <div
+                key={cp.id}
+                style={{ borderBottom: "1px solid var(--border-soft)" }}
+              >
+                {/* Row */}
+                <button
+                  onClick={() => setExpanded(isExp ? null : cp.id)}
+                  className="w-full cursor-pointer border-0 bg-transparent px-4 py-3 text-left hover:bg-hover"
+                  style={{ display: "block" }}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span
+                      className="font-mono-feat tnum mt-0.5 shrink-0"
+                      style={{ fontSize: 10, color: "var(--fg-faint)" }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="break-words leading-snug"
+                        style={{ fontSize: 13, fontWeight: 500 }}
+                      >
+                        {cp.title}
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        {/* Severity bar */}
+                        <div className="re-meter neg" style={{ flex: 1, height: 3 }}>
+                          <i style={{ width: `${(cp.severity ?? 0) * 100}%` }} />
+                        </div>
+                        <span className="font-mono-feat tnum shrink-0" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
+                          {cp.mentions}
+                        </span>
+                      </div>
+                      {/* Opportunity pill */}
+                      {linked.length > 0 && (
+                        <div className="mt-1.5">
+                          <span
+                            className="inline-block rounded px-1.5 py-0.5 font-medium leading-tight"
+                            style={{
+                              fontSize: 10,
+                              background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                              color: "var(--accent)",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              display: "block",
+                            }}
+                          >
+                            ↳ {linked[0]?.title}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <Icon
+                      name={isExp ? "chev-down" : "chev-right"}
+                      size={12}
+                      className="mt-0.5 shrink-0 text-fg-faint"
+                    />
+                  </div>
+                </button>
+
+                {/* Expanded detail */}
+                {isExp && (
+                  <div
+                    className="fade-up px-4 pb-3"
+                    style={{ borderTop: "1px solid var(--border-soft)", background: "var(--surface-2)" }}
+                  >
+                    {cp.summary && (
+                      <p className="mb-2 mt-3 text-fg-muted" style={{ fontSize: 12, lineHeight: 1.6 }}>
+                        {cp.summary}
+                      </p>
+                    )}
+                    {cp.sample && (
+                      <div
+                        className="mb-3 rounded p-2.5"
+                        style={{ borderLeft: "2px solid var(--accent)", background: "var(--bg)" }}
+                      >
+                        {cp.sample_author && (
+                          <div style={{ fontSize: 10, color: "var(--fg-faint)", marginBottom: 4 }}>
+                            @{cp.sample_author}
+                          </div>
+                        )}
+                        <p className="m-0 italic" style={{ fontSize: 12, lineHeight: 1.55 }}>
+                          "{cp.sample}"
+                        </p>
+                      </div>
+                    )}
+                    {linked.length > 0 && (
+                      <div
+                        className="rounded"
+                        style={{ border: "1px solid var(--border-soft)", overflow: "hidden" }}
+                      >
+                        <div
+                          className="px-3 py-1.5"
+                          style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border-soft)" }}
+                        >
+                          <span className="font-mono-feat" style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--fg-faint)" }}>
+                            What to do
+                          </span>
+                        </div>
+                        {linked.map((o, oi) => (
+                          <div
+                            key={o.id}
+                            className="px-3 py-2.5"
+                            style={{ borderTop: oi === 0 ? 0 : "1px solid var(--border-soft)" }}
+                          >
+                            <div className="font-medium" style={{ fontSize: 12 }}>{o.title}</div>
+                            {o.thesis && (
+                              <div className="mt-1 text-fg-muted" style={{ fontSize: 11, lineHeight: 1.5 }}>
+                                {o.thesis}
+                              </div>
+                            )}
+                            <div className="mt-2 flex gap-2">
+                              {o.effort && <StatLabel label="effort" value={o.effort} />}
+                              {o.payoff && <StatLabel label="payoff" value={o.payoff} hot={o.payoff === "high"} />}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      className="re-btn re-btn-ghost re-btn-sm mt-2"
+                      onClick={() => onOpenThread(cp.external_id || cp.id)}
+                    >
+                      <Icon name="list" size={11} /> {cp.threads} threads
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function tagClass(tag: string): string {
   const m: Record<string, string> = {
     Pricing: "re-tag-pricing",
@@ -698,6 +946,186 @@ function tagClass(tag: string): string {
     Workflow: "re-tag-flow",
   };
   return m[tag] ?? "";
+}
+
+function PainCard({
+  complaints,
+  opportunities,
+  onOpenThread,
+}: {
+  complaints: Complaint[];
+  opportunities: Opportunity[];
+  onOpenThread: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState<string | null>(
+    complaints[0]?.id ?? null,
+  );
+
+  const oppByComplaint = useMemo(() => {
+    const map = new Map<string, Opportunity[]>();
+    for (const o of opportunities) {
+      if (!o.anchor_complaint_id) continue;
+      const existing = map.get(o.anchor_complaint_id) ?? [];
+      existing.push(o);
+      map.set(o.anchor_complaint_id, existing);
+    }
+    return map;
+  }, [opportunities]);
+
+  if (complaints.length === 0)
+    return <EmptyTab label="No pain signals detected yet." />;
+
+  return (
+    <div className="re-card">
+      <div className="re-card-hd">
+        <h3>Pain signals</h3>
+        <span className="font-mono-feat text-[11px] text-fg-faint">
+          complaint → evidence → opportunity
+        </span>
+      </div>
+      <div>
+        {complaints.map((cp, i) => {
+          const isExp = expanded === cp.id;
+          const deltaPositive = cp.delta?.startsWith("+");
+          const linked = oppByComplaint.get(cp.id) ?? [];
+
+          return (
+            <div
+              key={cp.id}
+              style={{ borderTop: i === 0 ? 0 : "1px solid var(--border-soft)" }}
+            >
+              {/* Row header — click to expand */}
+              <button
+                onClick={() => setExpanded(isExp ? null : cp.id)}
+                className="grid w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-4 py-3.5 text-left hover:bg-hover"
+                style={{ gridTemplateColumns: "24px minmax(0,1fr) auto 52px 14px" }}
+              >
+                <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="break-words" style={{ fontSize: 14, fontWeight: 500 }}>
+                      {cp.title}
+                    </span>
+                    {cp.tag && (
+                      <span className={`re-tag ${tagClass(cp.tag)}`}>{cp.tag}</span>
+                    )}
+                    {cp.mentions > 0 && (
+                      <span
+                        className="rounded px-1.5 py-0.5 font-medium"
+                        style={{ fontSize: 10, background: "var(--surface-raised)", color: "var(--fg-muted)" }}
+                      >
+                        {cp.mentions} {cp.mentions === 1 ? "mention" : "mentions"}
+                      </span>
+                    )}
+                    {linked.length > 0 && (
+                      <span
+                        className="rounded px-1.5 py-0.5 font-medium"
+                        style={{ fontSize: 10, background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent)" }}
+                      >
+                        {linked.length} {linked.length === 1 ? "opportunity" : "opportunities"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span
+                  className="font-mono-feat tnum text-right"
+                  style={{ fontSize: 12, color: deltaPositive ? "var(--neg)" : "var(--pos)" }}
+                >
+                  {cp.delta ?? ""}
+                </span>
+                <div className="re-meter neg">
+                  <i style={{ width: `${(cp.severity ?? 0) * 100}%` }} />
+                </div>
+                <Icon name={isExp ? "chev-down" : "chev-right"} size={14} className="text-fg-faint" />
+              </button>
+
+              {/* Expanded body */}
+              {isExp && (
+                <div className="fade-up pb-5 pl-4 pr-4 md:pl-[52px]" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+                  {/* Summary + threads */}
+                  <div>
+                    {cp.summary && (
+                      <p className="m-0 text-fg-muted" style={{ fontSize: 13, lineHeight: 1.65 }}>
+                        {cp.summary}
+                      </p>
+                    )}
+                    <div className="mt-3">
+                      <button
+                        className="re-btn re-btn-sm"
+                        onClick={() => onOpenThread(cp.external_id || cp.id)}
+                      >
+                        <Icon name="list" size={12} /> View {cp.threads} threads
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Verbatim quote */}
+                  {cp.sample && (
+                    <div
+                      className="rounded-md p-3.5"
+                      style={{ background: "var(--surface-2)", borderLeft: "2px solid var(--accent)" }}
+                    >
+                      {cp.sample_author && (
+                        <div className="re-eyebrow mb-1.5" style={{ fontSize: 10 }}>
+                          @{cp.sample_author}
+                        </div>
+                      )}
+                      <p className="m-0 italic" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                        "{cp.sample}"
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Linked opportunities */}
+                  {linked.length > 0 && (
+                    <div
+                      className="rounded-md"
+                      style={{ border: "1px solid var(--border-soft)", overflow: "hidden" }}
+                    >
+                      <div
+                        className="flex items-center gap-2 px-4 py-2.5"
+                        style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--surface-raised)" }}
+                      >
+                        <Icon name="arrow-right" size={12} className="text-fg-faint" />
+                        <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          What to do about it
+                        </span>
+                      </div>
+                      {linked.map((o, oi) => (
+                        <div
+                          key={o.id}
+                          className="px-4 py-3.5"
+                          style={{ borderTop: oi === 0 ? 0 : "1px solid var(--border-soft)" }}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="m-0 font-medium" style={{ fontSize: 14 }}>{o.title}</p>
+                              {o.thesis && (
+                                <p className="m-0 mt-1 text-fg-muted" style={{ fontSize: 13, lineHeight: 1.55 }}>
+                                  {o.thesis}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 gap-3">
+                              {o.effort && <StatLabel label="effort" value={o.effort} />}
+                              {o.payoff && <StatLabel label="payoff" value={o.payoff} hot={o.payoff === "high"} />}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function SentimentCard({ series }: { series: number[] }) {

@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 export type IconName =
   | "search" | "plus" | "arrow-right" | "arrow-up" | "arrow-down"
-  | "chev-right" | "chev-down" | "chev-up"
+  | "chev-right" | "chev-left" | "chev-down" | "chev-up"
   | "x" | "check" | "home" | "scan" | "compare" | "history"
   | "user" | "settings" | "moon" | "sun" | "filter" | "download"
   | "share" | "external" | "spark" | "reddit" | "quote" | "trend-up"
@@ -35,6 +35,7 @@ export function Icon({ name, size = 16, className, style }: IconProps) {
     case "arrow-up":   return <svg {...props}><path d="M8 13V3m-4 4 4-4 4 4"/></svg>;
     case "arrow-down": return <svg {...props}><path d="M8 3v10m-4-4 4 4 4-4"/></svg>;
     case "chev-right": return <svg {...props}><path d="m6 3 5 5-5 5"/></svg>;
+    case "chev-left":  return <svg {...props}><path d="m10 3-5 5 5 5"/></svg>;
     case "chev-down":  return <svg {...props}><path d="m3 6 5 5 5-5"/></svg>;
     case "chev-up":    return <svg {...props}><path d="m3 10 5-5 5 5"/></svg>;
     case "x":          return <svg {...props}><path d="m4 4 8 8M12 4l-8 8"/></svg>;
