@@ -17,7 +17,7 @@ import { GrowthPage } from "./routes/growth";
 import { HistoryPage } from "./routes/history";
 import { ReportPage } from "./routes/report";
 import { ReportSectionsPage } from "./routes/report-sections";
-import { ScanReportPage } from "./routes/scan-report";
+import { ScanReportPage, ScanReportExportView } from "./routes/scan-report";
 import { AccountPage } from "./routes/account";
 import { BillingPage } from "./routes/billing";
 import { PlannedActionsPage } from "./routes/planned-actions";
@@ -45,6 +45,7 @@ const router = createBrowserRouter([
       </GuestGuard>
     ),
   },
+  { path: "scan-report/:id/export-pdf", Component: ScanReportExportView },
   {
     path: "/",
     Component: () => (
@@ -67,8 +68,8 @@ const router = createBrowserRouter([
       { path: "reports/:id", Component: ReportPage },
       { path: "reports/:id/sections", Component: ReportSectionsPage },
       { path: "scan-report", Component: ScanReportPage },
-      { path: "scan-report/:id", Component: ScanReportPage },
       { path: "scan-report/:id/:lens", Component: ScanReportPage },
+      { path: "scan-report/:id", Component: ScanReportPage },
       { path: "account", Component: AccountPage },
       { path: "billing", Component: BillingPage },
       { path: "my-plan", Component: PlannedActionsPage },

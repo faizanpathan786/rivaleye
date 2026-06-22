@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useRef, type ComponentType, type CSSProperties } from "react";
+import { useMemo, useEffect, useState, useRef, type ComponentType, type CSSProperties, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Crosshair, Megaphone, Layers, TrendingUp, Zap } from "lucide-react";
 import { Icon } from "@/components/icons";
@@ -164,8 +164,19 @@ export function ScanReportPage() {
   const ALL_LENSES = [...LENS_ORDER, "pain"] as LensId[];
   const lens: LensId = ALL_LENSES.includes(lensParam as LensId) ? (lensParam as LensId) : "summary";
   const [range, setRange] = useState("90d");
-  const [printingAll, setPrintingAll] = useState(false);
   const meta = LENS_META[lens];
+
+  // Export via Puppeteer (server-side PDF generation).
+  // "This dashboard" exports just the current lens; "full report" exports all.
+  const apiBase = () => import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const exportThis = () => {
+    if (!id) return;
+    window.location.href = `${apiBase()}/v1/reports/${id}/export-pdf?lens=${lens}`;
+  };
+  const exportAll = () => {
+    if (!id) return;
+    window.location.href = `${apiBase()}/v1/reports/${id}/export-pdf`;
+  };
 
   const goToLens = (next: LensId) => {
     const reportId = id || window.location.pathname.split("/")[3];
@@ -208,24 +219,6 @@ export function ScanReportPage() {
     const m = document.querySelector(".main");
     if (m) m.scrollTo({ top: 0, behavior: "smooth" });
   }, [lens]);
-
-  // Full-report PDF: wait for all lenses to render, then open browser print dialog.
-  useEffect(() => {
-    if (!printingAll) return;
-    const revert = () => setPrintingAll(false);
-    window.addEventListener("afterprint", revert);
-    // Wait 2.5s for React to fully render all nested components and apply all styles.
-    const t = window.setTimeout(() => window.print(), 2500);
-    return () => {
-      window.removeEventListener("afterprint", revert);
-      window.clearTimeout(t);
-    };
-  }, [printingAll]);
-
-  // "This dashboard" prints the on-screen lens via the browser dialog.
-  // "Full report" mounts all lenses and opens print dialog after they render.
-  const exportThis = () => window.print();
-  const exportAll = () => setPrintingAll(true);
 
   const onNav = (to: string) => navigate(to.startsWith("/") ? to : `/${to}`);
 
@@ -386,7 +379,7 @@ export function ScanReportPage() {
   };
 
   return (
-    <div style={{ position: "relative", minHeight: "100%" }} className={printingAll ? "printing-all" : undefined}>
+    <div style={{ position: "relative", minHeight: "100%" }}>
       <div
         className="no-print"
         style={{
@@ -417,23 +410,115 @@ export function ScanReportPage() {
 
         <div style={{ height: 48 }} />
       </div>
+    </div>
+  );
+}
 
-      {/* All-dashboards container for full-report print. Hidden from screen, shown
-          only in print media query when .printing-all class is set on root. */}
-      {printingAll && (
-        <div className="print-all-only">
-          {LENS_ORDER.map((l, i) => (
-            <section key={l} className={i > 0 ? "print-page-break" : undefined}>
-              <div style={{ padding: "16px 28px 0" }}>
-                <div className="re-eyebrow" style={{ fontSize: 11, color: LENS_META[l].color }}>
-                  {LENS_META[l].glyph} {LENS_META[l].name}{l !== "summary" ? " lens" : ""}
-                </div>
-              </div>
-              {renderLens(l)}
-            </section>
-          ))}
-        </div>
-      )}
+// ----------------------------------------------------------------------------
+// EXPORT VIEW — renders all five lenses stacked for PDF export. Reuses the exact
+// same presentational components and data wiring as the live report so the PDF
+// matches the UI 1:1. Rendered by the /scan-report/:id/export-pdf route which
+// Puppeteer loads and prints.
+
+export function ScanReportExportView() {
+  const { id } = useParams<{ id?: string }>();
+  // Optional ?lens=<id> restricts the export to a single dashboard.
+  const onlyLens = new URLSearchParams(window.location.search).get("lens") as LensId | null;
+
+  const reportQuery = useReportQuery(id);
+  const reportRow = reportQuery.data;
+  const isCompleted = reportRow?.status === "completed" || reportRow?.stage === "done";
+  const { data: sections, isLoading } = useReportSectionsQuery(isCompleted ? id : undefined);
+
+  const complaints = useReportComplaintsQuery(isCompleted ? id : undefined).data ?? [];
+  const voice = useReportVoiceQuery(isCompleted ? id : undefined).data;
+  const pricing = useReportPricingQuery(isCompleted ? id : undefined).data;
+  const switching = useReportSwitchingQuery(isCompleted ? id : undefined).data;
+  const quotes = useReportQuotesQuery(isCompleted ? id : undefined).data ?? [];
+  const leads = useReportLeadsQuery(isCompleted ? id : undefined).data ?? [];
+  const positioning = useReportPositioningQuery(isCompleted ? id : undefined).data ?? [];
+  const opportunities = useReportOpportunitiesQuery(isCompleted ? id : undefined).data ?? [];
+  const actions = useReportActionsQuery(isCompleted ? id : undefined).data ?? [];
+  const platforms = useReportPlatformsQuery(isCompleted ? id : undefined).data ?? [];
+  const sentimentSeries = useReportSentimentSeriesQuery(isCompleted ? id : undefined).data ?? [];
+  const featureGaps = useReportFeatureGapsQuery(isCompleted ? id : undefined).data ?? [];
+
+  const noop = () => {};
+
+  if (id && isCompleted && isLoading && !sections) {
+    return <div style={{ padding: 40, textAlign: "center", color: "var(--fg-muted)" }}>Loading report…</div>;
+  }
+  if (!isCompleted || !sections) {
+    return <div style={{ padding: 40, textAlign: "center", color: "var(--fg-muted)" }}>Report not ready.</div>;
+  }
+
+  const founderProps = sections?.founder != null ? toFounderViewProps(sections.founder as FounderViewSection) : undefined;
+  const productProps = sections?.product != null ? toProductViewProps(sections.product as ProductViewSection) : undefined;
+  const marketingProps = sections?.marketing != null ? toMarketingViewProps(sections.marketing as MarketingViewSection) : undefined;
+  const growthProps = sections?.growth != null ? toGrowthViewProps(sections.growth as GrowthViewSection) : undefined;
+  const evidenceSection: EvidenceSection | null = sections?.evidence != null ? normalizeEvidenceSection(sections.evidence) : null;
+
+  const liveCompetitor: ScanCompetitor | undefined = reportRow
+    ? {
+        name: reportRow.primary_competitor_name ?? reportRow.competitors[0] ?? reportRow.category,
+        domain: reportRow.primary_competitor_domain ?? "",
+        scannedAt: reportRow.scanned_at ?? reportRow.updated_at,
+        sources: reportRow.total_sources || reportRow.total_threads || platforms.reduce((s, p) => s + (p.posts ?? 0), 0),
+        platforms: platforms.map((p) => ({ id: p.platform_id, name: p.name })),
+        sentiment: {
+          overall: reportRow.sentiment_overall ?? 0,
+          positive: reportRow.sentiment_positive ?? 0,
+          neutral: reportRow.sentiment_neutral ?? 0,
+          negative: reportRow.sentiment_negative ?? 0,
+          trend: reportRow.sentiment_trend ?? "",
+        },
+      }
+    : undefined;
+
+  const summaryData: SummaryData | null = sections?.summary != null
+    ? {
+        ...(sections.summary as SummaryData),
+        intelligence: { brief: reportRow?.executive_brief ?? null, summary: reportRow?.voice_summary ?? null },
+      }
+    : null;
+
+  const competitorData: ScanCompetitor = liveCompetitor ?? summaryData?.competitor ?? {
+    name: "—", domain: "", scannedAt: "", sources: 0, platforms: [],
+    sentiment: { overall: 0, positive: 0, neutral: 0, negative: 0, trend: "" },
+  };
+
+  const lensContent: Record<Exclude<LensId, "pain">, ReactNode> = {
+    summary: (
+      <ExecutiveSummary
+        printAll
+        data={summaryData} competitor={competitorData} onPickLens={noop} reportId={id!}
+        complaints={complaints} voice={voice} pricing={pricing} switching={switching}
+        quotes={quotes} leads={leads} positioning={positioning} opportunities={opportunities}
+        actions={actions} platforms={platforms} sentimentSeries={sentimentSeries} featureGaps={featureGaps}
+      />
+    ),
+    founder: <FounderPage embedded data={founderProps} evidenceSection={evidenceSection} range="90d" competitorName={competitorData.name} reportId={id} />,
+    product: <ProductPage embedded data={productProps} evidenceSection={evidenceSection} range="90d" competitorName={competitorData.name} reportId={id} />,
+    marketing: <MarketingPage embedded data={marketingProps} evidenceSection={evidenceSection} range="90d" competitorName={competitorData.name} />,
+    growth: <GrowthPage embedded data={growthProps} evidenceSection={evidenceSection} range="90d" reportId={id} />,
+  };
+
+  const lensesToRender = onlyLens && LENS_ORDER.includes(onlyLens) ? [onlyLens] : LENS_ORDER;
+
+  return (
+    <div className="scan-export-root" style={{ background: "var(--bg)", minHeight: "100vh" }}>
+      {lensesToRender.map((l) => {
+        const m = LENS_META[l];
+        return (
+          <section key={l} className="scan-export-page" style={{ breakAfter: "page", padding: "32px 40px" }}>
+            <div style={{ marginBottom: 24, paddingBottom: 14, borderBottom: "1px solid var(--border-soft)" }}>
+              <div className="re-eyebrow" style={{ fontSize: 11, color: m.color }}>{m.glyph} {m.name}</div>
+              <div className="text-fg-faint" style={{ fontSize: 12, marginTop: 2 }}>{m.role}</div>
+            </div>
+            {lensContent[l as Exclude<LensId, "pain">]}
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -604,8 +689,8 @@ function ExportMenu({
               <Icon name="download" size={13} />
               <span>Export full report (all dashboards)</span>
             </button>
-            <div style={{ padding: “6px 10px 2px”, fontSize: 11 }} className=”font-mono-feat text-fg-faint”>
-              Opens your browser print dialog · choose “Save as PDF”
+            <div style={{ padding: "6px 10px 2px", fontSize: 11 }} className="font-mono-feat text-fg-faint">
+              Opens your browser print dialog · choose "Save as PDF"
             </div>
           </div>
         </>
@@ -642,6 +727,7 @@ function ExecutiveSummary({
   platforms,
   sentimentSeries,
   featureGaps,
+  printAll = false,
 }: {
   data: SummaryData | null;
   competitor: ScanCompetitor;
@@ -659,6 +745,7 @@ function ExecutiveSummary({
   platforms: PlatformStat[];
   sentimentSeries: number[];
   featureGaps: FeatureGap[];
+  printAll?: boolean;
 }) {
   type SummaryTabId = "overview" | "complaints" | "voice" | "pricing" | "switching" | "quotes" | "leads" | "positioning" | "opportunities" | "actions";
   const [tab, setTab] = useState<SummaryTabId>("overview");
@@ -777,7 +864,7 @@ function ExecutiveSummary({
                     {q.theme}
                   </span>
                   <p className="break-words" style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg)" }}>
-                    “{q.text}”
+                    "{q.text}"
                   </p>
                   <p className="font-mono-feat" style={{ margin: "auto 0 0", fontSize: 12, color: "var(--fg-faint)" }}>
                     {q.who} · {q.when}
@@ -836,7 +923,23 @@ function ExecutiveSummary({
         </div>
       </div>
 
+      {/* PRINT: render every tab panel stacked so the PDF shows all sections. */}
+      {printAll && (
+        <div className="px-4 pt-8 md:px-7" style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Complaints</div><ComplaintsCard complaints={complaints} onOpenThread={() => {}} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Voice of customer</div><VoiceTab voice={voice} competitorName={c.name} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Pricing</div><PricingTab pricing={pricing} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Switching</div><SwitchingTab switching={switching} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Verbatim</div><QuotesCard quotes={quotes} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Leads</div><LeadsCard leads={leads} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Positioning</div><PositioningCard positioning={positioning} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Opportunities</div><OpportunitiesCard opportunities={opportunities} /></div>
+          <div><div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10 }}>Recommended actions</div><ActionsCard actions={actions} reportId={reportId} /></div>
+        </div>
+      )}
+
       {/* TABS AT THE END */}
+      {!printAll && (
       <div style={{ marginTop: 48 }}>
         <div
           className="flex gap-1 overflow-x-auto px-4 md:px-7 scrollbar-none [&::-webkit-scrollbar]:hidden"
@@ -905,6 +1008,7 @@ function ExecutiveSummary({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
@@ -1666,7 +1770,7 @@ function PainAndOppsPage({
         {selectedComplaint && (
           <div className="flex flex-col gap-3">
             <div className="re-eyebrow" style={{ fontSize: 11, padding: "0 0 4px" }}>
-              Opportunities for “{selectedComplaint.title}”
+              Opportunities for "{selectedComplaint.title}"
             </div>
             {linkedOpps.length === 0 ? (
               <div className="re-card px-5 py-8 text-center" style={{ color: "var(--fg-faint)", fontSize: 13 }}>

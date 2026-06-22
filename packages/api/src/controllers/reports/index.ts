@@ -23,11 +23,13 @@ import { retryPlatformHandler } from "./handlers/retryPlatform";
 import { retrySynthesisHandler } from "./handlers/retrySynthesis";
 import { cancelHandler } from "./handlers/cancel";
 import { getSectionsHandler } from "./handlers/getSections";
+import { exportPdfHandler } from "./handlers/exportPdf";
 
 export const reportsController = new Elysia({
   prefix: "/reports",
   tags: ["reports"],
 })
+  .use(exportPdfHandler)
   .use(listReportsHandler)
   .use(createReportHandler)
   .use(getProgressHandler)

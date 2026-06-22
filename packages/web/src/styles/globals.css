@@ -448,13 +448,20 @@
      - .printing-all  → prints the stacked full report, hiding the live view
 --------------------------------------------------------------------------- */
 
-/* The stacked all-dashboards container is screen-hidden; only used for print. */
-.print-all-only { display: none; }
-
 @media print {
-  @page { margin: 14mm; }
+  @page { margin: 12mm; size: A4; orphans: 0; widows: 0; }
 
-  html, body { background: #fff !important; }
+  html, body { background: #fff !important; margin: 0; padding: 0; }
+
+  /* Let content flow across pages instead of being clipped to one viewport.
+     The base styles pin html/body/#root to height:100% which otherwise limits
+     the printable area (and the stacked PDF export) to a single page. */
+  html, body, #root {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  .scan-export-root { height: auto !important; overflow: visible !important; }
 
   /* Hide app chrome and any explicitly non-printable element. */
   .topbar,
@@ -472,15 +479,47 @@
   .main {
     overflow: visible !important;
     height: auto !important;
+    padding: 0 !important;
   }
 
   /* Keep cards intact across page boundaries. */
-  .re-card { break-inside: avoid; }
+  .re-card { break-inside: avoid; break-after: auto; }
 
   /* Page break before each dashboard in the full-report export. */
-  .print-page-break { break-before: page; }
+  .print-page-break { break-before: page !important; }
 
-  /* Full-report mode: show the stacked container, hide the single live view. */
-  .printing-all .scan-live-view { display: none !important; }
-  .printing-all .print-all-only { display: block !important; }
+  /* ── Stacked full-report PDF export (renders the real dashboard UI) ──────── */
+
+  /* One lens per page, no trailing blank page. */
+  .scan-export-page { break-after: page; }
+  .scan-export-page:last-child { break-after: auto; }
+
+  /* Keep content within the printable width and centered. */
+  .scan-export-root,
+  .scan-export-page { width: 100%; max-width: 1240px; margin-left: auto; margin-right: auto; }
+
+  /* Collapse fixed/min heights so empty placeholder containers (kanban columns,
+     chart wells, stepper tracks) don't balloon into blank pages. */
+  .scan-export-page * { min-height: 0 !important; }
+
+  /* Keep cards and their parent sections intact — never split across a page. */
+  .scan-export-page .re-card,
+  .scan-export-page .re-card-elev,
+  .scan-export-page table,
+  .scan-export-page figure { break-inside: avoid; }
+
+  /* Collapse the equal-fraction responsive CARD grids to a single full-width
+     column so cards use the whole width instead of leaving empty side space.
+     Structural row layouts (grid-cols-[40px_1fr] etc.) use arbitrary values and
+     are intentionally left untouched. */
+  .scan-export-page .sm\:grid-cols-2,
+  .scan-export-page .md\:grid-cols-2,
+  .scan-export-page .lg\:grid-cols-2,
+  .scan-export-page .sm\:grid-cols-3,
+  .scan-export-page .md\:grid-cols-3,
+  .scan-export-page .lg\:grid-cols-3,
+  .scan-export-page .grid-cols-2,
+  .scan-export-page .grid-cols-3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
