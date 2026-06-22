@@ -152,7 +152,6 @@ function TopBar({ crumbs, userInitial, userImage, onBrandClick, onNewScan, onAcc
         <span className="flex items-baseline tracking-[-0.02em]">
           Rival<span style={{ color: "var(--accent)" }}>Eye</span>
         </span>
-        <span className="re-chip hidden sm:inline" style={{ marginLeft: 6, fontSize: 10, padding: "1px 6px" }}>BETA</span>
       </div>
       <nav className="crumbs hidden md:flex items-center gap-2 flex-1 font-mono-feat text-fg-muted min-w-0" style={{ fontSize: 12 }}>
         {crumbs.map((c, i) => (
