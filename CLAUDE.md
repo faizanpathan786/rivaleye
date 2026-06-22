@@ -166,7 +166,6 @@ pnpm lint                             # eslint across workspace
 - [ ] Decide on tRPC vs plain REST between `web` and `api`. Default: REST with Elysia's type-exported client until a concrete need pushes us to tRPC.
 - [ ] Choose LLM provider as primary (Claude vs OpenAI). Wire both via a small `llm-client` abstraction in `shared/`.
 - [ ] Pick a Reddit access strategy (OAuth app vs public JSON endpoints). Document rate-limit budget in `packages/reddit-client/CLAUDE.md`.
-- [ ] Pricing/billing — Stripe integration is out of MVP; add when paid offer launches.
 - [ ] Test runner — Bun ships with `bun test`. Adopt once the first non-trivial service lands.
 
 Update this section as decisions land.
