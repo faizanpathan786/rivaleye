@@ -1,5 +1,6 @@
-import { useMemo, useEffect, useState, type CSSProperties } from "react";
+import { useMemo, useEffect, useState, type ComponentType, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Crosshair, Megaphone, Layers, TrendingUp, Zap } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { formatRelative } from "@/lib/format";
 import { useAddPlannedActionMutation } from "@/hooks/queries/use-planned-actions";
@@ -232,7 +233,7 @@ export function ScanReportPage() {
   if (id && reportRow?.status === "cancelled") {
     return (
       <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>SCAN CANCELLED</div>
+        <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 12 }}>SCAN CANCELLED</div>
         <div style={{ fontSize: 16, marginBottom: 8 }}>This scan was cancelled</div>
         <div style={{ fontSize: 13, marginBottom: 24 }}>You can start a new scan anytime</div>
         <button
@@ -422,7 +423,7 @@ export function ScanReportPage() {
           {LENS_ORDER.map((l, i) => (
             <section key={l} className={i > 0 ? "print-page-break" : undefined}>
               <div style={{ padding: "16px 28px 0" }}>
-                <div className="re-eyebrow" style={{ fontSize: 10, color: LENS_META[l].color }}>
+                <div className="re-eyebrow" style={{ fontSize: 11, color: LENS_META[l].color }}>
                   {LENS_META[l].glyph} {LENS_META[l].name}{l !== "summary" ? " lens" : ""}
                 </div>
               </div>
@@ -476,22 +477,22 @@ function UnifiedHeader({ competitor: c, meta, onNav, onExportThis, onExportAll, 
           <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: "1 1 280px" }}>
             <CompetitorAvatar name={c.name} domain={c.domain} size={48} borderRadius={12} />
             <div style={{ minWidth: 0 }}>
-              <div className="re-eyebrow" style={{ fontSize: 10 }}>Scan report</div>
+              <div className="re-eyebrow" style={{ fontSize: 11 }}>Scan report</div>
               <h1 className="re-h1 break-words" style={{ fontSize: "clamp(19px, 5vw, 25px)", marginTop: 3, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 {c.name}
-                <span className="font-mono-feat text-fg-faint break-all" style={{ fontSize: 12, fontWeight: 400 }}>{c.domain}</span>
+                <span className="font-mono-feat text-fg-faint break-all" style={{ fontSize: 13, fontWeight: 400 }}>{c.domain}</span>
                 {(c.sentiment.overall !== 0 || c.sources > 0) && (
-                  <span className={`re-chip ${sent.cls}`} style={{ fontSize: 9.5 }}>{sent.label}</span>
+                  <span className={`re-chip ${sent.cls}`} style={{ fontSize: 11 }}>{sent.label}</span>
                 )}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 5, flexWrap: "wrap" }}>
-                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
                   {c.sources.toLocaleString()} mentions · {c.platforms.length} platforms
                 </span>
                 {c.scannedAt && (
                   <>
-                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>·</span>
-                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>Scanned {c.scannedAt}</span>
+                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>·</span>
+                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>Scanned {c.scannedAt}</span>
                   </>
                 )}
               </div>
@@ -602,7 +603,7 @@ function ExportMenu({
               <Icon name="download" size={13} />
               <span>Export full report (all dashboards)</span>
             </button>
-            <div style={{ padding: "6px 10px 2px", fontSize: 10 }} className="font-mono-feat text-fg-faint">
+            <div style={{ padding: "6px 10px 2px", fontSize: 11 }} className="font-mono-feat text-fg-faint">
               Opens your browser print dialog · choose “Save as PDF”
             </div>
           </div>
@@ -665,12 +666,12 @@ function ExecutiveSummary({
     return (
       <div className="px-4 py-8 md:px-7" style={{ paddingBottom: 0 }}>
         <div className="re-card" style={{ padding: 32, textAlign: "center", color: "var(--fg-muted)" }}>
-          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>SUMMARY</div>
+          <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 12 }}>SUMMARY</div>
           <div style={{ fontSize: 16 }}>Generating executive summary…</div>
           <div style={{ fontSize: 13, marginTop: 8, color: "var(--fg-faint)" }}>Switch to a lens below while synthesis completes.</div>
         </div>
         <div style={{ marginTop: 24 }}>
-          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
+          <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 14 }}>PICK A LENS</div>
           <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 14 }}>
             {(["founder", "product", "marketing", "growth"] as const).map((id) => (
               <LensPreviewCard key={id} id={id} onPick={onPickLens} />
@@ -698,64 +699,88 @@ function ExecutiveSummary({
 
   return (
     <div className="px-4 py-8 md:px-7" style={{ paddingBottom: 0 }}>
-      {/* SUMMARY CONTENT FIRST - ALL DETAILS */}
-      <PerceptionHero data={data} />
+      {/* HERO — verdict + thesis */}
+      <SummaryHero data={data} />
 
-      <div style={{ marginTop: 28 }}>
-        <div className="re-eyebrow" style={{ fontSize: 10 }}>EXECUTIVE MEMO</div>
-        <h2 className="re-h2" style={{ fontSize: "clamp(20px, 5vw, 28px)", marginTop: 8, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 920 }}>
-          {data.headlines.mainThesis}
-        </h2>
-        <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
-          {data.headlines.insights}
-        </p>
-        <p style={{ marginTop: 12, fontSize: 16, lineHeight: 1.65, color: "var(--fg-muted)", maxWidth: 920 }}>
-          Switch a lens below to read the same evidence through a specific role — founder strategy, product roadmap, marketing copy, or growth conversations.
-        </p>
+      {/* KEY METRICS — only true headline numbers */}
+      <div className="grid grid-cols-3" style={{ marginTop: 20, gap: 12 }}>
+        <SummaryStat
+          label="Sentiment index"
+          value={c.sentiment.overall.toFixed(2).replace("-", "−")}
+          tone={c.sentiment.overall < -0.1 ? "neg" : c.sentiment.overall > 0.1 ? "pos" : undefined}
+          desc={`Average mention sentiment on a −1 (hostile) to +1 (loved) scale. Above 0 leans positive${c.sentiment.trend ? ` · trend ${c.sentiment.trend}` : ""}.`}
+        />
+        <SummaryStat
+          label="Mentions"
+          value={c.sources.toLocaleString()}
+          desc={`Public posts, comments and reviews we analysed — across ${c.platforms.length} platform${c.platforms.length === 1 ? "" : "s"}.`}
+        />
+        <SummaryStat
+          label="Platforms"
+          value={String(c.platforms.length)}
+          desc="Source platforms scanned for this competitor — e.g. Reddit, App Store, Hacker News."
+        />
       </div>
 
-      <div style={{ marginTop: 28 }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 14 }}>PICK A LENS</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 14 }}>
-          {(["founder", "product", "marketing", "growth"] as const).map((id) => (
-            <LensPreviewCard key={id} id={id} onPick={onPickLens} />
-          ))}
+      {/* TOP THEMES — labelled so the counts mean something */}
+      {data.topThemes.length > 0 && (
+        <div style={{ marginTop: 28 }}>
+          <div className="flex items-baseline justify-between" style={{ marginBottom: 12, gap: 12 }}>
+            <div>
+              <div className="re-eyebrow" style={{ fontSize: 11 }}>Top themes</div>
+              <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>What users talk about most</h3>
+            </div>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>Ranked by mention volume</span>
+          </div>
+          <div className="re-card" style={{ padding: "4px 16px" }}>
+            {(() => {
+              const max = Math.max(...data.topThemes.map((t) => t.mentions), 1);
+              return data.topThemes.map((t, i) => (
+                <div
+                  key={t.name}
+                  className="grid items-center"
+                  style={{ gridTemplateColumns: "minmax(110px, 1.3fr) 1fr auto", gap: 16, padding: "12px 0", borderTop: i === 0 ? 0 : "1px solid var(--border-soft)" }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 500, textTransform: "capitalize", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {t.name}
+                  </span>
+                  <div className="re-meter warn"><i style={{ width: `${(t.mentions / max) * 100}%` }} /></div>
+                  <span className="font-mono-feat" style={{ fontSize: 13, color: "var(--fg-muted)", whiteSpace: "nowrap" }}>
+                    {t.mentions.toLocaleString()} mentions
+                    {t.trend && <span className="text-fg-faint" style={{ marginLeft: 8 }}>{t.trend}</span>}
+                  </span>
+                </div>
+              ));
+            })()}
+          </div>
         </div>
-      </div>
+      )}
 
       {data.topQuotes.length > 0 && (
         <div style={{ marginTop: 32 }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
             <div>
-              <div className="re-eyebrow" style={{ fontSize: 10 }}>Top quotes</div>
+              <div className="re-eyebrow" style={{ fontSize: 11 }}>Top quotes</div>
               <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>What people are actually saying</h3>
             </div>
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>Verbatim · across every platform</span>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>Verbatim · across every platform</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 12 }}>
             {data.topQuotes.map((q, i) => {
-              const lensColors = ["#ff5c1a", "#6366f1", "#8b5cf6"];
+              const lensColors = ["var(--accent)", "#6366f1", "#8b5cf6"];
               const color = lensColors[i % lensColors.length];
               return (
-                <div
-                  key={i}
-                  className="rounded-lg border border-border bg-card"
-                  style={{
-                    borderTop: `4px solid ${color}`,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div style={{ padding: 16 }}>
-                    <div className="re-eyebrow" style={{ fontSize: 10, color, marginBottom: 12, textTransform: "capitalize", letterSpacing: "0.02em" }}>
-                      {q.theme}
-                    </div>
-                    <p style={{ margin: 0, fontStyle: "italic", fontSize: 14, lineHeight: 1.65, color: "var(--fg)" }}>
-                      "{q.text}"
-                    </p>
-                    <p style={{ margin: "12px 0 0 0", fontSize: 11, color: "var(--fg-faint)" }}>
-                      {q.who} · {q.when}
-                    </p>
-                  </div>
+                <div key={i} className="re-card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10, transition: "border-color 120ms, box-shadow 120ms" }}>
+                  <span className="font-mono-feat" style={{ fontSize: 11, fontWeight: 700, color, textTransform: "capitalize", letterSpacing: "0.02em", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: 2, background: color }} />
+                    {q.theme}
+                  </span>
+                  <p className="break-words" style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg)" }}>
+                    “{q.text}”
+                  </p>
+                  <p className="font-mono-feat" style={{ margin: "auto 0 0", fontSize: 12, color: "var(--fg-faint)" }}>
+                    {q.who} · {q.when}
+                  </p>
                 </div>
               );
             })}
@@ -763,28 +788,52 @@ function ExecutiveSummary({
         </div>
       )}
 
-      <div
-        style={{
-          marginTop: 32, padding: "22px 24px",
-          background: "var(--surface)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-soft)",
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 24,
-        }}
-      >
-        <SummaryStat
-          label="Sentiment index"
-          value={c.sentiment.overall.toFixed(2)}
-          tone={c.sentiment.overall < -0.1 ? "neg" : c.sentiment.overall > 0.1 ? "pos" : undefined}
-          sub={c.sentiment.trend}
-        />
-        <SummaryStat label="Mentions" value={c.sources.toLocaleString()} sub={`${c.platforms.length} platforms`} />
-        {data.topThemes.map((t) => (
-          <SummaryStat key={t.name} label={t.name} value={String(t.mentions)} tone="warn" sub={t.trend} />
-        ))}
-      </div>
-
       {data.platformBreakdown && data.platformBreakdown.length > 0 && (
         <PlatformBreakdownCard platforms={data.platformBreakdown} />
       )}
+
+      {/* GO DEEPER — highlighted CTA panel driving users into the role lenses */}
+      <div
+        style={{
+          marginTop: 44,
+          padding: "26px clamp(18px, 4vw, 28px) 28px",
+          borderRadius: 16,
+          border: "1px solid color-mix(in srgb, var(--accent) 24%, transparent)",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%), var(--surface-2)",
+          boxShadow: "var(--shadow-sm)",
+        }}
+      >
+        <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--accent)" }}>Go deeper · 4 role playbooks</div>
+        <h3 className="re-h2" style={{ fontSize: "clamp(20px, 4vw, 26px)", marginTop: 8, letterSpacing: "-0.02em" }}>
+          Turn this into your playbook
+        </h3>
+        <p className="text-fg-muted" style={{ marginTop: 8, fontSize: 14.5, lineHeight: 1.55, maxWidth: 640 }}>
+          The summary is the <em>what</em>. Each lens reworks the same evidence into a role-specific game plan —
+          where to attack, what to build, how to position, and who's ready to switch.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 12, marginTop: 20 }}>
+          <LensPreviewCard
+            id="founder"
+            onPick={onPickLens}
+            teaser={opportunities.length > 0 ? `${opportunities.length} opportunities` : undefined}
+          />
+          <LensPreviewCard
+            id="product"
+            onPick={onPickLens}
+            teaser={featureGaps.length > 0 ? `${featureGaps.length} feature gaps` : undefined}
+          />
+          <LensPreviewCard
+            id="marketing"
+            onPick={onPickLens}
+            teaser={positioning.length > 0 ? `${positioning.length} angles` : undefined}
+          />
+          <LensPreviewCard
+            id="growth"
+            onPick={onPickLens}
+            teaser={leads.length > 0 ? `${leads.length} high-intent leads` : undefined}
+          />
+        </div>
+      </div>
 
       {/* TABS AT THE END */}
       <div style={{ marginTop: 48 }}>
@@ -814,9 +863,9 @@ function ExecutiveSummary({
           <div style={{ width: "100%" }}>
             {tab === "overview" && (
               <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+                {/* main column — the substance: read → pain → switch → gap → evidence */}
                 <div className="flex flex-col gap-4">
                   <ScanExecutiveBriefCard brief={data.intelligence?.brief ?? null} />
-                  <ScanSummaryCard data={data} complaints={complaints} />
                   <ComplaintsCard
                     complaints={complaints.slice(0, 5)}
                     totalCount={complaints.length}
@@ -824,16 +873,18 @@ function ExecutiveSummary({
                     onViewAll={() => setTab("complaints")}
                     onOpenThread={() => {}}
                   />
-                  {sentimentSeries.length > 1 && (
-                    <ScanSentimentCard series={sentimentSeries} />
-                  )}
                   {switching && <ScanSwitchingSummary switching={switching} />}
-                </div>
-                <div className="flex flex-col gap-4">
-                  {platforms.length > 0 && <ScanPlatformBreakdown platforms={platforms} />}
-                  <ScanVerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} onViewAll={() => setTab("quotes")} />
                   {featureGaps.length > 0 && (
                     <ScanFeatureGapsCard featureGaps={featureGaps.slice(0, 6)} />
+                  )}
+                  <ScanVerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} onViewAll={() => setTab("quotes")} />
+                </div>
+                {/* right rail — scale & context */}
+                <div className="flex flex-col gap-4">
+                  <ScanSummaryCard data={data} complaints={complaints} />
+                  {platforms.length > 0 && <ScanPlatformBreakdown platforms={platforms} />}
+                  {sentimentSeries.length > 1 && (
+                    <ScanSentimentCard series={sentimentSeries} />
                   )}
                 </div>
               </div>
@@ -857,16 +908,16 @@ function ExecutiveSummary({
   );
 }
 
-function SummaryStat({ label, value, tone, sub }: { label: string; value: string; tone?: "neg" | "pos" | "warn"; sub: string }) {
+function SummaryStat({ label, value, tone, desc }: { label: string; value: string; tone?: "neg" | "pos" | "warn"; desc: string }) {
   const color =
     tone === "neg" ? "var(--neg)" : tone === "pos" ? "var(--pos)" : tone === "warn" ? "var(--warn)" : "var(--fg)";
   return (
-    <div>
-      <div className="re-eyebrow" style={{ fontSize: 10 }}>{label}</div>
-      <div className="font-mono-feat tnum" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginTop: 4, color }}>
+    <div className="re-card" style={{ padding: 15, display: "flex", flexDirection: "column" }}>
+      <div className="re-eyebrow" style={{ fontSize: 11, textTransform: "capitalize", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
+      <div className="font-mono-feat tnum" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginTop: 6, color }}>
         {value}
       </div>
-      <div style={{ fontSize: 11, color, marginTop: 2 }}>{sub}</div>
+      <p style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--fg-muted)", marginTop: 8 }}>{desc}</p>
     </div>
   );
 }
@@ -877,7 +928,7 @@ function PlatformBreakdownCard({ platforms }: { platforms: Array<{ id: string; n
     <div className="re-card" style={{ marginTop: 28 }}>
       <div className="re-card-hd">
         <h3>Platform breakdown</h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">
+        <span className="font-mono-feat text-[12px] text-fg-faint">
           {total} items
         </span>
       </div>
@@ -887,15 +938,15 @@ function PlatformBreakdownCard({ platforms }: { platforms: Array<{ id: string; n
           return (
             <div key={p.id}>
               <div className="mb-1 flex justify-between gap-2">
-                <span className="flex min-w-0 items-center gap-2" style={{ fontSize: 12 }}>
+                <span className="flex min-w-0 items-center gap-2" style={{ fontSize: 13 }}>
                   <span style={{ fontWeight: 500 }}>{p.name}</span>
-                  <span className="truncate font-mono-feat text-[10px] text-fg-faint">
+                  <span className="truncate font-mono-feat text-[11px] text-fg-faint">
                     {p.contexts.slice(0, 2).join(" · ")}
                   </span>
                 </span>
                 <span
                   className="flex-shrink-0 font-mono-feat tnum text-fg-muted"
-                  style={{ fontSize: 11 }}
+                  style={{ fontSize: 12 }}
                 >
                   {p.posts}{" "}
                   <span className="text-fg-faint">·</span>{" "}
@@ -925,60 +976,51 @@ function PlatformBreakdownCard({ platforms }: { platforms: Array<{ id: string; n
 }
 
 // ----------------------------------------------------------------------------
-// PERCEPTION HERO
+// SUMMARY HERO — the verdict + the thesis, in one band
 
-function PerceptionHero({ data }: { data: SummaryData }) {
+function SummaryHero({ data }: { data: SummaryData }) {
   const s = data.competitor.sentiment;
   const topTheme = data.topThemes[0];
-  const sentimentLabel =
-    s.overall < -0.2 ? "Negative-leaning" : s.overall > 0.2 ? "Positive-leaning" : "Mixed sentiment";
+  const verdict =
+    s.overall <= -0.3 ? { label: "Negative", color: "var(--neg)" }
+    : s.overall < -0.05 ? { label: "Mixed", color: "var(--warn)" }
+    : s.overall >= 0.15 ? { label: "Positive", color: "var(--pos)" }
+    : { label: "Neutral", color: "var(--fg-faint)" };
+
   return (
     <div className="re-card re-card-elev" style={{ overflow: "hidden", position: "relative" }}>
-      <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.4 }} />
+      <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.35 }} />
       <div
         className="grid grid-cols-1 md:grid-cols-[auto_1fr] place-items-center md:place-items-stretch md:items-center"
-        style={{
-          position: "relative", padding: 24, gap: 28,
-        }}
+        style={{ position: "relative", padding: 26, gap: 30 }}
       >
         <PerceptionRing positive={s.positive} neutral={s.neutral} negative={s.negative} index={s.overall} />
 
         <div style={{ minWidth: 0 }}>
-          <div className="re-eyebrow" style={{ fontSize: 10 }}>
-            What users think of {data.competitor.name}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="re-eyebrow" style={{ fontSize: 11 }}>Executive summary</span>
+            <span
+              className="re-chip"
+              style={{ fontSize: 11, color: verdict.color, background: `color-mix(in srgb, ${verdict.color} 12%, transparent)`, borderColor: "transparent" }}
+            >
+              {verdict.label}
+            </span>
+            {topTheme && (
+              <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
+                loudest theme · {topTheme.name.toLowerCase()}
+              </span>
+            )}
           </div>
-          <h2 className="re-h2" style={{ fontSize: "clamp(20px, 5vw, 26px)", marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-            {sentimentLabel}
-            {topTheme ? <>, with the loudest theme being <span style={{ color: "var(--accent)" }}>{topTheme.name.toLowerCase()}</span>.</> : "."}
+
+          <h2 className="re-h2 break-words" style={{ fontSize: "clamp(21px, 4vw, 30px)", marginTop: 10, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 760 }}>
+            {data.headlines.mainThesis}
           </h2>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4" style={{ marginTop: 18, gap: 14 }}>
-            {(["founder", "product", "marketing", "growth"] as const).map((id) => {
-              const m = LENS_META[id];
-              return (
-                <div
-                  key={id}
-                  style={{
-                    padding: "12px 14px",
-                    border: "1px solid var(--border-soft)",
-                    borderRadius: "var(--r-md)",
-                    background: "var(--surface-solid)",
-                    borderTop: `2px solid ${m.color}`,
-                  }}
-                >
-                  <div
-                    className="font-mono-feat"
-                    style={{ fontSize: 10, color: m.color, letterSpacing: "0.02em", fontWeight: 700 }}
-                  >
-                    {m.glyph} {m.name}
-                  </div>
-                  <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 6 }}>
-                    {m.role.split("·")[0]?.trim()}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {data.headlines.insights && (
+            <p className="text-fg-muted break-words" style={{ marginTop: 12, fontSize: 15, lineHeight: 1.6, maxWidth: 720 }}>
+              {data.headlines.insights}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -992,40 +1034,47 @@ function PerceptionRing({ positive, neutral, negative, index }: { positive: numb
   const negLen = (negative / total) * circ;
   const neuLen = (neutral / total) * circ;
   const posLen = (positive / total) * circ;
+  const pct = (n: number) => Math.round((n / total) * 100);
+
+  const indexColor = index <= -0.05 ? "var(--neg)" : index >= 0.15 ? "var(--pos)" : "var(--warn)";
+  const verdict = index <= -0.3 ? "Negative" : index < -0.05 ? "Mixed" : index >= 0.15 ? "Positive" : "Neutral";
+
+  const legend = [
+    { label: "Positive", value: pct(positive), color: "var(--pos)" },
+    { label: "Neutral", value: pct(neutral), color: "#d1ccc2" },
+    { label: "Negative", value: pct(negative), color: "var(--neg)" },
+  ];
 
   return (
-    <div style={{ position: "relative", width: "min(200px, 60vw)", aspectRatio: "1 / 1", maxWidth: 200 }}>
-      <svg width="100%" height="100%" viewBox="0 0 200 200" style={{ display: "block", transform: "rotate(-90deg)" }}>
-        <circle cx="100" cy="100" r={r} fill="none" stroke="rgba(20,16,12,0.06)" strokeWidth="16" />
-        <circle cx="100" cy="100" r={r} fill="none" stroke="var(--neg)" strokeWidth="16"
-          strokeDasharray={`${negLen} ${circ}`} strokeDashoffset={0} strokeLinecap="butt" />
-        <circle cx="100" cy="100" r={r} fill="none" stroke="#d1ccc2" strokeWidth="16"
-          strokeDasharray={`${neuLen} ${circ}`} strokeDashoffset={-negLen} strokeLinecap="butt" />
-        <circle cx="100" cy="100" r={r} fill="none" stroke="var(--pos)" strokeWidth="16"
-          strokeDasharray={`${posLen} ${circ}`} strokeDashoffset={-(negLen + neuLen)} strokeLinecap="butt" />
-      </svg>
-      <div
-        style={{
-          position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        }}
-      >
-        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10, letterSpacing: "0.02em" }}>
-          Perception
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "min(180px, 56vw)" }}>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", maxWidth: 180 }}>
+        <svg width="100%" height="100%" viewBox="0 0 200 200" style={{ display: "block", transform: "rotate(-90deg)" }}>
+          <circle cx="100" cy="100" r={r} fill="none" stroke="rgba(20,16,12,0.06)" strokeWidth="16" />
+          <circle cx="100" cy="100" r={r} fill="none" stroke="var(--neg)" strokeWidth="16"
+            strokeDasharray={`${negLen} ${circ}`} strokeDashoffset={0} strokeLinecap="butt" />
+          <circle cx="100" cy="100" r={r} fill="none" stroke="#d1ccc2" strokeWidth="16"
+            strokeDasharray={`${neuLen} ${circ}`} strokeDashoffset={-negLen} strokeLinecap="butt" />
+          <circle cx="100" cy="100" r={r} fill="none" stroke="var(--pos)" strokeWidth="16"
+            strokeDasharray={`${posLen} ${circ}`} strokeDashoffset={-(negLen + neuLen)} strokeLinecap="butt" />
+        </svg>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, letterSpacing: "0.02em" }}>Perception</div>
+          <div className="font-mono-feat tnum" style={{ fontSize: 34, fontWeight: 500, letterSpacing: "-0.03em", marginTop: 2, color: indexColor }}>
+            {index.toFixed(2).replace("-", "−")}
+          </div>
+          <div className="font-mono-feat" style={{ fontSize: 11, fontWeight: 600, marginTop: 1, color: indexColor }}>{verdict}</div>
         </div>
-        <div
-          className="font-mono-feat tnum"
-          style={{ fontSize: 36, fontWeight: 500, letterSpacing: "-0.03em", marginTop: 2, color: "var(--neg)" }}
-        >
-          {index.toFixed(2)}
-        </div>
-        <div style={{ display: "flex", gap: 6, marginTop: 6, fontFamily: "var(--font-mono)", fontSize: 9 }}>
-          <span style={{ color: "var(--pos)" }}>+{Math.round(positive * 100)}</span>
-          <span className="text-fg-faint">·</span>
-          <span className="text-fg-faint">{Math.round(neutral * 100)}</span>
-          <span className="text-fg-faint">·</span>
-          <span style={{ color: "var(--neg)" }}>−{Math.round(negative * 100)}</span>
-        </div>
+      </div>
+
+      {/* labelled legend — replaces the cryptic +68 · 15 · −28 row */}
+      <div style={{ display: "grid", gap: 5, width: "100%" }}>
+        {legend.map((l) => (
+          <div key={l.label} className="flex items-center" style={{ fontSize: 12.5, gap: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: l.color, flexShrink: 0 }} />
+            <span className="text-fg-muted">{l.label}</span>
+            <span className="font-mono-feat tnum ml-auto" style={{ color: "var(--fg)", fontWeight: 600 }}>{l.value}%</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1034,59 +1083,46 @@ function PerceptionRing({ positive, neutral, negative, index }: { positive: numb
 // ----------------------------------------------------------------------------
 // LENS PREVIEW CARD
 
-function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPick: (id: LensId) => void }) {
-  const m = LENS_META[id];
-  const [hover, setHover] = useState(false);
+const LENS_ICON: Record<Exclude<LensId, "summary">, ComponentType<{ size?: number | string }>> = {
+  founder: Crosshair,
+  product: Layers,
+  marketing: Megaphone,
+  growth: TrendingUp,
+  pain: Zap,
+};
 
+function LensPreviewCard({ id, onPick, teaser }: { id: Exclude<LensId, "summary">; onPick: (id: LensId) => void; teaser?: string }) {
+  const m = LENS_META[id];
+  const LensIcon = LENS_ICON[id];
   return (
     <button
       onClick={() => onPick(id)}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        border: `1px solid ${hover ? m.color + "55" : "var(--border-soft)"}`,
-        borderRadius: "var(--r-lg)",
-        background: hover ? `linear-gradient(135deg, ${m.bg}, transparent 70%)` : "var(--surface)",
-        padding: 0,
-        cursor: "pointer",
-        textAlign: "left",
-        overflow: "hidden",
-        transition: "border-color 200ms, background 200ms, transform 200ms",
-        transform: hover ? "translateY(-1px)" : "translateY(0)",
-        boxShadow: hover ? `0 12px 32px ${m.bg}` : "var(--shadow-sm)",
-        position: "relative",
-      }}
+      className="re-card group text-left"
+      style={{ cursor: "pointer", padding: 16, display: "flex", alignItems: "center", gap: 14, transition: "border-color 140ms, box-shadow 140ms" }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = `color-mix(in srgb, ${m.color} 45%, transparent)`; e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-soft)"; e.currentTarget.style.boxShadow = "var(--shadow-sm)"; }}
     >
-      <div style={{ height: 3, background: m.color }} />
-
-      <div style={{ padding: 22, display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "center" }}>
-        <div>
-          <div
-            className="font-mono-feat"
-            style={{ fontSize: 11, color: m.color, letterSpacing: "0.02em", fontWeight: 700 }}
-          >
-            {m.glyph} {m.name} lens
-          </div>
-          <div className="text-fg-muted" style={{ marginTop: 6, fontSize: 13 }}>{m.role}</div>
-        </div>
-
-        <span
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "6px 12px",
-            background: hover ? m.color : "var(--surface-solid)",
-            color: hover ? "#fff" : m.color,
-            border: `1px solid ${hover ? m.color : m.color + "55"}`,
-            borderRadius: 99,
-            fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600,
-            letterSpacing: "0.04em",
-            transition: "all 200ms",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Enter {m.name} <Icon name="arrow-right" size={11} />
+      <span
+        className="grid place-items-center shrink-0"
+        style={{ width: 42, height: 42, borderRadius: 11, background: `color-mix(in srgb, ${m.color} 13%, transparent)`, color: m.color }}
+      >
+        <LensIcon size={19} />
+      </span>
+      <span className="min-w-0" style={{ flex: 1 }}>
+        <span className="flex items-center gap-2 flex-wrap">
+          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>{m.name}</span>
+          {teaser && (
+            <span
+              className="font-mono-feat"
+              style={{ fontSize: 11, fontWeight: 600, color: m.color, background: `color-mix(in srgb, ${m.color} 13%, transparent)`, borderRadius: 99, padding: "1px 8px" }}
+            >
+              {teaser}
+            </span>
+          )}
         </span>
-      </div>
+        <span className="block text-fg-muted" style={{ fontSize: 13, marginTop: 3, lineHeight: 1.4 }}>{m.role}</span>
+      </span>
+      <span className="font-mono-feat shrink-0 transition-transform group-hover:translate-x-0.5" style={{ fontSize: 14, color: m.color }}>→</span>
     </button>
   );
 }
@@ -1100,16 +1136,16 @@ function AnchorQuote({ q, color }: { q: SummaryData["topQuotes"][number]; color:
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span
           className="font-mono-feat"
-          style={{ fontSize: 10, color, letterSpacing: "0.02em", fontWeight: 700, textTransform: "capitalize" }}
+          style={{ fontSize: 11, color, letterSpacing: "0.02em", fontWeight: 700, textTransform: "capitalize" }}
         >
           {q.theme ? `Theme · ${q.theme}` : "Quote"}
         </span>
-        {q.score > 0 && <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>{q.score}↑</span>}
+        {q.score > 0 && <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 12 }}>{q.score}↑</span>}
       </div>
       <p style={{ margin: 0, fontSize: 15, fontStyle: "italic", lineHeight: 1.55, color: "var(--fg)" }}>
         "{q.text}"
       </p>
-      <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+      <div className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
         {q.who}{q.sub ? ` · ${q.sub}` : ""}{q.when ? ` · ${q.when}` : ""}
       </div>
     </div>
@@ -1134,7 +1170,7 @@ function FlowList({
 }) {
   return (
     <div>
-      <div className="re-eyebrow mb-2" style={{ fontSize: 10 }}>
+      <div className="re-eyebrow mb-2" style={{ fontSize: 11 }}>
         <Icon
           name="arrow-right"
           size={10}
@@ -1159,7 +1195,7 @@ function FlowList({
             </div>
             <span
               className="font-mono-feat tnum text-right text-fg-faint"
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 12 }}
             >
               {s.count}
             </span>
@@ -1174,7 +1210,7 @@ function ScanExecutiveBriefCard({ brief }: { brief: string | null }) {
   if (!brief) return null;
   return (
     <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--accent)", borderWidth: 1.5 }}>
-      <div className="mb-2 text-[11px] font-semibold tracking-wide" style={{ color: "var(--accent)" }}>
+      <div className="mb-2 text-[12px] font-semibold tracking-wide" style={{ color: "var(--accent)" }}>
         Intelligence brief
       </div>
       <p className="text-sm leading-relaxed" style={{ color: "var(--fg)" }}>
@@ -1208,7 +1244,7 @@ function ScanSummaryCard({
         <h3>
           <Icon name="alert" size={14} /> Executive summary
         </h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">
+        <span className="font-mono-feat text-[12px] text-fg-faint">
           auto · {data?.competitor.scannedAt ? formatRelative(data.competitor.scannedAt) : "1d ago"}
         </span>
       </div>
@@ -1261,7 +1297,7 @@ function ScanSentimentCard({ series }: { series: number[] }) {
     <div className="re-card">
       <div className="re-card-hd">
         <h3>Sentiment over time</h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">
+        <span className="font-mono-feat text-[12px] text-fg-faint">
           weekly · 90d
         </span>
       </div>
@@ -1310,7 +1346,7 @@ function ScanSwitchingSummary({ switching }: { switching: SwitchingResponse }) {
     <div className="re-card">
       <div className="re-card-hd">
         <h3>Switching signals</h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">
+        <span className="font-mono-feat text-[12px] text-fg-faint">
           {switching.net_signal ?? ""}
         </span>
       </div>
@@ -1340,7 +1376,7 @@ function ScanPlatformBreakdown({ platforms }: { platforms: PlatformStat[] }) {
     <div className="re-card">
       <div className="re-card-hd">
         <h3>Platform breakdown</h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">
+        <span className="font-mono-feat text-[12px] text-fg-faint">
           {total} items
         </span>
       </div>
@@ -1353,7 +1389,7 @@ function ScanPlatformBreakdown({ platforms }: { platforms: PlatformStat[] }) {
                 <span style={{ fontSize: 13 }}>{p.name}</span>
                 <span
                   className="flex-shrink-0 font-mono-feat tnum text-fg-muted"
-                  style={{ fontSize: 11 }}
+                  style={{ fontSize: 12 }}
                 >
                   {p.posts}{" "}
                   <span className="text-fg-faint">·</span>{" "}
@@ -1413,14 +1449,14 @@ function ScanVerbatimCard({
         <h3>
           <Icon name="quote" size={14} /> Verbatim feed
         </h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">live</span>
+        <span className="font-mono-feat text-[12px] text-fg-faint">live</span>
       </div>
       <div className="flex flex-col gap-3 px-4 py-3">
         {quotes.map((q) => (
           <div key={q.id}>
             <div className="flex items-baseline gap-1.5">
               <span
-                className="font-mono-feat text-[11px] font-semibold tracking-wide flex-shrink-0"
+                className="font-mono-feat text-[12px] font-semibold tracking-wide flex-shrink-0"
                 style={{ color: "var(--accent)" }}
               >
                 {q.who}
@@ -1471,7 +1507,7 @@ function StuckAnalysisState({
   if (isSuccess) {
     return (
       <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>RETRYING</div>
+        <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 12 }}>RETRYING</div>
         <div style={{ fontSize: 16, marginBottom: 8 }}>Analysis re-queued.</div>
         <div style={{ fontSize: 13, color: "var(--fg-faint)" }}>
           The worker will resume from where it left off. This page will update automatically.
@@ -1482,7 +1518,7 @@ function StuckAnalysisState({
 
   return (
     <div className="px-4 py-12 md:px-7" style={{ textAlign: "center", color: "var(--fg-muted)" }}>
-      <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
+      <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 12 }}>
         {isStuck ? "ANALYSIS STUCK" : "GENERATING ANALYSIS"}
       </div>
       <div style={{ fontSize: 16, marginBottom: 8 }}>
@@ -1547,7 +1583,7 @@ function PainAndOppsPage({
   return (
     <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1400, margin: "0 auto" }}>
       <div style={{ marginBottom: 24 }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, color: "var(--neg)" }}>⚡ PAIN & OPPORTUNITIES</div>
+        <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--neg)" }}>⚡ PAIN & OPPORTUNITIES</div>
         <h2 className="re-h2" style={{ fontSize: "clamp(18px,4vw,24px)", marginTop: 6, letterSpacing: "-0.02em" }}>
           What {competitorName}'s users complain about — and where you can win
         </h2>
@@ -1562,7 +1598,7 @@ function PainAndOppsPage({
       >
         {/* LEFT: complaints list */}
         <div className="flex flex-col gap-3">
-          <div className="re-eyebrow" style={{ fontSize: 10, padding: "0 0 4px" }}>
+          <div className="re-eyebrow" style={{ fontSize: 11, padding: "0 0 4px" }}>
             COMPLAINTS <span className="font-mono-feat text-fg-faint">({complaints.length})</span>
           </div>
           {complaints.length === 0 ? (
@@ -1588,7 +1624,7 @@ function PainAndOppsPage({
                   <div className="flex items-start gap-3">
                     <span
                       className="font-mono-feat tnum mt-0.5 shrink-0"
-                      style={{ fontSize: 11, color: "var(--neg)", minWidth: 18 }}
+                      style={{ fontSize: 12, color: "var(--neg)", minWidth: 18 }}
                     >
                       {cp.mentions ?? ""}
                     </span>
@@ -1597,16 +1633,16 @@ function PainAndOppsPage({
                         {cp.title}
                       </div>
                       {cp.summary && (
-                        <p style={{ margin: "5px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                        <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.55 }}>
                           {cp.summary}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {cp.tag && (
-                          <span className="re-chip" style={{ fontSize: 10 }}>{cp.tag}</span>
+                          <span className="re-chip" style={{ fontSize: 11 }}>{cp.tag}</span>
                         )}
                         {linkedCount > 0 && (
-                          <span className="re-chip re-chip-accent" style={{ fontSize: 10 }}>
+                          <span className="re-chip re-chip-accent" style={{ fontSize: 11 }}>
                             {linkedCount} opp{linkedCount > 1 ? "s" : ""}
                           </span>
                         )}
@@ -1628,7 +1664,7 @@ function PainAndOppsPage({
         {/* RIGHT: opportunities panel — shown when a complaint is selected */}
         {selectedComplaint && (
           <div className="flex flex-col gap-3">
-            <div className="re-eyebrow" style={{ fontSize: 10, padding: "0 0 4px" }}>
+            <div className="re-eyebrow" style={{ fontSize: 11, padding: "0 0 4px" }}>
               Opportunities for “{selectedComplaint.title}”
             </div>
             {linkedOpps.length === 0 ? (
@@ -1642,20 +1678,20 @@ function PainAndOppsPage({
                   className="re-card"
                   style={{ padding: "14px 16px", borderLeft: "3px solid var(--pos)" }}
                 >
-                  <div className="re-eyebrow" style={{ fontSize: 9, color: "var(--pos)", marginBottom: 6 }}>
+                  <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--pos)", marginBottom: 6 }}>
                     OPPORTUNITY
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
                     {opp.title}
                   </div>
                   {opp.thesis && (
-                    <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                    <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.55 }}>
                       {opp.thesis}
                     </p>
                   )}
                   {opp.effort && (
                     <div className="mt-2">
-                      <span className="re-chip" style={{ fontSize: 10 }}>Effort: {opp.effort}</span>
+                      <span className="re-chip" style={{ fontSize: 11 }}>Effort: {opp.effort}</span>
                     </div>
                   )}
                 </div>
@@ -1668,7 +1704,7 @@ function PainAndOppsPage({
       {/* Standalone opportunities not linked to a specific complaint */}
       {standaloneOpps.length > 0 && (
         <div style={{ marginTop: 32 }}>
-          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
+          <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 12 }}>
             ALL OPPORTUNITIES <span className="font-mono-feat text-fg-faint">({standaloneOpps.length})</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1678,20 +1714,20 @@ function PainAndOppsPage({
                 className="re-card"
                 style={{ padding: "14px 16px", borderTop: "2px solid var(--pos)" }}
               >
-                <div className="re-eyebrow" style={{ fontSize: 9, color: "var(--pos)", marginBottom: 6 }}>
+                <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--pos)", marginBottom: 6 }}>
                   OPPORTUNITY
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
                   {opp.title}
                 </div>
                 {opp.thesis && (
-                  <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                  <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.55 }}>
                     {opp.thesis}
                   </p>
                 )}
                 {opp.effort && (
                   <div className="mt-2">
-                    <span className="re-chip" style={{ fontSize: 10 }}>Effort: {opp.effort}</span>
+                    <span className="re-chip" style={{ fontSize: 11 }}>Effort: {opp.effort}</span>
                   </div>
                 )}
               </div>
@@ -1709,7 +1745,7 @@ function ScanFeatureGapsCard({ featureGaps }: { featureGaps: FeatureGap[] }) {
     <div className="re-card">
       <div className="re-card-hd">
         <h3>Feature gaps</h3>
-        <span className="font-mono-feat text-[11px] text-fg-faint">
+        <span className="font-mono-feat text-[12px] text-fg-faint">
           requests · 90d
         </span>
       </div>
@@ -1720,7 +1756,7 @@ function ScanFeatureGapsCard({ featureGaps }: { featureGaps: FeatureGap[] }) {
             className="grid items-center gap-2"
             style={{ gridTemplateColumns: "minmax(0,1fr) 70px 36px" }}
           >
-            <span className="truncate" style={{ fontSize: 12 }}>{g.feature}</span>
+            <span className="truncate" style={{ fontSize: 13 }}>{g.feature}</span>
             <div className="re-meter">
               <i
                 style={{
@@ -1731,7 +1767,7 @@ function ScanFeatureGapsCard({ featureGaps }: { featureGaps: FeatureGap[] }) {
             </div>
             <span
               className="font-mono-feat tnum text-right text-fg-faint"
-              style={{ fontSize: 11 }}
+              style={{ fontSize: 12 }}
             >
               {g.votes}
             </span>
