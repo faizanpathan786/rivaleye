@@ -5,6 +5,7 @@ import { radar_events, type RadarEvent } from "@/db/schema/radar";
 import {
   reports,
   report_opportunities,
+  report_complaints,
   type Report,
   type ReportOpportunity,
 } from "@/db/schema/reports";
@@ -49,8 +50,15 @@ export type DashboardCompetitorSummary = Pick<
 
 export type DashboardOpportunity = Pick<
   ReportOpportunity,
-  "id" | "title" | "payoff"
-> & { report_id: string; competitor_name: string | null };
+  "id" | "title" | "payoff" | "effort"
+> & {
+  report_id: string;
+  competitor_name: string | null;
+  thesis: string | null;
+  evidence_quote: string | null;
+  evidence_author: string | null;
+  signal_tag: string | null;
+};
 
 export type DashboardPayload = {
   user: { name: User["name"]; email: User["email"] };
@@ -162,11 +170,26 @@ export async function getDashboard(userId: string): Promise<DashboardPayload | n
         id: report_opportunities.id,
         title: report_opportunities.title,
         payoff: report_opportunities.payoff,
+        effort: report_opportunities.effort,
+        thesis: report_opportunities.thesis,
         report_id: report_opportunities.report_id,
         competitor_name: reports.primary_competitor_name,
+        evidence_quote: report_complaints.sample,
+        evidence_author: report_complaints.sample_author,
+        signal_tag: report_complaints.tag,
       })
       .from(report_opportunities)
       .innerJoin(reports, eq(report_opportunities.report_id, reports.id))
+      .leftJoin(
+        report_complaints,
+        and(
+          eq(report_complaints.report_id, report_opportunities.report_id),
+          eq(
+            report_complaints.external_id,
+            report_opportunities.anchor_complaint_external_id,
+          ),
+        ),
+      )
       .where(eq(reports.owner_id, userId))
       .orderBy(
         sql`case ${report_opportunities.payoff} when 'high' then 0 when 'med' then 1 else 2 end`,

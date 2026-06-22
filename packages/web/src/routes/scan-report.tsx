@@ -406,16 +406,16 @@ export function ScanReportPage() {
           onNav={onNav}
           onExportThis={exportThis}
           onExportAll={exportAll}
+          activeLens={lens}
+          onPickLens={goToLens}
         />
 
         <div key={lens} className="fade-up">
           {renderLens(lens)}
         </div>
 
-        <div style={{ height: 140 }} />
+        <div style={{ height: 48 }} />
       </div>
-
-      <LensDock active={lens} onPick={goToLens} />
 
       {printingAll && (
         <div className="print-all-only">
@@ -423,7 +423,7 @@ export function ScanReportPage() {
             <section key={l} className={i > 0 ? "print-page-break" : undefined}>
               <div style={{ padding: "16px 28px 0" }}>
                 <div className="re-eyebrow" style={{ fontSize: 10, color: LENS_META[l].color }}>
-                  {LENS_META[l].glyph} {LENS_META[l].name.toUpperCase()}{l !== "summary" ? " LENS" : ""}
+                  {LENS_META[l].glyph} {LENS_META[l].name}{l !== "summary" ? " lens" : ""}
                 </div>
               </div>
               {renderLens(l)}
@@ -446,51 +446,54 @@ interface UnifiedHeaderProps {
   onNav: (to: string) => void;
   onExportThis: () => void;
   onExportAll: () => void;
+  activeLens: LensId;
+  onPickLens: (id: LensId) => void;
 }
 
-function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportThis, onExportAll }: UnifiedHeaderProps) {
+function sentimentChip(overall: number): { label: string; cls: string } {
+  if (overall <= -0.3) return { label: "Negative", cls: "re-chip-neg" };
+  if (overall < -0.05) return { label: "Mixed", cls: "re-chip-warn" };
+  if (overall >= 0.15) return { label: "Positive", cls: "re-chip-pos" };
+  return { label: "Neutral", cls: "" };
+}
+
+function UnifiedHeader({ competitor: c, meta, onNav, onExportThis, onExportAll, activeLens, onPickLens }: UnifiedHeaderProps) {
+  const sent = sentimentChip(c.sentiment.overall);
   return (
     <div
-      className="px-4 py-4 md:px-7"
+      className="px-4 md:px-7"
       style={{
         borderBottom: "1px solid var(--border-soft)",
         background: "var(--glass)",
         backdropFilter: "blur(18px) saturate(140%)",
         WebkitBackdropFilter: "blur(18px) saturate(140%)",
         position: "sticky", top: 0, zIndex: 4,
-        transition: "border-color 400ms",
       }}
     >
-      <div style={{ maxWidth: 1440, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 0, flex: "1 1 280px" }}>
-            <CompetitorAvatar name={c.name} domain={c.domain} size={52} borderRadius={12} />
+      <div style={{ maxWidth: 1240, margin: "0 auto" }}>
+        {/* identity row */}
+        <div className="pt-4" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: "1 1 280px" }}>
+            <CompetitorAvatar name={c.name} domain={c.domain} size={48} borderRadius={12} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <span className="re-eyebrow" style={{ fontSize: 10 }}>SCAN REPORT</span>
-                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 10 }}>·</span>
-                <span
-                  className="font-mono-feat"
-                  style={{
-                    fontSize: 10, fontWeight: 600,
-                    textTransform: "uppercase", letterSpacing: "0.08em",
-                    color: meta.color, transition: "color 400ms",
-                  }}
-                >
-                  {meta.glyph} {meta.name} lens
-                </span>
-              </div>
-              <h1 className="re-h1 break-words" style={{ fontSize: "clamp(18px, 5vw, 24px)", marginTop: 4, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <div className="re-eyebrow" style={{ fontSize: 10 }}>Scan report</div>
+              <h1 className="re-h1 break-words" style={{ fontSize: "clamp(19px, 5vw, 25px)", marginTop: 3, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 {c.name}
                 <span className="font-mono-feat text-fg-faint break-all" style={{ fontSize: 12, fontWeight: 400 }}>{c.domain}</span>
-                <span className="re-chip re-chip-pos" style={{ fontSize: 9 }}>FRESH</span>
+                {(c.sentiment.overall !== 0 || c.sources > 0) && (
+                  <span className={`re-chip ${sent.cls}`} style={{ fontSize: 9.5 }}>{sent.label}</span>
+                )}
               </h1>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
-                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>SCANNED {c.scannedAt}</span>
-                <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>·</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 5, flexWrap: "wrap" }}>
                 <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
                   {c.sources.toLocaleString()} mentions · {c.platforms.length} platforms
                 </span>
+                {c.scannedAt && (
+                  <>
+                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>·</span>
+                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>Scanned {c.scannedAt}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -502,7 +505,50 @@ function UnifiedHeader({ competitor: c, meta, range, setRange, onNav, onExportTh
             <ExportMenu onExportThis={onExportThis} onExportAll={onExportAll} lensName={meta.name} />
           </div>
         </div>
+
+        {/* lens tabs */}
+        <LensTabs active={activeLens} onPick={onPickLens} />
       </div>
+    </div>
+  );
+}
+
+// Integrated, always-visible lens navigation — replaces the floating dock.
+function LensTabs({ active, onPick }: { active: LensId; onPick: (id: LensId) => void }) {
+  return (
+    <div className="no-print -mb-px flex gap-1 overflow-x-auto" style={{ marginTop: 14 }} role="tablist">
+      {LENS_ORDER.map((id) => {
+        const m = LENS_META[id];
+        const isActive = active === id;
+        return (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onPick(id)}
+            className="shrink-0"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "10px 13px",
+              border: 0,
+              borderBottom: `2px solid ${isActive ? m.color : "transparent"}`,
+              background: "transparent",
+              color: isActive ? m.color : "var(--fg-muted)",
+              fontSize: 13,
+              fontWeight: isActive ? 600 : 500,
+              letterSpacing: "-0.005em",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "color 160ms, border-color 160ms",
+            }}
+            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = "var(--fg)"; }}
+            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = "var(--fg-muted)"; }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: 99, background: m.color, opacity: isActive ? 1 : 0.5 }} />
+            {m.name}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -681,10 +727,10 @@ function ExecutiveSummary({
         <div style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
             <div>
-              <div className="re-eyebrow" style={{ fontSize: 10 }}>TOP QUOTES</div>
-              <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>Top of mind, top of thread</h3>
+              <div className="re-eyebrow" style={{ fontSize: 10 }}>Top quotes</div>
+              <h3 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>What people are actually saying</h3>
             </div>
-            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>cross-cutting · all lenses anchor here</span>
+            <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>Verbatim · across every platform</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
             {data.topQuotes.map((q, i) => {
@@ -700,7 +746,7 @@ function ExecutiveSummary({
                   }}
                 >
                   <div style={{ padding: 16 }}>
-                    <div className="re-eyebrow" style={{ fontSize: 10, color, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    <div className="re-eyebrow" style={{ fontSize: 10, color, marginBottom: 12, textTransform: "capitalize", letterSpacing: "0.02em" }}>
                       {q.theme}
                     </div>
                     <p style={{ margin: 0, fontStyle: "italic", fontSize: 14, lineHeight: 1.65, color: "var(--fg)" }}>
@@ -899,7 +945,7 @@ function PerceptionHero({ data }: { data: SummaryData }) {
 
         <div style={{ minWidth: 0 }}>
           <div className="re-eyebrow" style={{ fontSize: 10 }}>
-            WHAT USERS THINK OF {data.competitor.name.toUpperCase()}
+            What users think of {data.competitor.name}
           </div>
           <h2 className="re-h2" style={{ fontSize: "clamp(20px, 5vw, 26px)", marginTop: 6, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
             {sentimentLabel}
@@ -922,7 +968,7 @@ function PerceptionHero({ data }: { data: SummaryData }) {
                 >
                   <div
                     className="font-mono-feat"
-                    style={{ fontSize: 9, color: m.color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
+                    style={{ fontSize: 10, color: m.color, letterSpacing: "0.02em", fontWeight: 700 }}
                   >
                     {m.glyph} {m.name}
                   </div>
@@ -964,8 +1010,8 @@ function PerceptionRing({ positive, neutral, negative, index }: { positive: numb
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         }}
       >
-        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          PERCEPTION
+        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 10, letterSpacing: "0.02em" }}>
+          Perception
         </div>
         <div
           className="font-mono-feat tnum"
@@ -1017,9 +1063,9 @@ function LensPreviewCard({ id, onPick }: { id: Exclude<LensId, "summary">; onPic
         <div>
           <div
             className="font-mono-feat"
-            style={{ fontSize: 10, color: m.color, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}
+            style={{ fontSize: 11, color: m.color, letterSpacing: "0.02em", fontWeight: 700 }}
           >
-            {m.glyph} {m.name.toUpperCase()} LENS
+            {m.glyph} {m.name} lens
           </div>
           <div className="text-fg-muted" style={{ marginTop: 6, fontSize: 13 }}>{m.role}</div>
         </div>
@@ -1054,9 +1100,9 @@ function AnchorQuote({ q, color }: { q: SummaryData["topQuotes"][number]; color:
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span
           className="font-mono-feat"
-          style={{ fontSize: 10, color, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
+          style={{ fontSize: 10, color, letterSpacing: "0.02em", fontWeight: 700, textTransform: "capitalize" }}
         >
-          {q.theme ? `THEME · ${q.theme.toUpperCase()}` : "QUOTE"}
+          {q.theme ? `Theme · ${q.theme}` : "Quote"}
         </span>
         {q.score > 0 && <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>{q.score}↑</span>}
       </div>
@@ -1066,76 +1112,6 @@ function AnchorQuote({ q, color }: { q: SummaryData["topQuotes"][number]; color:
       <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
         {q.who}{q.sub ? ` · ${q.sub}` : ""}{q.when ? ` · ${q.when}` : ""}
       </div>
-    </div>
-  );
-}
-
-// ----------------------------------------------------------------------------
-// LENS DOCK
-
-function LensDock({ active, onPick }: { active: LensId; onPick: (id: LensId) => void }) {
-  const order: LensId[] = ["summary", "founder", "product", "marketing", "growth"];
-  const [hovered, setHovered] = useState<LensId | null>(null);
-
-  return (
-    <div
-      className="no-print max-w-[calc(100vw-24px)] overflow-x-auto"
-      style={{
-        position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)",
-        zIndex: 40,
-        padding: 5,
-        background: "rgba(20,16,12,0.86)",
-        backdropFilter: "blur(20px) saturate(160%)",
-        WebkitBackdropFilter: "blur(20px) saturate(160%)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        borderRadius: 99,
-        boxShadow: "0 24px 60px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.20), 0 0 0 1px rgba(255,255,255,0.04) inset",
-        display: "flex", gap: 2, alignItems: "center",
-      }}
-    >
-      {order.map((id) => {
-        const m = LENS_META[id];
-        const isActive = active === id;
-        const isHov = hovered === id;
-        return (
-          <button
-            key={id}
-            onClick={() => onPick(id)}
-            onMouseEnter={() => setHovered(id)}
-            onMouseLeave={() => setHovered(null)}
-            aria-pressed={isActive}
-            className="px-3 py-2 sm:px-3.5 shrink-0"
-            style={{
-              border: 0,
-              borderRadius: 99,
-              cursor: "pointer",
-              background: isActive ? m.color : isHov ? "rgba(255,255,255,0.08)" : "transparent",
-              color: isActive ? "#fff" : "rgba(255,255,255,0.78)",
-              display: "inline-flex", alignItems: "center", gap: 8,
-              fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600,
-              letterSpacing: "0.02em",
-              whiteSpace: "nowrap",
-              transition: "background 200ms, color 200ms, transform 120ms",
-              transform: isActive ? "scale(1.0)" : "scale(0.98)",
-            }}
-          >
-            <span
-              style={{
-                width: 6, height: 6, borderRadius: 99,
-                background: isActive ? "#fff" : m.color,
-                boxShadow: isActive ? "0 0 0 3px rgba(255,255,255,0.15)" : "none",
-                transition: "box-shadow 200ms",
-              }}
-            />
-            {m.name}
-            {isActive && id !== "summary" && (
-              <span style={{ fontSize: 9, opacity: 0.8, marginLeft: -3, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                LENS
-              </span>
-            )}
-          </button>
-        );
-      })}
     </div>
   );
 }
@@ -1198,8 +1174,8 @@ function ScanExecutiveBriefCard({ brief }: { brief: string | null }) {
   if (!brief) return null;
   return (
     <div className="rounded-[10px] border p-5" style={{ borderColor: "var(--accent)", borderWidth: 1.5 }}>
-      <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
-        Intelligence Brief
+      <div className="mb-2 text-[11px] font-semibold tracking-wide" style={{ color: "var(--accent)" }}>
+        Intelligence brief
       </div>
       <p className="text-sm leading-relaxed" style={{ color: "var(--fg)" }}>
         {brief}
@@ -1444,7 +1420,7 @@ function ScanVerbatimCard({
           <div key={q.id}>
             <div className="flex items-baseline gap-1.5">
               <span
-                className="font-mono-feat text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
+                className="font-mono-feat text-[11px] font-semibold tracking-wide flex-shrink-0"
                 style={{ color: "var(--accent)" }}
               >
                 {q.who}
@@ -1653,7 +1629,7 @@ function PainAndOppsPage({
         {selectedComplaint && (
           <div className="flex flex-col gap-3">
             <div className="re-eyebrow" style={{ fontSize: 10, padding: "0 0 4px" }}>
-              OPPORTUNITIES FOR "{selectedComplaint.title.toUpperCase()}"
+              Opportunities for “{selectedComplaint.title}”
             </div>
             {linkedOpps.length === 0 ? (
               <div className="re-card px-5 py-8 text-center" style={{ color: "var(--fg-faint)", fontSize: 13 }}>

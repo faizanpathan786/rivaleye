@@ -10,6 +10,7 @@ import {
   report_platform_briefs,
 } from "../../../api/src/db/schema/pipeline.js";
 import { emit } from "../events/emit";
+import { COMPREHENSIVE_GOAL } from "../prompts/shared";
 import { PermanentError } from "../errors";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { fanInCheck } from "./fan-in";
@@ -80,7 +81,7 @@ export const stageA = inngest.createFunction(
           competitor: report.primary_competitor_name ?? (report.competitors[0] ?? ""),
           category: report.category,
           audience: report.audience ?? null,
-          goal: report.goal,
+          goal: COMPREHENSIVE_GOAL,
         };
 
         const stageARes = await runStageAExtract({

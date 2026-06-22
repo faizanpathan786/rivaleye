@@ -103,6 +103,72 @@
     --radius: 10px;
   }
 
+  .dark {
+    /* RivalEye — dark, deep-neutral surfaces — brightened blue accent */
+    --bg:        #0c0c0e;
+    --bg-sunken: #08080a;
+    --surface:   rgba(255,255,255,0.035);
+    --surface-2: rgba(255,255,255,0.05);
+    --surface-solid: #161619;
+    --glass:     rgba(20,20,24,0.62);
+    --glass-blur: 18px;
+
+    --fg:        #f0efee;
+    --fg-muted:  #a3a09a;
+    --fg-faint:  #6f6c66;
+    --border-soft:    rgba(255,255,255,0.08);
+    --border-strong:  rgba(255,255,255,0.15);
+    --hover:     rgba(255,255,255,0.05);
+
+    --accent:      #4aa3ff;
+    --accent-fg:   #06121f;
+    --accent-soft: rgba(74,163,255,0.16);
+
+    --pos:  #34d399;
+    --neu:  #6f6c66;
+    --neg:  #f87171;
+    --warn: #fbbf24;
+
+    --shadow-sm: 0 1px 0 rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 1px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.45), 0 12px 28px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5), 0 32px 64px rgba(0,0,0,0.55);
+
+    --grid-color: rgba(255,255,255,0.035);
+
+    /* shadcn tokens — dark blue-accent palette in HSL */
+    --background: 240 7% 5%;
+    --foreground: 40 9% 93%;
+    --card: 240 6% 10%;
+    --card-foreground: 40 9% 93%;
+    --popover: 240 6% 10%;
+    --popover-foreground: 40 9% 93%;
+    --primary: 211 100% 64%;
+    --primary-foreground: 211 60% 8%;
+    --secondary: 240 5% 14%;
+    --secondary-foreground: 40 9% 93%;
+    --muted: 240 5% 14%;
+    --muted-foreground: 36 6% 62%;
+    --accent-hsl: 211 100% 64%;
+    --accent-foreground: 211 60% 8%;
+    --destructive: 0 84% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
+    --ring: 211 100% 64%;
+  }
+
+  .dark body {
+    background:
+      radial-gradient(ellipse 1100px 700px at 8% -10%, rgba(74,163,255,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 900px 600px at 100% 105%, rgba(74,163,255,0.06) 0%, transparent 60%),
+      var(--bg);
+  }
+
+  /* Dark overrides for primitives that hardcode light values */
+  .dark .sb-active { background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.35); }
+  .dark .re-btn-accent { box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 4px 14px rgba(74,163,255,0.28); }
+  .dark .re-meter { background: rgba(255,255,255,0.08); }
+
   [data-density="compact"]     { --density-row: 30px; --pad-card: 12px; --pad-card-hd: 10px 12px; --pad-page-y: 18px; }
   [data-density="comfortable"] { --density-row: 44px; --pad-card: 18px; --pad-card-hd: 16px 18px; --pad-page-y: 28px; }
 
@@ -278,8 +344,7 @@
   .re-eyebrow {
     font-family: "Geist Mono", ui-monospace, monospace;
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.02em;
     color: var(--fg-faint);
   }
 
@@ -359,6 +424,20 @@
 .fade-up { animation: fadeUp 360ms cubic-bezier(.2,.7,.2,1) both; }
 @keyframes radar-sweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .radar-sweep { animation: radar-sweep 4s linear infinite; transform-origin: center; }
+
+/* Color-cycling radar sweep — rotates while the arc cycles through the RivalEye
+   logo's colors (blue → orange → green). Animating the gradient directly hits
+   the exact brand hues, which a hue-rotate around blue cannot reach. */
+@keyframes sweep-color {
+  0%,
+  100% { background: conic-gradient(from 0deg, #0061b1, transparent 95deg); }
+  33%  { background: conic-gradient(from 0deg, #f59e0b, transparent 95deg); }
+  66%  { background: conic-gradient(from 0deg, #16a34a, transparent 95deg); }
+}
+.radar-scan {
+  animation: radar-sweep 4s linear infinite, sweep-color 6s ease-in-out infinite;
+  transform-origin: center;
+}
 
 /* ---------------------------------------------------------------------------
    PRINT / PDF EXPORT

@@ -1,9 +1,12 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { queryClient, queryPersister, QUERY_CACHE_MAX_AGE } from "./lib/query-client";
 import { AppShell } from "./components/layout/app-shell";
 import { DashboardPage } from "./routes/dashboard";
-import { RadarPage } from "./routes/radar";
+// RadarPage (./routes/radar) is built but parked behind a coming-soon screen
+// for launch — keep the file; do not delete.
+import { RadarComingSoonPage } from "./routes/radar-soon";
 import { CompetitorsPage } from "./routes/competitors";
 import { ScanPage } from "./routes/scan";
 import { ComparePage } from "./routes/compare";
@@ -52,7 +55,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, Component: DashboardPage },
       { path: "dashboard", Component: DashboardPage },
-      { path: "radar", Component: RadarPage },
+      { path: "radar", Component: RadarComingSoonPage },
       { path: "competitors", Component: CompetitorsPage },
       { path: "scan", Component: ScanPage },
       { path: "compare", Component: ComparePage },
@@ -92,10 +95,17 @@ export function App() {
         },
       }}
     >
-      <AuthProvider>
-        <RouterProvider router={router} />
-        <Toaster richColors position="bottom-right" />
-      </AuthProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+        disableTransitionOnChange
+      >
+        <AuthProvider>
+          <RouterProvider router={router} />
+          <Toaster richColors position="bottom-right" />
+        </AuthProvider>
+      </ThemeProvider>
     </PersistQueryClientProvider>
   );
 }

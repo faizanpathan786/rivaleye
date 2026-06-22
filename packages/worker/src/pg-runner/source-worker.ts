@@ -35,6 +35,7 @@ import { triggerResynthesis } from "./resynthesis";
 import { PermanentError, RateLimitError } from "../errors";
 import type { SourceJobRow } from "./types";
 import type { PlatformExtract, StageAExtract } from "../prompts/shared";
+import { COMPREHENSIVE_GOAL } from "../prompts/shared";
 import { emptyStageAExtract, mergeStageAExtracts, toLegacyExtract } from "../pipeline/signal-adapters";
 
 const log = pino({ name: "source-worker" });
@@ -445,7 +446,7 @@ async function runStageAExtractionStep(
     competitor: reportRow.primary_competitor_name ?? (reportRow.category ?? ""),
     category: reportRow.category,
     audience: reportRow.audience ?? null,
-    goal: reportRow.goal,
+    goal: COMPREHENSIVE_GOAL,
   };
 
   const BATCH_SIZE = 50;
@@ -525,7 +526,7 @@ async function runStageBSummarizationStep(
     competitor: reportRow.primary_competitor_name ?? (reportRow.category ?? ""),
     category: reportRow.category,
     audience: reportRow.audience ?? null,
-    goal: reportRow.goal,
+    goal: COMPREHENSIVE_GOAL,
   };
 
   log.info({ reportId, platform, complaints: legacyExtract.complaints.length }, "Stage B: running LLM summarization");

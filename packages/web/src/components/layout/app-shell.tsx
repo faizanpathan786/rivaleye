@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/icons";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
 import { useMeQuery } from "@/hooks/queries/use-me";
 import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
@@ -164,6 +165,7 @@ function TopBar({ crumbs, userInitial, userImage, onBrandClick, onNewScan, onAcc
         ))}
       </nav>
       <div className="actions flex flex-1 md:flex-none items-center justify-end gap-1.5">
+        <ThemeToggle />
         <button type="button" className="re-btn re-btn-sm" onClick={onNewScan}>
           <Icon name="plus" size={14} /> New scan
         </button>
@@ -195,15 +197,16 @@ const NAV_ITEMS: Array<{
   to: string;
   icon: Parameters<typeof Icon>[0]["name"];
   label: string;
-  badgeKey?: "competitors" | "radar";
+  badgeKey?: "competitors";
+  soon?: boolean;
 }> = [
   { to: "/",            icon: "home",    label: "Overview" },
-  { to: "/radar",       icon: "spark",   label: "Radar", badgeKey: "radar" },
   { to: "/competitors", icon: "user",    label: "Competitors", badgeKey: "competitors" },
   { to: "/scan",        icon: "scan",    label: "New scan" },
   { to: "/compare",     icon: "compare", label: "Compare" },
   { to: "/history",     icon: "history", label: "History" },
   { to: "/billing",     icon: "spark",   label: "Credits" },
+  { to: "/radar",       icon: "spark",   label: "Radar", soon: true },
 ];
 
 interface SidebarProps {
@@ -230,9 +233,8 @@ function Sidebar({ open, pathname }: SidebarProps) {
     });
   }
 
-  const badges: Record<"competitors" | "radar", NavBadge> = {
+  const badges: Record<"competitors", NavBadge> = {
     competitors: { count: stats?.total_competitors ?? null },
-    radar: { count: stats?.urgent_radar_events_7d ?? null, tone: "alert" },
   };
 
   const recent: ReportRow[] = (reportsQuery.data ?? []).slice(0, 5);
@@ -260,6 +262,22 @@ function Sidebar({ open, pathname }: SidebarProps) {
           >
             <Icon name={item.icon} size={14} className="sb-icon flex-shrink-0" />
             <span className="flex-1">{item.label}</span>
+            {item.soon && (
+              <span
+                className="font-mono-feat"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.02em",
+                  padding: "1px 7px",
+                  borderRadius: 99,
+                  background: "var(--surface-2)",
+                  color: "var(--fg-faint)",
+                  border: "1px solid var(--border-soft)",
+                }}
+              >
+                Soon
+              </span>
+            )}
             {badge && badge.count !== null && badge.count > 0 && (
               <span
                 className="font-mono-feat"

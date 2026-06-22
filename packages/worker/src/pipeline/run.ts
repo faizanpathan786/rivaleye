@@ -32,6 +32,7 @@ import type {
   StageAExtract,
   SynthOutput,
 } from "../prompts/shared";
+import { COMPREHENSIVE_GOAL } from "../prompts/shared";
 import type { RoleSections } from "../prompts/role-sections/schema";
 import type { PlatformId } from "@rivaleye/scrapers";
 import { emptyStageAExtract } from "./signal-adapters";
@@ -116,7 +117,7 @@ export async function runPipeline(reportId: string): Promise<void> {
     competitor: report.primary_competitor_name ?? (report.competitors[0] ?? ""),
     category: report.category,
     audience: report.audience ?? null,
-    goal: report.goal,
+    goal: COMPREHENSIVE_GOAL,
   };
 
   await db

@@ -481,3 +481,9 @@ export interface PipelineCtx {
   audience: string | null;
   goal: string;
 }
+
+// Every scan produces the full perception report — we never narrow analysis at
+// scan time (the user narrows later via report lenses). This directive replaces
+// the old per-goal hint so all stages are told to cover everything.
+export const COMPREHENSIVE_GOAL =
+  "Produce a complete competitor perception report — do not narrow to a single objective. Surface user pain, missing features and gaps, switching signals (who is leaving and why), positioning and messaging angles, and MVP-worthy demand, each backed by verbatim evidence.";

@@ -9,6 +9,7 @@ import {
   useUpdateCompetitorMutation,
   useDeleteCompetitorMutation,
 } from "@/hooks/queries/use-competitors";
+import { useReportsQuery } from "@/hooks/queries/use-reports";
 import type {
   Competitor,
   CreateCompetitorPayload,
@@ -27,7 +28,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type FilterKey = "all" | "active" | "paused" | "primary";
 
 const PALETTE = [
   "#5e6ad2",
@@ -135,23 +135,24 @@ function MicroStat({
 }: {
   label: string;
   value: string | number;
-  tone?: "neg" | "warn" | null;
+  tone?: "neg" | "warn" | "pos" | null;
 }) {
   const color =
     tone === "neg"
       ? "var(--neg)"
       : tone === "warn"
         ? "var(--warn)"
-        : "var(--fg)";
+        : tone === "pos"
+          ? "var(--pos)"
+          : "var(--fg)";
   return (
     <div>
       <div
         className="font-mono-feat"
         style={{
-          fontSize: 9,
+          fontSize: 10,
           color: "var(--fg-faint)",
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
+          letterSpacing: "0.02em",
         }}
       >
         {label}
@@ -248,193 +249,87 @@ function Section({
 
 function CompetitorCard({
   c,
-  onOpen,
-  onToggle,
+  reportId,
+  lastScanAt,
+  onPrimary,
   onScan,
 }: {
   c: Competitor;
-  onOpen: () => void;
-  onToggle: () => void;
+  reportId: string | undefined;
+  lastScanAt: string | null;
+  onPrimary: () => void;
   onScan: () => void;
 }) {
-  const socials = c.socials ?? {};
-  const socialKeys = Object.keys(socials);
-  const watch = c.monitor_watch ?? [];
   const tags = c.tags ?? [];
   const color = c.color ?? pickColor(c.name);
-  const sentiment = c.stat_sentiment ?? 0;
-  const alerts = c.stat_alerts_7d ?? 0;
+  const sentiment = c.stat_sentiment;
+  const sentimentTone: "pos" | "warn" | "neg" | null =
+    sentiment == null ? null : sentiment <= -0.3 ? "neg" : sentiment < -0.05 ? "warn" : sentiment >= 0.15 ? "pos" : null;
+  const hasReport = Boolean(reportId);
+
   return (
     <div
-      className="re-card"
-      onClick={onOpen}
-      style={{ cursor: "pointer", transition: "border-color 100ms, box-shadow 100ms" }}
+      className="re-card group"
+      onClick={onPrimary}
+      style={{ cursor: "pointer", display: "flex", flexDirection: "column", transition: "border-color 120ms, box-shadow 120ms" }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--border-strong)";
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+        e.currentTarget.style.boxShadow = "var(--shadow-md)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "var(--border-soft)";
         e.currentTarget.style.boxShadow = "none";
       }}
     >
-      <div style={{ padding: 14 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              minWidth: 0,
-            }}
-          >
+      <div style={{ padding: 14, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <CompetitorAvatar name={c.name} domain={c.website} size={36} borderRadius={8} color={color} />
             <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  letterSpacing: "-0.005em",
-                }}
-              >
+              <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.005em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {c.name}
               </div>
-              <div
-                className="font-mono-feat"
-                style={{
-                  fontSize: 11,
-                  color: "var(--fg-faint)",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {c.website ?? ""}
               </div>
             </div>
           </div>
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle();
-            }}
-          >
-            <MonitorToggle on={c.monitor_enabled} />
+        </div>
+
+        {(c.category || tags.length > 0) && (
+          <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+            {c.category && (
+              <span className="re-chip" style={{ fontSize: 10 }}>{c.category}</span>
+            )}
+            {tags.slice(0, 2).map((t) => (
+              <span key={t} className="re-chip" style={{ fontSize: 10 }}>{t}</span>
+            ))}
           </div>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            marginTop: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          {c.category && (
-            <span className="re-chip" style={{ fontSize: 10 }}>
-              {c.category}
-            </span>
-          )}
-          <span
-            className={`re-chip ${c.priority === "primary" ? "re-chip-accent" : ""}`}
-            style={{ fontSize: 10 }}
-          >
-            {c.priority}
-          </span>
-          {tags.slice(0, 2).map((t) => (
-            <span key={t} className="re-chip" style={{ fontSize: 10 }}>
-              {t}
-            </span>
-          ))}
-        </div>
+        )}
       </div>
 
-      <hr
-        style={{
-          border: 0,
-          borderTop: "1px solid var(--border-soft)",
-          margin: 0,
-        }}
-      />
+      <hr style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: 0 }} />
 
-      <div
-        style={{
-          padding: "10px 16px",
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 8,
-        }}
-      >
-        <MicroStat
-          label="Sentiment"
-          value={sentiment.toFixed(2)}
-          tone="neg"
-        />
+      <div style={{ padding: "10px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        <MicroStat label="Sentiment" value={sentiment != null ? sentiment.toFixed(2).replace("-", "−") : "—"} tone={sentimentTone} />
         <MicroStat label="Mentions" value={(c.stat_mentions ?? 0).toLocaleString()} />
-        <MicroStat
-          label="Alerts 7d"
-          value={alerts}
-          tone={alerts > 5 ? "warn" : null}
-        />
+        <MicroStat label="Last scan" value={lastScanAt ? formatRelative(lastScanAt) : "—"} />
       </div>
 
-      <hr
-        style={{
-          border: 0,
-          borderTop: "1px solid var(--border-soft)",
-          margin: 0,
-        }}
-      />
+      <hr style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: 0 }} />
 
-      <div
-        style={{
-          padding: "10px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {socialKeys.slice(0, 5).map((k) => {
-            const watched =
-              watch.includes(k) || k === "linkedin" || k === "twitter";
-            return <PlatformChip key={k} id={k} dim={!watched} />;
-          })}
-          {socialKeys.length > 5 && (
-            <span
-              className="font-mono-feat"
-              style={{ fontSize: 10, color: "var(--fg-faint)" }}
-            >
-              +{socialKeys.length - 5}
-            </span>
-          )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span
-            className="font-mono-feat"
-            style={{ fontSize: 10, color: "var(--fg-faint)" }}
-          >
-            last activity {formatRelative(c.last_activity_at)}
-          </span>
-          <button
-            className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onScan();
-            }}
-            title="Run scan"
-          >
-            <Icon name="scan" size={12} />
-          </button>
-        </div>
+      <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span className="flex items-center gap-1.5 font-mono-feat" style={{ fontSize: 11, color: "var(--accent)", letterSpacing: "0.03em" }}>
+          {hasReport ? "View report" : "Run first scan"}
+          <span className="transition-transform group-hover:translate-x-0.5" style={{ fontSize: 13 }}>→</span>
+        </span>
+        <button
+          className="re-btn re-btn-ghost re-btn-sm"
+          onClick={(e) => { e.stopPropagation(); onScan(); }}
+          title="Re-scan"
+        >
+          <Icon name="scan" size={12} /> Rescan
+        </button>
       </div>
     </div>
   );
@@ -1105,33 +1000,51 @@ function CompetitorsSkeleton() {
 export function CompetitorsPage() {
   const navigate = useNavigate();
   const { data, isLoading, isError, error, refetch } = useCompetitorsQuery();
+  const { data: reports } = useReportsQuery();
   const createMutation = useCreateCompetitorMutation();
   const updateMutation = useUpdateCompetitorMutation();
   const deleteMutation = useDeleteCompetitorMutation();
 
   const list = useMemo(() => data ?? [], [data]);
 
+  // Map each competitor (by name) to its most recent report. Reports come back
+  // newest-first, so the first match wins.
+  const reportByCompetitor = useMemo(() => {
+    const map = new Map<string, { id: string; ranAt: string | null }>();
+    for (const r of reports ?? []) {
+      const names = [r.primary_competitor_name, ...(r.competitors ?? [])]
+        .filter(Boolean)
+        .map((n) => n!.toLowerCase());
+      for (const n of names) {
+        if (!map.has(n)) map.set(n, { id: r.id, ranAt: r.scanned_at ?? r.created_at });
+      }
+    }
+    return map;
+  }, [reports]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(
     () =>
-      list.filter((c) => {
-        if (filter === "active" && !c.monitor_enabled) return false;
-        if (filter === "paused" && c.monitor_enabled) return false;
-        if (filter === "primary" && c.priority !== "primary") return false;
-        if (
-          search &&
-          !(c.name.toLowerCase() + (c.website ?? "")).includes(
-            search.toLowerCase(),
+      list
+        .filter((c) => {
+          if (
+            search &&
+            !(c.name.toLowerCase() + (c.website ?? "")).includes(
+              search.toLowerCase(),
+            )
           )
-        )
-          return false;
-        return true;
-      }),
-    [list, filter, search],
+            return false;
+          return true;
+        })
+        .sort((a, b) => {
+          const ta = new Date(a.added_at ?? a.created_at).getTime();
+          const tb = new Date(b.added_at ?? b.created_at).getTime();
+          return tb - ta; // newest first
+        }),
+    [list, search],
   );
 
   const editing = list.find((c) => c.id === editingId) ?? null;
@@ -1191,12 +1104,6 @@ export function CompetitorsPage() {
     else navigate(`/${target}`);
   };
 
-  const filters: ReadonlyArray<[FilterKey, string]> = [
-    ["all", `All (${list.length})`],
-    ["active", `Active (${list.filter((c) => c.monitor_enabled).length})`],
-    ["paused", `Paused (${list.filter((c) => !c.monitor_enabled).length})`],
-    ["primary", "Primary"],
-  ];
 
   return (
     <div
@@ -1208,7 +1115,7 @@ export function CompetitorsPage() {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end sm:gap-3 mb-6">
         <div className="min-w-0">
-          <div className="re-eyebrow">COMPETITORS</div>
+          <div className="re-eyebrow">Competitors</div>
           <h1 className="re-h1" style={{ marginTop: 8 }}>
             Tracked competitors
           </h1>
@@ -1263,19 +1170,6 @@ export function CompetitorsPage() {
               color: "var(--fg)",
             }}
           />
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {filters.map(([k, l]) => (
-            <button
-              key={k}
-              type="button"
-              className={`re-chip ${filter === k ? "re-chip-solid" : ""}`}
-              style={{ cursor: "pointer", padding: "4px 12px" }}
-              onClick={() => setFilter(k)}
-            >
-              {l}
-            </button>
-          ))}
         </div>
         <div className="flex gap-2 md:ml-auto">
           <span
@@ -1337,17 +1231,24 @@ export function CompetitorsPage() {
             gap: 12,
           }}
         >
-          {filtered.map((c) => (
-            <CompetitorCard
-              key={c.id}
-              c={c}
-              onOpen={() => setEditingId(c.id)}
-              onToggle={() => handleToggleMonitor(c)}
-              onScan={() =>
-                c.slug === "linear" ? onNav("report") : onNav("scan")
-              }
-            />
-          ))}
+          {filtered.map((c) => {
+            const match = reportByCompetitor.get(c.name.toLowerCase());
+            const reportId = match?.id;
+            return (
+              <CompetitorCard
+                key={c.id}
+                c={c}
+                reportId={reportId}
+                lastScanAt={match?.ranAt ?? null}
+                onPrimary={() =>
+                  reportId
+                    ? navigate(`/scan-report/${reportId}`)
+                    : navigate("/scan", { state: { prefillCompetitor: c.name } })
+                }
+                onScan={() => navigate("/scan", { state: { prefillCompetitor: c.name } })}
+              />
+            );
+          })}
           {filtered.length === 0 && (
             <div
               className="re-card"
@@ -1362,26 +1263,13 @@ export function CompetitorsPage() {
               <button
                 type="button"
                 className="re-btn re-btn-ghost re-btn-sm"
-                onClick={() => {
-                  setFilter("all");
-                  setSearch("");
-                }}
+                onClick={() => setSearch("")}
               >
-                clear filters
+                Clear search
               </button>
             </div>
           )}
         </div>
-      )}
-
-      {editing && (
-        <CompetitorDrawer
-          competitor={editing}
-          onSave={(patch) => handleUpdate(editing.id, patch)}
-          onDelete={() => handleDelete(editing.id)}
-          onClose={() => setEditingId(null)}
-          saving={updateMutation.isPending || deleteMutation.isPending}
-        />
       )}
 
       {showAdd && (

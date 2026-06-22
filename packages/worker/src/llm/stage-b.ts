@@ -11,6 +11,7 @@ import {
 import { emit } from "../events/emit";
 import { PermanentError } from "../errors";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
+import { COMPREHENSIVE_GOAL } from "../prompts/shared";
 import { fanInCheck } from "./fan-in";
 
 let _llm: OpenRouterClient | null = null;
@@ -86,7 +87,7 @@ export const stageB = inngest.createFunction(
           competitor: report.primary_competitor_name ?? (report.competitors[0] ?? ""),
           category: report.category,
           audience: report.audience ?? null,
-          goal: report.goal,
+          goal: COMPREHENSIVE_GOAL,
         };
 
         return runStageBSummarize({

@@ -1,42 +1,23 @@
-import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowRight, Plus, RefreshCw } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
+import { ActivationHero } from "@/components/dashboard/activation";
+import { CompetitorBriefing } from "@/components/dashboard/competitor-briefing";
+import { OpportunityCard } from "@/components/dashboard/opportunity-card";
+import { ReportRail } from "@/components/dashboard/report-rail";
+import { SentimentBars } from "@/components/dashboard/sentiment-bars";
 import { useDashboardQuery } from "@/hooks/queries/use-dashboard";
 import { useReportsQuery } from "@/hooks/queries/use-reports";
-import { formatRelative } from "@/lib/format";
 import type { ReportRow } from "@/api/reports";
-import type { RadarEvent, RadarSeverity } from "@/api/radar";
+import type { CompetitorSummary, DashboardOpportunity } from "@/api/dashboard";
 
-type NavKey =
-  | "dashboard"
-  | "radar"
-  | "scan"
-  | "report"
-  | "competitors"
-  | "history"
-  | "compare"
-  | "account";
-
-const ROUTE_MAP: Record<NavKey, string> = {
-  dashboard: "/",
-  radar: "/radar",
-  scan: "/scan",
-  report: "/scan-report",
-  competitors: "/competitors",
-  history: "/history",
-  compare: "/compare",
-  account: "/account",
-};
-
-type Trend = "up" | "down";
-type Tone = "neg" | "warn" | "pos" | "default";
+const PAGE = "px-4 py-6 pb-16 md:px-8 w-full max-w-[1180px] mx-auto";
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const onNav = (key: NavKey) => navigate(ROUTE_MAP[key]);
-
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
 
@@ -45,18 +26,11 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="px-4 py-5 pb-14 md:px-7 w-full max-w-[1280px] mx-auto">
-        <Skeleton style={{ height: 80, marginBottom: 20 }} />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-          <Skeleton style={{ height: 90 }} />
-          <Skeleton style={{ height: 90 }} />
-          <Skeleton style={{ height: 90 }} />
-          <Skeleton style={{ height: 90 }} />
-        </div>
-        <Skeleton style={{ height: 280, marginBottom: 20 }} />
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4">
-          <Skeleton style={{ height: 320 }} />
-          <Skeleton style={{ height: 320 }} />
+      <div className={PAGE}>
+        <Skeleton style={{ height: 56, marginBottom: 28, maxWidth: 440 }} />
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-8">
+          <Skeleton style={{ height: 340 }} />
+          <Skeleton style={{ height: 340 }} />
         </div>
       </div>
     );
@@ -64,15 +38,8 @@ export function DashboardPage() {
 
   if (error) {
     return (
-      <div className="px-4 py-5 pb-14 md:px-7 w-full max-w-[1280px] mx-auto">
-        <div
-          className="re-card"
-          style={{
-            padding: 16,
-            color: "var(--neg)",
-            border: "1px solid var(--border-soft)",
-          }}
-        >
+      <div className={PAGE}>
+        <div className="re-card" style={{ padding: 16, color: "var(--neg)" }}>
           Failed to load dashboard. {error instanceof Error ? error.message : "Unknown error."}
         </div>
       </div>
@@ -80,452 +47,270 @@ export function DashboardPage() {
   }
 
   const data = dashboardQuery.data;
-  const reports: ReportRow[] = data?.recent_reports ?? reportsQuery.data ?? [];
-  const radarEvents: RadarEvent[] = data?.recent_radar_events ?? [];
+  const fullReports: ReportRow[] = reportsQuery.data ?? [];
   const opportunities = data?.opportunities ?? [];
+  const competitors = data?.competitors_summary ?? [];
   const stats = data?.stats;
   const user = data?.user;
 
-  const sentimentValue =
-    stats?.avg_sentiment != null ? stats.avg_sentiment.toFixed(2) : "—";
-  const sentimentTone: Tone =
-    stats?.avg_sentiment != null && stats.avg_sentiment < -0.15 ? "neg" : "default";
+  const totalCompetitors = stats?.total_competitors ?? 0;
+  const totalReports = stats?.total_reports ?? 0;
+
+  // N = 0 — activation
+  if (totalCompetitors === 0 && totalReports === 0) {
+    return (
+      <div className={PAGE}>
+        <ActivationHero userName={user?.name ?? null} />
+      </div>
+    );
+  }
+
+  const focusReport =
+    fullReports.find((r) => r.status === "completed") ?? fullReports[0];
+
+  // N = 1 — single-competitor intel briefing
+  if (totalCompetitors <= 1) {
+    if (focusReport && focusReport.status === "completed") {
+      const focusOpps = opportunities.filter((o) => o.report_id === focusReport.id);
+      return (
+        <div className={PAGE}>
+          <CompetitorBriefing report={focusReport} opportunities={focusOpps.length ? focusOpps : opportunities} />
+        </div>
+      );
+    }
+    return (
+      <div className={PAGE}>
+        <PendingState report={focusReport} userName={user?.name ?? null} onScan={() => navigate("/scan")} onOpen={(id) => navigate(`/scan-report/${id}`)} />
+      </div>
+    );
+  }
+
+  // N >= 2 — comparison hub
+  const highPayoff = opportunities.filter((o) => o.payoff === "high").length;
+  const oppCount = opportunities.length;
+  const headline =
+    oppCount > 0
+      ? `${oppCount} ${oppCount === 1 ? "opportunity" : "opportunities"} to act on`
+      : `Welcome back${user?.name ? `, ${user.name.split(" ")[0]}` : ""}.`;
 
   return (
-    <div className="px-4 py-5 pb-14 md:px-7 w-full max-w-[1280px] mx-auto">
-      {/* Hero row */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-5">
+    <div className={PAGE}>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.2, 0.7, 0.2, 1] }}
+        className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4"
+        style={{ marginBottom: 22 }}
+      >
         <div className="min-w-0">
-          <div className="re-eyebrow">WORKSPACE / stitchworks</div>
-          <h1 className="re-h1" style={{ marginTop: 8 }}>
-            Good morning{user?.name ? `, ${user.name}` : ""}.
-          </h1>
-          <p className="text-fg-muted break-words" style={{ marginTop: 6, maxWidth: 600 }}>
-            {stats?.total_competitors ?? 0} competitors analysed · {stats?.total_reports ?? 0} reports ·{" "}
-            {stats?.total_radar_events ?? 0} radar events
+          <div className="re-eyebrow">Across {totalCompetitors} competitors</div>
+          <h1 className="re-h1" style={{ marginTop: 8 }}>{headline}</h1>
+          <p className="text-fg-muted" style={{ marginTop: 6, fontSize: 13.5 }}>
+            {highPayoff} high-payoff · {totalReports} reports generated
           </p>
         </div>
         <div className="flex gap-2 flex-wrap shrink-0">
-          <button className="re-btn" onClick={() => onNav("compare")}>
-            <Icon name="compare" size={14} /> Compare two
+          <button className="re-btn" onClick={() => navigate("/compare")}>
+            <Icon name="compare" size={14} /> Compare
           </button>
-          <button className="re-btn re-btn-accent" onClick={() => onNav("scan")}>
-            <Icon name="plus" size={14} /> New scan
+          <button className="re-btn re-btn-accent" onClick={() => navigate("/scan")}>
+            <Plus size={14} /> New scan
           </button>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-3 gap-3" style={{ marginBottom: 24 }}>
+        <KpiTile label="Competitors" value={String(totalCompetitors)} hint="tracked" onClick={() => navigate("/competitors")} />
+        <KpiTile label="Reports" value={String(totalReports)} hint="generated" onClick={() => navigate("/history")} />
+        <KpiTile label="Opportunities" value={String(oppCount)} hint={`${highPayoff} high-payoff`} accent={highPayoff > 0} onClick={() => navigate("/pain-opps")} />
+      </div>
+
+      {/* analytics band — two balanced widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start" style={{ marginBottom: 28 }}>
+        <div>
+          <SectionHead title="Competitor sentiment" hint="Most disliked = most exposed" />
+          <div className="re-card" style={{ padding: 14 }}>
+            <SentimentBars competitors={competitors} />
+          </div>
+        </div>
+        <div>
+          <SectionHead title="Your competitors" actionLabel="Manage" onAction={() => navigate("/competitors")} />
+          <CompetitorList competitors={competitors} onReScan={(name) => navigate("/scan", { state: { prefillCompetitor: name } })} onManage={() => navigate("/competitors")} />
         </div>
       </div>
 
-      {/* Stat strip */}
-      {(() => {
-        const showRadar = (stats?.total_radar_events ?? 0) > 0;
-        return (
-          <div
-            className={`grid grid-cols-2 gap-3 mb-5 ${showRadar ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
-          >
-            <StatTile
-              label="Competitors analysed"
-              value={String(stats?.total_competitors ?? 0)}
-              delta="active"
-              trend="up"
-            />
-            <StatTile
-              label="Reports generated"
-              value={String(stats?.total_reports ?? 0)}
-              delta="all-time"
-              trend="up"
-            />
-            <StatTile
-              label="Sentiment index"
-              value={sentimentValue}
-              delta="avg across reports"
-              trend={sentimentTone === "neg" ? "down" : "up"}
-              tone={sentimentTone}
-            />
-            {showRadar && (
-              <StatTile
-                label="Urgent radar (7d)"
-                value={String(stats?.urgent_radar_events_7d ?? 0)}
-                delta="needs review"
-                trend="up"
-                tone="warn"
-              />
-            )}
-          </div>
-        );
-      })()}
-
-      {/* Recent reports — card grid */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600 }}>Recent reports</h3>
-          <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("history")}>
-            View all <Icon name="arrow-right" size={12} />
-          </button>
-        </div>
-
-        {reports.length === 0 ? (
-          <div className="re-card" style={{ padding: 32, textAlign: "center", color: "var(--fg-faint)", fontSize: 13 }}>
-            No reports yet.{" "}
-            <button className="re-btn re-btn-ghost re-btn-sm" style={{ display: "inline", padding: "0 4px", fontSize: 13 }} onClick={() => onNav("scan")}>
-              Run your first scan
+      {/* opportunities — full width, two-up grid */}
+      <section style={{ marginBottom: 32 }}>
+        <SectionHead title="Opportunities to act on" hint="Across all competitors" actionLabel="All opps" onAction={() => navigate("/pain-opps")} />
+        {oppCount === 0 ? (
+          <div className="re-card" style={{ padding: 24, textAlign: "center" }}>
+            <p className="text-fg-muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+              No opportunities surfaced yet — they appear once scans finish analysing.
+            </p>
+            <button className="re-btn re-btn-sm mx-auto" style={{ marginTop: 12 }} onClick={() => navigate("/scan")}>
+              <Plus size={13} /> Run a scan
             </button>
           </div>
         ) : (
-          <div style={{ overflowX: "auto", paddingBottom: 8 }}>
-            <div style={{ display: "flex", gap: 12, width: "max-content", alignItems: "stretch" }}>
-              {reports.map((r) => (
-                <div key={r.id} style={{ width: 260, flexShrink: 0, display: "flex" }}>
-                  <ReportCard report={r} onClick={() => navigate(`/scan-report/${r.id}`)} />
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
+            {opportunities.slice(0, 6).map((o, i) => (
+              <OpportunityCard key={o.id} opportunity={o} index={i} onOpen={() => navigate(`/scan-report/${o.report_id}`)} />
+            ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Two-column bottom */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4 mt-5">
-        <div className="re-card">
-          <div className="re-card-hd flex-wrap gap-2">
-            <h3>
-              <span className="re-dot re-dot-live" /> Radar — competitor moves
-            </h3>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                last 24h
-              </span>
-              <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("radar")}>
-                Open radar <Icon name="arrow-right" size={12} />
-              </button>
-            </div>
-          </div>
-          <div style={{ padding: "4px 0" }}>
-            {radarEvents.length === 0 ? (
-              <div
-                style={{
-                  padding: 24,
-                  textAlign: "center",
-                  color: "var(--fg-faint)",
-                  fontSize: 13,
-                  lineHeight: 1.55,
-                }}
-              >
-                Radar monitoring activates after your first competitor is added. Run a scan to get started.{" "}
-                <button
-                  className="re-btn re-btn-ghost re-btn-sm"
-                  style={{ display: "inline", padding: "0 4px", fontSize: 13 }}
-                  onClick={() => onNav("scan")}
-                >
-                  Run a scan
-                </button>
-              </div>
-            ) : (
-              radarEvents.slice(0, 4).map((ev, i) => {
-                const sev: RadarSeverity = ev.severity;
-                const sevColor =
-                  sev === "urgent" ? "var(--neg)" : sev === "high" ? "var(--warn)" : "#6366f1";
-                const sevBg =
-                  sev === "urgent"
-                    ? "rgba(220,38,38,0.08)"
-                    : sev === "high"
-                    ? "rgba(217,119,6,0.08)"
-                    : "rgba(99,102,241,0.08)";
-                const compName = ev.competitor_name ?? "—";
-                return (
-                  <div
-                    key={ev.id}
-                    onClick={() => onNav("radar")}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "60px 22px 1fr auto",
-                      padding: "14px 16px",
-                      borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
-                      gap: 12,
-                      alignItems: "center",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <span
-                      className="re-chip"
-                      style={{
-                        background: sevBg,
-                        color: sevColor,
-                        borderColor: "transparent",
-                        fontSize: 9,
-                        padding: "2px 6px",
-                        fontWeight: 600,
-                        letterSpacing: "0.06em",
-                        justifySelf: "start",
-                      }}
-                    >
-                      {ev.severity.toUpperCase()}
-                    </span>
-                    <div
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 5,
-                        background: "#666",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {compName[0]}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 500,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {ev.title}
-                      </div>
-                      <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                        {compName} · {ev.platform} · {formatRelative(ev.detected_at)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        <div className="re-card">
-          <div className="re-card-hd flex-wrap gap-2">
-            <h3>Opportunity hopper</h3>
-            <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-              cross-competitor
-            </span>
-          </div>
-          <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-            {opportunities.length === 0 ? (
-              <div
-                className="font-mono-feat"
-                style={{ fontSize: 12, color: "var(--fg-faint)", textAlign: "center", padding: "12px 0" }}
-              >
-                Opportunities appear here after your first scan.
-              </div>
-            ) : (
-              opportunities.map((o) => (
-                <div
-                  key={o.id}
-                  onClick={() => navigate(`/scan-report/${o.report_id}`)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: 12,
-                    background: "var(--surface-2)",
-                    borderRadius: "var(--r-md, 8px)",
-                    border: "1px solid var(--border-soft)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="break-words" style={{ fontSize: 13, fontWeight: 500 }}>{o.title}</div>
-                    <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                      signal from {o.competitor_name ?? "competitor"}
-                    </div>
-                  </div>
-                  <span
-                    className={`shrink-0 ${o.payoff === "high" ? "re-chip re-chip-accent" : "re-chip"}`}
-                    style={{ fontSize: 10 }}
-                  >
-                    {o.payoff} payoff
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+      {fullReports.length > 0 && (
+        <section>
+          <SectionHead title="Jump back in" actionLabel="View all" onAction={() => navigate("/history")} />
+          <ReportRail reports={fullReports} onOpen={(id) => navigate(`/scan-report/${id}`)} />
+        </section>
+      )}
     </div>
   );
 }
 
-function StatTile({
-  label,
-  value,
-  delta,
-  trend,
-  tone = "default",
+function PendingState({
+  report,
+  userName,
+  onScan,
+  onOpen,
 }: {
-  label: string;
-  value: string;
-  delta: string;
-  trend: Trend;
-  tone?: Tone;
+  report: ReportRow | undefined;
+  userName: string | null;
+  onScan: () => void;
+  onOpen: (id: string) => void;
 }) {
-  const color =
-    tone === "neg"
-      ? "var(--neg)"
-      : tone === "warn"
-      ? "var(--warn)"
-      : tone === "pos"
-      ? "var(--pos)"
-      : "var(--fg-muted)";
+  const name = report?.primary_competitor_name ?? report?.competitors?.[0] ?? "your competitor";
+  const failed = report?.status === "failed";
   return (
-    <div className="re-card" style={{ padding: 14 }}>
-      <div className="re-eyebrow" style={{ fontSize: 10 }}>
-        {label}
-      </div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
-        <span
-          className="font-mono-feat tnum"
-          style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}
-        >
-          {value}
-        </span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4, color, fontSize: 11 }}>
-        {trend === "up" && <Icon name="arrow-up" size={11} />}
-        {trend === "down" && <Icon name="arrow-down" size={11} />}
-        <span>{delta}</span>
-      </div>
-    </div>
-  );
-}
-
-function MiniSpark({ seed }: { seed: string }) {
-  const points = useMemo(() => {
-    let s = 0;
-    for (const c of seed) s = (s * 31 + c.charCodeAt(0)) >>> 0;
-    const arr: number[] = [];
-    for (let i = 0; i < 16; i++) {
-      s = (s * 1664525 + 1013904223) >>> 0;
-      arr.push(((s >>> 8) & 0xff) / 255);
-    }
-    return arr;
-  }, [seed]);
-  const w = 72;
-  const h = 22;
-  const path = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${(i / (points.length - 1)) * w} ${h - p * (h - 2) - 1}`)
-    .join(" ");
-  const last = points[points.length - 1] ?? 0;
-  const first = points[0] ?? 0;
-  const delta = last - first;
-  const color = delta > 0.1 ? "var(--neg)" : delta < -0.1 ? "var(--pos)" : "var(--fg-faint)";
-  return (
-    <svg width={w} height={h}>
-      <path d={path} fill="none" stroke={color} strokeWidth="1.2" strokeLinejoin="round" />
-      <circle cx={w} cy={h - last * (h - 2) - 1} r="2" fill={color} />
-    </svg>
-  );
-}
-
-function ReportCard({ report: r, onClick }: { report: ReportRow; onClick: () => void }) {
-  const name = r.primary_competitor_name ?? "Untitled";
-  const sentiment = r.sentiment_overall;
-  const isCompleted = r.status === "completed";
-  const isRunning = r.status === "running" || r.status === "queued";
-
-  const statusColor = isCompleted
-    ? "var(--pos)"
-    : isRunning
-    ? "#6366f1"
-    : r.status === "failed"
-    ? "var(--neg)"
-    : "var(--fg-faint)";
-  const statusLabel = isCompleted ? "Completed" : isRunning ? "Scanning…" : r.status === "failed" ? "Failed" : r.status;
-
-  const sentimentTone =
-    sentiment == null ? null : sentiment < -0.3 ? "neg" : sentiment < -0.15 ? "warn" : null;
-  const sentimentColor =
-    sentimentTone === "neg" ? "var(--neg)" : sentimentTone === "warn" ? "var(--warn)" : "var(--fg)";
-
-  return (
-    <div
-      className="re-card"
-      onClick={onClick}
-      style={{ cursor: "pointer", transition: "border-color 100ms, box-shadow 100ms", width: "100%", display: "flex", flexDirection: "column" }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--border-strong)";
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border-soft)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
-    >
-      {/* Header */}
-      <div style={{ padding: 14 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <CompetitorAvatar name={name} domain={r.primary_competitor_domain} size={36} borderRadius={8} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.005em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {name}
-              </div>
-              <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {r.primary_competitor_domain ?? ""}
-              </div>
-            </div>
-          </div>
-          <span
-            className="re-chip"
-            style={{ fontSize: 10, color: statusColor, background: `color-mix(in srgb, ${statusColor} 12%, transparent)`, flexShrink: 0 }}
-          >
-            {statusLabel.toUpperCase()}
-          </span>
-        </div>
-
-        <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-          {r.category && <span className="re-chip" style={{ fontSize: 10 }}>{r.category}</span>}
-          {r.goal && <span className="re-chip" style={{ fontSize: 10 }}>{r.goal.replace(/_/g, " ")}</span>}
-        </div>
-      </div>
-
-      <hr style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: 0 }} />
-
-      {/* Stats */}
-      <div style={{ padding: "10px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, flex: 1 }}>
-        <div>
-          <div className="font-mono-feat" style={{ fontSize: 9, color: "var(--fg-faint)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Sentiment</div>
-          <div className="font-mono-feat tnum" style={{ fontSize: 14, fontWeight: 500, marginTop: 2, color: sentimentColor }}>
-            {sentiment != null ? sentiment.toFixed(2) : "—"}
-          </div>
-        </div>
-        <div>
-          <div className="font-mono-feat" style={{ fontSize: 9, color: "var(--fg-faint)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Mentions</div>
-          <div className="font-mono-feat tnum" style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>
-            {(r.total_sources ?? 0).toLocaleString()}
-          </div>
-        </div>
-        <div>
-          <div className="font-mono-feat" style={{ fontSize: 9, color: "var(--fg-faint)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stage</div>
-          <div className="font-mono-feat tnum" style={{ fontSize: 10, fontWeight: 500, marginTop: 2, color: "var(--fg-muted)" }}>
-            {r.stage ?? "—"}
-          </div>
-        </div>
-      </div>
-
-      <hr style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: 0 }} />
-
-      {/* Footer */}
-      <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
-          last run {formatRelative(r.created_at)}
-        </span>
-        <button
-          className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
-          onClick={(e) => { e.stopPropagation(); onClick(); }}
-        >
-          <Icon name="chev-right" size={14} />
+    <div className="re-card mx-auto" style={{ maxWidth: 560, padding: 32, textAlign: "center", marginTop: 24 }}>
+      <div className="re-eyebrow">{failed ? "Scan failed" : "Scan in progress"}</div>
+      <h1 className="re-h2" style={{ marginTop: 10 }}>
+        {failed ? `We couldn't finish ${name}` : `Analysing ${name}…`}
+      </h1>
+      <p className="text-fg-muted mx-auto" style={{ marginTop: 8, fontSize: 13.5, lineHeight: 1.5, maxWidth: 380 }}>
+        {failed
+          ? "Something went wrong pulling public discussions. Try running it again."
+          : `Hang tight${userName ? `, ${userName.split(" ")[0]}` : ""} — we're pulling complaints, switching signals, and quotes. Your briefing appears here when it's ready.`}
+      </p>
+      <div className="flex gap-2 justify-center" style={{ marginTop: 18 }}>
+        {report && !failed && (
+          <button className="re-btn re-btn-sm" onClick={() => onOpen(report.id)}>
+            View progress <ArrowRight size={13} />
+          </button>
+        )}
+        <button className="re-btn re-btn-accent re-btn-sm" onClick={onScan}>
+          <RefreshCw size={13} /> {failed ? "Try again" : "New scan"}
         </button>
       </div>
     </div>
   );
 }
 
+function CompetitorList({
+  competitors,
+  onReScan,
+  onManage,
+}: {
+  competitors: CompetitorSummary[];
+  onReScan: (name: string) => void;
+  onManage: () => void;
+}) {
+  if (competitors.length === 0) {
+    return (
+      <div className="re-card text-fg-muted" style={{ padding: 16, fontSize: 12.5 }}>
+        Competitors you scan appear here.
+      </div>
+    );
+  }
+  return (
+    <div className="re-card" style={{ overflow: "hidden" }}>
+      {competitors.slice(0, 6).map((c, i) => {
+        const s = c.stat_sentiment;
+        const tone =
+          s == null ? "var(--fg-faint)" : s <= -0.3 ? "var(--neg)" : s < -0.05 ? "var(--warn)" : s >= 0.15 ? "var(--pos)" : "var(--fg-faint)";
+        return (
+          <div
+            key={c.id}
+            className="group flex items-center gap-3"
+            style={{ padding: "11px 13px", borderTop: i === 0 ? 0 : "1px solid var(--border-soft)" }}
+          >
+            <CompetitorAvatar name={c.name} size={26} borderRadius={6} />
+            <button type="button" onClick={onManage} className="text-left" style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
+              <div className="font-mono-feat" style={{ fontSize: 10.5, color: "var(--fg-faint)" }}>
+                {(c.stat_mentions ?? 0).toLocaleString()} mentions
+              </div>
+            </button>
+            <span className="font-mono-feat tnum" style={{ fontSize: 13, fontWeight: 600, color: tone }}>
+              {s != null ? s.toFixed(2).replace("-", "−") : "—"}
+            </span>
+            <button
+              type="button"
+              className="re-btn re-btn-ghost re-btn-icon re-btn-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Re-scan"
+              onClick={() => onReScan(c.name)}
+            >
+              <RefreshCw size={13} />
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SectionHead({
+  title,
+  hint,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  hint?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-2" style={{ marginBottom: 16 }}>
+      <div className="flex items-baseline gap-2 min-w-0">
+        <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.01em" }}>{title}</h3>
+        {hint && (
+          <span className="font-mono-feat truncate" style={{ fontSize: 10, color: "var(--fg-faint)", letterSpacing: "0.04em" }}>
+            {hint}
+          </span>
+        )}
+      </div>
+      {actionLabel && onAction && (
+        <button className="re-btn re-btn-ghost re-btn-sm shrink-0" onClick={onAction}>
+          {actionLabel} <ArrowRight size={12} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function KpiTile({
+  label,
+  value,
+  hint,
+  accent,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  accent?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} className="re-card text-left" style={{ padding: 14, cursor: "pointer" }}>
+      <div className="re-eyebrow" style={{ fontSize: 10 }}>{label}</div>
+      <div className="font-mono-feat tnum" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em", marginTop: 6, color: accent ? "var(--accent)" : "var(--fg)" }}>
+        {value}
+      </div>
+      <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)", marginTop: 4 }}>{hint}</div>
+    </button>
+  );
+}

@@ -15,6 +15,7 @@ import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { toLegacyExtract } from "../pipeline/signal-adapters";
 import { fanInCheck } from "../pg-runner/fan-in";
+import { COMPREHENSIVE_GOAL } from "../prompts/shared";
 import { report_platform_briefs } from "../../../api/src/db/schema/pipeline.js";
 import type { NormalizedPost } from "@rivaleye/scrapers";
 import pino from "pino";
@@ -38,7 +39,7 @@ const ctx = {
   competitor: report.primary_competitor_name ?? report.category,
   category: report.category,
   audience: report.audience ?? null,
-  goal: report.goal,
+  goal: COMPREHENSIVE_GOAL,
 };
 
 log.info({ reportId, platform, competitor: ctx.competitor }, "Loading mentions from DB");

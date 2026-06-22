@@ -1,10 +1,35 @@
-import { useState, useRef, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { Icon } from "@/components/icons";
+import { useState, useRef, type ComponentType, type ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowRight, Check, Globe, Search, Star } from "lucide-react";
+import {
+  FaAppStoreIos,
+  FaDev,
+  FaGooglePlay,
+  FaLinkedin,
+  FaSquareHackerNews,
+  FaXTwitter,
+} from "react-icons/fa6";
+import { SiGooglemaps, SiProducthunt, SiReddit } from "react-icons/si";
 import { useCreateReportMutation } from "@/hooks/queries/use-reports";
 import { useBalanceQuery } from "@/hooks/queries/use-billing";
 import { PaywallModal } from "@/components/billing/paywall-modal";
 import type { ReportGoal } from "@rivaleye/shared";
+
+type BrandIcon = ComponentType<{ size?: number | string; color?: string; className?: string }>;
+
+const PLATFORM_BRANDS: Record<string, { Icon: BrandIcon; color: string }> = {
+  reddit: { Icon: SiReddit, color: "#FF4500" },
+  producthunt: { Icon: SiProducthunt, color: "#DA552F" },
+  appstore: { Icon: FaAppStoreIos, color: "#0D96F6" },
+  playstore: { Icon: FaGooglePlay, color: "#0F9D58" },
+  hackernews: { Icon: FaSquareHackerNews, color: "#FF6600" },
+  devto: { Icon: FaDev, color: "var(--fg)" },
+  website: { Icon: Globe, color: "var(--accent)" },
+  twitter: { Icon: FaXTwitter, color: "var(--fg)" },
+  linkedin: { Icon: FaLinkedin, color: "#0A66C2" },
+  capterra: { Icon: Star, color: "#FF9D28" },
+  gmaps: { Icon: SiGooglemaps, color: "#1A73E8" },
+};
 
 type NavTarget = "scan" | "dashboard" | "radar" | "competitors" | "compare" | "history" | "account" | "signin";
 
@@ -38,20 +63,19 @@ const PLATFORMS = [
 
 type PlatformId = (typeof PLATFORMS)[number]["id"];
 
-// Goal options mirror @rivaleye/shared reportGoalSchema enum values.
-const GOALS: { id: ReportGoal; label: string; hint: string }[] = [
-  { id: "validate_idea",       label: "Validate an idea",         hint: "Focus on pain intensity & market demand" },
-  { id: "find_weaknesses",     label: "Find competitor weakness", hint: "Where to attack · wedge angles" },
-  { id: "improve_positioning", label: "Improve positioning",      hint: "Messaging angles · copy ideas" },
-  { id: "decide_mvp_features", label: "Decide MVP features",      hint: "Feature gaps · repeated requests" },
-  { id: "find_user_pain",      label: "Find user pain",           hint: "Surface verbatim complaints" },
-];
+// Every scan produces the full perception report — we never narrow at scan
+// time. The user narrows later via report lenses. The pipeline still requires a
+// goal value, so we send a fixed default the worker treats as "comprehensive".
+const DEFAULT_GOAL: ReportGoal = "find_user_pain";
 
 export function ScanPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const onNav = (t: NavTarget) => navigate(navPath(t));
 
-  const [name, setName] = useState("");
+  const prefillCompetitor =
+    (location.state as { prefillCompetitor?: string } | null)?.prefillCompetitor ?? "";
+  const [name, setName] = useState(prefillCompetitor);
   const [nameFocused, setNameFocused] = useState(false);
   const [category, setCategory] = useState("");
   const [audience, setAudience] = useState("");
@@ -61,7 +85,6 @@ export function ScanPage() {
     twitter: false, linkedin: false, capterra: false, gmaps: false,
   });
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [goal, setGoal] = useState<ReportGoal>("find_weaknesses");
 
   const { mutateAsync, isPending, error } = useCreateReportMutation();
   const { data: balance } = useBalanceQuery();
@@ -71,7 +94,6 @@ export function ScanPage() {
   const needsCredits = balance !== undefined && balance.free_scan_used && balance.balance < 1;
 
   const selectedPlatformCount = PLATFORMS.filter((p) => p.live && platforms[p.id]).length;
-  const goalLabel = GOALS.find((g) => g.id === goal)?.label.toLowerCase() ?? "";
 
   const canSubmit =
     !isPending &&
@@ -86,7 +108,7 @@ export function ScanPage() {
       category: category.trim(),
       competitors: [name.trim()],
       target_audience: audience.trim(),
-      founder_goal: goal,
+      founder_goal: DEFAULT_GOAL,
       selected_platforms: activePlatforms.length > 0 ? activePlatforms : PLATFORMS.filter((p) => p.live).map((p) => p.id),
       website_url: platforms.website && websiteUrl.trim() ? websiteUrl.trim() : undefined,
     });
@@ -122,9 +144,9 @@ export function ScanPage() {
     return (
       <div
         className="px-4 py-16 md:px-7"
-        style={{ textAlign: "center", color: "var(--fg-muted)", maxWidth: 1280, margin: "0 auto" }}
+        style={{ textAlign: "center", color: "var(--fg-muted)", maxWidth: 920, margin: "0 auto" }}
       >
-        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 16 }}>LAUNCHING SCAN</div>
+        <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 16 }}>Launching scan</div>
         <div style={{ fontSize: 22, fontWeight: 500, color: "var(--fg)", marginBottom: 8 }}>
           Starting your scan…
         </div>
@@ -149,8 +171,8 @@ export function ScanPage() {
         }}
       />
     )}
-    <div className="px-4 py-5 md:px-7 pb-16 w-full" style={{ maxWidth: 1280, margin: "0 auto" }}>
-      <div className="re-eyebrow">NEW SCAN</div>
+    <div className="px-4 py-5 md:px-7 pb-16 w-full" style={{ maxWidth: 920, margin: "0 auto" }}>
+      <div className="re-eyebrow">New scan</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>Run a competitor scan</h1>
       <p className="text-fg-muted w-full max-w-[580px]" style={{ marginTop: 8 }}>
         Point RivalEye at a competitor. We pull complaints, switching signals,
@@ -170,7 +192,7 @@ export function ScanPage() {
             boxShadow: nameFocused ? "0 0 0 3px var(--accent-soft)" : "none",
             transition: "border-color 120ms, box-shadow 120ms",
           }}>
-            <Icon name="search" size={16} className="text-fg-faint" />
+            <Search size={16} className="text-fg-faint" />
             <input
               className="min-w-0"
               style={{
@@ -208,73 +230,19 @@ export function ScanPage() {
         </div>
       </Step>
 
-      <Step n={3} label="What are you trying to learn?">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5" style={{ gap: 8 }}>
-          {GOALS.map((g) => {
-            const active = goal === g.id;
-            return (
-              <button
-                key={g.id}
-                onClick={() => setGoal(g.id)}
-                className="re-btn"
-                style={{
-                  flexDirection: "column", alignItems: "flex-start",
-                  padding: 12, height: "auto", gap: 4,
-                  borderColor: active ? "var(--fg)" : "var(--border-strong)",
-                  background: active ? "var(--surface-2)" : "var(--surface)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>{g.label}</span>
-                  {active && <div style={{ width: 8, height: 8, borderRadius: 99, background: "var(--accent)" }} />}
-                </div>
-                <span className="text-fg-muted" style={{ fontSize: 11, fontWeight: 400, textAlign: "left", lineHeight: 1.4 }}>
-                  {g.hint}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 8 }}>
-          We tune the report sections and ranking to match your goal.
-        </div>
-      </Step>
-
-      <Step n={4} label="Platforms to scan">
-        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 6 }}>
-          {PLATFORMS.map((p) => {
-            const on = platforms[p.id];
-            const disabled = !p.live;
-            return (
-              <button
-                key={p.id}
-                onClick={() => !disabled && setPlatforms((s) => ({ ...s, [p.id]: !s[p.id] }))}
-                className="re-btn"
-                disabled={disabled}
-                style={{
-                  justifyContent: "space-between",
-                  background: disabled ? "var(--surface)" : on ? "var(--accent-soft)" : "var(--surface)",
-                  borderColor: disabled ? "var(--border-soft)" : on ? "var(--accent)" : "var(--border-strong)",
-                  color: disabled ? "var(--fg-faint)" : on ? "var(--accent)" : "var(--fg)",
-                  height: 52,
-                  padding: "0 12px",
-                  opacity: disabled ? 0.55 : 1,
-                  cursor: disabled ? "default" : "pointer",
-                }}
-              >
-                <span className="min-w-0" style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
-                  <PlatformIcon id={p.id} active={on && !disabled} />
-                  <span className="min-w-0" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</span>
-                    <span className="text-fg-muted" style={{ fontSize: 11, fontWeight: 400 }}>
-                      {disabled ? "Coming soon" : p.sub}
-                    </span>
-                  </span>
-                </span>
-                {!disabled && on && <Icon name="check" size={14} />}
-              </button>
-            );
-          })}
+      <Step n={3} label="Platforms to scan">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 10 }}>
+          {PLATFORMS.map((p) => (
+            <PlatformTile
+              key={p.id}
+              id={p.id}
+              name={p.name}
+              sub={p.sub}
+              live={p.live}
+              on={platforms[p.id]}
+              onToggle={() => setPlatforms((s) => ({ ...s, [p.id]: !s[p.id] }))}
+            />
+          ))}
         </div>
         {platforms.website && (
           <div style={{ marginTop: 12 }}>
@@ -321,9 +289,9 @@ export function ScanPage() {
         }}
       >
         <div className="min-w-0">
-          <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>READY TO RUN</div>
+          <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>Ready to run</div>
           <div className="break-words" style={{ fontSize: 14, marginTop: 4 }}>
-            <b>{name || "—"}</b> · {goalLabel} · {selectedPlatformCount} platforms
+            <b>{name || "—"}</b> · {selectedPlatformCount} platforms
           </div>
         </div>
         <div className="flex flex-col sm:flex-row" style={{ gap: 8 }}>
@@ -344,7 +312,7 @@ export function ScanPage() {
             {isPending ? (
               <>Starting…</>
             ) : (
-              <>Run scan <Icon name="arrow-right" size={14} /></>
+              <>Run scan <ArrowRight size={14} /></>
             )}
           </button>
         </div>
@@ -372,92 +340,82 @@ function Step({ n, label, children }: { n: number; label: string; children: Reac
   );
 }
 
-function PlatformIcon({ id, active }: { id: PlatformId; active: boolean }) {
-  const color = active ? "currentColor" : "var(--fg-muted)";
-  const s = { width: 18, height: 18, color } as const;
-  switch (id) {
-    case "reddit":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="8" cy="9" r="5.5" />
-          <circle cx="6" cy="9" r="0.9" fill="currentColor" stroke="none" />
-          <circle cx="10" cy="9" r="0.9" fill="currentColor" stroke="none" />
-          <path d="M5.5 11.2c.7.6 1.6 1 2.5 1s1.8-.4 2.5-1" strokeLinecap="round" />
-          <circle cx="13" cy="6" r="1.2" />
-          <path d="M12 5.2 9.5 2.5" strokeLinecap="round" />
-        </svg>
-      );
-    case "linkedin":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="currentColor">
-          <rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.4" />
-          <rect x="3.5" y="6" width="1.6" height="6" />
-          <circle cx="4.3" cy="4.3" r="0.9" />
-          <path d="M6.8 6h1.5v.8c.3-.5.9-.9 1.7-.9 1.3 0 1.9.8 1.9 2.2V12h-1.6V8.5c0-.8-.3-1.2-.9-1.2s-1.1.4-1.1 1.3V12H6.8V6Z" />
-        </svg>
-      );
-    case "producthunt":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="8" cy="8" r="6" />
-          <path d="M6.5 11.5V4.5h2.2c1.1 0 2 .8 2 1.9 0 1-.9 1.9-2 1.9H6.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "twitter":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="currentColor">
-          <path d="M11.5 2h2L9.4 7l4.6 7h-3.7l-3-4.5L4 14H2l4.4-5.2L2 2h3.8l2.8 4.1L11.5 2Z" />
-        </svg>
-      );
-    case "appstore":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M11 4.6c-.6 0-1.5.4-2 .4-.6 0-1.4-.4-2.1-.4-1.2 0-2.3.9-2.3 2.7 0 1.1.3 2.3.9 3.4.6 1 1.1 1.7 1.7 1.7.5 0 .8-.3 1.6-.3.7 0 1 .3 1.6.3.6 0 1.2-.6 1.7-1.6.4-.7.5-1.4.5-1.4s-1.3-.4-1.3-1.9c0-1.2 1-1.8 1-1.8s-.5-1.1-1.3-1.1Z" />
-          <path d="M9.5 4c.3-.4.5-1 .4-1.5-.5 0-1.1.3-1.4.7-.3.3-.5.9-.4 1.4.5 0 1-.3 1.4-.6Z" />
-        </svg>
-      );
-    case "playstore":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M3 2.5l10 5.5-10 5.5V2.5Z" strokeLinejoin="round" />
-        </svg>
-      );
-    case "hackernews":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.4">
-          <rect x="2" y="2" width="12" height="12" rx="1.5" />
-          <path d="M5 5.5l3 3.5 3-3.5M8 9v3" strokeLinecap="round" />
-        </svg>
-      );
-    case "devto":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="1.5" y="3" width="13" height="10" rx="2" />
-          <path d="M5 6.5v3M7 6.5c1 0 2 .7 2 1.5S8 9.5 7 9.5" strokeLinecap="round" />
-          <path d="M10.5 6.5h1.5M10.5 8h1M10.5 9.5h1.5" strokeLinecap="round" />
-        </svg>
-      );
-    case "website":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="8" cy="8" r="6" />
-          <path d="M2 8h12M8 2c-1.5 2-2.5 3.8-2.5 6s1 4 2.5 6M8 2c1.5 2 2.5 3.8 2.5 6s-1 4-2.5 6" strokeLinecap="round" />
-        </svg>
-      );
-    case "capterra":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M8 2L2 6v8h4V9h4v5h4V6L8 2Z" strokeLinejoin="round" />
-        </svg>
-      );
-    case "gmaps":
-      return (
-        <svg viewBox="0 0 16 16" style={s} fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5S12.5 9.5 12.5 6c0-2.5-2-4.5-4.5-4.5Z" strokeLinejoin="round" />
-          <circle cx="8" cy="6" r="1.5" />
-        </svg>
-      );
-    default:
-      return <Icon name="spark" size={14} />;
-  }
+function PlatformTile({
+  id,
+  name,
+  sub,
+  live,
+  on,
+  onToggle,
+}: {
+  id: string;
+  name: string;
+  sub: string;
+  live: boolean;
+  on: boolean;
+  onToggle: () => void;
+}) {
+  const brand = PLATFORM_BRANDS[id] ?? { Icon: Globe, color: "var(--accent)" };
+  const { Icon: BrandLogo, color } = brand;
+  const selected = on && live;
+
+  return (
+    <button
+      type="button"
+      onClick={() => live && onToggle()}
+      disabled={!live}
+      aria-pressed={selected}
+      className="group text-left"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "12px 14px",
+        borderRadius: 12,
+        border: `1px solid ${selected ? color : "var(--border-soft)"}`,
+        background: selected ? `color-mix(in srgb, ${color} 7%, var(--surface))` : "var(--surface)",
+        boxShadow: selected ? `0 0 0 1px ${color} inset` : "var(--shadow-sm)",
+        cursor: live ? "pointer" : "default",
+        opacity: live ? 1 : 0.6,
+        transition: "border-color 120ms, background 120ms, box-shadow 120ms",
+      }}
+    >
+      <span
+        className="grid place-items-center shrink-0"
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          background: `color-mix(in srgb, ${color} 13%, transparent)`,
+          color,
+        }}
+      >
+        <BrandLogo size={19} color={color} />
+      </span>
+      <span className="min-w-0" style={{ flex: 1 }}>
+        <span className="block" style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: "-0.005em" }}>{name}</span>
+        <span className="block text-fg-muted" style={{ fontSize: 11, lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {live ? sub : "Coming soon"}
+        </span>
+      </span>
+      {!live ? (
+        <span className="font-mono-feat shrink-0" style={{ fontSize: 9.5, color: "var(--fg-faint)", border: "1px solid var(--border-soft)", borderRadius: 99, padding: "1px 7px" }}>
+          Soon
+        </span>
+      ) : (
+        <span
+          className="grid place-items-center shrink-0"
+          style={{
+            width: 20, height: 20, borderRadius: 6,
+            border: `1.5px solid ${selected ? color : "var(--border-strong)"}`,
+            background: selected ? color : "transparent",
+            color: "#fff",
+            transition: "background 120ms, border-color 120ms",
+          }}
+        >
+          {selected && <Check size={13} strokeWidth={3} />}
+        </span>
+      )}
+    </button>
+  );
 }

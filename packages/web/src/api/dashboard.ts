@@ -29,8 +29,13 @@ export type DashboardOpportunity = {
   id: string;
   title: string;
   payoff: "low" | "med" | "high";
+  effort: "low" | "med" | "high";
+  thesis: string | null;
   report_id: string;
   competitor_name: string | null;
+  evidence_quote: string | null;
+  evidence_author: string | null;
+  signal_tag: string | null;
 };
 
 export type DashboardData = {
