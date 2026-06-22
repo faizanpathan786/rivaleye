@@ -377,7 +377,6 @@ export function FounderPage({
   const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
-  const openInReport = reportId ? () => navigate(`/reports/${reportId}`) : undefined;
 
   return (
     <div>
@@ -391,7 +390,6 @@ export function FounderPage({
           marketSummary={F.market_opening_summary}
           wedge={F.wedge}
           openEvidence={openEvidence}
-          onOpenInReport={openInReport}
         />
 
         <SectionHead
@@ -551,10 +549,9 @@ interface OpportunitySnapshotProps {
   marketSummary: FounderViewProps["market_opening_summary"];
   wedge: FounderViewProps["wedge"];
   openEvidence: (refs: EvidenceRef) => void;
-  onOpenInReport?: () => void;
 }
 
-function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidence, onOpenInReport }: OpportunitySnapshotProps) {
+function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidence }: OpportunitySnapshotProps) {
   const factorsRecord = factorsToRecord(o.factors);
 
   return (
@@ -625,15 +622,6 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
             >
               <Icon name="quote" size={12} /> View evidence
             </button>
-            {onOpenInReport && (
-              <button
-                type="button"
-                className="re-btn re-btn-ghost re-btn-sm"
-                onClick={onOpenInReport}
-              >
-                <Icon name="external" size={12} /> Open in report
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -1221,9 +1209,6 @@ function ActionCard({
         </div>
 
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--border-soft)", display: "flex", gap: 6 }}>
-          <button type="button" className="re-btn re-btn-sm" style={{ flex: 1, justifyContent: "center" }}>
-            <Icon name="check" size={12} /> Add to plan
-          </button>
           <button
             type="button"
             className="re-btn re-btn-ghost re-btn-sm re-btn-icon"
@@ -1260,9 +1245,6 @@ function FounderFooter({ onNav, competitorName }: { onNav: (to: string) => void;
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" className="re-btn" onClick={() => onNav("/history")}>
-          <Icon name="list" size={14} /> Open full report
-        </button>
         <button type="button" className="re-btn re-btn-accent" onClick={() => onNav("/compare")}>
           <Icon name="compare" size={14} /> Compare to us
         </button>

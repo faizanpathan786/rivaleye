@@ -651,7 +651,6 @@ export function ProductPage({
   const cName = competitorName ?? COMPETITOR.name;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
-  const openInReport = reportId ? () => navigate(`/reports/${reportId}`) : undefined;
 
   return (
     <div>
@@ -660,7 +659,7 @@ export function ProductPage({
       )}
 
       <div className="px-4 py-4 md:px-7 md:py-6" style={{ paddingBottom: 60, maxWidth: 1440, margin: "0 auto" }}>
-        <OpportunitySummary score={P.score} evidenceRefs={P.evidence_refs} openEvidence={openEvidence} onOpenInReport={openInReport} />
+        <OpportunitySummary score={P.score} evidenceRefs={P.evidence_refs} openEvidence={openEvidence} />
 
         <SectionHeadPM
           eyebrow="01 · Feature gap map"
@@ -842,10 +841,9 @@ interface OpportunitySummaryProps {
   score: ProductViewProps["score"];
   evidenceRefs: EvidenceRef;
   openEvidence: (refs: EvidenceRef) => void;
-  onOpenInReport?: () => void;
 }
 
-function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport }: OpportunitySummaryProps) {
+function OpportunitySummary({ score, evidenceRefs, openEvidence }: OpportunitySummaryProps) {
   return (
     <div
       className="grid grid-cols-1 lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1.6fr)]"
@@ -907,15 +905,6 @@ function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport 
             >
               <Icon name="quote" size={12} /> View signals
             </button>
-            {onOpenInReport && (
-              <button
-                type="button"
-                className="re-btn re-btn-ghost re-btn-sm"
-                onClick={onOpenInReport}
-              >
-                <Icon name="external" size={12} /> Open in full report
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -1633,9 +1622,6 @@ function RoadmapCard({
           >
             <Icon name="quote" size={12} /> Evidence
           </button>
-          <button type="button" className="re-btn re-btn-ghost re-btn-sm">
-            <Icon name="check" size={12} /> Add to roadmap
-          </button>
         </div>
       </div>
     </div>
@@ -1759,18 +1745,6 @@ function DecisionColumn({
           </div>
         ))}
       </div>
-      <div
-        style={{
-          padding: "10px 14px",
-          borderTop: "1px solid var(--border-soft)",
-          textAlign: "center",
-          background: "var(--surface-solid)",
-        }}
-      >
-        <button type="button" className="re-btn re-btn-ghost re-btn-sm">
-          <Icon name="plus" size={12} /> Add {title.toLowerCase()} item
-        </button>
-      </div>
     </div>
   );
 }
@@ -1778,7 +1752,7 @@ function DecisionColumn({
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER
 
-function ProductFooter({ onNav }: { onNav: (to: string) => void }) {
+function ProductFooter() {
   return (
     <div
       style={{
@@ -1802,9 +1776,6 @@ function ProductFooter({ onNav }: { onNav: (to: string) => void }) {
         </p>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button type="button" className="re-btn" onClick={() => onNav("/history")}>
-          <Icon name="list" size={14} /> Open full report
-        </button>
         <button type="button" className="re-btn re-btn-accent">
           <Icon name="download" size={14} /> Export roadmap brief
         </button>

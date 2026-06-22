@@ -1841,9 +1841,6 @@ function MarketingFooter({ onNav }: { onNav: (to: string) => void }) {
         </p>
       </div>
       <div className="flex-wrap" style={{ display: "flex", gap: 8 }}>
-        <button type="button" className="re-btn" onClick={() => onNav("/history")}>
-          <Icon name="list" size={14} /> Open full report
-        </button>
         <button type="button" className="re-btn" style={{ background: VIO, color: "#fff", borderColor: VIO }}>
           <Icon name="download" size={14} /> Export positioning brief
         </button>

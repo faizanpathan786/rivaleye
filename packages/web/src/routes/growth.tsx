@@ -6,7 +6,6 @@ import { Icon } from "@/components/icons";
 import { ConfidenceIndicator } from "@/components/dashboard/confidence-indicator";
 import { ScoreFactors } from "@/components/dashboard/score-factors";
 import { EvidenceDrawer } from "@/components/dashboard/evidence-drawer";
-import { useAddOutreach } from "@/hooks/queries/use-outreach";
 import {
   bucketFloat,
   filterByDateRange,
@@ -639,7 +638,6 @@ export function GrowthPage({
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
   const [localRange, setLocalRange] = useState("90d");
   const [filter, setFilter] = useState<Filter>({ intent: "all", source: "all", urgency: "all" });
-  const addOutreach = useAddOutreach();
 
   if (!embedded) {
     if (reportsQuery.isLoading) {
@@ -696,20 +694,6 @@ export function GrowthPage({
   const G = data ?? GROWTH_DATA;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
-  const onAddToOutreach = reportId
-    ? (l: PricingLeadProps) =>
-        addOutreach.mutate({
-          report_id: reportId,
-          title: l.title,
-          pricing_issue: l.pricingIssue,
-          plan_limitation: l.planLimitation,
-          team_size_hint: l.teamSizeHint,
-          budget_sensitivity: l.budgetSensitivity,
-          alternative_interest: l.alternativeInterest,
-          suggested_pricing_angle: l.suggestedPricingAngle,
-          source_url: l.sourceUrl,
-        })
-    : undefined;
 
   const filteredFeed = G.feed.filter((f) => {
     if (filter.intent !== "all" && f.intentType !== filter.intent) return false;
@@ -758,7 +742,7 @@ export function GrowthPage({
         />
         <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {G.pricingLeads.map((l, i) => (
-            <PricingLeadCard key={i} l={l} openEvidence={openEvidence} onAddToOutreach={onAddToOutreach} />
+            <PricingLeadCard key={i} l={l} openEvidence={openEvidence} />
           ))}
         </div>
 
@@ -787,7 +771,7 @@ export function GrowthPage({
         />
         <SegmentHints rows={G.segmentHints} openEvidence={openEvidence} />
 
-        <GrowthFooter onNav={(to) => navigate(to)} reportId={reportId} />
+        <GrowthFooter reportId={reportId} />
       </div>
 
       <EvidenceDrawer
@@ -1490,11 +1474,9 @@ function PriorityTable({
 function PricingLeadCard({
   l,
   openEvidence,
-  onAddToOutreach,
 }: {
   l: PricingLeadProps;
   openEvidence: (refs: EvidenceRef) => void;
-  onAddToOutreach?: (l: PricingLeadProps) => void;
 }) {
   return (
     <div className="re-card">
@@ -1558,15 +1540,6 @@ function PricingLeadCard({
           >
             <Icon name="quote" size={12} /> Evidence
           </button>
-          {onAddToOutreach && (
-            <button
-              type="button"
-              className="re-btn re-btn-sm"
-              onClick={() => onAddToOutreach(l)}
-            >
-              <Icon name="arrow-right" size={12} /> Add to outreach
-            </button>
-          )}
         </div>
       </div>
     </div>
@@ -1921,7 +1894,7 @@ function SegChip({ children, tone }: { children: React.ReactNode; tone?: "neg" |
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER
 
-function GrowthFooter({ onNav, reportId }: { onNav: (to: string) => void; reportId?: string }) {
+function GrowthFooter({ reportId }: { reportId?: string }) {
   const handleExport = () => {
     if (!reportId) return;
     const data = { report_id: reportId, exported_at: new Date().toISOString() };
@@ -1957,13 +1930,6 @@ function GrowthFooter({ onNav, reportId }: { onNav: (to: string) => void; report
         </p>
       </div>
       <div className="flex flex-wrap" style={{ gap: 8 }}>
-        <button
-          type="button"
-          className="re-btn"
-          onClick={() => reportId && onNav(`/reports/${reportId}`)}
-        >
-          <Icon name="list" size={14} /> Open full report
-        </button>
         <button
           type="button"
           className="re-btn"
