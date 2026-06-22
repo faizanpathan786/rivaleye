@@ -25,42 +25,45 @@ function TransactionHistory() {
   const { data, isLoading } = useTransactionsQuery();
 
   if (isLoading) {
-    return <div style={{ color: "var(--fg-muted)", fontSize: 13, padding: "16px 0" }}>Loading…</div>;
+    return <div className="re-card" style={{ color: "var(--fg-muted)", fontSize: 13, padding: 16, textAlign: "center" }}>Loading…</div>;
   }
 
   if (!data || data.length === 0) {
     return (
-      <div style={{ color: "var(--fg-muted)", fontSize: 13, padding: "20px 0", textAlign: "center" }}>
+      <div className="re-card" style={{ color: "var(--fg-faint)", fontSize: 13, padding: "24px 16px", textAlign: "center" }}>
         No transactions yet.
       </div>
     );
   }
 
   return (
-    <div className="re-card" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      <div style={{ overflowY: "auto", maxHeight: 400 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead style={{ position: "sticky", top: 0, background: "var(--surface-2)", zIndex: 1 }}>
-            <tr style={{ borderBottom: "1px solid var(--border-soft)" }}>
-              <th style={{ textAlign: "left", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Date</th>
-              <th style={{ textAlign: "left", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Description</th>
-              <th style={{ textAlign: "right", padding: "10px 16px", color: "var(--fg-muted)", fontWeight: 500 }}>Credits</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((tx) => (
-              <tr key={tx.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
-                <td style={{ padding: "10px 16px", color: "var(--fg-muted)" }}>
+    <div className="re-card" style={{ overflow: "hidden", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+      <div style={{ overflowY: "auto", minHeight: 0 }}>
+        {data.map((tx, i) => {
+          const isPurchase = tx.type === "purchase";
+          return (
+            <div
+              key={tx.id}
+              className="flex items-center justify-between gap-4"
+              style={{ padding: "11px 16px", borderTop: i === 0 ? 0 : "1px solid var(--border-soft)" }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {tx.description}
+                </div>
+                <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)", marginTop: 2 }}>
                   {new Date(tx.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                </td>
-                <td style={{ padding: "10px 16px", color: "var(--fg)" }}>{tx.description}</td>
-                <td style={{ padding: "10px 16px", textAlign: "right", color: tx.type === "purchase" ? "var(--pos)" : "var(--fg-muted)", fontWeight: 600 }}>
-                  {tx.type === "purchase" ? "+" : "-"}{tx.amount}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              <span
+                className={`font-mono-feat tnum re-chip ${isPurchase ? "re-chip-pos" : ""}`}
+                style={{ fontSize: 12, fontWeight: 600, flexShrink: 0, color: isPurchase ? undefined : "var(--fg-muted)" }}
+              >
+                {isPurchase ? "+" : "−"}{tx.amount}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -116,56 +119,77 @@ export function BillingPage() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-12 md:px-7 md:pt-5" style={{ maxWidth: 1280, margin: "0 auto" }}>
-      <div className="re-eyebrow">CREDITS</div>
+    <div className="px-4 pt-4 pb-5 md:px-8 md:pt-5" style={{ maxWidth: 1280, margin: "0 auto", height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div className="re-eyebrow">Credits</div>
       <h1 className="re-h1" style={{ marginTop: 8 }}>Credits &amp; billing</h1>
-      <p style={{ marginTop: 6, color: "var(--fg-muted)", fontSize: 13 }}>
+      <p style={{ marginTop: 6, color: "var(--fg-muted)", fontSize: 13.5 }}>
         Each competitor scan costs 1 credit. Your first scan is free.
       </p>
 
-      {/* Balance + Usage */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 24 }}>
-        <div className="re-card" style={{ padding: "16px 20px" }}>
-          <div className="re-eyebrow" style={{ fontSize: 9, marginBottom: 6 }}>BALANCE</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-            {balanceLoading ? (
-              <span style={{ fontSize: 28, fontWeight: 700, color: "var(--fg-faint)" }}>—</span>
-            ) : (
-              <span style={{ fontSize: 28, fontWeight: 700, color: "var(--fg)", whiteSpace: "nowrap" }}>
-                {balance?.free_scan_used === false ? "Free" : creditsRemaining}
+      {/* Balance hero */}
+      <div
+        style={{
+          marginTop: 18,
+          flexShrink: 0,
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 16,
+          border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 13%, transparent), transparent 58%), var(--surface)",
+          boxShadow: "var(--shadow-sm)",
+          padding: "24px clamp(20px, 4vw, 28px)",
+        }}
+      >
+        <div className="flex flex-wrap items-end justify-between" style={{ gap: 28 }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--accent)" }}>Balance</div>
+            <div className="flex items-baseline" style={{ gap: 8, marginTop: 8 }}>
+              <span className="tnum" style={{ fontSize: 46, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1, color: "var(--fg)" }}>
+                {balanceLoading ? "—" : balance?.free_scan_used === false ? "Free" : creditsRemaining}
               </span>
-            )}
-            <span style={{ fontSize: 11, color: "var(--fg-muted)", whiteSpace: "nowrap" }}>
-              {balance?.free_scan_used === false ? "free scan" : "credits"}
-            </span>
+              <span style={{ fontSize: 13, color: "var(--fg-muted)" }}>
+                {balance?.free_scan_used === false ? "scan available" : "credits remaining"}
+              </span>
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--fg-faint)", marginTop: 8 }}>
+              1 credit = 1 full competitor scan · credits never expire
+            </div>
           </div>
-        </div>
 
-        <div className="re-card" style={{ padding: "16px 20px" }}>
-          <div className="re-eyebrow" style={{ fontSize: 9, marginBottom: 6 }}>USAGE</div>
-          {txLoading || balanceLoading ? (
-            <div style={{ fontSize: 12, color: "var(--fg-faint)" }}>Loading…</div>
-          ) : (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <div style={{ flex: 1, height: 6, borderRadius: 99, background: "var(--surface-2)", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${usagePct}%`, borderRadius: 99, background: usagePct > 80 ? "var(--neg)" : "var(--accent)", transition: "width 400ms ease" }} />
-                </div>
-                <span className="font-mono-feat tnum" style={{ fontSize: 12, color: "var(--fg-muted)", whiteSpace: "nowrap" }}>
+          {!balanceLoading && !txLoading && totalEver > 0 && (
+            <div style={{ flex: "1 1 240px", maxWidth: 340 }}>
+              <div className="flex items-baseline justify-between" style={{ marginBottom: 7 }}>
+                <span className="re-eyebrow" style={{ fontSize: 11 }}>Usage</span>
+                <span className="font-mono-feat tnum" style={{ fontSize: 12, color: "var(--fg-muted)" }}>
                   {scansUsed} / {totalEver}
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: "var(--fg-faint)" }}>
-                {scansUsed} scan{scansUsed !== 1 ? "s" : ""} run · {creditsRemaining} credit{creditsRemaining !== 1 ? "s" : ""} remaining
+              <div style={{ height: 9, borderRadius: 99, background: "var(--surface-2)", overflow: "hidden", boxShadow: "inset 0 0 0 1px var(--border-soft)" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${usagePct}%`,
+                    borderRadius: 99,
+                    background: usagePct > 80
+                      ? "linear-gradient(90deg, var(--warn), var(--neg))"
+                      : "linear-gradient(90deg, color-mix(in srgb, var(--accent) 70%, #fff), var(--accent))",
+                    transition: "width 500ms cubic-bezier(.2,.7,.2,1)",
+                  }}
+                />
               </div>
-            </>
+              <div style={{ fontSize: 12, color: "var(--fg-faint)", marginTop: 8 }}>
+                {scansUsed} scan{scansUsed !== 1 ? "s" : ""} run · {creditsRemaining} credit{creditsRemaining !== 1 ? "s" : ""} left
+              </div>
+            </div>
           )}
         </div>
       </div>
 
       {/* Buy Credits */}
-      <div style={{ marginTop: 24 }}>
-        <div className="re-eyebrow" style={{ marginBottom: 12 }}>BUY CREDITS</div>
+      <div style={{ marginTop: 20, flexShrink: 0 }}>
+        <div className="re-eyebrow" style={{ fontSize: 11 }}>Buy credits</div>
+        <h2 className="re-h2" style={{ fontSize: 18, marginTop: 6, marginBottom: 4 }}>Top up — buy more, pay less per scan</h2>
+        <p style={{ color: "var(--fg-muted)", fontSize: 13, marginBottom: 16 }}>1 credit = 1 full competitor scan. Credits never expire.</p>
         {error && (
           <div style={{ fontSize: 12, color: "var(--neg)", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 6, padding: "10px 14px", marginBottom: 16 }}>
             {error}
@@ -180,22 +204,28 @@ export function BillingPage() {
           <div style={{ color: "var(--fg-muted)", fontSize: 13 }}>Loading packs…</div>
         )}
         {packsQuery.data && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(180px, 100%), 1fr))", gap: 12 }}>
-            {packsQuery.data.map((pack) => (
-              <CreditPackCard
-                key={pack.id}
-                pack={pack}
-                onBuy={handleBuy}
-                loading={buyingPackId === pack.id}
-              />
-            ))}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 14 }}>
+            {(() => {
+              const baselinePerCredit = packsQuery.data.length
+                ? Math.max(...packsQuery.data.map((p) => p.price_paise / 100 / p.credits))
+                : undefined;
+              return packsQuery.data.map((pack) => (
+                <CreditPackCard
+                  key={pack.id}
+                  pack={pack}
+                  onBuy={handleBuy}
+                  loading={buyingPackId === pack.id}
+                  baselinePerCredit={baselinePerCredit}
+                />
+              ));
+            })()}
           </div>
         )}
       </div>
 
       {/* Transaction History */}
-      <div style={{ marginTop: 32 }}>
-        <div className="re-eyebrow" style={{ marginBottom: 12 }}>TRANSACTION HISTORY</div>
+      <div style={{ marginTop: 20, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+        <div className="re-eyebrow" style={{ fontSize: 11, marginBottom: 10, flexShrink: 0 }}>Transaction history</div>
         <TransactionHistory />
       </div>
     </div>

@@ -6,7 +6,6 @@ import { Icon } from "@/components/icons";
 import { ConfidenceIndicator } from "@/components/dashboard/confidence-indicator";
 import { ScoreFactors } from "@/components/dashboard/score-factors";
 import { EvidenceDrawer } from "@/components/dashboard/evidence-drawer";
-import { useAddOutreach } from "@/hooks/queries/use-outreach";
 import {
   bucketFloat,
   filterByDateRange,
@@ -592,8 +591,8 @@ const GRN_BG = "rgba(22,163,74,0.08)";
 
 const eyebrow: CSSProperties = {
   fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-  fontSize: 11,
-  textTransform: "uppercase",
+  fontSize: 12,
+  textTransform: "none",
   letterSpacing: "0.1em",
   color: "var(--fg-faint)",
 };
@@ -605,8 +604,8 @@ const monoFaint: CSSProperties = {
 
 const labelMono = (overrides: CSSProperties = {}): CSSProperties => ({
   ...monoFaint,
-  fontSize: 10,
-  textTransform: "uppercase",
+  fontSize: 11,
+  textTransform: "none",
   letterSpacing: "0.08em",
   paddingTop: 2,
   ...overrides,
@@ -639,7 +638,6 @@ export function GrowthPage({
   const [drawerRefs, setDrawerRefs] = useState<EvidenceRef | null>(null);
   const [localRange, setLocalRange] = useState("90d");
   const [filter, setFilter] = useState<Filter>({ intent: "all", source: "all", urgency: "all" });
-  const addOutreach = useAddOutreach();
 
   if (!embedded) {
     if (reportsQuery.isLoading) {
@@ -696,20 +694,6 @@ export function GrowthPage({
   const G = data ?? GROWTH_DATA;
   const openEvidence = (refs: EvidenceRef) => setDrawerRefs(refs);
   const closeEvidence = () => setDrawerRefs(null);
-  const onAddToOutreach = reportId
-    ? (l: PricingLeadProps) =>
-        addOutreach.mutate({
-          report_id: reportId,
-          title: l.title,
-          pricing_issue: l.pricingIssue,
-          plan_limitation: l.planLimitation,
-          team_size_hint: l.teamSizeHint,
-          budget_sensitivity: l.budgetSensitivity,
-          alternative_interest: l.alternativeInterest,
-          suggested_pricing_angle: l.suggestedPricingAngle,
-          source_url: l.sourceUrl,
-        })
-    : undefined;
 
   const filteredFeed = G.feed.filter((f) => {
     if (filter.intent !== "all" && f.intentType !== filter.intent) return false;
@@ -758,7 +742,7 @@ export function GrowthPage({
         />
         <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           {G.pricingLeads.map((l, i) => (
-            <PricingLeadCard key={i} l={l} openEvidence={openEvidence} onAddToOutreach={onAddToOutreach} />
+            <PricingLeadCard key={i} l={l} openEvidence={openEvidence} />
           ))}
         </div>
 
@@ -786,8 +770,6 @@ export function GrowthPage({
           subtitle="Soft inferences from post content. Confidence-scored. Use as background, not as fact."
         />
         <SegmentHints rows={G.segmentHints} openEvidence={openEvidence} />
-
-        <GrowthFooter onNav={(to) => navigate(to)} reportId={reportId} />
       </div>
 
       <EvidenceDrawer
@@ -811,7 +793,7 @@ function GrowthHeader({ range, setRange }: { range: string; setRange: (r: string
           style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}
         >
           <div>
-            <div style={eyebrow}>GROWTH VIEW · SWITCH-INTENT INTELLIGENCE</div>
+            <div style={{ ...eyebrow, letterSpacing: "0.02em" }}>Growth view · Switch-intent intelligence</div>
             <h1 className="re-h1" style={{ marginTop: 6 }}>
               Growth View
             </h1>
@@ -821,7 +803,7 @@ function GrowthHeader({ range, setRange }: { range: string; setRange: (r: string
             </p>
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
+            <span style={{ ...monoFaint, fontSize: 12, marginRight: 4, letterSpacing: "0.02em" }}>Range</span>
             {["24h", "7d", "30d", "90d"].map((r) => (
               <button
                 key={r}
@@ -871,7 +853,7 @@ function SectionHeadGR({
       }}
     >
       <div className="min-w-0">
-        <div style={{ ...eyebrow, fontSize: 10 }}>{eb}</div>
+        <div style={{ ...eyebrow, fontSize: 11 }}>{eb}</div>
         <h2 className="re-h2" style={{ marginTop: 6, fontSize: 22 }}>
           {title}
         </h2>
@@ -904,7 +886,7 @@ function IntentSnapshot({
       <div className="re-card re-card-elev" style={{ position: "relative", overflow: "hidden" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
         <div style={{ position: "relative", padding: 18 }}>
-          <div style={{ ...eyebrow, fontSize: 10 }}>SWITCH INTENT SCORE</div>
+          <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>Switch intent score</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
@@ -915,18 +897,18 @@ function IntentSnapshot({
             <span style={{ ...monoFaint, fontSize: 18, fontWeight: 400 }}>/100</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-            <span className="re-chip" style={{ fontSize: 11, color: GRN, background: GRN_BG, border: `1px solid ${GRN}33` }}>
+            <span className="re-chip" style={{ fontSize: 12, color: GRN, background: GRN_BG, border: `1px solid ${GRN}33` }}>
               {score.label}
             </span>
           </div>
 
           <hr className="re-rule" style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: "18px 0 12px" }} />
 
-          <div style={{ ...eyebrow, fontSize: 10, marginBottom: 8 }}>SCORE FACTORS</div>
+          <div style={{ ...eyebrow, fontSize: 11, marginBottom: 8, letterSpacing: "0.02em" }}>Score factors</div>
           <ScoreFactors factors={score.factors} />
 
           {score.explanation && (
-            <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.5 }}>
+            <p style={{ margin: "12px 0 0", fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.6 }}>
               {score.explanation}
             </p>
           )}
@@ -939,7 +921,7 @@ function IntentSnapshot({
           <h3>
             <Icon name="alert" size={14} /> Highest opportunity right now
           </h3>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
             live · auto-ranked
           </span>
         </div>
@@ -974,12 +956,12 @@ function IntentSnapshot({
                 <UrgencyPill level={topOpportunity.urgency} />
                 <span className="font-mono-feat tnum" style={{ fontSize: 13, fontWeight: 600, color: GRN }}>
                   {topOpportunity.intentScore}
-                  <span className="text-fg-faint" style={{ fontSize: 10 }}>
+                  <span className="text-fg-faint" style={{ fontSize: 11 }}>
                     /100
                   </span>
                 </span>
                 <span style={{ width: 1, height: 14, background: "var(--border-soft)" }} />
-                <span className="re-chip" style={{ fontSize: 10 }}>
+                <span className="re-chip" style={{ fontSize: 11 }}>
                   <span
                     style={{
                       display: "inline-block",
@@ -992,7 +974,7 @@ function IntentSnapshot({
                   />
                   {sourceName(topOpportunity.source)}
                 </span>
-                <span style={{ ...monoFaint, fontSize: 10 }}>{topOpportunity.sourceDate}</span>
+                <span style={{ ...monoFaint, fontSize: 11 }}>{topOpportunity.sourceDate}</span>
               </div>
               <EngagementBadge level={topOpportunity.engagementLevel} />
             </div>
@@ -1002,24 +984,24 @@ function IntentSnapshot({
             </h3>
 
             <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "80px 1fr", gap: 8, rowGap: 6 }}>
-              <span style={labelMono()}>INTENT</span>
+              <span style={labelMono({ letterSpacing: "0.02em" })}>Intent</span>
               <span style={{ fontSize: 12.5 }}>
                 <IntentTag intent={topOpportunity.intentType} />
               </span>
 
               {topOpportunity.painMentioned && (
                 <>
-                  <span style={labelMono()}>PAIN</span>
+                  <span style={labelMono({ letterSpacing: "0.02em" })}>Pain</span>
                   <span style={{ fontSize: 12.5, color: "var(--fg-muted)" }}>{topOpportunity.painMentioned}</span>
                 </>
               )}
 
               {topOpportunity.suggestedAngle && (
                 <>
-                  <span className="font-mono-feat" style={{ ...labelMono({ color: GRN }), fontWeight: 600 }}>
-                    ANGLE
+                  <span className="font-mono-feat" style={{ ...labelMono({ color: GRN, letterSpacing: "0.02em" }), fontWeight: 600 }}>
+                    Angle
                   </span>
-                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg)", fontWeight: 500 }}>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)", fontWeight: 500 }}>
                     {topOpportunity.suggestedAngle}
                   </span>
                 </>
@@ -1070,7 +1052,7 @@ function IntentFilters({
 }) {
   return (
     <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-      <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 4 }}>
+      <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em", marginRight: 4 }}>
         {count}/{total} shown
       </span>
       <SelectChip
@@ -1118,7 +1100,7 @@ function SelectChip({
 }) {
   return (
     <div className="re-chip" style={{ padding: "1px 4px 1px 9px", gap: 0 }}>
-      <span className="text-fg-faint" style={{ fontSize: 10 }}>
+      <span className="text-fg-faint" style={{ fontSize: 11 }}>
         {label}
       </span>
       <select
@@ -1128,7 +1110,7 @@ function SelectChip({
           border: 0,
           background: "transparent",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 11,
+          fontSize: 12,
           color: "var(--fg)",
           padding: "2px 4px",
           outline: "none",
@@ -1168,7 +1150,7 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
         >
           {f.intentScore}
         </span>
-        <span style={{ ...monoFaint, fontSize: 9, marginTop: 2 }}>INTENT</span>
+        <span style={{ ...monoFaint, fontSize: 11, marginTop: 2, letterSpacing: "0.02em" }}>Intent</span>
         <div style={{ marginTop: 8 }}>
           <UrgencyPill level={f.urgency} />
         </div>
@@ -1177,7 +1159,7 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
       {/* Main content */}
       <div className="min-w-0" style={{ padding: "14px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
-          <span className="re-chip" style={{ fontSize: 10 }}>
+          <span className="re-chip" style={{ fontSize: 11 }}>
             <span
               style={{
                 display: "inline-block",
@@ -1191,12 +1173,12 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
             {sourceName(f.source)}
           </span>
           {f.userOrContext && (
-            <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg)", fontWeight: 500 }}>
+            <span className="font-mono-feat" style={{ fontSize: 12, color: "var(--fg)", fontWeight: 500 }}>
               {f.userOrContext}
             </span>
           )}
-          <span style={{ ...monoFaint, fontSize: 10 }}>·</span>
-          <span style={{ ...monoFaint, fontSize: 10 }}>{f.sourceDate}</span>
+          <span style={{ ...monoFaint, fontSize: 11 }}>·</span>
+          <span style={{ ...monoFaint, fontSize: 11 }}>{f.sourceDate}</span>
           <span style={{ marginLeft: "auto" }}>
             <EngagementBadge level={f.engagementLevel} />
           </span>
@@ -1235,9 +1217,9 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
 }
 
 const URGENCY_STYLES: Record<UiUrgency, { c: string; bg: string; lbl: string }> = {
-  hot: { c: "var(--neg)", bg: "rgba(220,38,38,.10)", lbl: "HOT" },
-  warm: { c: "var(--warn)", bg: "rgba(217,119,6,.10)", lbl: "WARM" },
-  research: { c: "var(--fg-muted)", bg: "rgba(20,16,12,.06)", lbl: "RESEARCH" },
+  hot: { c: "var(--neg)", bg: "color-mix(in srgb, var(--neg) 10%, transparent)", lbl: "Hot" },
+  warm: { c: "var(--warn)", bg: "color-mix(in srgb, var(--warn) 10%, transparent)", lbl: "Warm" },
+  research: { c: "var(--fg-muted)", bg: "var(--surface-2)", lbl: "Research" },
 };
 
 function UrgencyPill({ level }: { level: UiUrgency }) {
@@ -1250,8 +1232,8 @@ function UrgencyPill({ level }: { level: UiUrgency }) {
         background: map.bg,
         color: map.c,
         fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        fontSize: 9,
-        textTransform: "uppercase",
+        fontSize: 11,
+        textTransform: "none",
         letterSpacing: "0.06em",
         fontWeight: 700,
       }}
@@ -1265,8 +1247,8 @@ type LowMedHigh = "low" | "medium" | "high";
 
 const ENGAGEMENT_STYLES: Record<LowMedHigh, { c: string; bg: string; lbl: string }> = {
   high: { c: GRN, bg: GRN_BG, lbl: "High engagement" },
-  medium: { c: "var(--warn)", bg: "rgba(217,119,6,.08)", lbl: "Med engagement" },
-  low: { c: "var(--fg-muted)", bg: "rgba(20,16,12,.06)", lbl: "Low engagement" },
+  medium: { c: "var(--warn)", bg: "color-mix(in srgb, var(--warn) 8%, transparent)", lbl: "Med engagement" },
+  low: { c: "var(--fg-muted)", bg: "var(--surface-2)", lbl: "Low engagement" },
 };
 
 function EngagementBadge({ level }: { level: LowMedHigh }) {
@@ -1279,8 +1261,8 @@ function EngagementBadge({ level }: { level: LowMedHigh }) {
         background: map.bg,
         color: map.c,
         fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        fontSize: 9,
-        textTransform: "uppercase",
+        fontSize: 11,
+        textTransform: "none",
         letterSpacing: "0.06em",
         fontWeight: 600,
         border: `1px solid ${map.c}33`,
@@ -1314,8 +1296,8 @@ function IntentTag({ intent }: { intent: SwitchIntentType }) {
         color: c,
         border: `1px solid ${c}33`,
         fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        fontSize: 10,
-        textTransform: "uppercase",
+        fontSize: 11,
+        textTransform: "none",
         letterSpacing: "0.04em",
         fontWeight: 600,
       }}
@@ -1335,8 +1317,8 @@ function PainTag({ pain }: { pain: string }) {
         color: "var(--fg-muted)",
         border: "1px solid var(--border-soft)",
         fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        fontSize: 10,
-        textTransform: "uppercase",
+        fontSize: 11,
+        textTransform: "none",
         letterSpacing: "0.04em",
       }}
     >
@@ -1348,9 +1330,9 @@ function PainTag({ pain }: { pain: string }) {
 type SpamRisk = LowMedHigh;
 
 const SPAM_STYLES: Record<SpamRisk, { c: string; bg: string; lbl: string }> = {
-  low: { c: "var(--pos)", bg: "rgba(22,163,74,.08)", lbl: "LOW SPAM RISK" },
-  medium: { c: "var(--warn)", bg: "rgba(217,119,6,.08)", lbl: "WATCH TONE" },
-  high: { c: "var(--neg)", bg: "rgba(220,38,38,.08)", lbl: "HIGH SPAM RISK" },
+  low: { c: "var(--pos)", bg: "color-mix(in srgb, var(--pos) 8%, transparent)", lbl: "Low spam risk" },
+  medium: { c: "var(--warn)", bg: "color-mix(in srgb, var(--warn) 8%, transparent)", lbl: "Watch tone" },
+  high: { c: "var(--neg)", bg: "color-mix(in srgb, var(--neg) 8%, transparent)", lbl: "High spam risk" },
 };
 
 function SpamRiskBadge({ level }: { level: SpamRisk }) {
@@ -1364,8 +1346,8 @@ function SpamRiskBadge({ level }: { level: SpamRisk }) {
         color: map.c,
         border: `1px solid ${map.c}33`,
         fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        fontSize: 9,
-        textTransform: "uppercase",
+        fontSize: 11,
+        textTransform: "none",
         letterSpacing: "0.06em",
         fontWeight: 700,
         display: "inline-flex",
@@ -1401,8 +1383,8 @@ function PriorityTable({
           padding: "10px 18px",
           borderBottom: "1px solid var(--border-soft)",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 10,
-          textTransform: "uppercase",
+          fontSize: 11,
+          textTransform: "none",
           letterSpacing: "0.08em",
           color: "var(--fg-faint)",
           gap: 12,
@@ -1431,7 +1413,7 @@ function PriorityTable({
           <UrgencyPill level={r.priority} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.3 }}>{r.conversationTitle}</div>
-            <div style={{ ...monoFaint, fontSize: 10, marginTop: 2 }}>
+            <div style={{ ...monoFaint, fontSize: 11, marginTop: 2 }}>
               {sourceName(r.source)} · {r.sourceDate}
             </div>
           </div>
@@ -1442,7 +1424,7 @@ function PriorityTable({
             {r.pain && <PainTag pain={r.pain} />}
           </div>
           <div>
-            <span className="re-chip" style={{ fontSize: 10 }}>
+            <span className="re-chip" style={{ fontSize: 11 }}>
               <span
                 style={{
                   display: "inline-block",
@@ -1456,7 +1438,7 @@ function PriorityTable({
               {sourceName(r.source)}
             </span>
           </div>
-          <div style={{ fontSize: 12, lineHeight: 1.4, color: "var(--fg-muted)" }}>{r.suggestedAction}</div>
+          <div style={{ fontSize: 13, lineHeight: 1.4, color: "var(--fg-muted)" }}>{r.suggestedAction}</div>
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
             <button
               type="button"
@@ -1490,20 +1472,18 @@ function PriorityTable({
 function PricingLeadCard({
   l,
   openEvidence,
-  onAddToOutreach,
 }: {
   l: PricingLeadProps;
   openEvidence: (refs: EvidenceRef) => void;
-  onAddToOutreach?: (l: PricingLeadProps) => void;
 }) {
   return (
     <div className="re-card">
       <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span
           className="re-chip"
-          style={{ fontSize: 10, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid transparent" }}
+          style={{ fontSize: 11, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid transparent" }}
         >
-          PRICING PAIN
+          Pricing pain
         </span>
       </div>
       <div style={{ padding: "8px 16px 14px" }}>
@@ -1536,17 +1516,17 @@ function PricingLeadCard({
             <div
               className="font-mono-feat"
               style={{
-                fontSize: 10,
+                fontSize: 11,
                 color: GRN,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                textTransform: "none",
+                letterSpacing: "0.02em",
                 fontWeight: 700,
                 marginBottom: 4,
               }}
             >
-              SUGGESTED ANGLE
+              Suggested angle
             </div>
-            <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{l.suggestedPricingAngle}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.6 }}>{l.suggestedPricingAngle}</span>
           </div>
         )}
 
@@ -1558,15 +1538,6 @@ function PricingLeadCard({
           >
             <Icon name="quote" size={12} /> Evidence
           </button>
-          {onAddToOutreach && (
-            <button
-              type="button"
-              className="re-btn re-btn-sm"
-              onClick={() => onAddToOutreach(l)}
-            >
-              <Icon name="arrow-right" size={12} /> Add to outreach
-            </button>
-          )}
         </div>
       </div>
     </div>
@@ -1584,10 +1555,10 @@ function Chiplet({ label, value, tone }: { label: string; value: string; tone?: 
         border: "1px solid var(--border-soft)",
       }}
     >
-      <div style={{ ...monoFaint, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
+      <div style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em" }}>{label}</div>
       <div
         style={{
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: 500,
           marginTop: 3,
           color,
@@ -1624,8 +1595,8 @@ function CommunitiesTable({
           padding: "10px 18px",
           borderBottom: "1px solid var(--border-soft)",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 10,
-          textTransform: "uppercase",
+          fontSize: 11,
+          textTransform: "none",
           letterSpacing: "0.08em",
           color: "var(--fg-faint)",
           gap: 14,
@@ -1663,7 +1634,7 @@ function CommunitiesTable({
                 border: `1px solid ${coverageColor(c.source)}40`,
                 display: "grid",
                 placeItems: "center",
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 700,
                 color: coverageColor(c.source),
                 fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
@@ -1673,7 +1644,7 @@ function CommunitiesTable({
             </span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{c.name}</div>
-              <div style={{ ...monoFaint, fontSize: 10, marginTop: 2 }}>{sourceName(c.source)}</div>
+              <div style={{ ...monoFaint, fontSize: 11, marginTop: 2 }}>{sourceName(c.source)}</div>
             </div>
           </div>
           <div className="font-mono-feat tnum" style={{ fontSize: 13, fontWeight: 500 }}>
@@ -1687,7 +1658,7 @@ function CommunitiesTable({
             <div className="re-meter" style={{ flex: 1, height: 3 }}>
               <i style={{ width: `${c.fit * 100}%`, background: GRN }} />
             </div>
-            <span className="font-mono-feat tnum" style={{ fontSize: 10, color: GRN }}>
+            <span className="font-mono-feat tnum" style={{ fontSize: 11, color: GRN }}>
               {Math.round(c.fit * 100)}
             </span>
           </div>
@@ -1730,16 +1701,16 @@ function ReplyAngleCard({
       >
         <span
           className="font-mono-feat"
-          style={{ fontSize: 10, color: GRN, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
+          style={{ fontSize: 11, color: GRN, textTransform: "none", letterSpacing: "0.02em", fontWeight: 700 }}
         >
-          TEMPLATE {String(index + 1).padStart(2, "0")}
+          Template {String(index + 1).padStart(2, "0")}
         </span>
         <SpamRiskBadge level={r.spamRisk} />
       </div>
       <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         <div>
-          <div style={{ ...eyebrow, fontSize: 9, marginBottom: 4 }}>CONTEXT</div>
-          <p className="text-fg-muted" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.5 }}>
+          <div style={{ ...eyebrow, fontSize: 11, marginBottom: 4, letterSpacing: "0.02em" }}>Context</div>
+          <p className="text-fg-muted" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6 }}>
             {r.contextSummary}
           </p>
         </div>
@@ -1748,53 +1719,53 @@ function ReplyAngleCard({
           <div
             className="font-mono-feat"
             style={{
-              fontSize: 9,
+              fontSize: 11,
               color: GRN,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
+              textTransform: "none",
+              letterSpacing: "0.02em",
               fontWeight: 700,
               marginBottom: 4,
             }}
           >
-            ACKNOWLEDGE
+            Acknowledge
           </div>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{r.whatToAcknowledge}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6 }}>{r.whatToAcknowledge}</span>
         </div>
 
         <div
-          style={{ padding: 10, background: "rgba(220,38,38,0.05)", borderRadius: 8, borderLeft: "2px solid var(--neg)" }}
+          style={{ padding: 10, background: "color-mix(in srgb, var(--neg) 5%, transparent)", borderRadius: 8, borderLeft: "2px solid var(--neg)" }}
         >
           <div
             className="font-mono-feat"
             style={{
-              fontSize: 9,
+              fontSize: 11,
               color: "var(--neg)",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
+              textTransform: "none",
+              letterSpacing: "0.02em",
               fontWeight: 700,
               marginBottom: 4,
             }}
           >
-            DON'T
+            Don't
           </div>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{r.whatNotToSay}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6 }}>{r.whatNotToSay}</span>
         </div>
 
         <div style={{ padding: 12, background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border-soft)" }}>
           <div
             className="font-mono-feat"
             style={{
-              fontSize: 9,
+              fontSize: 11,
               color: "var(--fg)",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
+              textTransform: "none",
+              letterSpacing: "0.02em",
               fontWeight: 700,
               marginBottom: 6,
             }}
           >
-            HELPFUL REPLY
+            Helpful reply
           </div>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, fontStyle: "italic" }}>"{r.helpfulReplyAngle}"</p>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, fontStyle: "italic" }}>"{r.helpfulReplyAngle}"</p>
           {r.softCtaSuggestion && (
             <div
               style={{
@@ -1806,10 +1777,10 @@ function ReplyAngleCard({
                 alignItems: "center",
               }}
             >
-              <span style={{ ...monoFaint, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                SOFT CTA
+              <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>
+                Soft CTA
               </span>
-              <span style={{ fontSize: 12, color: "var(--fg-muted)", fontStyle: "italic" }}>{r.softCtaSuggestion}</span>
+              <span style={{ fontSize: 13, color: "var(--fg-muted)", fontStyle: "italic" }}>{r.softCtaSuggestion}</span>
             </div>
           )}
         </div>
@@ -1848,7 +1819,7 @@ function SegmentHints({
       {rows.map((r, i) => (
         <div key={i} className="re-card" style={{ padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <span className="font-mono-feat" style={{ fontSize: 11, fontWeight: 600 }}>
+            <span className="font-mono-feat" style={{ fontSize: 12, fontWeight: 600 }}>
               {r.roleHint ?? "Inferred segment"}
             </span>
             <ConfidenceIndicator confidence={r.confidence} />
@@ -1895,11 +1866,11 @@ function SegChip({ children, tone }: { children: React.ReactNode; tone?: "neg" |
     tone === "neg" ? "var(--neg)" : tone === "warn" ? "var(--warn)" : tone === "pos" ? "var(--pos)" : "var(--fg-muted)";
   const bg =
     tone === "neg"
-      ? "rgba(220,38,38,.08)"
+      ? "color-mix(in srgb, var(--neg) 8%, transparent)"
       : tone === "warn"
-        ? "rgba(217,119,6,.08)"
+        ? "color-mix(in srgb, var(--warn) 8%, transparent)"
         : tone === "pos"
-          ? "rgba(22,163,74,.08)"
+          ? "color-mix(in srgb, var(--pos) 8%, transparent)"
           : "var(--surface-2)";
   return (
     <span
@@ -1909,7 +1880,7 @@ function SegChip({ children, tone }: { children: React.ReactNode; tone?: "neg" |
         background: bg,
         color: c,
         border: `1px solid ${tone ? `${c}33` : "var(--border-soft)"}`,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 500,
       }}
     >
@@ -1921,58 +1892,3 @@ function SegChip({ children, tone }: { children: React.ReactNode; tone?: "neg" |
 // ─────────────────────────────────────────────────────────────────────────
 // FOOTER
 
-function GrowthFooter({ onNav, reportId }: { onNav: (to: string) => void; reportId?: string }) {
-  const handleExport = () => {
-    if (!reportId) return;
-    const data = { report_id: reportId, exported_at: new Date().toISOString() };
-    const csv = "Report ID,Exported At\n" + reportId + "," + new Date().toISOString();
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `growth-shortlist-${new Date().getTime()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <div
-      className="px-5 py-5 md:px-6 md:py-[22px]"
-      style={{
-        marginTop: 50,
-        borderRadius: 10,
-        border: "1px solid var(--border-soft)",
-        background: `linear-gradient(135deg, ${GRN_BG}, rgba(0,97,177,0.04))`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 24,
-        flexWrap: "wrap",
-      }}
-    >
-      <div className="min-w-0">
-        <div style={eyebrow}>GROWTH OPERATING PRINCIPLE</div>
-        <p className="w-full max-w-[720px]" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, fontWeight: 500 }}>
-          "Find five conversations worth participating in today — and earn a reply by being useful, not loud."
-        </p>
-      </div>
-      <div className="flex flex-wrap" style={{ gap: 8 }}>
-        <button
-          type="button"
-          className="re-btn"
-          onClick={() => reportId && onNav(`/reports/${reportId}`)}
-        >
-          <Icon name="list" size={14} /> Open full report
-        </button>
-        <button
-          type="button"
-          className="re-btn"
-          style={{ background: GRN, color: "#fff", borderColor: GRN }}
-          onClick={handleExport}
-        >
-          <Icon name="download" size={14} /> Export today's shortlist
-        </button>
-      </div>
-    </div>
-  );
-}

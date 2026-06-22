@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Zap } from "lucide-react";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
 import {
   useReportsQuery,
@@ -24,15 +25,17 @@ export function PainOppsPage() {
   const isLoading = complaintsLoading || oppsLoading;
 
   return (
-    <div className="px-4 py-8 md:px-7" style={{ maxWidth: 1400, margin: "0 auto" }}>
+    <div className="px-4 py-8 md:px-8" style={{ maxWidth: 1180, margin: "0 auto" }}>
       {/* Page header */}
-      <div style={{ marginBottom: 28 }}>
-        <div className="re-eyebrow" style={{ fontSize: 10, color: "var(--neg)" }}>⚡ PAIN & OPPORTUNITIES</div>
-        <h1 className="re-h1" style={{ fontSize: "clamp(20px,4vw,28px)", marginTop: 6, letterSpacing: "-0.02em" }}>
-          Competitor Pain Analysis
+      <div style={{ marginBottom: 26 }}>
+        <div className="re-eyebrow flex items-center gap-1.5" style={{ fontSize: 11, color: "var(--neg)" }}>
+          <Zap size={12} /> Pain &amp; opportunities
+        </div>
+        <h1 className="re-h1" style={{ fontSize: "clamp(21px,4vw,28px)", marginTop: 8, letterSpacing: "-0.02em" }}>
+          What competitors&rsquo; users complain about
         </h1>
-        <p style={{ fontSize: 13, color: "var(--fg-muted)", marginTop: 4 }}>
-          Select a competitor to see what their users complain about and where you can win.
+        <p style={{ fontSize: 13.5, color: "var(--fg-muted)", marginTop: 6, maxWidth: 580, lineHeight: 1.5 }}>
+          Pick a competitor to see what frustrates their users — and the openings where you can win them over.
         </p>
       </div>
 
@@ -79,10 +82,7 @@ function CompetitorSelector({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div
-      className="flex flex-wrap gap-2.5"
-      style={{ marginBottom: 32 }}
-    >
+    <div className="flex flex-wrap gap-2.5" style={{ marginBottom: 30 }}>
       {reports.map((r) => {
         const name = r.primary_competitor_name ?? r.competitors[0] ?? r.category;
         const domain = r.primary_competitor_domain ?? "";
@@ -102,7 +102,7 @@ function CompetitorSelector({
               transition: "border-color 150ms, background 150ms",
               fontSize: 13,
               color: isSelected ? "var(--fg)" : "var(--fg-muted)",
-              fontWeight: isSelected ? 500 : 400,
+              fontWeight: isSelected ? 600 : 400,
             }}
           >
             <CompetitorAvatar name={name} domain={domain} size={22} borderRadius={99} />
@@ -142,83 +142,46 @@ function PainContent({
 
   return (
     <div>
-      {/* Stats bar */}
-      <div
-        className="flex items-center gap-6 flex-wrap"
-        style={{
-          padding: "12px 16px",
-          background: "var(--surface)",
-          border: "1px solid var(--border-soft)",
-          borderRadius: "var(--r-md)",
-          marginBottom: 24,
-        }}
-      >
-        <CompetitorAvatar
-          name={name}
-          domain={report.primary_competitor_domain ?? ""}
-          size={32}
-          borderRadius={8}
-        />
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>{name}</div>
-          <div className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg-faint)" }}>
-            {complaints.length} COMPLAINTS · {opportunities.length} OPPORTUNITIES
-          </div>
+      {/* Summary bar */}
+      <div className="re-card flex items-center gap-4 flex-wrap" style={{ padding: "13px 16px", marginBottom: 28 }}>
+        <CompetitorAvatar name={name} domain={report.primary_competitor_domain ?? ""} size={36} borderRadius={9} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>{name}</div>
+          {report.primary_competitor_domain && (
+            <div className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg-faint)" }}>
+              {report.primary_competitor_domain}
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <span className="re-chip re-chip-neg" style={{ fontSize: 11 }}>{complaints.length} complaints</span>
+          <span className="re-chip re-chip-pos" style={{ fontSize: 11 }}>{opportunities.length} opportunities</span>
         </div>
       </div>
 
-      {/* Complaints */}
-      <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 10 }}>
-        COMPLAINTS{" "}
-        <span className="font-mono-feat text-fg-faint">({complaints.length})</span>
+      {/* Complaints — what's wrong */}
+      <div style={{ marginBottom: 14 }}>
+        <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--neg)" }}>Pain</div>
+        <h2 className="re-h2" style={{ fontSize: 18, marginTop: 6 }}>What users complain about</h2>
       </div>
+
       {complaints.length === 0 ? (
         <div className="re-card px-5 py-10 text-center" style={{ color: "var(--fg-faint)", fontSize: 13 }}>
           No complaints found for this competitor.
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
           {complaints.map((cp) => (
-            <div
-              key={cp.id}
-              className="re-card"
-              style={{ padding: "12px 14px", borderLeft: "3px solid var(--neg)" }}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className="font-mono-feat tnum mt-0.5 shrink-0"
-                  style={{ fontSize: 11, color: "var(--neg)", minWidth: 22 }}
-                >
-                  {cp.mentions}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
-                    {cp.title}
-                  </div>
-                  {cp.summary && (
-                    <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.5 }}>
-                      {cp.summary}
-                    </p>
-                  )}
-                  {cp.tag && (
-                    <div className="mt-2">
-                      <span className="re-chip" style={{ fontSize: 10 }}>{cp.tag}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ComplaintCard key={cp.id} complaint={cp} />
           ))}
         </div>
       )}
 
-      {/* Opportunities */}
+      {/* Opportunities — how to win */}
       {opportunities.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <div className="re-eyebrow" style={{ fontSize: 10, marginBottom: 12 }}>
-            OPPORTUNITIES{" "}
-            <span className="font-mono-feat text-fg-faint">({opportunities.length})</span>
-          </div>
+        <div style={{ marginTop: 40 }}>
+          <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--pos)" }}>Opportunities</div>
+          <h2 className="re-h2" style={{ fontSize: 18, marginTop: 6, marginBottom: 16 }}>Where you can win</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {opportunities.map((opp, i) => (
               <OppCard key={opp.id ?? i} opp={opp} />
@@ -230,27 +193,49 @@ function PainContent({
   );
 }
 
+function ComplaintCard({ complaint: cp }: { complaint: Complaint }) {
+  return (
+    <div className="re-card" style={{ padding: "14px 16px" }}>
+      <div className="flex items-center gap-2.5" style={{ marginBottom: 9 }}>
+        <span style={{ width: 7, height: 7, borderRadius: 99, background: "var(--neg)", flexShrink: 0 }} />
+        {cp.tag && <span className="re-chip" style={{ fontSize: 11, textTransform: "capitalize" }}>{cp.tag}</span>}
+      </div>
+      <div className="break-words" style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)", lineHeight: 1.35 }}>
+        {cp.title}
+      </div>
+      {cp.summary && (
+        <p className="break-words" style={{ margin: "5px 0 0", fontSize: 12.5, color: "var(--fg-muted)", lineHeight: 1.5 }}>
+          {cp.summary}
+        </p>
+      )}
+      {cp.sample && (
+        <p className="break-words" style={{ margin: "9px 0 0", fontSize: 12.5, color: "var(--fg)", lineHeight: 1.5, fontStyle: "italic" }}>
+          “{cp.sample}”{cp.sample_author && <span className="font-mono-feat not-italic" style={{ color: "var(--fg-faint)", fontSize: 11 }}> — {cp.sample_author}</span>}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function OppCard({ opp }: { opp: Opportunity }) {
   return (
-    <div
-      className="re-card"
-      style={{ padding: "13px 15px", borderTop: "2px solid var(--pos)" }}
-    >
-      <div className="re-eyebrow" style={{ fontSize: 9, color: "var(--pos)", marginBottom: 6 }}>
-        OPPORTUNITY
-      </div>
-      <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", lineHeight: 1.4 }}>
+    <div className="re-card" style={{ padding: "15px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
+      <span className="font-mono-feat" style={{ fontSize: 11, fontWeight: 700, color: "var(--pos)", letterSpacing: "0.02em", display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 2, background: "var(--pos)" }} />
+        Opportunity
+      </span>
+      <div className="break-words" style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)", lineHeight: 1.35 }}>
         {opp.title}
       </div>
       {opp.thesis && (
-        <p style={{ margin: "5px 0 0", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+        <p className="break-words" style={{ margin: 0, fontSize: 12.5, color: "var(--fg-muted)", lineHeight: 1.55 }}>
           {opp.thesis}
         </p>
       )}
       {(opp.effort || opp.payoff) && (
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {opp.effort && <span className="re-chip" style={{ fontSize: 10 }}>Effort: {opp.effort}</span>}
-          {opp.payoff && <span className="re-chip re-chip-pos" style={{ fontSize: 10 }}>Payoff: {opp.payoff}</span>}
+        <div className="flex flex-wrap gap-1.5" style={{ marginTop: "auto", paddingTop: 4 }}>
+          {opp.payoff && <span className="re-chip re-chip-pos" style={{ fontSize: 11, textTransform: "capitalize" }}>{opp.payoff} payoff</span>}
+          {opp.effort && <span className="re-chip" style={{ fontSize: 11, textTransform: "capitalize" }}>{opp.effort} effort</span>}
         </div>
       )}
     </div>

@@ -714,7 +714,7 @@ function ExecutiveSummary({
         <SummaryStat
           label="Mentions"
           value={c.sources.toLocaleString()}
-          desc={`Public posts, comments and reviews we analysed — across ${c.platforms.length} platform${c.platforms.length === 1 ? "" : "s"}.`}
+          desc="Public posts, comments and reviews we analysed for this competitor."
         />
         <SummaryStat
           label="Platforms"
