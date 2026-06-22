@@ -549,8 +549,8 @@ const INDIGO = "#6366f1";
 
 const eyebrow: CSSProperties = {
   fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-  fontSize: 11,
-  textTransform: "uppercase",
+  fontSize: 12,
+  textTransform: "none",
   letterSpacing: "0.1em",
   color: "var(--fg-faint)",
 };
@@ -562,8 +562,8 @@ const monoFaint: CSSProperties = {
 
 const labelMono = (overrides: CSSProperties = {}): CSSProperties => ({
   ...monoFaint,
-  fontSize: 10,
-  textTransform: "uppercase",
+  fontSize: 11,
+  textTransform: "none",
   letterSpacing: "0.08em",
   paddingTop: 2,
   ...overrides,
@@ -752,7 +752,7 @@ function ProductHeader({ competitor, range, setRange }: ProductHeaderProps) {
           }}
         >
           <div className="min-w-0">
-            <div style={eyebrow}>PRODUCT VIEW · ROADMAP INTELLIGENCE</div>
+            <div style={{ ...eyebrow, letterSpacing: "0.02em" }}>Product view · Roadmap intelligence</div>
             <h1 className="re-h1" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               Product View
               <span
@@ -772,7 +772,7 @@ function ProductHeader({ competitor, range, setRange }: ProductHeaderProps) {
             </p>
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
+            <span style={{ ...monoFaint, fontSize: 12, marginRight: 4 }}>Range</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
                 key={r}
@@ -822,7 +822,7 @@ function SectionHeadPM({
       }}
     >
       <div className="min-w-0">
-        <div style={{ ...eyebrow, fontSize: 10 }}>{eb}</div>
+        <div style={{ ...eyebrow, fontSize: 11 }}>{eb}</div>
         <h2 className="re-h2" style={{ marginTop: 6, fontSize: 22 }}>
           {title}
         </h2>
@@ -855,7 +855,7 @@ function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport 
       <div className="re-card re-card-elev" style={{ position: "relative", overflow: "hidden" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
         <div style={{ position: "relative", padding: 18 }}>
-          <div style={{ ...eyebrow, fontSize: 10 }}>PRODUCT OPPORTUNITY SCORE</div>
+          <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>Product opportunity score</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
@@ -869,7 +869,7 @@ function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport 
             <span
               className="re-chip"
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: INDIGO,
                 background: "rgba(99,102,241,0.08)",
                 border: "1px solid rgba(99,102,241,0.2)",
@@ -881,7 +881,7 @@ function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport 
 
           <hr className="re-rule" style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: "18px 0 12px" }} />
 
-          <div style={{ ...eyebrow, fontSize: 10, marginBottom: 8 }}>SCORE FACTORS</div>
+          <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em", marginBottom: 8 }}>Score factors</div>
           <ScoreFactors factors={score.factors} />
         </div>
       </div>
@@ -892,7 +892,7 @@ function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport 
           <h3>
             <Icon name="alert" size={14} /> Top product insight
           </h3>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
             synthesized from evidence signals
           </span>
         </div>
@@ -929,8 +929,8 @@ function OpportunitySummary({ score, evidenceRefs, openEvidence, onOpenInReport 
 function FiltersStrip({ filters, setFilters }: { filters: Filters; setFilters: (f: Filters) => void }) {
   return (
     <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-      <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 4 }}>
-        FILTERS
+      <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", marginRight: 4 }}>
+        Filters
       </span>
       <FilterChip
         label="Source"
@@ -967,7 +967,7 @@ function FilterChip({
 }) {
   return (
     <div className="re-chip" style={{ padding: "1px 4px 1px 9px", gap: 0 }}>
-      <span className="text-fg-faint" style={{ fontSize: 10 }}>
+      <span className="text-fg-faint" style={{ fontSize: 11 }}>
         {label}
       </span>
       <select
@@ -977,7 +977,7 @@ function FilterChip({
           border: 0,
           background: "transparent",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 11,
+          fontSize: 12,
           color: "var(--fg)",
           padding: "2px 4px",
           outline: "none",
@@ -1009,8 +1009,8 @@ const sortBtn = (active: boolean): CSSProperties => ({
   padding: 0,
   cursor: "pointer",
   fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-  fontSize: 10,
-  textTransform: "uppercase",
+  fontSize: 11,
+  textTransform: "none",
   letterSpacing: "0.08em",
   fontWeight: 500,
 });
@@ -1040,8 +1040,8 @@ function FeatureGapTable({
             padding: "10px 18px",
             borderBottom: "1px solid var(--border-soft)",
             fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-            fontSize: 10,
-            textTransform: "uppercase",
+            fontSize: 11,
+            textTransform: "none",
             letterSpacing: "0.08em",
             color: "var(--fg-faint)",
             gap: 12,
@@ -1105,14 +1105,14 @@ function FeatureGapRow({
     >
       <div>
         <div style={{ fontSize: 14, fontWeight: 500 }}>{g.feature_gap}</div>
-        <div style={{ ...monoFaint, fontSize: 10, marginTop: 2 }}>{g.summary}</div>
+        <div style={{ ...monoFaint, fontSize: 11, marginTop: 2 }}>{g.summary}</div>
       </div>
       <div className="font-mono-feat tnum" style={{ fontSize: 14, fontWeight: 500 }}>
         {g.mentions}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
         {g.sources.map((src) => (
-          <span key={src} className="re-chip" style={{ fontSize: 9, padding: "1px 7px" }}>
+          <span key={src} className="re-chip" style={{ fontSize: 11, padding: "1px 7px" }}>
             <span
               style={{
                 display: "inline-block",
@@ -1135,8 +1135,8 @@ function FeatureGapRow({
             background: sevBg,
             color: sevColor,
             fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-            fontSize: 10,
-            textTransform: "uppercase",
+            fontSize: 11,
+            textTransform: "none",
             letterSpacing: "0.06em",
             fontWeight: 600,
           }}
@@ -1147,12 +1147,12 @@ function FeatureGapRow({
       <div>
         <ConfidenceIndicator confidence={g.confidence} />
       </div>
-      <div style={{ fontSize: 12, color: "var(--fg-muted)" }}>{g.user_segment}</div>
+      <div style={{ fontSize: 13, color: "var(--fg-muted)" }}>{g.user_segment}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
         <span
           className="font-mono-feat"
           style={{
-            fontSize: 11,
+            fontSize: 12,
             color: g.suggested_action?.includes("P0") ? "var(--accent)" : g.suggested_action?.includes("P1") ? INDIGO : "var(--fg-muted)",
             fontWeight: 500,
           }}
@@ -1188,8 +1188,8 @@ function ProductAreaHeatmap({ rows }: { rows: HeatmapRow[] }) {
             padding: "10px 18px",
             borderBottom: "1px solid var(--border-soft)",
             fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-            fontSize: 10,
-            textTransform: "uppercase",
+            fontSize: 11,
+            textTransform: "none",
             letterSpacing: "0.08em",
             color: "var(--fg-faint)",
             gap: 14,
@@ -1244,7 +1244,7 @@ function HeatCell({ value }: { value: number }) {
     >
       <span
         className="font-mono-feat tnum"
-        style={{ fontSize: 12, fontWeight: 500, color: labelColor, position: "relative" }}
+        style={{ fontSize: 13, fontWeight: 500, color: labelColor, position: "relative" }}
       >
         {Math.round(value * 100)}
       </span>
@@ -1277,23 +1277,23 @@ function ClusterCard({
   return (
     <div className="re-card">
       <div style={{ padding: "14px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span className="re-chip" style={{ fontSize: 10 }}>
+        <span className="re-chip" style={{ fontSize: 11 }}>
           {c.product_area}
         </span>
-        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
+        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 12 }}>
           {c.frequency} mentions
         </span>
       </div>
       <div style={{ padding: "8px 16px 14px" }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500, lineHeight: 1.35 }}>{c.complaint_title}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "76px 1fr", gap: 8, rowGap: 8, marginTop: 12 }}>
-          <span style={labelMono()}>SEVERITY</span>
+          <span style={labelMono({ letterSpacing: "0.02em" })}>Severity</span>
           <span
             style={{
               fontSize: 12.5,
               color: sevColor,
               fontWeight: 600,
-              textTransform: "uppercase",
+              textTransform: "none",
               letterSpacing: "0.05em",
               fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
             }}
@@ -1301,15 +1301,15 @@ function ClusterCard({
             {sevLbl}
           </span>
 
-          <span style={labelMono()}>IMPACT</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>{impactLbl}</span>
+          <span style={labelMono({ letterSpacing: "0.02em" })}>Impact</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>{impactLbl}</span>
 
           {c.suggested_product_response && (
             <>
-              <span className="font-mono-feat" style={{ ...labelMono({ color: INDIGO }), fontWeight: 600 }}>
-                RESPONSE
+              <span className="font-mono-feat" style={{ ...labelMono({ color: INDIGO, letterSpacing: "0.02em" }), fontWeight: 600 }}>
+                Response
               </span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg)", fontWeight: 500 }}>
+              <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)", fontWeight: 500 }}>
                 {c.suggested_product_response}
               </span>
             </>
@@ -1318,7 +1318,7 @@ function ClusterCard({
         <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {c.sources.map((src) => (
-              <span key={src} className="re-chip" style={{ fontSize: 9, padding: "1px 7px" }}>
+              <span key={src} className="re-chip" style={{ fontSize: 11, padding: "1px 7px" }}>
                 <span
                   style={{
                     display: "inline-block",
@@ -1367,7 +1367,7 @@ function LoveCard({
 }) {
   const rec = REC_STYLES[l.recommendation] ?? REC_STYLES.learn;
   return (
-    <div className="re-card" style={{ display: "flex", flexDirection: "column", borderTop: `3px solid ${rec.color}` }}>
+    <div className="re-card" style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "14px 16px 12px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span
@@ -1377,21 +1377,21 @@ function LoveCard({
               background: rec.bg,
               color: rec.color,
               fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-              fontSize: 10,
-              textTransform: "uppercase",
+              fontSize: 11,
+              textTransform: "none",
               letterSpacing: "0.06em",
               fontWeight: 700,
             }}
           >
             {l.recommendation}
           </span>
-          <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
+          <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 12 }}>
             {l.positive_mentions} praise mentions
           </span>
         </div>
 
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500 }}>{l.feature_name}</h3>
-        <p className="text-fg-muted" style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.55 }}>
+        <p className="text-fg-muted" style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.6 }}>
           {l.why_users_love_it}
         </p>
 
@@ -1408,17 +1408,17 @@ function LoveCard({
             <div
               className="font-mono-feat"
               style={{
-                fontSize: 9,
+                fontSize: 11,
                 color: rec.color,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                textTransform: "none",
+                letterSpacing: "0.02em",
                 fontWeight: 600,
                 marginBottom: 4,
               }}
             >
-              PRODUCT LESSON
+              Product lesson
             </div>
-            <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg)" }}>{l.product_lesson}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)" }}>{l.product_lesson}</span>
           </div>
         )}
 
@@ -1489,7 +1489,7 @@ function WorkflowJourney({
               borderRadius: 8,
             }}
           >
-            <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 10 }}>
+            <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
               {String(i + 1).padStart(2, "0")}
             </span>
             <span style={{ fontSize: 13, fontWeight: 500 }}>{s.workflow_name}</span>
@@ -1528,13 +1528,13 @@ function JourneyStep({ s, index }: { s: AdaptedWorkflowStep; index: number }) {
           placeItems: "center",
           color,
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 700,
         }}
       >
         {index + 1}
       </div>
-      <div style={{ fontSize: 12, fontWeight: 500, textAlign: "center", lineHeight: 1.3 }}>{s.workflow_name}</div>
+      <div style={{ fontSize: 13, fontWeight: 500, textAlign: "center", lineHeight: 1.3 }}>{s.workflow_name}</div>
       <FrictionPill level={s.friction} />
     </div>
   );
@@ -1556,8 +1556,8 @@ function FrictionPill({ level }: { level: "high" | "medium" | "low" }) {
         background: map.bg,
         color: map.c,
         fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-        fontSize: 9,
-        textTransform: "uppercase",
+        fontSize: 11,
+        textTransform: "none",
         letterSpacing: "0.06em",
         fontWeight: 700,
         width: "fit-content",
@@ -1597,18 +1597,18 @@ function RoadmapCard({
       </div>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", gap: 8, rowGap: 8 }}>
-          <span style={labelMono()}>PROBLEM</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--fg-muted)" }}>{r.user_problem}</span>
+          <span style={labelMono({ letterSpacing: "0.02em" })}>Problem</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>{r.user_problem}</span>
 
-          <span style={labelMono()}>FEATURE</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--fg)", fontWeight: 500 }}>{r.suggested_feature}</span>
+          <span style={labelMono({ letterSpacing: "0.02em" })}>Feature</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)", fontWeight: 500 }}>{r.suggested_feature}</span>
 
           {r.why_now && (
             <>
-              <span className="font-mono-feat" style={{ ...labelMono({ color: impactColor }), fontWeight: 600 }}>
-                WHY NOW
+              <span className="font-mono-feat" style={{ ...labelMono({ color: impactColor, letterSpacing: "0.02em" }), fontWeight: 600 }}>
+                Why now
               </span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--fg)" }}>{r.why_now}</span>
+              <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)" }}>{r.why_now}</span>
             </>
           )}
         </div>
@@ -1617,7 +1617,7 @@ function RoadmapCard({
           <RoadmapStat label="Impact" value={impactBucket} color={impactColor} />
           <RoadmapStat label="Effort" value={r.effort_estimate} color="var(--fg)" />
           <div style={{ padding: 8, border: "1px solid var(--border-soft)", borderRadius: 8, background: "var(--surface-solid)" }}>
-            <div style={{ ...monoFaint, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>Confidence</div>
+            <div style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em" }}>Confidence</div>
             <div style={{ marginTop: 3 }}>
               <ConfidenceIndicator confidence={r.confidence} />
             </div>
@@ -1645,7 +1645,7 @@ function RoadmapCard({
 function RoadmapStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ padding: 8, border: "1px solid var(--border-soft)", borderRadius: 8, background: "var(--surface-solid)" }}>
-      <div style={{ ...monoFaint, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
+      <div style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em" }}>{label}</div>
       <div className="font-mono-feat" style={{ fontSize: 13, fontWeight: 500, marginTop: 3, color, textTransform: "capitalize" }}>
         {value}
       </div>
@@ -1669,7 +1669,7 @@ function BuildAvoidLearn({
         title="Build"
         items={d.build}
         color="var(--accent)"
-        bg="rgba(0,97,177,0.05)"
+        bg="color-mix(in srgb, var(--accent) 6%, transparent)"
         openEvidence={openEvidence}
       />
       <DecisionColumn
@@ -1721,7 +1721,7 @@ function DecisionColumn({
           <span style={{ width: 8, height: 8, borderRadius: 99, background: color }} />
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color }}>{title}</h3>
         </div>
-        <span style={{ ...monoFaint, fontSize: 10 }}>{items.length} items</span>
+        <span style={{ ...monoFaint, fontSize: 11 }}>{items.length} items</span>
       </div>
       <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
         {items.map((it, i) => (
@@ -1745,15 +1745,15 @@ function DecisionColumn({
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <h4 style={{ margin: 0, fontSize: 13.5, fontWeight: 500 }}>{it.title}</h4>
-              <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 10 }}>
+              <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
                 {it.evidence_count}
               </span>
             </div>
-            <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5 }}>
+            <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.6 }}>
               {it.reason}
             </p>
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ ...monoFaint, fontSize: 10 }}>confidence</span>
+              <span style={{ ...monoFaint, fontSize: 11 }}>confidence</span>
               <ConfidenceIndicator confidence={it.confidence} />
             </div>
           </div>
@@ -1764,7 +1764,7 @@ function DecisionColumn({
           padding: "10px 14px",
           borderTop: "1px solid var(--border-soft)",
           textAlign: "center",
-          background: "rgba(255,255,255,0.5)",
+          background: "var(--surface-solid)",
         }}
       >
         <button type="button" className="re-btn re-btn-ghost re-btn-sm">
@@ -1786,7 +1786,7 @@ function ProductFooter({ onNav }: { onNav: (to: string) => void }) {
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(0,97,177,0.04))",
+        background: "linear-gradient(135deg, rgba(99,102,241,0.06), color-mix(in srgb, var(--accent) 5%, transparent))",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -1795,8 +1795,8 @@ function ProductFooter({ onNav }: { onNav: (to: string) => void }) {
       }}
     >
       <div className="min-w-0">
-        <div style={eyebrow}>PM CHECKLIST</div>
-        <p className="w-full max-w-[720px]" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, fontWeight: 500 }}>
+        <div style={{ ...eyebrow, letterSpacing: "0.02em" }}>PM checklist</div>
+        <p className="w-full max-w-[720px]" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.6, fontWeight: 500 }}>
           "I know what to build, what to skip, and which competitor strengths to respect — and every decision is anchored
           to real evidence."
         </p>

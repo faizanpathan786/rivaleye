@@ -280,8 +280,8 @@ function severityLabel(severity: number): string {
 
 const eyebrow: CSSProperties = {
   fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-  fontSize: 11,
-  textTransform: "uppercase",
+  fontSize: 12,
+  textTransform: "none",
   letterSpacing: "0.1em",
   color: "var(--fg-faint)",
 };
@@ -480,7 +480,7 @@ function FounderHeader({ competitor, range, setRange }: FounderHeaderProps) {
       <div style={{ maxWidth: 1440, margin: "0 auto" }}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
           <div className="min-w-0">
-            <div style={eyebrow}>FOUNDER VIEW · STRATEGIC DECISION DASHBOARD</div>
+            <div style={eyebrow}>Founder view · strategic decision dashboard</div>
             <h1 className="re-h1 flex flex-wrap items-center" style={{ marginTop: 6, gap: 12 }}>
               Founder View
               <span
@@ -500,7 +500,7 @@ function FounderHeader({ competitor, range, setRange }: FounderHeaderProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
+            <span style={{ ...monoFaint, fontSize: 12, marginRight: 4 }}>Range</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
                 key={r}
@@ -532,7 +532,7 @@ function FounderHeader({ competitor, range, setRange }: FounderHeaderProps) {
 function SectionHead({ eyebrow: eb, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
     <div style={{ marginTop: 44, marginBottom: 14 }}>
-      <div style={{ ...eyebrow, fontSize: 10 }}>{eb}</div>
+      <div style={{ ...eyebrow, fontSize: 11 }}>{eb}</div>
       <h2 className="re-h2" style={{ marginTop: 6, fontSize: 22 }}>
         {title}
       </h2>
@@ -566,7 +566,7 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
       <div className="re-card re-card-elev" style={{ position: "relative" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.6, pointerEvents: "none", overflow: "hidden", borderRadius: "inherit" }} />
         <div style={{ position: "relative", padding: 18 }}>
-          <div style={{ ...eyebrow, fontSize: 10 }}>OPPORTUNITY SCORE</div>
+          <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>Opportunity score</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
@@ -577,15 +577,15 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
             <span style={{ ...monoFaint, fontSize: 18, fontWeight: 400 }}>/100</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
-            <span className="re-chip re-chip-accent" style={{ fontSize: 11 }}>
+            <span className="re-chip re-chip-accent" style={{ fontSize: 12 }}>
               {o.label}
             </span>
           </div>
-          <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.55 }}>{o.headline}</p>
+          <p style={{ margin: "12px 0 0", fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.6 }}>{o.headline}</p>
 
           <hr className="re-rule" style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: "18px 0 12px" }} />
 
-          <div style={{ ...eyebrow, fontSize: 10, marginBottom: 8 }}>SCORE FACTORS</div>
+          <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em", marginBottom: 8 }}>Score factors</div>
           <ScoreFactors factors={factorsRecord} />
         </div>
       </div>
@@ -596,7 +596,7 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
           <h3>
             <Icon name="alert" size={14} /> Market opening summary
           </h3>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
             strategist's take · auto-synthesized
           </span>
         </div>
@@ -604,16 +604,16 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--fg)" }}>{marketSummary.summary}</p>
 
           <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "clamp(60px, 15vw, 100px) 1fr", gap: 8, rowGap: 8 }}>
-            <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>TARGET</span>
-            <span style={{ fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.5 }}>{marketSummary.target}</span>
-            <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>OPPORTUNITY</span>
-            <span style={{ fontSize: 13, color: "var(--fg)", lineHeight: 1.5 }}>{marketSummary.main_opportunity}</span>
-            <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>WHY NOW</span>
-            <span style={{ fontSize: 13, color: "var(--fg-muted)", lineHeight: 1.5 }}>{marketSummary.why_now}</span>
+            <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2 }}>Target</span>
+            <span style={{ fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.6 }}>{marketSummary.target}</span>
+            <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2 }}>Opportunity</span>
+            <span style={{ fontSize: 14, color: "var(--fg)", lineHeight: 1.6 }}>{marketSummary.main_opportunity}</span>
+            <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2 }}>Why now</span>
+            <span style={{ fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.6 }}>{marketSummary.why_now}</span>
           </div>
 
           <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>CONFIDENCE</span>
+            <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>Confidence</span>
             <ConfidenceIndicator confidence={marketSummary.confidence} />
           </div>
 
@@ -644,8 +644,8 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "linear-gradient(180deg, rgba(0,97,177,0.06) 0%, var(--surface) 38%)",
-          borderColor: "rgba(0,97,177,0.18)",
+          background: "linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, transparent) 0%, var(--surface) 40%)",
+          borderColor: "color-mix(in srgb, var(--accent) 22%, transparent)",
         }}
       >
         <div
@@ -667,7 +667,7 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
                 color: "#fff",
                 display: "grid",
                 placeItems: "center",
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 700,
                 fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
               }}
@@ -676,8 +676,8 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
             </span>
             Best wedge to attack
           </h3>
-          <span className="re-chip re-chip-accent" style={{ fontSize: 10 }}>
-            RECOMMENDED
+          <span className="re-chip re-chip-accent" style={{ fontSize: 11 }}>
+            Recommended
           </span>
         </div>
         <div style={{ padding: 18 }}>
@@ -695,11 +695,12 @@ function OpportunitySnapshot({ opportunity: o, marketSummary, wedge, openEvidenc
           <hr className="re-rule" style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: "16px 0 12px" }} />
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>EVIDENCE STRENGTH</span>
+            <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>Evidence strength</span>
             <span
               className="re-chip"
               style={{
-                fontSize: 10,
+                fontSize: 11,
+                textTransform: "capitalize",
                 color:
                   wedge.evidence_strength === "high"
                     ? "var(--pos)"
@@ -732,15 +733,15 @@ function WedgeRow({ label, value }: { label: string; value: string }) {
       <span
         style={{
           ...monoFaint,
-          fontSize: 10,
-          textTransform: "uppercase",
+          fontSize: 11,
+          textTransform: "none",
           letterSpacing: "0.08em",
           paddingTop: 2,
         }}
       >
         {label}
       </span>
-      <span style={{ fontSize: 13, color: "var(--fg)", lineHeight: 1.5 }}>{value}</span>
+      <span style={{ fontSize: 14, color: "var(--fg)", lineHeight: 1.6 }}>{value}</span>
     </div>
   );
 }
@@ -760,16 +761,16 @@ function StrengthCard({
       <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span className="re-dot re-dot-pos" />
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>STRENGTH</span>
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>Strength</span>
         </div>
         <ConfidenceIndicator confidence={s.confidence} />
       </div>
       <div style={{ padding: "8px 16px 14px" }}>
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: "-0.005em" }}>{s.title}</h3>
-        <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 13, lineHeight: 1.55 }}>
+        <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.6 }}>
           {s.explanation}
         </p>
-        <p className="text-fg-muted" style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.5, fontStyle: "italic" }}>
+        <p className="text-fg-muted" style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.6, fontStyle: "italic" }}>
           {s.why_users_love_it}
         </p>
 
@@ -787,11 +788,11 @@ function StrengthCard({
         >
           <span
             className="font-mono-feat"
-            style={{ fontSize: 10, color: "var(--accent)", fontWeight: 600, marginTop: 1 }}
+            style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, marginTop: 1 }}
           >
             WHY THIS MATTERS
           </span>
-          <span style={{ fontSize: 12, lineHeight: 1.5 }}>{s.implication}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.6 }}>{s.implication}</span>
         </div>
 
         <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
@@ -830,8 +831,8 @@ function FrustrationCard({
             padding: "2px 8px",
             borderRadius: 99,
             fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-            fontSize: 10,
-            textTransform: "uppercase",
+            fontSize: 11,
+            textTransform: "none",
             letterSpacing: "0.06em",
             background: sevBg,
             color: sevColor,
@@ -839,7 +840,7 @@ function FrustrationCard({
         >
           {sevLbl} severity
         </span>
-        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 11 }}>
+        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 12 }}>
           {f.frequency} mentions
         </span>
       </div>
@@ -847,18 +848,18 @@ function FrustrationCard({
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: "-0.005em" }}>{f.title}</h3>
 
         <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "70px 1fr", gap: 8, rowGap: 6 }}>
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em", paddingTop: 2 }}>
             WHY
           </span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>{f.summary}</span>
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>{f.summary}</span>
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em", paddingTop: 2 }}>
             OPPORTUNITY
           </span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg)", fontWeight: 500 }}>{f.opportunity_implication}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)", fontWeight: 500 }}>{f.opportunity_implication}</span>
         </div>
 
         <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>CONFIDENCE</span>
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>Confidence</span>
           <ConfidenceIndicator confidence={f.confidence} />
         </div>
 
@@ -901,8 +902,8 @@ function UnmetNeedsTable({
           padding: "10px 18px",
           borderBottom: "1px solid var(--border-soft)",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 10,
-          textTransform: "uppercase",
+          fontSize: 11,
+          textTransform: "none",
           letterSpacing: "0.08em",
           color: "var(--fg-faint)",
           gap: 12,
@@ -957,8 +958,8 @@ function UnmetNeedsTable({
                         : "rgba(20,16,12,.04)",
                   color: opColor,
                   fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-                  fontSize: 10,
-                  textTransform: "uppercase",
+                  fontSize: 11,
+                  textTransform: "none",
                   letterSpacing: "0.06em",
                   fontWeight: 600,
                 }}
@@ -1014,7 +1015,7 @@ function PricingOpportunity({
       style={{ overflow: "hidden" }}
     >
       <div className="border-b border-[var(--border-soft)] md:border-b-0 md:border-r" style={{ padding: 22, borderRightColor: "var(--border-soft)", position: "relative" }}>
-        <div style={{ ...eyebrow, fontSize: 10 }}>PRICING PAIN SCORE</div>
+        <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>Pricing pain score</div>
         <div className="flex flex-wrap items-baseline" style={{ gap: 8, marginTop: 6 }}>
           <span
             className="font-mono-feat tnum"
@@ -1023,39 +1024,39 @@ function PricingOpportunity({
             {displayScore}
           </span>
           <span style={{ ...monoFaint, fontSize: 18, fontWeight: 400 }}>/100</span>
-          <span className="re-chip re-chip-warn" style={{ marginLeft: 8, fontSize: 11 }}>
+          <span className="re-chip re-chip-warn" style={{ marginLeft: 8, fontSize: 12 }}>
             Real wedge
           </span>
         </div>
 
         <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "120px 1fr", gap: 10, rowGap: 12 }}>
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>
-            MAIN ISSUE
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2 }}>
+            Main issue
           </span>
-          <span style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--fg)" }}>{p.main}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg)" }}>{p.main}</span>
 
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>
-            WHO FEELS IT
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2 }}>
+            Who feels it
           </span>
-          <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--fg-muted)" }}>{p.who}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-muted)" }}>{p.who}</span>
 
           <span
             className="font-mono-feat"
-            style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2, color: "var(--accent)" }}
+            style={{ fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2, color: "var(--accent)" }}
           >
-            OPPORTUNITY
+            Opportunity
           </span>
-          <span style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--fg)" }}>{p.opportunity}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg)" }}>{p.opportunity}</span>
 
           {p.risk && (
             <>
               <span
                 className="font-mono-feat"
-                style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2, color: "var(--neg)" }}
+                style={{ fontSize: 11, textTransform: "none", letterSpacing: "0.02em", paddingTop: 2, color: "var(--neg)" }}
               >
-                RISK WARNING
+                Risk warning
               </span>
-              <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--fg-muted)" }}>{p.risk}</span>
+              <span style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-muted)" }}>{p.risk}</span>
             </>
           )}
         </div>
@@ -1071,7 +1072,7 @@ function PricingOpportunity({
       </div>
 
       <div style={{ padding: 22, background: "var(--surface-2)" }}>
-        <div style={{ ...eyebrow, fontSize: 10 }}>PRICING VOCABULARY</div>
+        <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>Pricing vocabulary</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline", marginTop: 10 }}>
           {PRICING_VOCAB.map(([w, s]) => (
             <span
@@ -1097,41 +1098,36 @@ function PricingOpportunity({
 
 function RiskCard({ r }: { r: FounderViewProps["risks"][number] }) {
   const lvlColor = severityColor(r.severity);
-  const lvlBg =
-    bucketFloat(r.severity) === "high"
-      ? "rgba(220,38,38,.06)"
-      : bucketFloat(r.severity) === "medium"
-        ? "rgba(217,119,6,.06)"
-        : "rgba(20,16,12,.03)";
   return (
-    <div className="re-card" style={{ borderLeft: `3px solid ${lvlColor}`, background: lvlBg }}>
+    <div className="re-card">
       <div style={{ padding: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Icon name="alert" size={14} style={{ color: lvlColor }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <Icon name="alert" size={14} style={{ color: lvlColor, flexShrink: 0 }} />
             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500 }}>{r.title}</h3>
           </div>
           <span
+            className="shrink-0"
             style={{
-              padding: "2px 8px",
+              padding: "2px 9px",
               borderRadius: 99,
               fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              background: "rgba(255,255,255,0.7)",
+              fontSize: 11,
+              textTransform: "capitalize",
+              letterSpacing: "0.02em",
+              background: `color-mix(in srgb, ${lvlColor} 13%, transparent)`,
               color: lvlColor,
-              border: `1px solid ${lvlColor}33`,
               fontWeight: 600,
+              whiteSpace: "nowrap",
             }}
           >
-            RISK · {severityLabel(r.severity)}
+            Risk · {severityLabel(r.severity)}
           </span>
         </div>
-        <p className="text-fg-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+        <p className="text-fg-muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
           {r.explanation}
         </p>
-        <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5 }}>
+        <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.6 }}>
           {r.why_it_matters}
         </p>
         <div
@@ -1146,10 +1142,10 @@ function RiskCard({ r }: { r: FounderViewProps["risks"][number] }) {
             alignItems: "flex-start",
           }}
         >
-          <span className="font-mono-feat" style={{ fontSize: 10, color: "var(--fg)", fontWeight: 600, marginTop: 1 }}>
+          <span className="font-mono-feat" style={{ fontSize: 11, color: "var(--fg)", fontWeight: 600, marginTop: 1 }}>
             DO
           </span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{r.recommendation}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6 }}>{r.recommendation}</span>
         </div>
       </div>
     </div>
@@ -1199,7 +1195,7 @@ function ActionCard({
               display: "grid",
               placeItems: "center",
               fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 600,
             }}
           >
@@ -1207,7 +1203,7 @@ function ActionCard({
           </span>
           <span
             className="font-mono-feat"
-            style={{ fontSize: 11, fontWeight: 600, color: c, textTransform: "uppercase", letterSpacing: "0.06em" }}
+            style={{ fontSize: 12, fontWeight: 600, color: c, textTransform: "none", letterSpacing: "0.06em" }}
           >
             {ACTION_KIND_LABEL[a.kind]}
           </span>
@@ -1218,10 +1214,10 @@ function ActionCard({
         <h3 style={{ margin: 0, fontSize: 17, fontWeight: 500, letterSpacing: "-0.005em", lineHeight: 1.3 }}>{a.title}</h3>
 
         <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", gap: 8, rowGap: 8 }}>
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 2 }}>
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.08em", paddingTop: 2 }}>
             WHY
           </span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.55, color: "var(--fg-muted)" }}>{a.why}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>{a.why}</span>
         </div>
 
         <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--border-soft)", display: "flex", gap: 6 }}>
@@ -1254,12 +1250,12 @@ function FounderFooter({ onNav, competitorName }: { onNav: (to: string) => void;
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: "linear-gradient(135deg, rgba(0,97,177,0.06), rgba(99,102,241,0.04))",
+        background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), rgba(99,102,241,0.05))",
       }}
     >
       <div className="min-w-0">
-        <div style={eyebrow}>NORTH STAR</div>
-        <p className="w-full" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
+        <div style={eyebrow}>North star</div>
+        <p className="w-full" style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.6, maxWidth: 720, fontWeight: 500 }}>
           {`"Now I understand where ${cName} is strong, where users are frustrated, what the market wants, and what opportunity we can attack."`}
         </p>
       </div>

@@ -632,8 +632,8 @@ const LANG_TABS: Array<{ key: LangTab; label: string; sub: string; tone: "pos" |
 
 const eyebrow: CSSProperties = {
   fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-  fontSize: 11,
-  textTransform: "uppercase",
+  fontSize: 12,
+  textTransform: "none",
   letterSpacing: "0.1em",
   color: "var(--fg-faint)",
 };
@@ -645,9 +645,9 @@ const monoFaint: CSSProperties = {
 
 const labelMono = (overrides: CSSProperties = {}): CSSProperties => ({
   ...monoFaint,
-  fontSize: 10,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
+  fontSize: 11,
+  textTransform: "none",
+  letterSpacing: "0.02em",
   paddingTop: 2,
   ...overrides,
 });
@@ -754,7 +754,7 @@ export function MarketingPage({
                   key={t.key}
                   type="button"
                   className={`re-chip ${activeLangTab === t.key ? "re-chip-solid" : ""}`}
-                  style={{ cursor: "pointer", padding: "4px 10px", fontSize: 11 }}
+                  style={{ cursor: "pointer", padding: "4px 10px", fontSize: 12 }}
                   onClick={() => setActiveLangTab(t.key)}
                 >
                   {t.label}
@@ -858,7 +858,7 @@ function MarketingHeader({ competitor, range, setRange }: MarketingHeaderProps) 
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6 flex-wrap"
         >
           <div>
-            <div style={eyebrow}>MARKETING VIEW · POSITIONING INTELLIGENCE</div>
+            <div style={{ ...eyebrow, letterSpacing: "0.02em" }}>Marketing view · Positioning intelligence</div>
             <h1 className="re-h1 flex-wrap" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12 }}>
               Marketing View
               <span
@@ -878,7 +878,7 @@ function MarketingHeader({ competitor, range, setRange }: MarketingHeaderProps) 
             </p>
           </div>
           <div className="flex-wrap" style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span style={{ ...monoFaint, fontSize: 11, marginRight: 4 }}>RANGE</span>
+            <span style={{ ...monoFaint, fontSize: 12, marginRight: 4 }}>Range</span>
             {["30d", "90d", "1y", "all"].map((r) => (
               <button
                 key={r}
@@ -928,7 +928,7 @@ function SectionHeadMK({
       }}
     >
       <div>
-        <div style={{ ...eyebrow, fontSize: 10 }}>{eb}</div>
+        <div style={{ ...eyebrow, fontSize: 11 }}>{eb}</div>
         <h2 className="re-h2" style={{ marginTop: 6, fontSize: 22 }}>
           {title}
         </h2>
@@ -954,7 +954,7 @@ function FilterChipMK({
 }) {
   return (
     <div className="re-chip" style={{ padding: "1px 4px 1px 9px", gap: 0 }}>
-      <span className="text-fg-faint" style={{ fontSize: 10 }}>
+      <span className="text-fg-faint" style={{ fontSize: 11 }}>
         {label}
       </span>
       <select
@@ -964,7 +964,7 @@ function FilterChipMK({
           border: 0,
           background: "transparent",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 11,
+          fontSize: 12,
           color: "var(--fg)",
           padding: "2px 4px",
           outline: "none",
@@ -1000,7 +1000,7 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
       <div className="re-card re-card-elev" style={{ position: "relative", overflow: "hidden" }}>
         <div className="crosshair-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
         <div style={{ position: "relative", padding: 18 }}>
-          <div style={{ ...eyebrow, fontSize: 10 }}>MESSAGING OPPORTUNITY SCORE</div>
+          <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>Messaging opportunity score</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8 }}>
             <span
               className="font-mono-feat tnum"
@@ -1011,14 +1011,14 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
             <span style={{ ...monoFaint, fontSize: 18, fontWeight: 400 }}>/100</span>
           </div>
           <div style={{ marginTop: 10 }}>
-            <span className="re-chip" style={{ fontSize: 11, color: VIO, background: VIO_BG, border: `1px solid ${VIO}33` }}>
+            <span className="re-chip" style={{ fontSize: 12, color: VIO, background: VIO_BG, border: `1px solid ${VIO}33` }}>
               {score.label}
             </span>
           </div>
 
           <hr className="re-rule" style={{ border: 0, borderTop: "1px solid var(--border-soft)", margin: "18px 0 12px" }} />
 
-          <div style={{ ...eyebrow, fontSize: 10, marginBottom: 8 }}>SCORE FACTORS</div>
+          <div style={{ ...eyebrow, fontSize: 11, marginBottom: 8, letterSpacing: "0.02em" }}>Score factors</div>
           <ScoreFactors factors={factorsRecord} />
         </div>
       </div>
@@ -1029,7 +1029,7 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
           <h3>
             <Icon name="quote" size={14} /> Messaging summary
           </h3>
-          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+          <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
             synthesized · multi-platform
           </span>
         </div>
@@ -1042,7 +1042,7 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
             style={{
               margin: "0 18px 18px",
               padding: 18,
-              background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
+              background: `linear-gradient(135deg, ${VIO_BG}, color-mix(in srgb, var(--accent) 4%, transparent))`,
               border: `1px solid ${VIO}33`,
               borderRadius: 10,
               position: "relative",
@@ -1051,9 +1051,9 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <span
                 className="font-mono-feat"
-                style={{ fontSize: 10, color: VIO, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
+                style={{ fontSize: 11, color: VIO, textTransform: "none", letterSpacing: "0.02em", fontWeight: 700 }}
               >
-                ★ BEST POSITIONING ANGLE
+                ★ Best positioning angle
               </span>
               <ConfidenceIndicator confidence={bestAngle.confidence} />
             </div>
@@ -1071,23 +1071,23 @@ function MessagingSnapshot({ score, messaging_summary, bestAngle, openEvidence }
             >
               {bestAngle.suggested_message}
             </h2>
-            <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.5 }}>
+            <p className="text-fg-muted" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.6 }}>
               {bestAngle.angle_title}
             </p>
 
             <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "80px 1fr", gap: 8, rowGap: 6 }}>
-              <span style={labelMono()}>PAIN</span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>
+              <span style={labelMono()}>Pain</span>
+              <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>
                 {bestAngle.pain_targeted}
               </span>
-              <span style={labelMono()}>CHANNEL</span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>
+              <span style={labelMono()}>Channel</span>
+              <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>
                 {bestAngle.best_channel_or_use_case}
               </span>
               {bestAngle.risk_warning && (
                 <>
-                  <span style={labelMono({ color: "var(--neg)" })}>RISK</span>
-                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>
+                  <span style={labelMono({ color: "var(--neg)" })}>Risk</span>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>
                     {bestAngle.risk_warning}
                   </span>
                 </>
@@ -1165,7 +1165,7 @@ function LanguageGroup({
           />
           {title}
         </h3>
-        <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+        <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
           {sub}
         </span>
       </div>
@@ -1203,7 +1203,7 @@ function LanguageGroup({
               "{c.phrase}"
               <span
                 className="font-mono-feat tnum"
-                style={{ fontSize: 10, color, fontWeight: 600, padding: "1px 5px", borderRadius: 99, background: bg }}
+                style={{ fontSize: 11, color, fontWeight: 600, padding: "1px 5px", borderRadius: 99, background: bg }}
               >
                 {c.frequency}
               </span>
@@ -1246,42 +1246,42 @@ function AngleCard({
       >
         <span
           className="font-mono-feat"
-          style={{ fontSize: 10, color: VIO, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}
+          style={{ fontSize: 11, color: VIO, textTransform: "none", letterSpacing: "0.02em", fontWeight: 700 }}
         >
-          ANGLE {String(index + 1).padStart(2, "0")}
+          Angle {String(index + 1).padStart(2, "0")}
         </span>
         <ConfidenceIndicator confidence={a.confidence} />
       </div>
 
       <div style={{ padding: "18px 18px 16px" }}>
-        <div style={{ ...eyebrow, fontSize: 9, marginBottom: 4 }}>HEADLINE</div>
+        <div style={{ ...eyebrow, fontSize: 11, marginBottom: 4, letterSpacing: "0.02em" }}>Headline</div>
         <h3 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
           "{a.suggested_message}"
         </h3>
-        <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.5, color: "var(--fg-muted)" }}>{a.angle_title}</p>
+        <p style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.6, color: "var(--fg-muted)" }}>{a.angle_title}</p>
 
         <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "84px 1fr", gap: 8, rowGap: 6 }}>
-          <span style={labelMono()}>PAIN TARGET</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg)" }}>{a.pain_targeted}</span>
+          <span style={labelMono()}>Pain target</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)" }}>{a.pain_targeted}</span>
 
-          <span style={labelMono()}>RESPECT</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>
+          <span style={labelMono()}>Respect</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>
             {a.competitor_strength_to_respect}
           </span>
 
           {a.risk_warning && (
             <>
-              <span style={labelMono({ color: "var(--neg)" })}>RISK</span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>{a.risk_warning}</span>
+              <span style={labelMono({ color: "var(--neg)" })}>Risk</span>
+              <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>{a.risk_warning}</span>
             </>
           )}
         </div>
 
         <div style={{ marginTop: 14 }}>
-          <div style={{ ...eyebrow, fontSize: 10, marginBottom: 8 }}>BEST FOR</div>
+          <div style={{ ...eyebrow, fontSize: 11, marginBottom: 8, letterSpacing: "0.02em" }}>Best for</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {a.best_channel_or_use_case.split(",").map((u) => (
-              <span key={u.trim()} className="re-chip" style={{ fontSize: 10 }}>
+              <span key={u.trim()} className="re-chip" style={{ fontSize: 11 }}>
                 {u.trim()}
               </span>
             ))}
@@ -1328,8 +1328,8 @@ function PromiseRealityTable({
           padding: "10px 18px",
           borderBottom: "1px solid var(--border-soft)",
           fontFamily: "var(--font-mono, 'Geist Mono', ui-monospace, monospace)",
-          fontSize: 10,
-          textTransform: "uppercase",
+          fontSize: 11,
+          textTransform: "none",
           letterSpacing: "0.08em",
           color: "var(--fg-faint)",
           gap: 14,
@@ -1369,17 +1369,17 @@ function PromiseRealityTable({
               {r.competitor_claim}
             </div>
           </div>
-          <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--fg)" }}>{r.user_reality}</div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg)" }}>{r.user_reality}</div>
           <div>
             <div className="font-mono-feat tnum" style={{ fontSize: 14, fontWeight: 600, color: VIO }}>
               {r.evidence_count}
             </div>
-            <div style={{ ...monoFaint, fontSize: 9, marginTop: 2 }}>MENTIONS</div>
+            <div style={{ ...monoFaint, fontSize: 11, marginTop: 2 }}>Mentions</div>
           </div>
           <div
             style={{
               fontSize: 13,
-              lineHeight: 1.5,
+              lineHeight: 1.6,
               padding: "8px 10px",
               background: VIO_BG,
               borderRadius: 8,
@@ -1417,15 +1417,15 @@ function ObjectionCard({
   return (
     <div className="re-card" style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "12px 14px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span className="re-chip" style={{ fontSize: 10, background: VIO_BG, color: VIO, border: `1px solid ${VIO}33` }}>
+        <span className="re-chip" style={{ fontSize: 11, background: VIO_BG, color: VIO, border: `1px solid ${VIO}33` }}>
           {o.objection_type}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ ...monoFaint, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>FREQ</span>
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>Freq</span>
           <div className="re-meter" style={{ width: 36, height: 3 }}>
             <i style={{ width: `${o.frequency * 100}%`, background: VIO }} />
           </div>
-          <span className="font-mono-feat tnum" style={{ fontSize: 10, color: VIO, fontWeight: 600 }}>
+          <span className="font-mono-feat tnum" style={{ fontSize: 11, color: VIO, fontWeight: 600 }}>
             {Math.round(o.frequency * 100)}
           </span>
         </div>
@@ -1434,20 +1434,20 @@ function ObjectionCard({
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500, lineHeight: 1.35 }}>{o.objection_title}</h3>
 
         <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "70px 1fr", gap: 8, rowGap: 6 }}>
-          <span style={labelMono()}>WHY</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg-muted)" }}>{o.why_users_hesitate}</span>
+          <span style={labelMono()}>Why</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-muted)" }}>{o.why_users_hesitate}</span>
 
           <span className="font-mono-feat" style={{ ...labelMono({ color: VIO }), fontWeight: 600 }}>
-            RESPOND
+            Respond
           </span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--fg)", fontWeight: 500 }}>
+          <span style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--fg)", fontWeight: 500 }}>
             {o.suggested_response}
           </span>
         </div>
 
         <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            CONFIDENCE
+          <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em" }}>
+            Confidence
           </span>
           <ConfidenceIndicator confidence={o.confidence} />
         </div>
@@ -1477,20 +1477,20 @@ function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["compa
       <div
         className="p-5 pt-12 md:p-8 md:pt-8"
         style={{
-          background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
+          background: `linear-gradient(135deg, ${VIO_BG}, color-mix(in srgb, var(--accent) 4%, transparent))`,
           borderBottom: "1px solid var(--border-soft)",
           position: "relative",
         }}
       >
         <div style={{ position: "absolute", top: 12, right: 16, display: "flex", gap: 6 }}>
-          <span className="re-chip" style={{ fontSize: 10, background: "#fff" }}>
-            BLOCK · HERO
+          <span className="re-chip" style={{ fontSize: 11, background: "var(--surface-solid)" }}>
+            Block · Hero
           </span>
           <button type="button" className="re-btn re-btn-ghost re-btn-sm">
             <Icon name="download" size={12} /> Copy
           </button>
         </div>
-        <div style={{ ...eyebrow, fontSize: 10 }}>RIVALEYE.app/linear-alternative</div>
+        <div style={{ ...eyebrow, fontSize: 11, letterSpacing: "0.02em" }}>rivaleye.app/linear-alternative</div>
         <h2
           style={{
             margin: "8px 0 0",
@@ -1519,7 +1519,7 @@ function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["compa
       <BuilderBlock title="Objections to address" tone="neutral" items={c.objections_to_handle} />
 
       <div style={{ padding: "18px 22px", borderTop: "1px solid var(--border-soft)", background: "var(--surface-2)" }}>
-        <div style={{ ...eyebrow, fontSize: 10, marginBottom: 10 }}>PROOF — VERBATIM QUOTES</div>
+        <div style={{ ...eyebrow, fontSize: 11, marginBottom: 10, letterSpacing: "0.02em" }}>Proof — verbatim quotes</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {c.proof_quotes.map((p, i) => (
             <div
@@ -1532,7 +1532,7 @@ function ComparisonBuilder({ c, competitorName }: { c: MarketingViewProps["compa
                 borderLeft: `2px solid ${VIO}`,
                 fontSize: 14,
                 fontStyle: "italic",
-                lineHeight: 1.5,
+                lineHeight: 1.6,
               }}
             >
               "{p}"
@@ -1567,13 +1567,13 @@ function BuilderBlock({
     <div style={{ padding: "18px 22px", borderLeft: borderLeft ? "1px solid var(--border-soft)" : 0 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color }}>{title}</h4>
-        <span className="re-chip" style={{ fontSize: 9 }}>
-          BLOCK
+        <span className="re-chip" style={{ fontSize: 11 }}>
+          Block
         </span>
       </div>
       <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
         {items.map((it, i) => (
-          <li key={i} style={{ fontSize: 13, lineHeight: 1.5, display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <li key={i} style={{ fontSize: 14, lineHeight: 1.6, display: "flex", gap: 10, alignItems: "flex-start" }}>
             <span style={{ flexShrink: 0, marginTop: 6, width: 5, height: 5, borderRadius: 99, background: color }} />
             <span style={{ color: "var(--fg)" }}>{it}</span>
           </li>
@@ -1613,7 +1613,7 @@ function CopyIdeas({
           <div key={c.key} className="re-card">
             <div className="re-card-hd">
               <h3>{c.label}</h3>
-              <span className="font-mono-feat text-fg-faint" style={{ fontSize: 11 }}>
+              <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
                 {items.length} ideas
               </span>
             </div>
@@ -1662,13 +1662,13 @@ function CopyRow({
           "{item.copy}"
         </div>
       </div>
-      <div className="text-fg-muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
-        <span style={{ ...monoFaint, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 6 }}>
-          SIGNAL
+      <div className="text-fg-muted" style={{ fontSize: 14, lineHeight: 1.6 }}>
+        <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", marginRight: 6 }}>
+          Signal
         </span>
         {item.signal_behind_it}
       </div>
-      <span className="re-chip" style={{ fontSize: 10, justifySelf: "start" }}>
+      <span className="re-chip" style={{ fontSize: 11, justifySelf: "start" }}>
         {item.best_use_case}
       </span>
       <ConfidenceIndicator confidence={item.confidence} />
@@ -1720,7 +1720,7 @@ function QuoteLibrary({
           justifyContent: "space-between",
         }}
       >
-        <span style={{ ...monoFaint, fontSize: 11 }}>
+        <span style={{ ...monoFaint, fontSize: 12 }}>
           {filtered.length} of {quotes.length} quotes · sorted by copy-usefulness
         </span>
         <div style={{ display: "flex", gap: 6 }}>
@@ -1758,27 +1758,27 @@ function QuoteLibraryCard({
         borderLeft: `3px solid ${q.sentiment > 0 ? "var(--pos)" : "var(--neg)"}`,
       }}
     >
-      <p style={{ margin: 0, fontSize: 14, fontStyle: "italic", lineHeight: 1.55 }}>"{q.quote}"</p>
+      <p style={{ margin: 0, fontSize: 14, fontStyle: "italic", lineHeight: 1.6 }}>"{q.quote}"</p>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <span className="font-mono-feat" style={{ fontSize: 11, fontWeight: 500 }}>
+        <span className="font-mono-feat" style={{ fontSize: 12, fontWeight: 500 }}>
           {q.source}
         </span>
         {q.source_date && (
           <>
-            <span style={{ ...monoFaint, fontSize: 11 }}>·</span>
-            <span style={{ ...monoFaint, fontSize: 11 }}>{q.source_date}</span>
+            <span style={{ ...monoFaint, fontSize: 12 }}>·</span>
+            <span style={{ ...monoFaint, fontSize: 12 }}>{q.source_date}</span>
           </>
         )}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 10, alignItems: "center" }}>
         {q.signals.map((s) => (
-          <span key={s} className="re-chip" style={{ fontSize: 9 }}>
+          <span key={s} className="re-chip" style={{ fontSize: 11 }}>
             {s}
           </span>
         ))}
         <span style={{ flex: 1 }} />
-        <span className="font-mono-feat" style={{ fontSize: 10, color: VIO, fontWeight: 600 }}>
-          USEFULNESS {Math.round(q.copy_usefulness_score * 100)}
+        <span className="font-mono-feat" style={{ fontSize: 11, color: VIO, fontWeight: 600 }}>
+          Usefulness {Math.round(q.copy_usefulness_score * 100)}
         </span>
       </div>
       {q.related_positioning_angle && (
@@ -1794,9 +1794,9 @@ function QuoteLibraryCard({
             gap: 10,
           }}
         >
-          <span style={{ fontSize: 11.5, color: "var(--fg)" }}>
-            <span style={{ ...monoFaint, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 6 }}>
-              ANGLE
+          <span style={{ fontSize: 12.5, color: "var(--fg)" }}>
+            <span style={{ ...monoFaint, fontSize: 11, textTransform: "none", letterSpacing: "0.02em", marginRight: 6 }}>
+              Angle
             </span>
             {q.related_positioning_angle}
           </span>
@@ -1825,7 +1825,7 @@ function MarketingFooter({ onNav }: { onNav: (to: string) => void }) {
         padding: "22px 24px",
         borderRadius: 10,
         border: "1px solid var(--border-soft)",
-        background: `linear-gradient(135deg, ${VIO_BG}, rgba(0,97,177,0.04))`,
+        background: `linear-gradient(135deg, ${VIO_BG}, color-mix(in srgb, var(--accent) 4%, transparent))`,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -1834,8 +1834,8 @@ function MarketingFooter({ onNav }: { onNav: (to: string) => void }) {
       }}
     >
       <div>
-        <div style={eyebrow}>MARKETING CHECKLIST</div>
-        <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.5, maxWidth: 720, fontWeight: 500 }}>
+        <div style={{ ...eyebrow, letterSpacing: "0.02em" }}>Marketing checklist</div>
+        <p style={{ margin: "6px 0 0", fontSize: 16, lineHeight: 1.6, maxWidth: 720, fontWeight: 500 }}>
           "I know exactly what to say, in what words, on which channel — and every line is anchored to a real user
           quote."
         </p>
