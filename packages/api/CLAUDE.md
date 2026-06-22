@@ -99,7 +99,7 @@ Each route belongs to exactly one domain controller. Be generous — when in dou
 | `/dashboard` | `dashboard/` | aggregated stats for the dashboard view |
 | `/insights` | `insights/` | (future) cluster/gap/opportunity sub-resources of a report |
 | `/sources` | `sources/` | (future) ingestion source records (Reddit threads, etc.) |
-| `/billing` | `billing/` | (future) plan, invoices, Stripe webhooks |
+| `/billing` | `billing/` | credit packs, orders, payment verification, Razorpay webhook |
 
 **Rules:**
 - `authorization/` is NOT a dumping ground for anything auth-adjacent. Owns only the "what can I do?" concern.
@@ -232,6 +232,6 @@ pnpm --filter @rivaleye/api type-check
 - [ ] Flesh out `services/report-generator.ts` — currently enqueues `scrape-platform` jobs fan-out; add `report_platform_jobs` row inserts so worker can fan-in.
 - [ ] Decide on shared error type / response envelope. Default for now: `{ data, error }`.
 - [ ] Add `bun test` for the first non-trivial service.
-- [ ] Stripe billing endpoints under `/v1/billing` when the paid offer goes live.
+- [x] Billing endpoints under `/v1/billing` — Razorpay credit packs (orders, verify, webhook).
 
 Update this section as decisions land.
