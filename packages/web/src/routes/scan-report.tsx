@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, type ComponentType, type CSSProperties } from "react";
+import { useMemo, useEffect, useState, useRef, type ComponentType, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Crosshair, Megaphone, Layers, TrendingUp, Zap } from "lucide-react";
 import { Icon } from "@/components/icons";
@@ -209,21 +209,21 @@ export function ScanReportPage() {
     if (m) m.scrollTo({ top: 0, behavior: "smooth" });
   }, [lens]);
 
-  // Full-report PDF: once the stacked print container is mounted, fire the
-  // browser print dialog, then revert so the screen view returns.
+  // Full-report PDF: wait for all lenses to render, then open browser print dialog.
   useEffect(() => {
     if (!printingAll) return;
     const revert = () => setPrintingAll(false);
     window.addEventListener("afterprint", revert);
-    const t = window.setTimeout(() => window.print(), 80);
+    // Wait 2.5s for React to fully render all nested components and apply all styles.
+    const t = window.setTimeout(() => window.print(), 2500);
     return () => {
       window.removeEventListener("afterprint", revert);
       window.clearTimeout(t);
     };
   }, [printingAll]);
 
-  // "This dashboard" prints the on-screen lens; "Full report" mounts the
-  // stacked container (the effect above triggers print).
+  // "This dashboard" prints the on-screen lens via the browser dialog.
+  // "Full report" mounts all lenses and opens print dialog after they render.
   const exportThis = () => window.print();
   const exportAll = () => setPrintingAll(true);
 
@@ -418,6 +418,8 @@ export function ScanReportPage() {
         <div style={{ height: 48 }} />
       </div>
 
+      {/* All-dashboards container for full-report print. Hidden from screen, shown
+          only in print media query when .printing-all class is set on root. */}
       {printingAll && (
         <div className="print-all-only">
           {LENS_ORDER.map((l, i) => (
@@ -492,7 +494,7 @@ function UnifiedHeader({ competitor: c, meta, onNav, onExportThis, onExportAll, 
                 {c.scannedAt && (
                   <>
                     <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>·</span>
-                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>Scanned {c.scannedAt}</span>
+                    <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>Scanned {formatRelative(c.scannedAt)}</span>
                   </>
                 )}
               </div>
@@ -570,7 +572,6 @@ function ExportMenu({
 
   const choose = (fn: () => void) => {
     setOpen(false);
-    // Defer so the menu unmounts before the print dialog blocks the thread.
     setTimeout(fn, 0);
   };
 
@@ -603,7 +604,7 @@ function ExportMenu({
               <Icon name="download" size={13} />
               <span>Export full report (all dashboards)</span>
             </button>
-            <div style={{ padding: "6px 10px 2px", fontSize: 11 }} className="font-mono-feat text-fg-faint">
+            <div style={{ padding: “6px 10px 2px”, fontSize: 11 }} className=”font-mono-feat text-fg-faint”>
               Opens your browser print dialog · choose “Save as PDF”
             </div>
           </div>
