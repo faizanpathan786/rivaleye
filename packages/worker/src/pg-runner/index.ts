@@ -33,6 +33,7 @@ import type { WorkerConfig, SourceJobRow, SynthesisJobRow } from "./types";
 import { processSourceJob } from "./source-worker";
 import { processSynthesisJob } from "./synthesis-worker";
 import { healOrphanedReports } from "./recovery";
+import { pollPdfJobs } from "./pdf-worker";
 
 const log = pino({ name: "pg-runner" });
 
@@ -437,6 +438,7 @@ async function main(): Promise<void> {
     await Promise.all([
       pollSourceJobs(config),
       pollSynthesisJobs(config),
+      pollPdfJobs(config),
       recoverStaleJobs(config),
     ]);
   } catch (err) {
@@ -479,6 +481,7 @@ async function mainSynthOnly(): Promise<void> {
   try {
     await Promise.all([
       pollSynthesisJobs(config),
+      pollPdfJobs(config),
       recoverStaleJobs(config),
     ]);
   } catch (err) {

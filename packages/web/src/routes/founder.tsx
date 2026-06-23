@@ -826,9 +826,11 @@ function FrustrationCard({
         >
           {sevLbl} severity
         </span>
-        <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 12 }}>
-          {f.frequency} mentions
-        </span>
+        {f.frequency >= 2 && (
+          <span className="font-mono-feat tnum text-fg-faint" style={{ fontSize: 12 }}>
+            {Math.round(f.frequency)} mentions
+          </span>
+        )}
       </div>
       <div style={{ padding: "8px 16px 14px" }}>
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: "-0.005em" }}>{f.title}</h3>

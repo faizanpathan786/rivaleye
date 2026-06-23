@@ -141,6 +141,13 @@
       "when": 1781800977843,
       "tag": "0019_eager_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1782195317275,
+      "tag": "0020_quiet_wildside",
+      "breakpoints": true
     }
   ]
 }
