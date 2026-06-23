@@ -3,7 +3,7 @@
 # Stage 1: Build stage
 FROM node:20-slim as builder
 
-# Install dependencies first (Chrome, build tools, and extraction tools)
+# Install dependencies first (Chrome, build tools, extraction tools, and Bun)
 RUN apt-get update && \
     apt-get install -y \
       chromium \
@@ -13,8 +13,13 @@ RUN apt-get update && \
       g++ \
       tar \
       unzip \
-      gzip && \
+      gzip \
+      curl && \
     rm -rf /var/lib/apt/lists/*
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
 WORKDIR /app
 
@@ -34,14 +39,19 @@ RUN pnpm exec turbo run build --concurrency=1
 # Stage 2: Runtime stage (smaller image)
 FROM node:20-slim
 
-# Install runtime dependencies (Chrome, sandbox, and tools)
+# Install runtime dependencies (Chrome, sandbox, tools, and Bun)
 RUN apt-get update && \
     apt-get install -y \
       chromium \
       chromium-sandbox \
       tar \
-      unzip && \
+      unzip \
+      curl && \
     rm -rf /var/lib/apt/lists/*
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
 WORKDIR /app
 
