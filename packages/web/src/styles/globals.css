@@ -492,7 +492,27 @@
 
   /* One lens per page, no trailing blank page. */
   .scan-export-page { break-after: page; }
-  .scan-export-page:last-child { break-after: auto; }
+  .scan-export-page:last-child { break-after: avoid; }
+
+  /* Cover page gets its own sheet. */
+  .scan-export-cover { break-after: page; break-inside: avoid; }
+
+  /* Headings & eyebrows stay glued to the content that follows — kills the
+     stranded-label / near-empty-page problem. */
+  .scan-export-page h1,
+  .scan-export-page h2,
+  .scan-export-page h3,
+  .scan-export-page .re-eyebrow,
+  .scan-export-page .re-card-hd { break-after: avoid; break-inside: avoid; }
+
+  /* Body sets overflow-wrap:anywhere which mangles short labels (e.g.
+     "OPPORTUNITY" → "OPPORTUNI TY") in narrow columns. Restore normal wrapping
+     inside the export so words only break when genuinely too long. */
+  .scan-export-root,
+  .scan-export-root * { overflow-wrap: break-word; word-break: normal; }
+
+  /* Keep the compact KPI stat row as a row (don't collapse it like big cards). */
+  .scan-export-page .scan-kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 
   /* Keep content within the printable width and centered. */
   .scan-export-root,

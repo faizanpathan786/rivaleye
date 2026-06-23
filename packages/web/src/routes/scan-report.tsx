@@ -1,6 +1,8 @@
 import { useMemo, useEffect, useState, useRef, type ComponentType, type CSSProperties, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Crosshair, Megaphone, Layers, TrendingUp, Zap } from "lucide-react";
+import { toast } from "sonner";
+import axios from "@/lib/axios";
+import { Crosshair, Megaphone, Layers, TrendingUp, Zap, Loader2 } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { formatRelative } from "@/lib/format";
 import { useAddPlannedActionMutation } from "@/hooks/queries/use-planned-actions";
@@ -164,19 +166,58 @@ export function ScanReportPage() {
   const ALL_LENSES = [...LENS_ORDER, "pain"] as LensId[];
   const lens: LensId = ALL_LENSES.includes(lensParam as LensId) ? (lensParam as LensId) : "summary";
   const [range, setRange] = useState("90d");
+  const [exporting, setExporting] = useState(false);
   const meta = LENS_META[lens];
 
-  // Export via Puppeteer (server-side PDF generation).
-  // "This dashboard" exports just the current lens; "full report" exports all.
+  // Export is generated async in the worker. Enqueue → poll → download when
+  // ready, so the user is never blocked behind a long loader.
+  // "This dashboard" exports the current lens; "full report" exports all.
   const apiBase = () => import.meta.env.VITE_API_URL || "http://localhost:4000";
-  const exportThis = () => {
-    if (!id) return;
-    window.location.href = `${apiBase()}/v1/reports/${id}/export-pdf?lens=${lens}`;
+  const runExport = async (lensId?: string) => {
+    if (!id || exporting) return;
+    setExporting(true);
+    const finish = () => setExporting(false);
+    let toastId: string | number | undefined;
+    try {
+      const res = await axios.post(`/v1/reports/${id}/export-pdf${lensId ? `?lens=${lensId}` : ""}`);
+      const jobId = (res.data as { data?: { job_id?: string } })?.data?.job_id;
+      if (!jobId) throw new Error("no job id");
+      toastId = toast.loading("Preparing your PDF — we'll download it the moment it's ready.");
+      const startedAt = Date.now();
+      const poll = async () => {
+        if (Date.now() - startedAt > 120_000) {
+          toast.error("Export is taking too long — please try again.", { id: toastId });
+          finish();
+          return;
+        }
+        try {
+          const s = await axios.get(`/v1/reports/pdf-jobs/${jobId}`);
+          const st = (s.data as { data?: { ready?: boolean; status?: string } })?.data;
+          if (st?.ready) {
+            toast.success("Your report PDF is ready.", { id: toastId });
+            window.location.href = `${apiBase()}/v1/reports/pdf-jobs/${jobId}/download`;
+            finish();
+            return;
+          }
+          if (st?.status === "failed") {
+            toast.error("PDF export failed — please try again.", { id: toastId });
+            finish();
+            return;
+          }
+        } catch {
+          /* transient poll error — keep trying until the timeout */
+        }
+        setTimeout(poll, 2500);
+      };
+      setTimeout(poll, 2500);
+    } catch {
+      if (toastId !== undefined) toast.error("Couldn't start the export.", { id: toastId });
+      else toast.error("Couldn't start the export.");
+      finish();
+    }
   };
-  const exportAll = () => {
-    if (!id) return;
-    window.location.href = `${apiBase()}/v1/reports/${id}/export-pdf`;
-  };
+  const exportThis = () => runExport(lens);
+  const exportAll = () => runExport();
 
   const goToLens = (next: LensId) => {
     const reportId = id || window.location.pathname.split("/")[3];
@@ -400,6 +441,7 @@ export function ScanReportPage() {
           onNav={onNav}
           onExportThis={exportThis}
           onExportAll={exportAll}
+          exporting={exporting}
           activeLens={lens}
           onPickLens={goToLens}
         />
@@ -504,9 +546,55 @@ export function ScanReportExportView() {
   };
 
   const lensesToRender = onlyLens && LENS_ORDER.includes(onlyLens) ? [onlyLens] : LENS_ORDER;
+  const sent = sentimentChip(competitorData.sentiment.overall);
 
   return (
-    <div className="scan-export-root" style={{ background: "var(--bg)", minHeight: "100vh" }}>
+    <div className="scan-export-root" style={{ background: "var(--bg)" }}>
+      {!onlyLens && (
+        <section className="scan-export-cover" style={{ padding: "96px 56px 56px", display: "flex", flexDirection: "column", gap: 56 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/logo.svg" alt="RivalEye" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} />
+            <span className="flex items-baseline" style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.02em" }}>
+              Rival<span style={{ color: "var(--accent)" }}>Eye</span>
+            </span>
+          </div>
+
+          <div>
+            <div className="re-eyebrow" style={{ fontSize: 12 }}>Competitor perception report</div>
+            <h1 style={{ fontSize: 52, fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.02, marginTop: 16 }}>
+              {competitorData.name}
+            </h1>
+            {competitorData.domain && (
+              <div className="font-mono-feat text-fg-muted" style={{ fontSize: 14, marginTop: 10 }}>{competitorData.domain}</div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 22, flexWrap: "wrap" }}>
+              <span className={`re-chip ${sent.cls}`} style={{ fontSize: 12 }}>
+                {sent.label} · {competitorData.sentiment.overall.toFixed(2).replace("-", "−")}
+              </span>
+              <span className="font-mono-feat text-fg-faint" style={{ fontSize: 12 }}>
+                {competitorData.sources.toLocaleString()} mentions · {competitorData.platforms.length} platforms
+              </span>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginBottom: 10 }}>In this report</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {LENS_ORDER.map((l) => {
+                const m = LENS_META[l];
+                return (
+                  <span key={l} className="re-chip" style={{ fontSize: 11, color: m.color }}>
+                    {m.glyph} {m.name}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="font-mono-feat text-fg-faint" style={{ fontSize: 11, marginTop: 28 }}>
+              Generated {new Date().toLocaleDateString(undefined, { day: "2-digit", month: "long", year: "numeric" })}
+            </div>
+          </div>
+        </section>
+      )}
       {lensesToRender.map((l) => {
         const m = LENS_META[l];
         return (
@@ -534,6 +622,7 @@ interface UnifiedHeaderProps {
   onNav: (to: string) => void;
   onExportThis: () => void;
   onExportAll: () => void;
+  exporting: boolean;
   activeLens: LensId;
   onPickLens: (id: LensId) => void;
 }
@@ -545,7 +634,7 @@ function sentimentChip(overall: number): { label: string; cls: string } {
   return { label: "Neutral", cls: "" };
 }
 
-function UnifiedHeader({ competitor: c, meta, onNav, onExportThis, onExportAll, activeLens, onPickLens }: UnifiedHeaderProps) {
+function UnifiedHeader({ competitor: c, meta, onNav, onExportThis, onExportAll, exporting, activeLens, onPickLens }: UnifiedHeaderProps) {
   const sent = sentimentChip(c.sentiment.overall);
   return (
     <div
@@ -590,7 +679,7 @@ function UnifiedHeader({ competitor: c, meta, onNav, onExportThis, onExportAll, 
             <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => onNav("/compare")}>
               <Icon name="compare" size={14} /> Compare
             </button>
-            <ExportMenu onExportThis={onExportThis} onExportAll={onExportAll} lensName={meta.name} />
+            <ExportMenu onExportThis={onExportThis} onExportAll={onExportAll} lensName={meta.name} exporting={exporting} />
           </div>
         </div>
 
@@ -648,10 +737,12 @@ function ExportMenu({
   onExportThis,
   onExportAll,
   lensName,
+  exporting,
 }: {
   onExportThis: () => void;
   onExportAll: () => void;
   lensName: string;
+  exporting: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -662,11 +753,25 @@ function ExportMenu({
 
   return (
     <div style={{ position: "relative" }}>
-      <button className="re-btn re-btn-ghost re-btn-sm" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <Icon name="download" size={14} /> Export
+      <button
+        className="re-btn re-btn-ghost re-btn-sm"
+        onClick={() => !exporting && setOpen((v) => !v)}
+        aria-expanded={open}
+        disabled={exporting}
+        style={{ opacity: exporting ? 0.85 : 1, cursor: exporting ? "default" : "pointer" }}
+      >
+        {exporting ? (
+          <>
+            <Loader2 size={14} className="animate-spin" /> Generating…
+          </>
+        ) : (
+          <>
+            <Icon name="download" size={14} /> Export
+          </>
+        )}
       </button>
 
-      {open && (
+      {open && !exporting && (
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setOpen(false)} />
           <div
@@ -690,7 +795,7 @@ function ExportMenu({
               <span>Export full report (all dashboards)</span>
             </button>
             <div style={{ padding: "6px 10px 2px", fontSize: 11 }} className="font-mono-feat text-fg-faint">
-              Opens your browser print dialog · choose "Save as PDF"
+              Generated in the background · downloads automatically when ready
             </div>
           </div>
         </>
@@ -791,7 +896,7 @@ function ExecutiveSummary({
       <SummaryHero data={data} />
 
       {/* KEY METRICS — only true headline numbers */}
-      <div className="grid grid-cols-3" style={{ marginTop: 20, gap: 12 }}>
+      <div className="grid grid-cols-3 scan-kpi-row" style={{ marginTop: 20, gap: 12 }}>
         <SummaryStat
           label="Sentiment index"
           value={c.sentiment.overall.toFixed(2).replace("-", "−")}

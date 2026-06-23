@@ -26,6 +26,7 @@ export const report_platform_stage_enum = pgEnum("report_platform_stage", [
   "completed",
 ]);
 import { reports } from "./reports";
+import { users } from "./users";
 
 export const report_platform_job_status_enum = pgEnum("report_platform_job_status", [
   "queued",
@@ -123,6 +124,53 @@ export const report_platform_briefs = pgTable(
     index("report_platform_briefs_report_id_idx").on(t.report_id),
   ],
 );
+
+// ── Async PDF export jobs ────────────────────────────────────────────────
+// Enqueued by the API, processed by the worker (headless-Chrome render). The
+// worker reuses the requester's session cookie (stored transiently) to auth the
+// export view's data fetches, then stores the PDF as base64 and clears the
+// cookie. UX: enqueue → poll status → download when ready.
+export const report_pdf_job_status_enum = pgEnum("report_pdf_job_status", [
+  "queued",
+  "running",
+  "completed",
+  "failed",
+]);
+
+export const report_pdf_jobs = pgTable(
+  "report_pdf_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    report_id: uuid("report_id")
+      .notNull()
+      .references(() => reports.id, { onDelete: "cascade" }),
+    owner_id: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lens: text("lens"), // null = full report, otherwise a single lens id
+    status: report_pdf_job_status_enum("status").notNull().default("queued"),
+    session_cookie: text("session_cookie"), // transient; cleared once rendered
+    pdf_base64: text("pdf_base64"), // populated on completion
+    error: text("error"),
+    attempt_count: integer("attempt_count").notNull().default(0),
+    max_attempts: integer("max_attempts").notNull().default(2),
+    run_after: timestamp("run_after").notNull().defaultNow(),
+    locked_at: timestamp("locked_at"),
+    locked_by: text("locked_by"),
+    started_at: timestamp("started_at"),
+    completed_at: timestamp("completed_at"),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("report_pdf_jobs_status_run_after_idx").on(t.status, t.run_after, t.created_at).where(sql`status = 'queued'`),
+    index("report_pdf_jobs_owner_id_idx").on(t.owner_id),
+    index("report_pdf_jobs_locked_at_idx").on(t.locked_at).where(sql`status = 'running'`),
+  ],
+);
+
+export type ReportPdfJob = typeof report_pdf_jobs.$inferSelect;
+export type NewReportPdfJob = typeof report_pdf_jobs.$inferInsert;
 
 export type ReportPlatformJob = typeof report_platform_jobs.$inferSelect;
 export type NewReportPlatformJob = typeof report_platform_jobs.$inferInsert;
