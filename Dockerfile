@@ -3,14 +3,17 @@
 # Stage 1: Build stage
 FROM node:20-slim as builder
 
-# Install dependencies first (Chrome, build tools)
+# Install dependencies first (Chrome, build tools, and extraction tools)
 RUN apt-get update && \
     apt-get install -y \
       chromium \
       chromium-sandbox \
       python3 \
       make \
-      g++ && \
+      g++ \
+      tar \
+      unzip \
+      gzip && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -31,11 +34,13 @@ RUN pnpm exec turbo run build --concurrency=1
 # Stage 2: Runtime stage (smaller image)
 FROM node:20-slim
 
-# Install only runtime dependencies (Chrome, sandbox)
+# Install runtime dependencies (Chrome, sandbox, and tools)
 RUN apt-get update && \
     apt-get install -y \
       chromium \
-      chromium-sandbox && \
+      chromium-sandbox \
+      tar \
+      unzip && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -51,9 +56,11 @@ RUN npm install -g pnpm@9.15.2 && \
 # Copy built output from builder stage
 COPY --from=builder /app/packages ./packages
 
-# Set environment
+# Set environment - use system chromium and limit memory
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=false
 
 # Default port for API
 EXPOSE 4000
