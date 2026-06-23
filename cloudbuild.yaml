@@ -1,24 +1,5 @@
-# Docker-based deploy: build in cloud (no disk space issues), deploy to VM
-
+# Direct deployment: pull code to VM and rebuild
 steps:
-  # Step 1: Build Docker image
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/rivaleye:latest'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/rivaleye:$COMMIT_SHA'
-      - '.'
-    timeout: '3600s'
-
-  # Step 2: Push to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/rivaleye'
-
-  # Step 3: Deploy to VM (pull image and restart)
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -28,7 +9,7 @@ steps:
           --zone=us-central1-a \
           --tunnel-through-iap \
           --quiet \
-          --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && bash deploy-docker.sh'"
+          --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && git pull origin main && pnpm install && pnpm exec turbo run build --concurrency=1 && pm2 restart all && pm2 save'"
 
 timeout: '3600s'
 
