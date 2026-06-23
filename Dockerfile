@@ -18,8 +18,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy lock file and workspace files
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml tsconfig.base.json ./
+# Copy root config files needed for build
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml tsconfig.base.json turbo.json .prettierrc* ./
 
 # Copy all packages
 COPY packages ./packages
@@ -45,8 +45,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy package files
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
+# Copy root config files
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml tsconfig.base.json turbo.json .prettierrc* ./
 COPY packages ./packages
 
 # Install pnpm and production dependencies only
