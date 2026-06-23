@@ -75,5 +75,5 @@ ENV PUPPETEER_SKIP_DOWNLOAD=false
 # Default port for API
 EXPOSE 4000
 
-# Start all services with PM2
-CMD ["pnpm", "start"]
+# Start the API server (main service)
+CMD ["pnpm", "--filter", "@rivaleye/api", "dev"]
