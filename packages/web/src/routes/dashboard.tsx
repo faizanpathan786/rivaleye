@@ -125,6 +125,14 @@ export function DashboardPage() {
         <KpiTile label="Opportunities" value={String(oppCount)} hint={`${highPayoff} high-payoff`} accent={highPayoff > 0} onClick={() => navigate("/pain-opps")} />
       </div>
 
+      {/* Jump back in — moved to top */}
+      {fullReports.length > 0 && (
+        <section style={{ marginBottom: 28 }}>
+          <SectionHead title="Jump back in" actionLabel="View all" onAction={() => navigate("/history")} />
+          <ReportRail reports={fullReports} onOpen={(id) => navigate(`/scan-report/${id}`)} />
+        </section>
+      )}
+
       {/* analytics band — two balanced widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start" style={{ marginBottom: 28 }}>
         <div>
@@ -160,12 +168,6 @@ export function DashboardPage() {
         )}
       </section>
 
-      {fullReports.length > 0 && (
-        <section>
-          <SectionHead title="Jump back in" actionLabel="View all" onAction={() => navigate("/history")} />
-          <ReportRail reports={fullReports} onOpen={(id) => navigate(`/scan-report/${id}`)} />
-        </section>
-      )}
     </div>
   );
 }
