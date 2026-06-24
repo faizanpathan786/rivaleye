@@ -11,7 +11,7 @@ steps:
           --quiet \
           --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && rm -f deploy-docker.sh && git pull origin main && pnpm install && pnpm exec turbo run build --concurrency=1 && pm2 restart all && pm2 save'"
 
-timeout: '3600s'
+timeout: '7200s'
 
 options:
   logging: CLOUD_LOGGING_ONLY
