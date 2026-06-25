@@ -13,7 +13,7 @@ export function RadarComingSoonPage() {
   const reduce = useReducedMotion();
 
   return (
-    <div className="px-4 py-8 md:px-8 w-full" style={{ minHeight: "100%", display: "grid", placeItems: "center" }}>
+    <div className="px-4 py-4 md:px-8 w-full" style={{ minHeight: "100%", display: "grid", placeItems: "center" }}>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -26,8 +26,8 @@ export function RadarComingSoonPage() {
           className="mx-auto"
           style={{
             position: "relative",
-            width: 248,
-            height: 248,
+            width: 220,
+            height: 220,
             borderRadius: "50%",
             border: "1px solid var(--border-strong)",
             background: "radial-gradient(circle at 50% 50%, var(--accent-soft) 0%, transparent 70%)",
@@ -67,7 +67,7 @@ export function RadarComingSoonPage() {
           </span>
         </div>
 
-        <div className="re-eyebrow" style={{ marginTop: 32 }}>Radar · in development</div>
+        <div className="re-eyebrow" style={{ marginTop: 22 }}>Radar · in development</div>
         <h1 style={{ fontSize: "clamp(26px, 5vw, 38px)", fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.1, marginTop: 12 }}>
           Always-on competitor radar
         </h1>
@@ -77,7 +77,7 @@ export function RadarComingSoonPage() {
         </p>
 
         {/* feature row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" style={{ marginTop: 32, textAlign: "left" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" style={{ marginTop: 24, textAlign: "left" }}>
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.title}
@@ -96,7 +96,7 @@ export function RadarComingSoonPage() {
           ))}
         </div>
 
-        <div className="flex gap-2 justify-center flex-wrap" style={{ marginTop: 32 }}>
+        <div className="flex gap-2 justify-center flex-wrap" style={{ marginTop: 20 }}>
           <button className="re-btn re-btn-accent" onClick={() => navigate("/scan")}>
             Run a scan instead <ArrowRight size={15} />
           </button>

@@ -6,12 +6,13 @@ export const QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000,
+      staleTime: 10 * 60 * 1000, // 10 minutes
       // gcTime must be >= the persisted maxAge, otherwise inactive queries are
       // dropped from memory before they can be re-hydrated on the next load.
       gcTime: QUERY_CACHE_MAX_AGE,
       refetchOnWindowFocus: false,
-      retry: 1,
+      retry: 0,
+      throwOnError: false,
     },
   },
 });

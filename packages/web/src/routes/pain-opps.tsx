@@ -25,7 +25,7 @@ export function PainOppsPage() {
   const isLoading = complaintsLoading || oppsLoading;
 
   return (
-    <div className="px-4 py-8 md:px-8" style={{ maxWidth: 1180, margin: "0 auto" }}>
+    <div className="px-4 py-8 md:px-8" style={{ maxWidth: "100%" }}>
       {/* Page header */}
       <div style={{ marginBottom: 26 }}>
         <div className="re-eyebrow flex items-center gap-1.5" style={{ fontSize: 11, color: "var(--neg)" }}>
@@ -40,7 +40,7 @@ export function PainOppsPage() {
       </div>
 
       {/* Competitor selector */}
-      {reportsLoading ? (
+      {reportsLoading && completed.length === 0 ? (
         <div className="re-card px-5 py-8 text-center" style={{ color: "var(--fg-faint)", fontSize: 13 }}>
           Loading competitors…
         </div>
@@ -61,7 +61,7 @@ export function PainOppsPage() {
               report={selectedReport}
               complaints={complaints}
               opportunities={opportunities}
-              isLoading={isLoading}
+              isLoading={isLoading && !complaints.length && !opportunities.length}
             />
           )}
         </>

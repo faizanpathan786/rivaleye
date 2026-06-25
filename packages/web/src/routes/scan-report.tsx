@@ -237,7 +237,7 @@ export function ScanReportPage() {
   // Live data fetch — only when :id is present in the route.
   const reportQuery = useReportQuery(id);
   const reportRow = reportQuery.data;
-  const reportIsLoading = reportQuery.isLoading;
+  const reportIsLoading = reportQuery.isPending && !reportQuery.data;
   const progressQuery = useReportProgressQuery(id);
   const isCompleted = reportRow?.status === "completed" || reportRow?.stage === "done";
   const { data: sections, isLoading, error } = useReportSectionsQuery(isCompleted ? id : undefined);
@@ -286,7 +286,7 @@ export function ScanReportPage() {
   // sections arrive, causing the full page to flash with empty content.
   // Use different copy: "Loading scan…" only for brand-new in-flight scans;
   // "Loading report…" when opening an existing completed report.
-  const sectionsLoading = isCompleted && isLoading;
+  const sectionsLoading = isCompleted && isLoading && !sections;
   const isKnownReport = !!reportRow; // initialData seeds this from list cache instantly
   const loadingLabel = isKnownReport || isCompleted ? "Loading report…" : "Loading scan…";
   if (id && ((reportIsLoading && !reportRow) || (sectionsLoading && !sections))) {
@@ -879,14 +879,14 @@ function ExecutiveSummary({
 
   const tabsData: Array<[SummaryTabId, string]> = [
     ["overview", "Overview"],
-    ["complaints", `Complaints (${complaints.length})`],
+    ["complaints", "Complaints"],
     ["voice", "Voice of customer"],
     ["pricing", "Pricing"],
     ["switching", "Switching"],
-    ["quotes", `Verbatim (${quotes.length})`],
-    ["leads", `Leads (${leads.length})`],
+    ["quotes", "Verbatim"],
+    ["leads", "Leads"],
     ["positioning", "Positioning"],
-    ["opportunities", `Opportunities (${opportunities.length})`],
+    ["opportunities", "Opportunities"],
     ["actions", "Recommended actions"],
   ];
 
@@ -1071,7 +1071,7 @@ function ExecutiveSummary({
         <div className="px-4 pb-16 pt-5 md:px-7">
           <div style={{ width: "100%" }}>
             {tab === "overview" && (
-              <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+              <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
                 {/* main column — the substance: read → pain → switch → gap → evidence */}
                 <div className="flex flex-col gap-4">
                   <ScanExecutiveBriefCard brief={data.intelligence?.brief ?? null} />
@@ -1083,15 +1083,15 @@ function ExecutiveSummary({
                     onOpenThread={() => {}}
                   />
                   {switching && <ScanSwitchingSummary switching={switching} />}
-                  {featureGaps.length > 0 && (
-                    <ScanFeatureGapsCard featureGaps={featureGaps.slice(0, 6)} />
-                  )}
-                  <ScanVerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} onViewAll={() => setTab("quotes")} />
                 </div>
                 {/* right rail — scale & context */}
                 <div className="flex flex-col gap-4">
                   <ScanSummaryCard data={data} complaints={complaints} />
                   {platforms.length > 0 && <ScanPlatformBreakdown platforms={platforms} />}
+                  <ScanVerbatimCard quotes={quotes.slice(0, 5)} totalCount={quotes.length} onViewAll={() => setTab("quotes")} />
+                  {featureGaps.length > 0 && (
+                    <ScanFeatureGapsCard featureGaps={featureGaps.slice(0, 6)} />
+                  )}
                   {sentimentSeries.length > 1 && (
                     <ScanSentimentCard series={sentimentSeries} />
                   )}

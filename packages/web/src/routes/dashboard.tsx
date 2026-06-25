@@ -14,17 +14,17 @@ import { useReportsQuery } from "@/hooks/queries/use-reports";
 import type { ReportRow } from "@/api/reports";
 import type { CompetitorSummary, DashboardOpportunity } from "@/api/dashboard";
 
-const PAGE = "px-4 py-6 pb-16 md:px-8 w-full max-w-[1180px] mx-auto";
+const PAGE = "px-4 py-6 pb-16 md:px-8 w-full";
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
 
-  const isLoading = dashboardQuery.isLoading || reportsQuery.isLoading;
+  const isPending = (dashboardQuery.isPending || reportsQuery.isPending) && !dashboardQuery.data && !reportsQuery.data;
   const error = dashboardQuery.error || reportsQuery.error;
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className={PAGE}>
         <Skeleton style={{ height: 56, marginBottom: 28, maxWidth: 440 }} />

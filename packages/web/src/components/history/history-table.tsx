@@ -62,7 +62,7 @@ export function HistoryTable({ rows }: { rows: ReportRow[] }) {
               <tr
                 key={r.id}
                 style={{ cursor: "pointer" }}
-                onClick={() => navigate(`/reports/${r.id}`)}
+                onClick={() => navigate(`/scan-report/${r.id}`)}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "")}
               >
@@ -97,7 +97,7 @@ export function HistoryTable({ rows }: { rows: ReportRow[] }) {
                 <td style={{ ...td, paddingRight: 16 }}>
                   <button
                     className="re-btn re-btn-ghost re-btn-sm"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/reports/${r.id}`); }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/scan-report/${r.id}`); }}
                   >
                     Open <Icon name="chev-right" size={12} />
                   </button>

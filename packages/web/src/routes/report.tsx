@@ -18,7 +18,6 @@ import {
   useReportSwitchingQuery,
   useReportVoiceQuery,
 } from "@/hooks/queries/use-reports";
-import { useAddPlannedActionMutation } from "@/hooks/queries/use-planned-actions";
 import { retryPlatform } from "@/api/reports";
 import { formatRelative } from "@/lib/format";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
@@ -2034,22 +2033,6 @@ function StatLabel({
 }
 
 export function ActionsCard({ actions, reportId }: { actions: ActionRow[]; reportId: string }) {
-  const [addingId, setAddingId] = useState<string | null>(null);
-  const { mutate: addToPlan } = useAddPlannedActionMutation();
-
-  const handleAddToPlan = (action: ActionRow) => {
-    setAddingId(action.id);
-    addToPlan({
-      report_id: reportId,
-      title: action.step,
-      description: action.detail || undefined,
-      role: action.role || undefined,
-      effort: action.effort || undefined,
-    }, {
-      onSuccess: () => setAddingId(null),
-      onError: () => setAddingId(null),
-    });
-  };
 
   if (actions.length === 0)
     return <EmptyTab label="No recommended actions yet." />;
@@ -2095,7 +2078,7 @@ export function ActionsCard({ actions, reportId }: { actions: ActionRow[]; repor
             {a.role && (
               <span
                 className="re-chip col-start-2 justify-self-start md:col-start-auto"
-                style={{ fontSize: 10 }}
+                style={{ fontSize: 9, opacity: 0.7 }}
               >
                 {a.role}
               </span>
@@ -2103,18 +2086,11 @@ export function ActionsCard({ actions, reportId }: { actions: ActionRow[]; repor
             {a.effort && (
               <span
                 className={`re-chip ${a.effort === "high" ? "re-chip-warn" : a.effort === "med" ? "" : "re-chip-pos"} col-start-2 justify-self-start md:col-start-auto`}
-                style={{ fontSize: 10 }}
+                style={{ fontSize: 9, opacity: 0.7 }}
               >
                 effort · {a.effort}
               </span>
             )}
-            <button
-              onClick={() => handleAddToPlan(a)}
-              disabled={addingId === a.id}
-              className="re-btn re-btn-sm col-start-2 justify-self-start md:col-start-auto md:justify-self-end"
-            >
-              {addingId === a.id ? "Adding..." : "+ Add to plan"}
-            </button>
           </div>
         ))}
       </div>

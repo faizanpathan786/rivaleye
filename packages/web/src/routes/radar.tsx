@@ -133,7 +133,7 @@ export function RadarPage() {
     };
   }, [allEvents, competitorById]);
 
-  const isLoading = eventsQuery.isLoading || competitorsQuery.isLoading;
+  const isLoading = (eventsQuery.isPending || competitorsQuery.isPending) && !allEvents.length;
   const error = eventsQuery.error ?? competitorsQuery.error;
 
   return (

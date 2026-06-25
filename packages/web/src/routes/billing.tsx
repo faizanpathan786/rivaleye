@@ -22,9 +22,9 @@ function loadRazorpayScript(): Promise<void> {
 }
 
 function TransactionHistory() {
-  const { data, isLoading } = useTransactionsQuery();
+  const { data, isPending } = useTransactionsQuery();
 
-  if (isLoading) {
+  if (isPending && !data) {
     return <div className="re-card" style={{ color: "var(--fg-muted)", fontSize: 13, padding: 16, textAlign: "center" }}>Loading…</div>;
   }
 
@@ -70,8 +70,8 @@ function TransactionHistory() {
 }
 
 export function BillingPage() {
-  const { data: balance, isLoading: balanceLoading } = useBalanceQuery();
-  const { data: transactions, isLoading: txLoading } = useTransactionsQuery();
+  const { data: balance, isPending: balancePending } = useBalanceQuery();
+  const { data: transactions, isPending: txPending } = useTransactionsQuery();
   const packsQuery = useCreditPacksQuery();
   const createOrder = useCreateOrderMutation();
   const verifyPayment = useVerifyPaymentMutation();
@@ -145,7 +145,7 @@ export function BillingPage() {
             <div className="re-eyebrow" style={{ fontSize: 11, color: "var(--accent)" }}>Balance</div>
             <div className="flex items-baseline" style={{ gap: 8, marginTop: 8 }}>
               <span className="tnum" style={{ fontSize: 46, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1, color: "var(--fg)" }}>
-                {balanceLoading ? "—" : balance?.free_scan_used === false ? "Free" : creditsRemaining}
+                {balancePending && !balance ? "—" : balance?.free_scan_used === false ? "Free" : creditsRemaining}
               </span>
               <span style={{ fontSize: 13, color: "var(--fg-muted)" }}>
                 {balance?.free_scan_used === false ? "scan available" : "credits remaining"}
@@ -156,7 +156,7 @@ export function BillingPage() {
             </div>
           </div>
 
-          {!balanceLoading && !txLoading && totalEver > 0 && (
+          {!balancePending && !balance && !txPending && !transactions && totalEver > 0 && (
             <div style={{ flex: "1 1 240px", maxWidth: 340 }}>
               <div className="flex items-baseline justify-between" style={{ marginBottom: 7 }}>
                 <span className="re-eyebrow" style={{ fontSize: 11 }}>Usage</span>
@@ -200,7 +200,7 @@ export function BillingPage() {
             {successMsg}
           </div>
         )}
-        {packsQuery.isLoading && (
+        {packsQuery.isPending && !packsQuery.data && (
           <div style={{ color: "var(--fg-muted)", fontSize: 13 }}>Loading packs…</div>
         )}
         {packsQuery.data && (

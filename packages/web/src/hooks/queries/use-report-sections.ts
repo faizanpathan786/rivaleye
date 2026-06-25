@@ -7,8 +7,8 @@ export function useReportSectionsQuery(id: string | undefined) {
     queryKey: ["reports", "sections", id],
     queryFn: () => getReportSections(id as string),
     enabled: !!id,
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 min - reasonable cache for completed reports
+    retry: 0,
+    staleTime: 10 * 60 * 1000, // 10 min - keep cached data fresh
     gcTime: 60 * 60 * 1000, // 1 hour - keep in cache
     refetchOnWindowFocus: false,
   });
