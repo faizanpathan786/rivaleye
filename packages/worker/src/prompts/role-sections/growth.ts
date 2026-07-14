@@ -32,7 +32,7 @@ SCHEMA — required top-level fields
     "score": number,                                   // 0–100 composite
     "label": string,                                   // e.g. "High", "Moderate", "Low"
     "explanation": string,                             // 1–2 sentences grounding the score in evidence
-    "factors": {
+    "factors": {                                        // ALL SIX keys required every time — decimals 0–1, never 0–100, never left at 0 unless the corpus genuinely has zero signal for it. Example: { "alternative_seeking_posts": 0.6, "pricing_complaints": 0.3, "explicit_competitor_frustration": 0.5, "recency": 0.7, "engagement_level": 0.4, "source_quality": 0.65 }
       "alternative_seeking_posts": number,             // 0–1 normalised rate of posts actively seeking alternatives
       "pricing_complaints": number,                    // 0–1 rate of pricing-driven frustration signals
       "explicit_competitor_frustration": number,       // 0–1 rate of direct product-frustration signals

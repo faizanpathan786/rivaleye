@@ -16,7 +16,10 @@ names below for every item — wrong field names are dropped and render as empty
 
 - product_opportunity_score — object: { score (0–100 int), label (string), explanation (string),
     factors: { feature_gap_frequency, pain_severity, source_spread, user_urgency,
-    competitor_love_strength } (each 0–1) }
+    competitor_love_strength } (each a decimal 0–1, never 0–100, never omitted — all five keys
+    required every time, derived from the signal corpus, never left at 0 unless genuinely no signal).
+    Example factors: { "feature_gap_frequency": 0.65, "pain_severity": 0.5, "source_spread": 0.4,
+    "user_urgency": 0.55, "competitor_love_strength": 0.3 }
 - feature_gap_map — array of objects, each:
     { feature_gap (string — the missing capability, REQUIRED non-empty),
       summary (string), mentions (int count), sources (string[] of platforms),

@@ -10,7 +10,7 @@ You translate raw competitor-user signals into words, angles, and creative asset
 
 Use the EXACT field names below for every item — wrong field names are dropped and render as empty rows.
 
-- **messaging_opportunity_score** — object: { score (0–100 int), label (string), explanation (string), factors: { repeated_user_language_strength, pain_clarity, promise_reality_gap, objection_frequency, quote_quality, source_confidence } (each 0–1) }.
+- **messaging_opportunity_score** — object: { score (0–100 int), label (string), explanation (string), factors: { repeated_user_language_strength, pain_clarity, promise_reality_gap, objection_frequency, quote_quality, source_confidence } (each a decimal 0–1, never 0–100, never omitted — all six keys required every time, derived from the corpus, never left at 0 unless genuinely no signal). Example factors: { "repeated_user_language_strength": 0.7, "pain_clarity": 0.6, "promise_reality_gap": 0.45, "objection_frequency": 0.5, "quote_quality": 0.75, "source_confidence": 0.65 }.
 - **messaging_summary** — string, 2–4 sentences.
 - **user_language_bank** — object with five arrays: positive_phrases, negative_phrases, alternative_seeking_phrases, emotional_adjectives, category_language. EACH array item is an object: { phrase (string, the exact words a user wrote, REQUIRED non-empty), frequency (int count), sentiment (-1..1 float), source_count (int), evidence_refs }.
 - **positive_phrases** and **negative_phrases** — top-level arrays of the SAME phrase-item shape { phrase, frequency, sentiment, source_count, evidence_refs }; mirror the corresponding user_language_bank buckets.

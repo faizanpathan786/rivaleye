@@ -14,10 +14,10 @@ function FlowList({
       <ul className="space-y-1">
         {flows.map((flow) => (
           <li
-            key={flow.partner}
+            key={flow.competitor_name}
             className="flex items-center justify-between gap-2 text-sm"
           >
-            <span className="min-w-0 break-words">{flow.partner}</span>
+            <span className="min-w-0 break-words">{flow.competitor_name}</span>
             <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
               {flow.count} · {Math.round(flow.share * 100)}%
             </span>

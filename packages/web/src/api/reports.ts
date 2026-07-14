@@ -69,7 +69,7 @@ export type PricingResponse = {
   pain_score: number | null;
 };
 
-export type SwitchingFlow = { partner: string; count: number; share: number };
+export type SwitchingFlow = { competitor_name: string; count: number; share: number };
 export type SwitchingResponse = {
   inbound: SwitchingFlow[];
   outbound: SwitchingFlow[];

@@ -20,7 +20,7 @@ Return ONE JSON object with EXACTLY these top-level keys (all required, never om
   "voice_words": [{ "kind": "positive|negative", "word": "1-3 word phrase users actually said", "count": 0 }],
   "positioning": [{ "angle": "short attack angle label e.g. 'Pricing transparency'", "thesis": "1-2 sentences: what you say to steal Twilio customers on this angle, and why it works now", "audience": "specific persona e.g. 'Solo devs building side projects on $0 budget'", "against": "exact Twilio weakness this angle attacks" }],
   "actions": [{ "step": "concrete next action, phrased as an imperative e.g. 'Add a live pricing calculator showing total cost vs Twilio per 1000 messages'", "detail": "1 sentence on how to execute this and why it will work given the complaints", "effort": "low|med|high", "role": "Founder|PM|Marketing|Engineering|Sales" }],
-  "leads": [],
+  "leads": [{ "who": "username or handle of the person showing high switch/buy intent — never fabricate, must be a real author from the evidence", "sub": "subreddit or platform context, or null", "when_label": "relative time like '2 days ago' if known, else null", "score": 0, "signal": "short phrase naming the intent signal, e.g. 'Actively planning migration from HubSpot'", "quote": "verbatim quote under 200 chars showing the intent, or null" }],
   "opportunities": [{ "title": "3-5 word opportunity label", "thesis": "2-3 sentences: what to build, for whom, and why this is an opening — tie to a specific complaint cluster", "effort": "low|med|high", "payoff": "low|med|high", "anchor_complaint_external_id": "external_id of the complaint cluster this addresses, or null" }],
   "threads": [],
   "report_meta": {
@@ -49,7 +49,8 @@ Rules:
 8. feature_gaps[]: only include genuinely missing product capabilities, not "looking for alternatives". A feature gap is something the product should do but doesn't.
 9. pricing_tiers[].note: if specific prices were mentioned in the data, include them verbatim.
 10. report_meta.sentiment_overall: compute as positive - negative (range -1 to 1).
-11. Return ONLY the JSON object. No prose, no markdown fences.`;
+11. leads[]: a lead is a specific person showing explicit high switch/buy intent — actively asking how to migrate/switch away from or to the competitor, seriously comparing it against an alternative with intent to move, or asking for a trial/demo/onboarding help. Do NOT include generic complainers or casual mentions. who must be the real username the quote/signal came from — never invent one; omit the item entirely if you can't attribute it to a real author. score is 0-100 reflecting how strong/explicit the intent is.
+12. Return ONLY the JSON object. No prose, no markdown fences.`;
 
 export function buildSynth(input: SynthInput): {
   system: string;

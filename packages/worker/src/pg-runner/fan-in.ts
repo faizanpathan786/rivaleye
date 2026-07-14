@@ -17,17 +17,13 @@ import { reports } from "../../../api/src/db/schema/reports.js";
 import { log } from "../logger";
 
 /**
- * Partial Report Generation: Fan-In with Early Synthesis Trigger
+ * Fan-In: Wait for All Platforms, Then Synthesize
  *
- * Triggers synthesis job creation as soon as we have enough successful platforms,
- * rather than waiting for all platforms to complete. Failed platforms continue
- * retrying in the background and will trigger resynthesis when they succeed.
- *
- * Triggers synthesis when:
- * - At least 2 platforms succeeded (partial generation), OR
- * - All platforms are terminal and at least 1 succeeded
- *
- * Marks report as "partial: true" until all platforms are complete.
+ * Triggers synthesis only once every platform job for the report has reached
+ * a terminal state (completed or failed) — never early. If some platforms
+ * failed but at least one succeeded, synthesis still runs on whatever data
+ * is available and the report is marked "partial: true" so the UI can show
+ * which platforms didn't contribute.
  *
  * @param reportId - UUID of the report
  * @throws Error if database operation fails (not caught; caller decides retry strategy)
@@ -54,18 +50,15 @@ export async function fanInCheck(reportId: string): Promise<void> {
     const pendingCount = jobs.length - completedCount - failedCount;
     const allTerminal = pendingCount === 0;
 
-    // Trigger synthesis if:
-    // 1. At least 2 platforms succeeded (enough data for clustering), OR
-    // 2. All platforms are terminal with at least 1 success (fallback for complete generation)
-    // Key: ignore failed platforms - only count what succeeded
-    const shouldTrigger = completedCount >= 2 || (allTerminal && completedCount > 0);
+    // Only trigger once every job for this report is terminal — never early.
+    const shouldTrigger = allTerminal;
 
     if (!shouldTrigger) {
       return { kind: "not-ready", completedCount, total: jobs.length };
     }
 
     // If all platforms failed, mark report as failed
-    if (allTerminal && completedCount === 0) {
+    if (completedCount === 0) {
       const failedPlatforms = jobs.map((j) => j.platform ?? "unknown");
       await tx
         .update(reports)
@@ -81,8 +74,8 @@ export async function fanInCheck(reportId: string): Promise<void> {
       return { kind: "all-failed", failedPlatforms };
     }
 
-    // Mark report as partial if we still have pending platforms
-    const isPartial = pendingCount > 0;
+    // Mark report as partial if some (but not all) platforms failed
+    const isPartial = failedCount > 0;
     if (isPartial) {
       await tx
         .update(reports)
@@ -117,14 +110,14 @@ export async function fanInCheck(reportId: string): Promise<void> {
   // Log outcomes after the transaction commits so log entries are never ghost-created
   switch (outcome.kind) {
     case "not-ready":
-      await log(reportId, "info", "fan-in", null, `Waiting for sufficient successful platforms (${outcome.completedCount}/${outcome.total} completed); need ≥2 successes for clustering`);
+      await log(reportId, "info", "fan-in", null, `Waiting for all platforms to finish (${outcome.completedCount}/${outcome.total} completed so far)`);
       break;
     case "all-failed":
       await log(reportId, "warn", "fan-in", null, `All source jobs failed; marking report failed`);
       break;
     case "created":
-      const status = outcome.isPartial ? `partial (${outcome.completedCount}/${outcome.total} completed, retrying remainder)` : `complete (all ${outcome.completedCount} platforms succeeded)`;
-      await log(reportId, "info", "fan-in", null, `Synthesis triggered with ${status}; creating synthesis job`);
+      const status = outcome.isPartial ? `partial (${outcome.completedCount}/${outcome.total} platforms succeeded, rest failed)` : `complete (all ${outcome.completedCount} platforms succeeded)`;
+      await log(reportId, "info", "fan-in", null, `All platforms terminal, synthesis triggered with ${status}; creating synthesis job`);
       await log(reportId, "info", "fan-in", null, `Synthesis job created: ${outcome.id}`);
       break;
     case "exists":

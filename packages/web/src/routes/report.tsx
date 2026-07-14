@@ -1205,14 +1205,14 @@ function SwitchingSummary({ switching }: { switching: SwitchingResponse }) {
           tone="pos"
           flows={switching.inbound}
           max={maxIn}
-          field="partner"
+          field="competitor_name"
         />
         <FlowList
           eyebrow="OUTBOUND"
           tone="neg"
           flows={switching.outbound}
           max={maxOut}
-          field="partner"
+          field="competitor_name"
         />
       </div>
     </div>
@@ -1228,9 +1228,9 @@ function FlowList({
 }: {
   eyebrow: string;
   tone: "pos" | "neg";
-  flows: Array<{ partner: string; count: number }>;
+  flows: Array<{ competitor_name: string; count: number }>;
   max: number;
-  field: "partner";
+  field: "competitor_name";
 }) {
   return (
     <div>
@@ -1798,8 +1798,8 @@ export function LeadsCard({ leads }: { leads: LeadRow[] }) {
       <div
         className="grid items-center gap-3.5 px-5 py-2.5 font-mono-feat text-[10px] uppercase text-fg-faint"
         style={{
-          gridTemplateColumns: "120px 160px minmax(180px,1fr) 70px 110px",
-          minWidth: 760,
+          gridTemplateColumns: "200px 140px minmax(180px,1fr) 60px",
+          minWidth: 720,
           borderBottom: "1px solid var(--border-soft)",
           letterSpacing: "0.08em",
         }}
@@ -1808,25 +1808,28 @@ export function LeadsCard({ leads }: { leads: LeadRow[] }) {
         <span>User · Platform</span>
         <span>Quote</span>
         <span>Score</span>
-        <span />
       </div>
       {leads.map((l, i) => (
         <div
           key={l.id}
           className="grid cursor-pointer items-center gap-3.5 px-5 py-4 hover:bg-hover"
           style={{
-            gridTemplateColumns: "120px 160px minmax(180px,1fr) 70px 110px",
-            minWidth: 760,
+            gridTemplateColumns: "200px 140px minmax(180px,1fr) 60px",
+            minWidth: 720,
             borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
           }}
         >
           <span
             className="re-chip justify-self-start"
             style={{
-              background: signalColors[l.signal ?? ""] ?? "var(--fg)",
-              color: "#fff",
+              background: signalColors[l.signal ?? ""] ?? "var(--surface-2)",
+              color: signalColors[l.signal ?? ""] ? "#fff" : "var(--fg-muted)",
               borderColor: "transparent",
               fontSize: 10,
+              whiteSpace: "normal",
+              textAlign: "left",
+              lineHeight: 1.35,
+              maxWidth: "100%",
             }}
           >
             {l.signal ?? "—"}
@@ -1859,9 +1862,6 @@ export function LeadsCard({ leads }: { leads: LeadRow[] }) {
           <span className="font-mono-feat tnum" style={{ fontSize: 12 }}>
             {l.score}↑
           </span>
-          <button className="re-btn re-btn-sm justify-self-end">
-            <Icon name="arrow-right" size={12} /> Outreach
-          </button>
         </div>
       ))}
       </div>
@@ -1884,7 +1884,7 @@ export function PositioningCard({ positioning }: { positioning: Positioning[] })
         {positioning.map((p, i) => (
           <div
             key={p.id}
-            className="grid grid-cols-[auto_1fr] items-start gap-x-5 gap-y-3 px-4 py-5 md:grid-cols-[auto_1fr_auto] md:px-7 md:py-6"
+            className="grid grid-cols-[auto_1fr] items-start gap-x-5 gap-y-3 px-4 py-5 md:px-7 md:py-6"
             style={{
               borderTop: i === 0 ? 0 : "1px solid var(--border-soft)",
             }}
@@ -1933,9 +1933,6 @@ export function PositioningCard({ positioning }: { positioning: Positioning[] })
                 )}
               </div>
             </div>
-            <button className="re-btn re-btn-sm col-start-2 justify-self-start md:col-start-auto md:justify-self-auto">
-              Copy
-            </button>
           </div>
         ))}
       </div>

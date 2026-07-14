@@ -21,7 +21,9 @@ export function DashboardPage() {
   const dashboardQuery = useDashboardQuery();
   const reportsQuery = useReportsQuery();
 
-  const isPending = (dashboardQuery.isPending || reportsQuery.isPending) && !dashboardQuery.data && !reportsQuery.data;
+  const isPending =
+    (dashboardQuery.isPending && !dashboardQuery.data) ||
+    (reportsQuery.isPending && !reportsQuery.data);
   const error = dashboardQuery.error || reportsQuery.error;
 
   if (isPending) {

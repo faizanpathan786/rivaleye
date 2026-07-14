@@ -85,17 +85,21 @@ export function useReportQuery(id: string | undefined) {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     // Seed from the reports list so opening a known report is instant — no
-    // loading flash. The list query always has the latest row for every report
-    // the user has already seen, so this is safe to use as initial data.
+    // loading flash. The list row is missing columns the detail view needs
+    // (voice_summary, executive_brief, etc. — see reports.service.ts's
+    // listReports, which selects a narrow column set for the sidebar/list UI).
+    // initialDataUpdatedAt is deliberately 0, NOT the list query's freshness —
+    // that would make React Query treat this partial row as already up to date
+    // and skip the real fetch, permanently hiding those extra columns behind a
+    // placeholder that never gets replaced. Returning 0 shows the seed
+    // instantly (no flash) while still marking it stale so the full row is
+    // fetched right after mount.
     initialData: () => {
       if (!id) return undefined;
       const list = qc.getQueryData<ReportRow[]>(reportsKeys.list());
       return list?.find((r) => r.id === id);
     },
-    initialDataUpdatedAt: () => {
-      const state = qc.getQueryState(reportsKeys.list());
-      return state?.dataUpdatedAt;
-    },
+    initialDataUpdatedAt: () => 0,
     refetchInterval: (q) => {
       const status = q.state.data?.status;
       if (!status || TERMINAL_STATUSES.has(status)) return false;

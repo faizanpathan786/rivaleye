@@ -41,6 +41,7 @@ import {
   useRetrySynthesisMutation,
 } from "@/hooks/queries/use-reports";
 import { ReportInProgress } from "@/components/report/report-in-progress";
+import { ReportLoader } from "@/components/report/report-loader";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
 import type {
   Complaint,
@@ -290,14 +291,7 @@ export function ScanReportPage() {
   const isKnownReport = !!reportRow; // initialData seeds this from list cache instantly
   const loadingLabel = isKnownReport || isCompleted ? "Loading report…" : "Loading scan…";
   if (id && ((reportIsLoading && !reportRow) || (sectionsLoading && !sections))) {
-    return (
-      <div
-        className="px-4 py-16 md:px-7"
-        style={{ textAlign: "center", color: "var(--fg-muted)" }}
-      >
-        <div style={{ fontSize: 16 }}>{loadingLabel}</div>
-      </div>
-    );
+    return <ReportLoader label={loadingLabel} />;
   }
 
   // Show in-progress UI while the report pipeline is still running.
@@ -1374,9 +1368,9 @@ function FlowList({
 }: {
   eyebrow: string;
   tone: "pos" | "neg";
-  flows: Array<{ partner: string; count: number }>;
+  flows: Array<{ competitor_name: string; count: number }>;
   max: number;
-  field: "partner";
+  field: "competitor_name";
 }) {
   return (
     <div>
@@ -1566,14 +1560,14 @@ function ScanSwitchingSummary({ switching }: { switching: SwitchingResponse }) {
           tone="pos"
           flows={switching.inbound}
           max={maxIn}
-          field="partner"
+          field="competitor_name"
         />
         <FlowList
           eyebrow="OUTBOUND"
           tone="neg"
           flows={switching.outbound}
           max={maxOut}
-          field="partner"
+          field="competitor_name"
         />
       </div>
     </div>

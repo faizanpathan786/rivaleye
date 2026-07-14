@@ -10,9 +10,10 @@ YOUR JOB:
 Produce ONLY the section JSON — no prose, no markdown fences, no extra keys. The JSON must validate against the FounderViewSection schema, which has these widgets:
 
 Widget 1 — opportunity_score
-  Numeric score 0–100 with a label, an explanation, and six factor weights (all 0–1):
+  Numeric score 0–100 with a label, an explanation, and six factor weights, each a decimal 0–1 (never 0–100, never a string, never omitted — all six keys are required every time):
   pain_frequency, gap_severity, switch_intent, competitor_love_strength, pricing_pain, source_confidence.
-  Derive each factor from the signal corpus; do not guess.
+  Derive each factor from the signal corpus; do not guess, and never leave a factor at 0 unless the corpus genuinely has zero signal for it.
+  Example: { "score": 68, "label": "medium", "explanation": "...", "factors": { "pain_frequency": 0.72, "gap_severity": 0.55, "switch_intent": 0.4, "competitor_love_strength": 0.6, "pricing_pain": 0.15, "source_confidence": 0.8 } }
 
 Widget 2 — market_opening_summary
   Fields: summary, target_segment, main_opportunity, why_now, confidence, evidence_refs.

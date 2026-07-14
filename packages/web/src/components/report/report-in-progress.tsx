@@ -262,20 +262,24 @@ export function ReportInProgress({
   const rescanMutation = useCreateReportMutation();
 
   const startRescan = () => {
-    // Only rescan failed platforms, reuse successful data
-    const failedPlatforms = report.failed_platforms ?? [];
-    // If no failed platforms specified, rescan nothing (user must specify which platforms)
-    const scanPlatforms = failedPlatforms.length > 0 ? failedPlatforms : [];
+    // Only rescan failed platforms, reuse successful data.
+    // Derived from live per-platform status, not report.failed_platforms —
+    // that DB column is only written once synthesis completes, so it stays
+    // empty (and this would send selected_platforms: [], a 422) for any
+    // report where synthesis hasn't succeeded yet.
+    const failedPlatforms = platforms
+      .filter((p) => p.status === "failed")
+      .map((p) => p.platform);
 
     const payload: CreateReportPayload & { resume_from_report_id?: string } = {
       category: report.category,
       competitors: report.competitors,
       target_audience: report.audience ?? "",
       founder_goal: report.goal,
-      selected_platforms: scanPlatforms,
+      selected_platforms: failedPlatforms,
       resume_from_report_id: report.id,
       ...(report.primary_competitor_domain
-        ? { website_url: report.primary_competitor_domain }
+        ? { website_url: `https://${report.primary_competitor_domain}` }
         : {}),
     };
     rescanMutation.mutate(payload, {

@@ -299,6 +299,9 @@ export async function processSourceJob(
         "Retrying job with backoff"
       );
 
+      // Guard against clobbering a status a concurrent/duplicate execution of
+      // this same job may have already finalized (e.g. a stale duplicate that
+      // errors out after a peer already completed it).
       await db
         .update(report_platform_jobs)
         .set({
@@ -309,13 +312,20 @@ export async function processSourceJob(
           last_error: errorMsg,
           updated_at: new Date(),
         })
-        .where(eq(report_platform_jobs.id, job.id));
+        .where(
+          and(
+            eq(report_platform_jobs.id, job.id),
+            sql`${report_platform_jobs.status} NOT IN ('completed', 'cancelled')`,
+          ),
+        );
     } else {
       log.error(
         { jobId: job.id, attemptCount: job.attempt_count, maxAttempts: job.max_attempts, isPermanent },
         "Job exceeded max attempts or is permanent failure; marking as failed"
       );
 
+      // Same guard as above: never overwrite a status a peer execution of this
+      // job already finalized as completed/cancelled.
       await db
         .update(report_platform_jobs)
         .set({
@@ -327,7 +337,12 @@ export async function processSourceJob(
           completed_at: new Date(),
           updated_at: new Date(),
         })
-        .where(eq(report_platform_jobs.id, job.id));
+        .where(
+          and(
+            eq(report_platform_jobs.id, job.id),
+            sql`${report_platform_jobs.status} NOT IN ('completed', 'cancelled')`,
+          ),
+        );
 
       // Still call fan-in in case other sources succeeded (partial report)
       await fanInCheck(job.report_id);
