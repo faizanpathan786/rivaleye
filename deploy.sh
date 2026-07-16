@@ -24,8 +24,20 @@ pnpm exec turbo run type-check --concurrency=1
 # parallel starves a small VM and the build hangs.
 pnpm exec turbo run build --concurrency=1
 
+# Apply any pending database migrations. Drizzle applies only committed
+# migration files and is a no-op when none are pending.
+pnpm db:migrate
+
 # Start the apps if they're not running, or zero-downtime reload if they are.
 # `pm2 restart all` fails when no processes exist (e.g. after a VM reboot), so
 # use startOrReload against the ecosystem file, then persist the process list.
 pm2 startOrReload ecosystem.config.cjs --update-env
 pm2 save
+
+# Set up idempotent log rotation for pm2-managed apps.
+if ! pm2 describe pm2-logrotate > /dev/null 2>&1; then
+  pm2 install pm2-logrotate
+  pm2 set pm2-logrotate:max_size 50M
+  pm2 set pm2-logrotate:retain 14
+  pm2 set pm2-logrotate:compress true
+fi
