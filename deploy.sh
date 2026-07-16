@@ -24,6 +24,12 @@ pnpm exec turbo run type-check --concurrency=1
 # parallel starves a small VM and the build hangs.
 pnpm exec turbo run build --concurrency=1
 
+# drizzle-kit reads CONNECTION_STRING from the environment; load it from the
+# repo .env (runtime processes get it via --env-file, but this shell does not).
+set -a
+source ./.env
+set +a
+
 # Apply any pending database migrations. Drizzle applies only committed
 # migration files and is a no-op when none are pending.
 pnpm db:migrate

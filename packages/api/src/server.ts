@@ -3,7 +3,7 @@ import { corsPlugin } from "./config/cors";
 import { helmetPlugin } from "./config/helmet";
 import { loggerPlugin } from "./config/logger";
 import { swaggerPlugin } from "./config/swagger";
-import { and, eq, lte, min, sql } from "drizzle-orm";
+import { and, eq, lte, max, min, sql } from "drizzle-orm";
 import { controllers } from "./controllers";
 import { auth } from "./libs/auth";
 import { db } from "./db/client";
@@ -47,6 +47,38 @@ async function getOldestQueuedSeconds(): Promise<number | null> {
   return Math.floor((Date.now() - oldestMs) / 1000);
 }
 
+// A live worker constantly claims jobs (locked_at) or finishes them
+// (completed_at); a dead worker goes quiet on both. Used to distinguish a
+// genuinely stalled worker from one that's just backlogged with old-but-being-
+// worked-on jobs.
+async function getMostRecentWorkerActivityMs(): Promise<number | null> {
+  const [platformRows, synthesisRows] = await Promise.all([
+    db
+      .select({
+        locked: max(report_platform_jobs.locked_at),
+        completed: max(report_platform_jobs.completed_at),
+      })
+      .from(report_platform_jobs),
+    db
+      .select({
+        locked: max(synthesis_jobs.locked_at),
+        completed: max(synthesis_jobs.completed_at),
+      })
+      .from(synthesis_jobs),
+  ]);
+
+  const activityDates = [
+    platformRows[0]?.locked,
+    platformRows[0]?.completed,
+    synthesisRows[0]?.locked,
+    synthesisRows[0]?.completed,
+  ].filter((d): d is NonNullable<typeof d> => d !== null && d !== undefined);
+
+  if (activityDates.length === 0) return null;
+
+  return Math.max(...activityDates.map((d) => new Date(d).getTime()));
+}
+
 export const app = new Elysia()
   .use(corsPlugin)
   .mount("/v1/auth", auth.handler)
@@ -64,11 +96,22 @@ export const app = new Elysia()
     let queue: "ok" | "stalled" | "unknown" = "unknown";
     let oldest_queued_seconds: number | null = null;
     try {
-      oldest_queued_seconds = await getOldestQueuedSeconds();
-      queue =
-        oldest_queued_seconds !== null && oldest_queued_seconds > QUEUE_STALLED_THRESHOLD_SECONDS
-          ? "stalled"
-          : "ok";
+      const [oldestQueuedSeconds, mostRecentActivityMs] = await Promise.all([
+        getOldestQueuedSeconds(),
+        getMostRecentWorkerActivityMs(),
+      ]);
+      oldest_queued_seconds = oldestQueuedSeconds;
+
+      const backlogIsOld =
+        oldest_queued_seconds !== null && oldest_queued_seconds > QUEUE_STALLED_THRESHOLD_SECONDS;
+      const activityIsStale =
+        mostRecentActivityMs === null ||
+        Math.floor((Date.now() - mostRecentActivityMs) / 1000) > QUEUE_STALLED_THRESHOLD_SECONDS;
+
+      // Only call it "stalled" when both the backlog is old AND the worker
+      // hasn't claimed or completed anything recently — an old backlog alone
+      // just means a live worker is busy/backlogged, not dead.
+      queue = backlogIsOld && activityIsStale ? "stalled" : "ok";
     } catch {
       queue = "unknown";
       oldest_queued_seconds = null;
