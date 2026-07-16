@@ -9,6 +9,8 @@
     "dev:synth":  "bun --watch --env-file=../../.env src/synth/index.ts",
     "dev:postgres": "bun --watch --env-file=../../.env src/pg-runner/index.ts",
     "dev":        "concurrently -n scrape,llm,synth -c blue,green,yellow \"pnpm dev:scrape\" \"pnpm dev:llm\" \"pnpm dev:synth\"",
+    "start:scrape": "bun --env-file=../../.env src/scrape/index.ts",
+    "start:synth": "bun --env-file=../../.env src/synth/index.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "test": "vitest run",

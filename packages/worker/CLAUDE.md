@@ -78,7 +78,7 @@ synth worker polls synthesis_jobs (SELECT FOR UPDATE SKIP LOCKED)
 
 ## 4. Concurrency + recovery
 
-- Max 2 concurrent source jobs globally (`MAX_CONCURRENT_SOURCE = 2` in index.ts).
+- Source jobs: max 8 concurrent per process by default (`WORKER_MAX_CONCURRENT_SOURCE`, clamped 1–20). Synthesis jobs: max 2 concurrent per process by default (`WORKER_MAX_CONCURRENT_SYNTHESIS`, clamped 1–5). Worker DB pool size via `WORKER_DB_POOL_MAX` (default 10, clamped 5–20).
 - `recoverStaleJobs` runs every 30s in both workers.
   - Source jobs stale after 15 min → retry up to max_attempts; if synthesis already started, mark failed (fail-forward).
   - Synthesis jobs stale after 30 min → retry up to max_attempts.

@@ -9,7 +9,7 @@ steps:
           --zone=us-central1-a \
           --tunnel-through-iap \
           --quiet \
-          --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && rm -f deploy-docker.sh && git reset --hard HEAD && git pull origin main && pnpm install && pnpm exec turbo run build --concurrency=1 && pm2 restart all && pm2 save'"
+          --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && git reset --hard HEAD && git pull origin main && bash deploy.sh'"
 
 timeout: '7200s'
 
