@@ -5,8 +5,11 @@ import * as schema from "../../api/src/db/schema/index.js";
 const connectionString = process.env.CONNECTION_STRING;
 if (!connectionString) throw new Error("CONNECTION_STRING is required");
 
+const poolMaxRaw = parseInt(process.env.WORKER_DB_POOL_MAX ?? "", 10);
+const poolMax = Number.isNaN(poolMaxRaw) ? 10 : Math.min(20, Math.max(5, poolMaxRaw));
+
 const queryClient = postgres(connectionString, {
-  max: 5,
+  max: poolMax,
   idle_timeout: 20,    // release idle connections after 20s (before Supabase kills them at ~30s)
   connect_timeout: 10, // fail fast on bad connections rather than hanging
   // Required for Supabase's port-6543 PgBouncer transaction-mode pooler: prepared

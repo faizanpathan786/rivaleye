@@ -38,6 +38,24 @@ import { pollPdfJobs } from "./pdf-worker";
 const log = pino({ name: "pg-runner" });
 
 /**
+ * Parse an env var as an integer, falling back to a default on NaN,
+ * and clamping the result to [min, max].
+ *
+ * @param raw - Raw env var value (may be undefined)
+ * @param def - Fallback value when raw is missing or not a number
+ * @param min - Lower bound (inclusive)
+ * @param max - Upper bound (inclusive)
+ */
+function clampInt(raw: string | undefined, def: number, min: number, max: number): number {
+  const parsed = raw !== undefined ? parseInt(raw, 10) : NaN;
+  if (Number.isNaN(parsed)) return def;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+const MAX_CONCURRENT_SOURCE = clampInt(process.env.WORKER_MAX_CONCURRENT_SOURCE, 8, 1, 20);
+const MAX_CONCURRENT_SYNTHESIS = clampInt(process.env.WORKER_MAX_CONCURRENT_SYNTHESIS, 2, 1, 5);
+
+/**
  * Generate a unique worker ID combining hostname, process ID, and random suffix.
  *
  * Format: hostname:pid:random
@@ -67,7 +85,6 @@ function generateWorkerId(): string {
  * @param config - Worker configuration (ID, poll interval, timeouts)
  */
 async function pollSourceJobs(config: WorkerConfig): Promise<void> {
-  const MAX_CONCURRENT_SOURCE = 5;
   let activeJobs = 0;
 
   log.info(
@@ -159,13 +176,20 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
  * @param config - Worker configuration (ID, poll interval, timeouts)
  */
 async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
+  let activeJobs = 0;
+
   log.info(
-    { workerId: config.workerId, interval: config.pollIntervalMs },
+    { workerId: config.workerId, interval: config.pollIntervalMs, maxConcurrent: MAX_CONCURRENT_SYNTHESIS },
     "Starting synthesis job polling loop"
   );
 
   while (true) {
     try {
+      if (activeJobs >= MAX_CONCURRENT_SYNTHESIS) {
+        await sleep(config.pollIntervalMs);
+        continue;
+      }
+
       // Claim the next job within a transaction for atomicity
       const job = await db.transaction(async (tx) =>
         claimSynthesisJob(tx as any, config.workerId)
@@ -204,23 +228,28 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
         continue;
       }
 
-      // Process the job
-      try {
-        await processSynthesisJob(job, report, config.workerId);
-        log.info(
-          { jobId: job.id, reportId: job.report_id },
-          "Synthesis job completed successfully"
-        );
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        log.error(
-          { jobId: job.id, reportId: job.report_id, error: errorMsg },
-          "Synthesis job processing failed"
-        );
-        // Job handles its own retry logic
-      }
+      // Fire and forget — increment counter before async work starts
+      activeJobs++;
+      processSynthesisJob(job, report, config.workerId)
+        .then(() => {
+          log.info(
+            { jobId: job.id, reportId: job.report_id },
+            "Synthesis job completed successfully"
+          );
+        })
+        .catch((err: unknown) => {
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          log.error(
+            { jobId: job.id, reportId: job.report_id, error: errorMsg },
+            "Synthesis job processing failed"
+          );
+          // Job handles its own retry logic
+        })
+        .finally(() => {
+          activeJobs--;
+        });
 
-      // No sleep between successful processes
+      // No sleep — immediately try to claim another job up to MAX_CONCURRENT_SYNTHESIS
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       if (isConnectionError(err)) {
