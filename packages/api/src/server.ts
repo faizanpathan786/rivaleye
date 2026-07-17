@@ -3,82 +3,25 @@ import { corsPlugin } from "./config/cors";
 import { helmetPlugin } from "./config/helmet";
 import { loggerPlugin } from "./config/logger";
 import { swaggerPlugin } from "./config/swagger";
-import { and, eq, lte, max, min, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { controllers } from "./controllers";
 import { errorHandlerPlugin } from "./plugins/error-handler";
 import { auth } from "./libs/auth";
 import { db } from "./db/client";
-import { report_platform_jobs, synthesis_jobs } from "./db/schema/pipeline";
+import {
+  getQueueMetrics,
+  getWorkerMetrics,
+  isQueueOrphaned,
+  type JobTableMetrics,
+  type QueueMetrics,
+} from "./services/metrics.service";
+import { startAlertLoop } from "./services/alerting.service";
 
 const port = Number(process.env.PORT ?? 4000);
 
-// A queued job older than this with no worker having picked it up means the
-// worker process is dead, not just backlogged.
+// A queued job older than this with no alive worker of the responsible role
+// means the worker process is dead, not just backlogged.
 const QUEUE_STALLED_THRESHOLD_SECONDS = 15 * 60;
-
-async function getOldestQueuedSeconds(): Promise<number | null> {
-  const [platformRows, synthesisRows] = await Promise.all([
-    db
-      .select({ oldest: min(report_platform_jobs.created_at) })
-      .from(report_platform_jobs)
-      .where(
-        and(
-          eq(report_platform_jobs.status, "queued"),
-          lte(report_platform_jobs.run_after, sql`now()`),
-        ),
-      ),
-    db
-      .select({ oldest: min(synthesis_jobs.created_at) })
-      .from(synthesis_jobs)
-      .where(
-        and(
-          eq(synthesis_jobs.status, "queued"),
-          lte(synthesis_jobs.run_after, sql`now()`),
-        ),
-      ),
-  ]);
-
-  const oldestDates = [platformRows[0]?.oldest, synthesisRows[0]?.oldest].filter(
-    (d): d is NonNullable<typeof d> => d !== null && d !== undefined,
-  );
-
-  if (oldestDates.length === 0) return null;
-
-  const oldestMs = Math.min(...oldestDates.map((d) => new Date(d).getTime()));
-  return Math.floor((Date.now() - oldestMs) / 1000);
-}
-
-// A live worker constantly claims jobs (locked_at) or finishes them
-// (completed_at); a dead worker goes quiet on both. Used to distinguish a
-// genuinely stalled worker from one that's just backlogged with old-but-being-
-// worked-on jobs.
-async function getMostRecentWorkerActivityMs(): Promise<number | null> {
-  const [platformRows, synthesisRows] = await Promise.all([
-    db
-      .select({
-        locked: max(report_platform_jobs.locked_at),
-        completed: max(report_platform_jobs.completed_at),
-      })
-      .from(report_platform_jobs),
-    db
-      .select({
-        locked: max(synthesis_jobs.locked_at),
-        completed: max(synthesis_jobs.completed_at),
-      })
-      .from(synthesis_jobs),
-  ]);
-
-  const activityDates = [
-    platformRows[0]?.locked,
-    platformRows[0]?.completed,
-    synthesisRows[0]?.locked,
-    synthesisRows[0]?.completed,
-  ].filter((d): d is NonNullable<typeof d> => d !== null && d !== undefined);
-
-  if (activityDates.length === 0) return null;
-
-  return Math.max(...activityDates.map((d) => new Date(d).getTime()));
-}
 
 export const app = new Elysia()
   .use(errorHandlerPlugin)
@@ -97,33 +40,66 @@ export const app = new Elysia()
 
     let queue: "ok" | "stalled" | "unknown" = "unknown";
     let oldest_queued_seconds: number | null = null;
+    let stalled_queues: string[] = [];
+    let workers: {
+      total: number;
+      alive_total: number;
+      alive_by_role: Record<string, number>;
+    } | null = null;
+
     try {
-      const [oldestQueuedSeconds, mostRecentActivityMs] = await Promise.all([
-        getOldestQueuedSeconds(),
-        getMostRecentWorkerActivityMs(),
+      const [queueMetrics, workerMetrics] = await Promise.all([
+        getQueueMetrics(),
+        getWorkerMetrics(),
       ]);
-      oldest_queued_seconds = oldestQueuedSeconds;
 
-      const backlogIsOld =
-        oldest_queued_seconds !== null && oldest_queued_seconds > QUEUE_STALLED_THRESHOLD_SECONDS;
-      const activityIsStale =
-        mostRecentActivityMs === null ||
-        Math.floor((Date.now() - mostRecentActivityMs) / 1000) > QUEUE_STALLED_THRESHOLD_SECONDS;
+      const entries = Object.entries(queueMetrics) as [
+        keyof QueueMetrics,
+        JobTableMetrics,
+      ][];
 
-      // Only call it "stalled" when both the backlog is old AND the worker
-      // hasn't claimed or completed anything recently — an old backlog alone
-      // just means a live worker is busy/backlogged, not dead.
-      queue = backlogIsOld && activityIsStale ? "stalled" : "ok";
+      const oldestValues = entries
+        .map(([, metrics]) => metrics.oldest_queued_seconds)
+        .filter((v): v is number => v !== null);
+      oldest_queued_seconds = oldestValues.length > 0 ? Math.min(...oldestValues) : null;
+
+      // Real dead-worker signal: a queue is only "stalled" when its backlog is
+      // old AND zero workers of the role that would process it are alive —
+      // replaces the old locked_at/completed_at activity inference, which
+      // couldn't tell "dead worker" apart from "worker alive but backlogged".
+      stalled_queues = entries
+        .filter(([key, metrics]) =>
+          isQueueOrphaned(key, metrics, workerMetrics, QUEUE_STALLED_THRESHOLD_SECONDS),
+        )
+        .map(([key]) => key);
+
+      queue = stalled_queues.length > 0 ? "stalled" : "ok";
+
+      workers = {
+        total: workerMetrics.rows.length,
+        alive_total: workerMetrics.rows.filter((r) => r.alive).length,
+        alive_by_role: workerMetrics.alive_by_role,
+      };
     } catch {
       queue = "unknown";
       oldest_queued_seconds = null;
+      workers = null;
     }
 
-    return { ok: true, db: "up", queue, oldest_queued_seconds };
+    if (queue === "stalled") {
+      return status(503, { ok: false, db: "up", queue, oldest_queued_seconds, stalled_queues, workers });
+    }
+
+    return { ok: true, db: "up", queue, oldest_queued_seconds, workers };
   })
   .use(controllers)
   .listen(port);
 
 console.log(`RivalEye API listening on ${app.server?.hostname}:${app.server?.port}`);
+
+// Off by default so dev/test runs never send alerts.
+if (process.env.ENABLE_ALERTS === "true") {
+  startAlertLoop();
+}
 
 export type App = typeof app;
