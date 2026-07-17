@@ -83,7 +83,11 @@ async function getJobTableMetrics(table: JobTable, since: Date): Promise<JobTabl
       .groupBy(table.status),
     db.select({ value: count() }).from(table).where(eq(table.status, "running")),
     db
-      .select({ oldest: min(table.created_at) })
+      // Compute the age in SQL (single DB clock). The *_at columns are `timestamp`
+      // (no tz); a JS Date.now()-vs-parsed-string comparison drifts by the
+      // process TZ offset (observed −5.5h), which would make a stale queue look
+      // fresh and, worse, dead workers look alive.
+      .select({ age: sql<number | null>`floor(extract(epoch from (now() - min(${table.created_at}))))::int` })
       .from(table)
       .where(and(eq(table.status, "queued"), lte(table.run_after, sql`now()`))),
   ]);
@@ -93,9 +97,7 @@ async function getJobTableMetrics(table: JobTable, since: Date): Promise<JobTabl
     by_status_24h[row.status] = Number(row.value);
   }
 
-  const oldest = oldestRow?.oldest ?? null;
-  const oldest_queued_seconds =
-    oldest === null ? null : Math.floor((Date.now() - new Date(oldest).getTime()) / 1000);
+  const oldest_queued_seconds = oldestRow?.age ?? null;
 
   return {
     by_status_24h,
@@ -119,24 +121,20 @@ export async function getWorkerMetrics(): Promise<WorkerMetrics> {
     .select({
       worker_id: worker_heartbeats.worker_id,
       role: worker_heartbeats.role,
-      last_seen_at: worker_heartbeats.last_seen_at,
+      // Age computed in SQL (see note in getJobTableMetrics) so tz-naive
+      // timestamps never drift dead workers into "alive".
+      seconds_since_heartbeat: sql<number>`floor(extract(epoch from (now() - ${worker_heartbeats.last_seen_at})))::int`,
       in_flight: worker_heartbeats.in_flight,
     })
     .from(worker_heartbeats);
 
-  const now = Date.now();
-  const rows: WorkerRow[] = heartbeats.map((h) => {
-    const seconds_since_heartbeat = Math.floor(
-      (now - new Date(h.last_seen_at).getTime()) / 1000,
-    );
-    return {
-      worker_id: h.worker_id,
-      role: h.role,
-      seconds_since_heartbeat,
-      in_flight: h.in_flight,
-      alive: seconds_since_heartbeat <= WORKER_DEAD_THRESHOLD_SECONDS,
-    };
-  });
+  const rows: WorkerRow[] = heartbeats.map((h) => ({
+    worker_id: h.worker_id,
+    role: h.role,
+    seconds_since_heartbeat: h.seconds_since_heartbeat,
+    in_flight: h.in_flight,
+    alive: h.seconds_since_heartbeat <= WORKER_DEAD_THRESHOLD_SECONDS,
+  }));
 
   const alive_by_role: Record<string, number> = {};
   for (const row of rows) {
