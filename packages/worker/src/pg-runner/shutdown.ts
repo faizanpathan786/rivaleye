@@ -37,6 +37,10 @@ export function unregisterInFlight(jobId: string): void {
   inFlight.delete(jobId);
 }
 
+export function inFlightCount(): number {
+  return inFlight.size;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }

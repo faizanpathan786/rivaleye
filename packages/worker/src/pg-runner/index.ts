@@ -35,6 +35,7 @@ import { processSynthesisJob } from "./synthesis-worker";
 import { recoverStaleJobs as recoverStaleJobsOnce } from "./recovery";
 import { pollPdfJobs } from "./pdf-worker";
 import { isShuttingDown, registerInFlight, unregisterInFlight, installSignalHandlers } from "./shutdown";
+import { runHeartbeatLoop } from "./heartbeat";
 import { withLlmContext } from "@rivaleye/shared";
 
 const log = pino({ name: "pg-runner" });
@@ -410,6 +411,7 @@ async function main(): Promise<void> {
       pollSynthesisJobs(config),
       pollPdfJobs(config),
       recoverStaleJobs(config),
+      runHeartbeatLoop(config.workerId, "combined", log),
     ]);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
@@ -432,6 +434,7 @@ async function mainScrapeOnly(): Promise<void> {
     await Promise.all([
       pollSourceJobs(config),
       recoverStaleJobs(config),
+      runHeartbeatLoop(config.workerId, "scrape", log),
     ]);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
@@ -455,6 +458,7 @@ async function mainSynthOnly(): Promise<void> {
       pollSynthesisJobs(config),
       pollPdfJobs(config),
       recoverStaleJobs(config),
+      runHeartbeatLoop(config.workerId, "synth", log),
     ]);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
