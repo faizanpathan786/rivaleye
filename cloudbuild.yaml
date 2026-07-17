@@ -1,15 +1,50 @@
-# Direct deployment: pull code to VM and rebuild
+# Atomic-release deploy to the single GCE VM over IAP.
+#
+# Instead of git-pulling HEAD onto the live working dir (which races with new
+# pushes and rebuilds dist in place), we pin to the EXACT triggering commit:
+#   1. `git archive` the commit into a tarball from the Cloud Build checkout.
+#   2. scp the tarball + the (commit-pinned) bootstrap script to the VM.
+#   3. The bootstrap extracts it into releases/<sha> and hands off to that
+#      release's deploy.sh, which builds out-of-line, migrates, flips the
+#      `current` symlink, reloads PM2, health-gates, and auto-rolls-back.
+#
+# COMMIT_SHA is provided for trigger-based builds. For a manual `gcloud builds
+# submit`, pass it explicitly: --substitutions=COMMIT_SHA=<full-sha>.
+substitutions:
+  _VM: 'faizan514pathan@rivaleye-server'
+  _ZONE: 'us-central1-a'
+  _STAGING: 'rivaleye-deploy-staging'
+
 steps:
-  - name: 'gcr.io/cloud-builders/gcloud'
+  # 1. Build a tarball of the exact commit being deployed.
+  - id: archive
+    name: 'gcr.io/cloud-builders/git'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud compute ssh faizan514pathan@rivaleye-server \
-          --zone=us-central1-a \
-          --tunnel-through-iap \
-          --quiet \
-          --command="bash -lc 'cd /home/faizan514pathan/rivaleye-v3 && git reset --hard HEAD && git pull origin main && bash deploy.sh'"
+        set -euo pipefail
+        test -n "${COMMIT_SHA}" || { echo "COMMIT_SHA is empty; pass --substitutions=COMMIT_SHA=<sha> for manual builds"; exit 1; }
+        git archive --format=tar.gz -o "/workspace/rivaleye-${COMMIT_SHA}.tar.gz" "${COMMIT_SHA}"
+
+  # 2. Upload the tarball + bootstrap script, then run the bootstrap pinned to
+  #    the SHA. The bootstrap script is taken from THIS commit's checkout, so it
+  #    is always the vetted version for the code being deployed.
+  - id: deploy
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -euo pipefail
+        SSH="gcloud compute ssh ${_VM} --zone=${_ZONE} --tunnel-through-iap --quiet"
+        SCP="gcloud compute scp --zone=${_ZONE} --tunnel-through-iap --quiet"
+
+        $SSH --command="mkdir -p ~/${_STAGING}"
+        $SCP "/workspace/rivaleye-${COMMIT_SHA}.tar.gz" "${_VM}:~/${_STAGING}/rivaleye-${COMMIT_SHA}.tar.gz"
+        $SCP "/workspace/scripts/vm-bootstrap.sh" "${_VM}:~/${_STAGING}/vm-bootstrap.sh"
+
+        $SSH --command="bash -lc 'bash ~/${_STAGING}/vm-bootstrap.sh ${COMMIT_SHA} ~/${_STAGING}/rivaleye-${COMMIT_SHA}.tar.gz'"
 
 timeout: '7200s'
 
