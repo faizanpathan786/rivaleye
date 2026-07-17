@@ -123,25 +123,24 @@ async function grantCreditsForOrder(
     if (claimed.length === 0) return { granted: false, userId: null };
 
     const tx = claimed[0]!;
-    const existing = await trx
-      .select()
-      .from(user_credits)
-      .where(eq(user_credits.user_id, tx.user_id))
-      .limit(1);
 
-    if (existing.length === 0) {
-      await trx.insert(user_credits).values({
+    // Atomic upsert: avoids the select-then-write race where a concurrent
+    // grant or scan-debit on the same row silently overwrites this one.
+    await trx
+      .insert(user_credits)
+      .values({
         user_id: tx.user_id,
         balance: tx.amount,
         free_scan_used: false,
         updated_at: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: user_credits.user_id,
+        set: {
+          balance: sql`${user_credits.balance} + ${tx.amount}`,
+          updated_at: new Date(),
+        },
       });
-    } else {
-      await trx
-        .update(user_credits)
-        .set({ balance: existing[0]!.balance + tx.amount, updated_at: new Date() })
-        .where(eq(user_credits.user_id, tx.user_id));
-    }
     return { granted: true, userId: tx.user_id };
   });
 }
@@ -157,7 +156,11 @@ export async function verifyPayment(
   const expected = createHmac("sha256", keySecret)
     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
     .digest("hex");
-  if (expected !== razorpay_signature) throw new Error("Invalid payment signature");
+  const expectedBuf = Buffer.from(expected);
+  const providedBuf = Buffer.from(razorpay_signature);
+  if (expectedBuf.length !== providedBuf.length || !timingSafeEqual(expectedBuf, providedBuf)) {
+    throw new Error("Invalid payment signature");
+  }
 
   const txRows = await db
     .select()

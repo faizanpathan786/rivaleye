@@ -3,7 +3,11 @@ import { Elysia } from "elysia";
 
 import { Tags } from "@/types/swagger";
 
-const enabled = process.env.SWAGGER_ENABLED !== "false";
+// Opt-in only: docs are a source-leak surface (route shapes, internal error
+// messages via examples) and must never be mounted in production by default.
+const enabled =
+  process.env.ENABLE_API_DOCS === "true" ||
+  (process.env.NODE_ENV !== "production" && process.env.SWAGGER_ENABLED !== "false");
 
 export const swaggerPlugin = enabled
   ? swagger({

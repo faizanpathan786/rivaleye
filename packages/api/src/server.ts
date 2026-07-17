@@ -5,6 +5,7 @@ import { loggerPlugin } from "./config/logger";
 import { swaggerPlugin } from "./config/swagger";
 import { and, eq, lte, max, min, sql } from "drizzle-orm";
 import { controllers } from "./controllers";
+import { errorHandlerPlugin } from "./plugins/error-handler";
 import { auth } from "./libs/auth";
 import { db } from "./db/client";
 import { report_platform_jobs, synthesis_jobs } from "./db/schema/pipeline";
@@ -80,6 +81,7 @@ async function getMostRecentWorkerActivityMs(): Promise<number | null> {
 }
 
 export const app = new Elysia()
+  .use(errorHandlerPlugin)
   .use(corsPlugin)
   .mount("/v1/auth", auth.handler)
   .use(swaggerPlugin)

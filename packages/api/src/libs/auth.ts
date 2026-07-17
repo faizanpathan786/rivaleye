@@ -38,7 +38,40 @@ export const auth = betterAuth({
       generateId: () => randomUUID(),
     },
   },
-  emailAndPassword: { enabled: true },
+  emailAndPassword: {
+    enabled: true,
+    // Gated behind an env flag: default OFF so the pre-launch demo/signup
+    // flow keeps working without an email provider wired up. Flip
+    // REQUIRE_EMAIL_VERIFICATION=true once transactional email is in place.
+    requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === "true",
+  },
+  // Scripted signups are the cheap abuse vector here: each account gets a
+  // free scan, and a scan is a real scrape + LLM cost. Rate limit sign-up
+  // stricter than general auth traffic.
+  //
+  // NOTE on storage: better-auth's "database" rate-limit storage requires a
+  // `rateLimit` table registered in the drizzleAdapter `schema` map above.
+  // That table doesn't exist yet in packages/api/src/db/schema and adding it
+  // requires a Drizzle migration — out of scope for this change (schema/
+  // migrations are owned separately and this task is explicitly barred from
+  // touching db/**). Using "memory" for now: still stops single-process
+  // scripted abuse, just doesn't survive a process restart. Once a
+  // `rate_limit` Drizzle table + migration lands, flip `storage: "database"`.
+  //
+  // Note: this only bounds signup/signin abuse. A separate, coarser
+  // per-IP scan-enqueue budget is enforced in the reports pipeline
+  // (see @rivaleye/api reports.service.ts / worker fan-out), independent of
+  // this account-creation limiter.
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 20,
+    storage: "memory",
+    customRules: {
+      "/sign-up/email": { window: 60 * 10, max: 5 },
+      "/sign-in/email": { window: 60, max: 10 },
+    },
+  },
   socialProviders: {
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? {
