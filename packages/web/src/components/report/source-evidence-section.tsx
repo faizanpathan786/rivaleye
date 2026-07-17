@@ -1,4 +1,5 @@
 import { useReportThreadsQuery } from "@/hooks/queries/use-reports";
+import { safeHref } from "@/lib/safe-url";
 
 export function SourceEvidenceSection({ reportId }: { reportId: string }) {
   const { data, isLoading, error } = useReportThreadsQuery(reportId);
@@ -47,9 +48,9 @@ export function SourceEvidenceSection({ reportId }: { reportId: string }) {
                     {thread.excerpt}
                   </p>
                 ) : null}
-                {thread.url ? (
+                {safeHref(thread.url) ? (
                   <a
-                    href={thread.url}
+                    href={safeHref(thread.url)}
                     target="_blank"
                     rel="noreferrer"
                     className="block break-all font-mono text-xs text-primary hover:underline"

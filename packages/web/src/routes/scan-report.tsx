@@ -169,15 +169,31 @@ export function ScanReportPage() {
   const [range, setRange] = useState("90d");
   const [exporting, setExporting] = useState(false);
   const meta = LENS_META[lens];
+  const exportPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Export is generated async in the worker. Enqueue → poll → download when
-  // ready, so the user is never blocked behind a long loader.
+  // ready, so the user is never blocked behind a long loader. Stop polling on
+  // unmount so a background timer doesn't keep firing after the user leaves.
   // "This dashboard" exports the current lens; "full report" exports all.
   const apiBase = () => import.meta.env.VITE_API_URL || "http://localhost:4000";
+  useEffect(() => {
+    return () => {
+      if (exportPollRef.current) {
+        clearTimeout(exportPollRef.current);
+        exportPollRef.current = null;
+      }
+    };
+  }, []);
   const runExport = async (lensId?: string) => {
     if (!id || exporting) return;
     setExporting(true);
-    const finish = () => setExporting(false);
+    const finish = () => {
+      setExporting(false);
+      if (exportPollRef.current) {
+        clearTimeout(exportPollRef.current);
+        exportPollRef.current = null;
+      }
+    };
     let toastId: string | number | undefined;
     try {
       const res = await axios.post(`/v1/reports/${id}/export-pdf${lensId ? `?lens=${lensId}` : ""}`);
@@ -208,9 +224,9 @@ export function ScanReportPage() {
         } catch {
           /* transient poll error — keep trying until the timeout */
         }
-        setTimeout(poll, 2500);
+        exportPollRef.current = setTimeout(poll, 2500);
       };
-      setTimeout(poll, 2500);
+      exportPollRef.current = setTimeout(poll, 2500);
     } catch {
       if (toastId !== undefined) toast.error("Couldn't start the export.", { id: toastId });
       else toast.error("Couldn't start the export.");

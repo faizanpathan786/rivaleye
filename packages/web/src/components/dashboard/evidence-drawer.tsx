@@ -32,6 +32,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { EvidenceRef, EvidenceSection } from "@/lib/dashboard-helpers";
 import { cn } from "@/lib/utils";
+import { safeHref } from "@/lib/safe-url";
 
 export type EvidenceDrawerProps = {
   open: boolean;
@@ -171,9 +172,9 @@ export function EvidenceDrawer({
                         {quote.sentiment.toFixed(2)}
                       </span>
                     )}
-                    {quote.source_url && (
+                    {safeHref(quote.source_url) && (
                       <a
-                        href={quote.source_url}
+                        href={safeHref(quote.source_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline hover:text-[var(--fg)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"

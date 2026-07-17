@@ -7,6 +7,7 @@ import { useCompetitorsQuery } from "@/hooks/queries/use-competitors";
 import type { RadarEvent, RadarSeverity } from "@/api/radar";
 import type { Competitor } from "@/api/competitors";
 import { formatRelative } from "@/lib/format";
+import { safeHref } from "@/lib/safe-url";
 import { CompetitorAvatar } from "@/components/competitor-avatar";
 
 type Severity = "urgent" | "high" | "med" | "low";
@@ -656,7 +657,8 @@ function RadarEventRow({ event: ev, competitor, first }: RadarEventRowProps) {
                 className="re-btn re-btn-sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (ev.url) window.open(ev.url, "_blank");
+                  const safeUrl = safeHref(ev.url);
+                  if (safeUrl) window.open(safeUrl, "_blank", "noopener,noreferrer");
                 }}
               >
                 <Icon name="external" size={12} /> Open source

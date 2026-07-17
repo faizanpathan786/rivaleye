@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Icon } from "@/components/icons";
 import { useReportThreadQuery } from "@/hooks/queries/use-reports";
 import { formatRelative } from "@/lib/format";
+import { safeHref } from "@/lib/safe-url";
 
 interface ThreadModalProps {
   reportId: string;
@@ -99,9 +100,9 @@ export function ThreadModal({ reportId, threadId, onClose }: ThreadModalProps) {
               {data?.title ?? (isLoading ? "Loading thread…" : "Thread")}
             </h3>
           </div>
-          {data?.url && (
+          {safeHref(data?.url) && (
             <a
-              href={data.url}
+              href={safeHref(data?.url)}
               target="_blank"
               rel="noreferrer"
               className="re-btn re-btn-ghost re-btn-sm"

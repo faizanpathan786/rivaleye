@@ -52,7 +52,16 @@ const SAMPLE_ROWS: [string, number, number][] = [
 export function SignInPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get("returnTo") ?? CONFIG.auth.redirectPath;
+  const rawReturnTo = searchParams.get("returnTo") ?? CONFIG.auth.redirectPath;
+  // Only allow same-app relative paths — never hand an attacker-controlled
+  // absolute/protocol-relative URL to navigate() or a callbackURL.
+  const returnTo =
+    rawReturnTo.startsWith("/") &&
+    !rawReturnTo.startsWith("//") &&
+    !rawReturnTo.startsWith("/\\") &&
+    !rawReturnTo.includes("://")
+      ? rawReturnTo
+      : CONFIG.auth.redirectPath;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");

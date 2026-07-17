@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { ConfidenceIndicator } from "@/components/dashboard/confidence-indicator";
 import { ScoreFactors } from "@/components/dashboard/score-factors";
 import { EvidenceDrawer } from "@/components/dashboard/evidence-drawer";
+import { safeHref } from "@/lib/safe-url";
 import {
   bucketFloat,
   filterByDateRange,
@@ -1017,9 +1018,9 @@ function IntentSnapshot({
               >
                 <Icon name="quote" size={12} /> Evidence
               </button>
-              {topOpportunity.sourceUrl && (
+              {safeHref(topOpportunity.sourceUrl) && (
                 <a
-                  href={topOpportunity.sourceUrl}
+                  href={safeHref(topOpportunity.sourceUrl)}
                   target="_blank"
                   rel="noreferrer noopener"
                   className="re-btn re-btn-sm"
@@ -1199,9 +1200,9 @@ function FeedCard({ f, openEvidence }: { f: FeedItemProps; openEvidence: (refs: 
           >
             <Icon name="quote" size={12} /> Evidence
           </button>
-          {f.sourceUrl && (
+          {safeHref(f.sourceUrl) && (
             <a
-              href={f.sourceUrl}
+              href={safeHref(f.sourceUrl)}
               target="_blank"
               rel="noreferrer noopener"
               className="re-btn re-btn-sm"
@@ -1447,9 +1448,9 @@ function PriorityTable({
             >
               <Icon name="quote" size={12} /> Evidence
             </button>
-            {r.sourceUrl && (
+            {safeHref(r.sourceUrl) && (
               <a
-                href={r.sourceUrl}
+                href={safeHref(r.sourceUrl)}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="re-btn re-btn-ghost re-btn-sm"

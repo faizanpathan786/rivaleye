@@ -13,11 +13,17 @@ export function GuestGuard({ children }: GuestGuardProps) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const rawReturnTo = searchParams.get("returnTo") || CONFIG.auth.redirectPath;
-  // Only allow same-app paths — and SPA-navigate instead of a full page
-  // reload, which would re-bootstrap the bundle and re-resolve the session.
-  const returnTo = rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//")
-    ? rawReturnTo
-    : CONFIG.auth.redirectPath;
+  // Only allow same-app relative paths — and SPA-navigate instead of a full
+  // page reload, which would re-bootstrap the bundle and re-resolve the
+  // session. Reject protocol-relative ("//"), backslash ("/\"), and any path
+  // embedding a "://" that could be interpreted as an absolute URL.
+  const returnTo =
+    rawReturnTo.startsWith("/") &&
+    !rawReturnTo.startsWith("//") &&
+    !rawReturnTo.startsWith("/\\") &&
+    !rawReturnTo.includes("://")
+      ? rawReturnTo
+      : CONFIG.auth.redirectPath;
   const justSignedOut =
     (location.state as { signedOut?: boolean } | null)?.signedOut === true;
 

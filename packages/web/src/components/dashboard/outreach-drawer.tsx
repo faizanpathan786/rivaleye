@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "@/components/icons";
 import { useOutreachQuery, useRemoveOutreach } from "@/hooks/queries/use-outreach";
 import { Skeleton } from "@/components/ui/skeleton";
+import { safeHref } from "@/lib/safe-url";
 
 export type OutreachDrawerProps = {
   open: boolean;
@@ -104,9 +105,9 @@ export function OutreachDrawer({ open, onClose }: OutreachDrawerProps) {
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {item.team_size_hint && <span>Team: {item.team_size_hint}</span>}
                     {item.budget_sensitivity && <span>Budget: {item.budget_sensitivity}</span>}
-                    {item.source_url && (
+                    {safeHref(item.source_url) && (
                       <a
-                        href={item.source_url}
+                        href={safeHref(item.source_url)}
                         target="_blank"
                         rel="noreferrer"
                         className="underline hover:text-foreground"
