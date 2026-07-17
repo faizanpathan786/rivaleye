@@ -26,8 +26,18 @@ import { GoogleMapsScraper } from "./gmaps";
 import { HackerNewsScraper } from "./hackernews";
 import { DevToScraper } from "./devto";
 import { WebsiteScraper } from "./website";
+import { FixtureScraper } from "./fixtures/fixture-scraper";
+
+export { FixtureScraper } from "./fixtures/fixture-scraper";
+export { synthesizePosts } from "./fixtures/synthesize";
+
+// Zero-cost verification path: when SCRAPER_PROVIDER=fixtures, every platform
+// resolves to the deterministic FixtureScraper (recorded/synthetic posts, no
+// network, no paid provider). Read once at module load.
+const USE_FIXTURES = process.env.SCRAPER_PROVIDER === "fixtures";
 
 export function getScraper(platform: PlatformId): Scraper {
+  if (USE_FIXTURES) return new FixtureScraper(platform);
   switch (platform) {
     case "reddit":
       return new RedditScraper();

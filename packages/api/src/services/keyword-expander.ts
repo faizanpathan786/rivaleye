@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { OpenRouterClient } from "@rivaleye/shared/llm";
+import type { LlmClient } from "@rivaleye/shared/llm";
 
 const SYSTEM_PROMPT =
   "You are a search-query strategist. Given a competitor name and product category, " +
@@ -19,7 +19,7 @@ export interface KeywordInput {
 }
 
 export async function expandKeywords(
-  llm: OpenRouterClient,
+  llm: LlmClient,
   input: KeywordInput,
 ): Promise<string[]> {
   const user = `Competitor: ${input.competitor}
@@ -28,6 +28,12 @@ Audience: ${input.audience ?? "unspecified"}
 Founder goal: ${input.goal}
 
 Return the JSON now.`;
-  const res = await llm.complete({ system: SYSTEM_PROMPT, user, schema: keywordsSchema });
+  // Bounded + single-attempt: this runs in the report-creation request path, so
+  // a stalled provider must never hang the HTTP request. The caller already
+  // falls back to [competitor] on any failure.
+  const res = await llm.complete(
+    { system: SYSTEM_PROMPT, user, schema: keywordsSchema, tag: "keyword-expander" },
+    { timeoutMs: 8_000, maxAttempts: 1 },
+  );
   return res.parsed.keywords;
 }

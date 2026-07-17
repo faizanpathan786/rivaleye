@@ -7,8 +7,8 @@ import {
   report_pipeline_checkpoints,
 } from "../../../api/src/db/schema/pipeline.js";
 import type { PipelineCheckpointStage } from "../../../api/src/db/schema/pipeline.js";
-import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
-import type { LlmCallOptions } from "@rivaleye/shared";
+import { createLlmClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import { log } from "../logger.js";
 import { assembleSignalPool } from "./assemble-signals";
 import { toLegacyMergedClusters } from "./signal-cluster-adapters";
@@ -53,11 +53,11 @@ const LLM_OPTS_D: LlmCallOptions = { timeoutMs: 120_000, maxAttempts: 3 };
 const LLM_OPTS_D_ROLE: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 3 };
 const LLM_OPTS_E: LlmCallOptions = { timeoutMs: 300_000, maxAttempts: 2 };
 
-let _llm: OpenRouterClient | null = null;
+let _llm: LlmClient | null = null;
 
-function getLlm(): OpenRouterClient {
+function getLlm(): LlmClient {
   if (_llm) return _llm;
-  _llm = new OpenRouterClient({ apiKey: readOpenRouterApiKey(), model: LLM_MODEL });
+  _llm = createLlmClient();
   return _llm;
 }
 

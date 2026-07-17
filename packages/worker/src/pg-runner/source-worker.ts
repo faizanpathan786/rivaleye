@@ -16,10 +16,9 @@ import type { NormalizedPost } from "@rivaleye/scrapers";
 import { getScraper } from "@rivaleye/scrapers";
 import {
   discoverCompetitorIdentifiers,
-  LLM_MODEL,
+  createLlmClient,
   LlmSchemaError,
-  OpenRouterClient,
-  readOpenRouterApiKey,
+  type LlmClient,
   type DiscoveredIds,
 } from "@rivaleye/shared";
 import pino from "pino";
@@ -44,13 +43,10 @@ const CHUNK_SIZE = 500;
 /**
  * Lazy-initialize OpenRouterClient to avoid connection overhead if not needed.
  */
-let _llm: OpenRouterClient | null = null;
-function getLlm(): OpenRouterClient {
+let _llm: LlmClient | null = null;
+function getLlm(): LlmClient {
   if (_llm) return _llm;
-  _llm = new OpenRouterClient({
-    apiKey: readOpenRouterApiKey(),
-    model: LLM_MODEL,
-  });
+  _llm = createLlmClient();
   return _llm;
 }
 

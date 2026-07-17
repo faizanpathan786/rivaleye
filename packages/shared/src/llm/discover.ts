@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { OpenRouterClient } from "./openrouter";
-import { readOpenRouterApiKey } from "./config";
+import type { LlmClient } from "./types";
+import { createLlmClient } from "./factory";
 
 const SONAR_MODEL = process.env["PERPLEXITY_SONAR_MODEL"] ?? "perplexity/sonar";
 
@@ -26,14 +26,11 @@ export const discoveredIdsSchema = z.object({
 
 export type DiscoveredIds = z.infer<typeof discoveredIdsSchema>;
 
-let _client: OpenRouterClient | null = null;
+let _client: LlmClient | null = null;
 
-function getSonarClient(): OpenRouterClient {
+function getSonarClient(): LlmClient {
   if (_client) return _client;
-  _client = new OpenRouterClient({
-    apiKey: readOpenRouterApiKey(),
-    model: SONAR_MODEL,
-  });
+  _client = createLlmClient({ model: SONAR_MODEL });
   return _client;
 }
 
@@ -84,6 +81,7 @@ export async function discoverCompetitorIdentifiers(
       system: SYSTEM,
       user: buildUserPrompt(competitorName),
       schema: discoveredIdsSchema,
+      tag: "sonar-discovery",
     },
     { timeoutMs: 60_000, maxAttempts: 2 },
   );

@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
-import { LLM_MODEL, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
+import { LLM_MODEL, createLlmClient } from "@rivaleye/shared";
+import type { LlmClient } from "@rivaleye/shared";
 import { db } from "../db";
 import { inngest } from "../inngest/client";
 import { mentions } from "../../../api/src/db/schema/mentions.js";
@@ -15,10 +16,10 @@ import { PermanentError } from "../errors";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { fanInCheck } from "./fan-in";
 
-let _llm: OpenRouterClient | null = null;
-function getLlm(): OpenRouterClient {
+let _llm: LlmClient | null = null;
+function getLlm(): LlmClient {
   if (_llm) return _llm;
-  _llm = new OpenRouterClient({ apiKey: readOpenRouterApiKey(), model: LLM_MODEL });
+  _llm = createLlmClient();
   return _llm;
 }
 

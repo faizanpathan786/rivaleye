@@ -1,10 +1,10 @@
-import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import { synthOutputSchema, type MergedClusters, type PipelineCtx, type PlatformBrief, type PlatformExtract, type SynthOutput } from "../prompts/shared";
 import { buildSynth } from "../prompts/cross/synth";
 import { PipelineError } from "./errors";
 
 export interface StageDInput {
-  llm: OpenRouterClient;
+  llm: LlmClient;
   ctx: PipelineCtx;
   merged: MergedClusters;
   briefs: PlatformBrief[];

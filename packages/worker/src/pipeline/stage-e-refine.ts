@@ -1,4 +1,4 @@
-import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import { synthOutputSchema } from "../prompts/shared";
 import type { MergedClusters, PipelineCtx, SynthOutput } from "../prompts/shared";
 import { buildRefine } from "../prompts/cross/refine";
@@ -7,7 +7,7 @@ import { log } from "../logger.js";
 const MAX_TOKENS = 32000;
 
 export interface StageEInput {
-  llm: OpenRouterClient;
+  llm: LlmClient;
   ctx: PipelineCtx;
   merged: MergedClusters;
   draft: SynthOutput;

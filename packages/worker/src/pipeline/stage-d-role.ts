@@ -1,4 +1,4 @@
-import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import type { PipelineCtx, MergedSignals } from "../prompts/shared";
 import { buildOverviewSynth } from "../prompts/role-sections/overview";
 import { buildFounderSynth } from "../prompts/role-sections/founder";
@@ -59,7 +59,7 @@ interface SectionSchema<T> {
  * (the typical failure is a truncated or wrapped response).
  */
 async function ensureSection<T>(
-  llm: OpenRouterClient,
+  llm: LlmClient,
   built: BuiltPrompt,
   schema: SectionSchema<T>,
   name: string,
@@ -111,7 +111,7 @@ async function ensureSection<T>(
 }
 
 export interface RoleSynthesisInput {
-  llm: OpenRouterClient;
+  llm: LlmClient;
   ctx: PipelineCtx;
   mergedSignals: MergedSignals;
 }

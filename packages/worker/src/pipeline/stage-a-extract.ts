@@ -1,5 +1,5 @@
 import type { NormalizedPost, PlatformId } from "@rivaleye/scrapers";
-import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import type { PipelineCtx, StageAExtract } from "../prompts/shared";
 import { stageAExtractSchema } from "../prompts/shared";
 import { buildAppStoreExtract } from "../prompts/platform/appstore/extract";
@@ -13,7 +13,7 @@ import { buildLinkedInExtract } from "../prompts/platform/linkedin/extract";
 import { buildTwitterExtract } from "../prompts/platform/twitter/extract";
 
 export interface StageAInput {
-  llm: OpenRouterClient;
+  llm: LlmClient;
   ctx: PipelineCtx;
   platform: PlatformId;
   posts: NormalizedPost[];

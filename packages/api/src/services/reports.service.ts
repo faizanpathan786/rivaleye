@@ -25,19 +25,19 @@ import { mentions } from "@/db/schema/mentions";
 import { report_role_sections } from "@/db/schema/report-role-sections";
 import { inngest } from "@/libs/inngest";
 import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
-import { OpenRouterClient, ENABLED_PLATFORMS, readOpenRouterApiKey, LLM_MODEL } from "@rivaleye/shared";
-import type { EnabledPlatformId } from "@rivaleye/shared";
+import { createLlmClient, ENABLED_PLATFORMS } from "@rivaleye/shared";
+import type { EnabledPlatformId, LlmClient } from "@rivaleye/shared";
 import { expandKeywords } from "./keyword-expander";
 import type { CreateReportInput } from "@rivaleye/shared";
 import { getPipelineEngine } from "@/config/engine";
 import { consumeCreditForScan, PaymentRequiredError } from "./billing.service";
 export { PaymentRequiredError };
 
-let _llm: OpenRouterClient | null = null;
+let _llm: LlmClient | null = null;
 
-function getLlm(): OpenRouterClient {
+function getLlm(): LlmClient {
   if (!_llm) {
-    _llm = new OpenRouterClient({ apiKey: readOpenRouterApiKey(), model: LLM_MODEL });
+    _llm = createLlmClient();
   }
   return _llm;
 }

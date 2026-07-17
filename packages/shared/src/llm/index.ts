@@ -1,5 +1,12 @@
 export { OpenRouterClient } from "./openrouter";
-export type { LlmCallOptions, LlmRequest, LlmResponse, OpenRouterClientOptions } from "./openrouter";
+export type { OpenRouterClientOptions } from "./openrouter";
+export type { LlmCallOptions, LlmClient, LlmRequest, LlmResponse } from "./types";
+export { MockLlmClient } from "./mock";
+export type { MockLlmClientOptions } from "./mock";
+export { createLlmClient, getLlmProvider } from "./factory";
+export type { LlmProvider } from "./factory";
+export { generateMock } from "./zod-mock";
+export type { MockRng, MockContext } from "./zod-mock";
 export { LlmHttpError, LlmJsonParseError, LlmSchemaError } from "./errors";
 export * from "./config";
 export { discoverCompetitorIdentifiers, discoveredIdsSchema } from "./discover";

@@ -10,7 +10,7 @@ import { db } from "../db";
 import { mentions } from "../../../api/src/db/schema/mentions.js";
 import { reports } from "../../../api/src/db/schema/reports.js";
 import { report_platform_jobs } from "../../../api/src/db/schema/pipeline.js";
-import { LLM_MODEL, LlmSchemaError, OpenRouterClient, readOpenRouterApiKey } from "@rivaleye/shared";
+import { LlmSchemaError, createLlmClient } from "@rivaleye/shared";
 import { runStageAExtract } from "../pipeline/stage-a-extract";
 import { runStageBSummarize } from "../pipeline/stage-b-summarize";
 import { toLegacyExtract } from "../pipeline/signal-adapters";
@@ -28,7 +28,7 @@ if (!reportId || !platform) {
   process.exit(1);
 }
 
-const llm = new OpenRouterClient({ apiKey: readOpenRouterApiKey(), model: LLM_MODEL });
+const llm = createLlmClient();
 
 // Load report
 const [report] = await db.select().from(reports).where(eq(reports.id, reportId)).limit(1);

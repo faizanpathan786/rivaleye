@@ -1,5 +1,5 @@
 import type { PlatformId } from "@rivaleye/scrapers";
-import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import type {
   EvidenceIndexItem, MergedClusters, MergedSignals, PipelineCtx, PlatformBrief, StageAExtract,
   StageCMergeLlmOutput,
@@ -9,7 +9,7 @@ import { enrichMergedSignals, toLegacyMergedClusters } from "./signal-cluster-ad
 import { PipelineError } from "./errors";
 
 export interface StageCInput {
-  llm: OpenRouterClient;
+  llm: LlmClient;
   ctx: PipelineCtx;
   briefs: PlatformBrief[];
   signalExtracts: Array<{ platform: PlatformId; extract: StageAExtract }>;

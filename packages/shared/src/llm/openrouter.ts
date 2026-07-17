@@ -1,24 +1,8 @@
 import type { ZodSchema } from "zod";
 import { LlmHttpError, LlmJsonParseError, LlmSchemaError, formatZodIssues } from "./errors";
+import type { LlmCallOptions, LlmClient, LlmRequest, LlmResponse } from "./types";
 
-export interface LlmRequest<TSchema extends ZodSchema | undefined = undefined> {
-  system: string;
-  user: string;
-  schema?: TSchema;
-  maxTokens?: number;
-}
-
-export interface LlmCallOptions {
-  timeoutMs?: number;
-  maxAttempts?: number;
-}
-
-export interface LlmResponse<T> {
-  parsed: T;
-  raw: string;
-  usage: { promptTokens: number; completionTokens: number };
-  model: string;
-}
+export type { LlmCallOptions, LlmRequest, LlmResponse } from "./types";
 
 export interface OpenRouterClientOptions {
   apiKey: string;
@@ -66,7 +50,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export class OpenRouterClient {
+export class OpenRouterClient implements LlmClient {
   private readonly apiKey: string;
   private readonly model: string;
   private readonly temperature: number;

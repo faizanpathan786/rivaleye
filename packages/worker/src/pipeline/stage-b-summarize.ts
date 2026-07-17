@@ -1,5 +1,5 @@
 import type { PlatformId } from "@rivaleye/scrapers";
-import type { LlmCallOptions, OpenRouterClient } from "@rivaleye/shared";
+import type { LlmCallOptions, LlmClient } from "@rivaleye/shared";
 import type { PipelineCtx, PlatformBrief, PlatformExtract } from "../prompts/shared";
 import { buildAppStoreSummarize } from "../prompts/platform/appstore/summarize";
 import { buildPlayStoreSummarize } from "../prompts/platform/playstore/summarize";
@@ -12,7 +12,7 @@ import { buildLinkedInSummarize } from "../prompts/platform/linkedin/summarize";
 import { buildTwitterSummarize } from "../prompts/platform/twitter/summarize";
 
 export interface StageBInput {
-  llm: OpenRouterClient;
+  llm: LlmClient;
   ctx: PipelineCtx;
   platform: PlatformId;
   extract: PlatformExtract;
