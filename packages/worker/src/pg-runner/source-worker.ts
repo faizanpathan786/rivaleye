@@ -356,13 +356,20 @@ export async function processSourceJob(
  * @param reportRow - Report metadata (competitor, category, etc.)
  * @returns Array of normalized posts
  */
+// Hard ceiling on a single platform fetch. Several DIY scrapers (producthunt,
+// appstore, playstore, devto, hackernews) call raw fetch() with no AbortSignal,
+// so a stalled provider TCP read would otherwise hang the job — holding its
+// concurrency slot and 'running' lock — until the 25-min stale sweep. This
+// bounds every scraper uniformly regardless of its internal timeout hygiene.
+const SCRAPER_FETCH_TIMEOUT_MS = Number(process.env.SCRAPER_FETCH_TIMEOUT_MS ?? 120_000);
+
 async function fetchPosts(
   platform: string,
   reportRow: { primary_competitor_name: string | null; category: string; website_url?: string | null },
   discovered: DiscoveredIds | null,
 ): Promise<NormalizedPost[]> {
   const scraper = getScraper(platform as any);
-  const posts = await scraper.fetch({
+  const query = {
     competitor: reportRow.primary_competitor_name ?? "",
     category: reportRow.category,
     keywords: [],
@@ -371,8 +378,33 @@ async function fetchPosts(
     playStoreAppId: discovered?.play_store_app_id ?? undefined,
     linkedinUrl: discovered?.linkedin_url ?? undefined,
     twitterHandle: discovered?.twitter_handle ?? undefined,
+  };
+  return withTimeout(
+    scraper.fetch(query),
+    SCRAPER_FETCH_TIMEOUT_MS,
+    `scraper.fetch(${platform}) exceeded ${SCRAPER_FETCH_TIMEOUT_MS}ms`,
+  );
+}
+
+/**
+ * Reject if the promise doesn't settle within ms. The underlying fetch may keep
+ * running in the background, but the job stops waiting on it and releases its
+ * slot; the error is retryable so the job re-queues with backoff.
+ */
+function withTimeout<T>(p: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
   });
-  return posts;
 }
 
 /**

@@ -11,6 +11,8 @@ import { and, asc, eq, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { report_pdf_jobs } from "../../../api/src/db/schema/pipeline.js";
 import { renderReportPdf } from "../pdf/render";
+import { decryptSecret } from "@rivaleye/shared";
+import { isShuttingDown, registerInFlight, unregisterInFlight } from "./shutdown";
 
 const log = pino({ name: "pdf-worker" });
 
@@ -54,7 +56,7 @@ async function processPdfJob(job: PdfJob): Promise<void> {
     const pdf = await renderReportPdf({
       reportId: job.report_id,
       lens: job.lens,
-      sessionCookie: job.session_cookie ?? "",
+      sessionCookie: job.session_cookie ? decryptSecret(job.session_cookie) : "",
     });
     await db
       .update(report_pdf_jobs)
@@ -103,12 +105,18 @@ export async function pollPdfJobs(config: { workerId: string; pollIntervalMs: nu
   log.info({ workerId: config.workerId }, "Starting PDF export polling loop");
   while (true) {
     try {
+      if (isShuttingDown()) return;
       const job = await claimPdfJob(config.workerId);
       if (!job) {
         await sleep(config.pollIntervalMs);
         continue;
       }
-      await processPdfJob(job);
+      registerInFlight(job.id, "pdf");
+      try {
+        await processPdfJob(job);
+      } finally {
+        unregisterInFlight(job.id);
+      }
     } catch (e) {
       log.error({ err: e instanceof Error ? e.message : String(e) }, "PDF poll loop error");
       await sleep(config.pollIntervalMs);

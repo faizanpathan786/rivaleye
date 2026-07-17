@@ -6,6 +6,8 @@ import {
   enqueuePdfJob,
   getPdfJobStatus,
   getPdfJobForDownload,
+  PdfExportForbiddenError,
+  PdfExportRateLimitError,
 } from "@/services/pdf-export-jobs.service";
 
 export const exportPdfHandler = new Elysia()
@@ -25,6 +27,12 @@ export const exportPdfHandler = new Elysia()
         });
         return ok({ job_id: jobId, status: "queued" });
       } catch (e) {
+        if (e instanceof PdfExportForbiddenError) {
+          return status(404, { message: "Report not found", error: "REPORT_NOT_FOUND" });
+        }
+        if (e instanceof PdfExportRateLimitError) {
+          return status(429, { message: "Too many exports; try again later", error: "EXPORT_RATE_LIMITED" });
+        }
         log.error(e);
         return status(500, { message: "Failed to queue export", error: "EXPORT_ENQUEUE_FAILED" });
       }

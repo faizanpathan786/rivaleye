@@ -9,7 +9,8 @@
  *   bun --env-file=.env.e2e src/scripts/e2e-local.ts "Notion" reddit,hackernews,devto
  */
 import { randomUUID } from "node:crypto";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { db } from "../db";
 import { users } from "../../../api/src/db/schema/users.js";
 import { user_credits } from "../../../api/src/db/schema/billing.js";
@@ -37,7 +38,7 @@ async function main(): Promise<void> {
   const email = `e2e+${randomUUID().slice(0, 8)}@example.com`;
   const [user] = await db
     .insert(users)
-    .values({ id: randomUUID(), name: "E2E", email, emailVerified: true })
+    .values({ name: "E2E", email, email_verified: true })
     .returning({ id: users.id });
   const ownerId = user!.id;
   await db.insert(user_credits).values({ user_id: ownerId, balance: 100, free_scan_used: false });
@@ -62,7 +63,7 @@ async function main(): Promise<void> {
       report_id: reportId,
       platform,
       status: "queued" as const,
-      stage: "queued",
+      stage: "queued" as const,
       attempt_count: 0,
       max_attempts: 3,
       run_after: new Date(),
@@ -103,11 +104,11 @@ async function main(): Promise<void> {
     .limit(1);
 
   const counts = {
-    mentions: await count(mentions, reportId),
-    briefs: await count(report_platform_briefs, reportId),
-    complaints: await count(report_complaints, reportId),
-    opportunities: await count(report_opportunities, reportId),
-    actions: await count(report_actions, reportId),
+    mentions: await countRows(mentions.report_id, reportId),
+    briefs: await countRows(report_platform_briefs.report_id, reportId),
+    complaints: await countRows(report_complaints.report_id, reportId),
+    opportunities: await countRows(report_opportunities.report_id, reportId),
+    actions: await countRows(report_actions.report_id, reportId),
   };
 
   console.log("\n===== E2E RESULT =====");
@@ -127,11 +128,10 @@ async function main(): Promise<void> {
   process.exit(ok ? 0 : 1);
 }
 
-async function count(table: { report_id: unknown }, reportId: string): Promise<number> {
-  const [row] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(table as never)
-    .where(eq((table as { report_id: never }).report_id, reportId as never));
+async function countRows(column: AnyPgColumn, reportId: string): Promise<number> {
+  const [row] = await db.execute<{ n: number }>(
+    sql`select count(*)::int as n from ${column.table} where ${column} = ${reportId}`,
+  );
   return row?.n ?? 0;
 }
 

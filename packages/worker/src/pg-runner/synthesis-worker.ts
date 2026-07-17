@@ -200,20 +200,39 @@ export async function processSynthesisJob(
       })
       .where(and(eq(reports.id, job.report_id), ne(reports.status, "cancelled")));
 
-    // Step 5: Check if a re-synthesis was requested due to late platform success
-    if (job.rerun_requested) {
+    // Step 5: Atomically complete the job ONLY if no re-synthesis was requested.
+    // rerun_requested may have been flipped true by a late platform AFTER this
+    // job was claimed (job.rerun_requested is the stale claim-time snapshot), so
+    // we must decide against the live DB value, not the snapshot: complete with
+    // a guard on rerun_requested=false and, if that matches nothing, take the
+    // re-queue branch. This closes the window where a late platform's rerun
+    // request was silently dropped.
+    const durationMs = Date.now() - startedAt;
+    const completed = await db
+      .update(synthesis_jobs)
+      .set({
+        status: "completed",
+        completed_at: new Date(),
+        locked_at: null,
+        locked_by: null,
+        updated_at: new Date(),
+      })
+      .where(and(eq(synthesis_jobs.id, job.id), eq(synthesis_jobs.rerun_requested, false)))
+      .returning({ id: synthesis_jobs.id });
+
+    if (completed.length === 0) {
+      // rerun_requested is true in the DB (set during this run, or at claim time)
+      // — re-queue for a full rebuild over the updated briefs instead of completing.
       log.info(
         { jobId: job.id, reportId: job.report_id },
         "Re-synthesis requested; clearing checkpoints and re-queuing job"
       );
 
       await db.transaction(async (tx) => {
-        // Clear all checkpoints so synthesis re-runs from scratch over updated briefs
         await tx
           .delete(report_pipeline_checkpoints)
           .where(eq(report_pipeline_checkpoints.report_id, job.report_id));
 
-        // Re-queue the synthesis job for another run
         await tx
           .update(synthesis_jobs)
           .set({
@@ -236,19 +255,7 @@ export async function processSynthesisJob(
       return; // Exit early; don't emit completed
     }
 
-    // Step 5b: Mark job completed (if no rerun requested)
-    const durationMs = Date.now() - startedAt;
     log.info({ jobId: job.id, durationMs }, "Marking synthesis job completed");
-    await db
-      .update(synthesis_jobs)
-      .set({
-        status: "completed",
-        completed_at: new Date(),
-        locked_at: null,
-        locked_by: null,
-        updated_at: new Date(),
-      })
-      .where(eq(synthesis_jobs.id, job.id));
 
     // Step 6: Emit completed event
     await emit({

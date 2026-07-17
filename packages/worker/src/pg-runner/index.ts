@@ -21,7 +21,7 @@
 
 import os from "os";
 import pino from "pino";
-import { and, eq, lte } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db";
 import {
   report_platform_jobs,
@@ -32,8 +32,9 @@ import { claimSourceJob, claimSynthesisJob } from "./claim";
 import type { WorkerConfig, SourceJobRow, SynthesisJobRow } from "./types";
 import { processSourceJob } from "./source-worker";
 import { processSynthesisJob } from "./synthesis-worker";
-import { healOrphanedReports } from "./recovery";
+import { recoverStaleJobs as recoverStaleJobsOnce } from "./recovery";
 import { pollPdfJobs } from "./pdf-worker";
+import { isShuttingDown, registerInFlight, unregisterInFlight, installSignalHandlers } from "./shutdown";
 
 const log = pino({ name: "pg-runner" });
 
@@ -94,6 +95,8 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
 
   while (true) {
     try {
+      if (isShuttingDown()) return;
+
       if (activeJobs >= MAX_CONCURRENT_SOURCE) {
         await sleep(config.pollIntervalMs);
         continue;
@@ -104,7 +107,7 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
       );
 
       if (!job) {
-        await sleep(config.pollIntervalMs);
+        await sleep(idlePollMs(config.pollIntervalMs));
         continue;
       }
 
@@ -136,6 +139,7 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
 
       // Fire and forget — increment counter before async work starts
       activeJobs++;
+      registerInFlight(job.id, "source");
       processSourceJob(job, report, config.workerId)
         .then(() => {
           log.info({ jobId: job.id, platform: job.platform }, "Source job completed successfully");
@@ -146,6 +150,7 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
         })
         .finally(() => {
           activeJobs--;
+          unregisterInFlight(job.id);
         });
 
       // No sleep — immediately try to claim another job up to MAX_CONCURRENT_SOURCE
@@ -185,6 +190,8 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
 
   while (true) {
     try {
+      if (isShuttingDown()) return;
+
       if (activeJobs >= MAX_CONCURRENT_SYNTHESIS) {
         await sleep(config.pollIntervalMs);
         continue;
@@ -197,7 +204,7 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
 
       if (!job) {
         // No jobs available; sleep and try again
-        await sleep(config.pollIntervalMs);
+        await sleep(idlePollMs(config.pollIntervalMs));
         continue;
       }
 
@@ -230,6 +237,7 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
 
       // Fire and forget — increment counter before async work starts
       activeJobs++;
+      registerInFlight(job.id, "synthesis");
       processSynthesisJob(job, report, config.workerId)
         .then(() => {
           log.info(
@@ -247,6 +255,7 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
         })
         .finally(() => {
           activeJobs--;
+          unregisterInFlight(job.id);
         });
 
       // No sleep — immediately try to claim another job up to MAX_CONCURRENT_SYNTHESIS
@@ -288,108 +297,14 @@ async function recoverStaleJobs(config: WorkerConfig): Promise<void> {
   const RECOVERY_POLL_MS = 30000; // 30 seconds
 
   while (true) {
+    if (isShuttingDown()) return;
     try {
-      // Recover stale source jobs
-      const sourceTimeout = new Date(
-        Date.now() - config.sourceJobTimeoutMinutes * 60 * 1000
-      );
-
-      const staleSourceJobs = await db
-        .select()
-        .from(report_platform_jobs)
-        .where(
-          and(
-            eq(report_platform_jobs.status, "running"),
-            lte(report_platform_jobs.locked_at, sourceTimeout)
-          )
-        );
-
-      if (staleSourceJobs.length > 0) {
-        log.warn(
-          { count: staleSourceJobs.length, timeoutMinutes: config.sourceJobTimeoutMinutes },
-          "Found stale source jobs; recovering"
-        );
-
-        for (const job of staleSourceJobs) {
-          // Reset to queued with exponential backoff
-          const backoffMs = getBackoffMs(job.attempt_count);
-          await db
-            .update(report_platform_jobs)
-            .set({
-              status: "queued",
-              run_after: new Date(Date.now() + backoffMs),
-              locked_at: null,
-              locked_by: null,
-              last_error: `Stale lock recovered by ${config.workerId} after ${config.sourceJobTimeoutMinutes}m`,
-              updated_at: new Date(),
-            })
-            .where(eq(report_platform_jobs.id, job.id));
-
-          log.info(
-            {
-              jobId: job.id,
-              platform: job.platform,
-              attemptCount: job.attempt_count,
-              backoffMs,
-            },
-            "Recovered stale source job"
-          );
-        }
-      }
-
-      // Recover stale synthesis jobs
-      const synthesisTimeout = new Date(
-        Date.now() - config.synthesisJobTimeoutMinutes * 60 * 1000
-      );
-
-      const staleSynthesisJobs = await db
-        .select()
-        .from(synthesis_jobs)
-        .where(
-          and(
-            eq(synthesis_jobs.status, "running"),
-            lte(synthesis_jobs.locked_at, synthesisTimeout)
-          )
-        );
-
-      if (staleSynthesisJobs.length > 0) {
-        log.warn(
-          { count: staleSynthesisJobs.length, timeoutMinutes: config.synthesisJobTimeoutMinutes },
-          "Found stale synthesis jobs; recovering"
-        );
-
-        for (const job of staleSynthesisJobs) {
-          // Reset to queued with exponential backoff
-          const backoffMs = getBackoffMs(job.attempt_count);
-          await db
-            .update(synthesis_jobs)
-            .set({
-              status: "queued",
-              run_after: new Date(Date.now() + backoffMs),
-              locked_at: null,
-              locked_by: null,
-              last_error: `Stale lock recovered by ${config.workerId} after ${config.synthesisJobTimeoutMinutes}m`,
-              updated_at: new Date(),
-            })
-            .where(eq(synthesis_jobs.id, job.id));
-
-          log.info(
-            {
-              jobId: job.id,
-              reportId: job.report_id,
-              attemptCount: job.attempt_count,
-              backoffMs,
-            },
-            "Recovered stale synthesis job"
-          );
-        }
-      }
-
-      // Heal orphaned reports: all platform jobs done but no synthesis job created
-      // (guards against fan-in failures due to transient DB errors)
-      await healOrphanedReports();
-
-      // Sleep before next recovery check
+      // Delegate to the single hardened implementation in recovery.ts, which
+      // respects max_attempts, fail-forwards when synthesis already started,
+      // guards its UPDATEs on the observed lock, and heals orphaned + all-failed
+      // reports. (This module previously carried an inferior duplicate that
+      // re-queued forever without a max_attempts check — removed.)
+      await recoverStaleJobsOnce(config);
       await sleep(RECOVERY_POLL_MS);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -402,6 +317,18 @@ async function recoverStaleJobs(config: WorkerConfig): Promise<void> {
       }
     }
   }
+}
+
+/**
+ * Idle poll interval with jitter. When no job was claimed we back off to a
+ * larger interval (up to 8× base) with ±25% jitter so N idle workers don't
+ * hammer PgBouncer in lockstep every 500ms. Busy loops (a job was claimed)
+ * skip this and re-poll immediately.
+ */
+function idlePollMs(baseMs: number): number {
+  const capped = Math.min(baseMs * 8, 4000);
+  const jitter = capped * 0.25 * (Math.random() * 2 - 1);
+  return Math.round(capped + jitter);
 }
 
 /**
@@ -462,6 +389,8 @@ async function main(): Promise<void> {
     "Starting pg-runner with configuration"
   );
 
+  installSignalHandlers(config.workerId, log);
+
   // Run three concurrent loops; any unhandled error in main() will cause process exit
   try {
     await Promise.all([
@@ -486,6 +415,7 @@ async function mainScrapeOnly(): Promise<void> {
     synthesisJobTimeoutMinutes: 90,
   };
   log.info({ workerId, mode: "scrape-only" }, "Starting pg-runner (scrape + recovery only)");
+  installSignalHandlers(workerId, log);
   try {
     await Promise.all([
       pollSourceJobs(config),
@@ -507,6 +437,7 @@ async function mainSynthOnly(): Promise<void> {
     synthesisJobTimeoutMinutes: 90,
   };
   log.info({ workerId, mode: "synth-only" }, "Starting pg-runner (synthesis + recovery only)");
+  installSignalHandlers(workerId, log);
   try {
     await Promise.all([
       pollSynthesisJobs(config),

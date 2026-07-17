@@ -42,6 +42,38 @@ function getLlm(): LlmClient {
   return _llm;
 }
 
+const RETRY_MAX_PER_HOUR = Number(process.env.REPORT_RETRY_MAX_PER_HOUR ?? 10);
+
+/**
+ * Per-report retry throttle. Retry endpoints re-queue a full platform scrape or
+ * the whole synthesis chain (paid scraper + LLM work) and are owner-authenticated
+ * but were otherwise unbounded — a user (or a stolen session) could spam retries
+ * for unlimited re-runs. We record each retry as a report_logs row and cap the
+ * count per rolling hour. Uses the existing (report_id, created_at) index; no new
+ * table. The per-report LLM token budget (worker side) is the hard cost ceiling;
+ * this is the request-rate guard.
+ */
+async function checkAndRecordRetry(reportId: string, kind: string): Promise<boolean> {
+  const rows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(report_logs)
+    .where(
+      and(
+        eq(report_logs.report_id, reportId),
+        eq(report_logs.stage, "retry"),
+        gt(report_logs.created_at, sql`now() - interval '1 hour'`),
+      ),
+    );
+  if ((rows[0]?.count ?? 0) >= RETRY_MAX_PER_HOUR) return false;
+  await db.insert(report_logs).values({
+    report_id: reportId,
+    level: "info",
+    stage: "retry",
+    message: `retry requested: ${kind}`,
+  });
+  return true;
+}
+
 async function assertReportOwned(id: string, owner_id: string): Promise<Report | null> {
   const rows = await db.select().from(reports).where(eq(reports.id, id)).limit(1);
   const row = rows[0];
@@ -654,6 +686,9 @@ export async function retryPlatform(
     .limit(1);
   if (!job) return { ok: false, reason: "platform_not_in_report" };
   if (job.status === "running") return { ok: false, reason: "already_running" };
+  if (!(await checkAndRecordRetry(reportId, `platform:${platform}`))) {
+    return { ok: false, reason: "retry_rate_limited" };
+  }
 
   await db
     .update(report_platform_jobs)
@@ -695,6 +730,9 @@ export async function retrySynthesis(
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const report = await assertReportOwned(reportId, owner_id);
   if (!report) return { ok: false, reason: "not_found" };
+  if (!(await checkAndRecordRetry(reportId, "synthesis"))) {
+    return { ok: false, reason: "retry_rate_limited" };
+  }
 
   // Find an existing synthesis job in a terminal or stuck state.
   const [job] = await db

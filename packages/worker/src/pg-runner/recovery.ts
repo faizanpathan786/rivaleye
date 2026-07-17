@@ -13,9 +13,10 @@
  * Should be run as a background loop (e.g., every 30 seconds) on one worker.
  */
 
-import { and, eq, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, lte, notInArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { report_platform_jobs, synthesis_jobs } from "../../../api/src/db/schema/pipeline.js";
+import { reports } from "../../../api/src/db/schema/reports.js";
 import { log } from "../logger";
 import { fanInCheck } from "./fan-in";
 import type { WorkerConfig } from "./types";
@@ -100,6 +101,9 @@ async function recoverStaleSourceJobs(timeoutMinutes: number): Promise<void> {
         `[recovery] Recovering stale source job ${job.id} (report=${job.report_id}, platform=${job.platform}, attempt=${job.attempt_count}/${job.max_attempts}, stale=${staleDurationMs}ms): resetting to queued`
       );
 
+      // Guard on the exact lock we observed (status still 'running', same
+      // locked_by) so a job that completed — or was re-claimed by a live worker —
+      // between our SELECT and this UPDATE is never clobbered back to queued.
       await db
         .update(report_platform_jobs)
         .set({
@@ -110,7 +114,13 @@ async function recoverStaleSourceJobs(timeoutMinutes: number): Promise<void> {
           last_error: `Stale lock detected after ${staleDurationMs}ms; recovered and retried`,
           updated_at: new Date(),
         })
-        .where(eq(report_platform_jobs.id, job.id));
+        .where(
+          and(
+            eq(report_platform_jobs.id, job.id),
+            eq(report_platform_jobs.status, "running"),
+            job.locked_by ? eq(report_platform_jobs.locked_by, job.locked_by) : sql`true`,
+          ),
+        );
 
       await log(job.report_id, "warn", "recovery", job.platform, `Job stale for ${staleDurationMs}ms; recovered and retrying (attempt ${job.attempt_count + 1}/${job.max_attempts})`);
     } else {
@@ -133,7 +143,13 @@ async function recoverStaleSourceJobs(timeoutMinutes: number): Promise<void> {
           completed_at: new Date(),
           updated_at: new Date(),
         })
-        .where(eq(report_platform_jobs.id, job.id));
+        .where(
+          and(
+            eq(report_platform_jobs.id, job.id),
+            eq(report_platform_jobs.status, "running"),
+            job.locked_by ? eq(report_platform_jobs.locked_by, job.locked_by) : sql`true`,
+          ),
+        );
 
       await log(job.report_id, "error", "recovery", job.platform, failReason);
 
@@ -192,7 +208,13 @@ async function recoverStaleSynthesisJobs(timeoutMinutes: number): Promise<void> 
           last_error: `Stale lock detected after ${staleDurationMs}ms; recovered and retried`,
           updated_at: new Date(),
         })
-        .where(eq(synthesis_jobs.id, job.id));
+        .where(
+          and(
+            eq(synthesis_jobs.id, job.id),
+            eq(synthesis_jobs.status, "running"),
+            job.locked_by ? eq(synthesis_jobs.locked_by, job.locked_by) : sql`true`,
+          ),
+        );
 
       await log(job.report_id, "warn", "synthesis.recovery", null, `Job stale for ${staleDurationMs}ms; recovered and retrying (attempt ${job.attempt_count + 1}/${job.max_attempts})`);
     } else {
@@ -211,7 +233,13 @@ async function recoverStaleSynthesisJobs(timeoutMinutes: number): Promise<void> 
           completed_at: new Date(),
           updated_at: new Date(),
         })
-        .where(eq(synthesis_jobs.id, job.id));
+        .where(
+          and(
+            eq(synthesis_jobs.id, job.id),
+            eq(synthesis_jobs.status, "running"),
+            job.locked_by ? eq(synthesis_jobs.locked_by, job.locked_by) : sql`true`,
+          ),
+        );
 
       await log(job.report_id, "error", "synthesis.recovery", null, `Job stale for ${staleDurationMs}ms; exceeded max attempts and marked as failed`);
     }
@@ -252,5 +280,49 @@ export async function healOrphanedReports(): Promise<void> {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[recovery] fanInCheck failed for orphaned report ${reportId}:`, msg);
     }
+  }
+
+  await healAllFailedReports();
+}
+
+/**
+ * Heal reports where every source job is terminal but NONE completed, and the
+ * report itself was never moved off a live status. The all-failed branch of
+ * fanInCheck marks the report failed inline (no synthesis job is created), so if
+ * that write is silently rolled back (the PgBouncer failure mode this module
+ * guards against) nothing else ever re-drives it: no synthesis worker (no job)
+ * and healOrphanedReports skips it (it requires COUNT(completed) > 0). This flips
+ * such stuck reports to failed so they don't hang in 'running'/'queued' forever.
+ */
+async function healAllFailedReports(): Promise<void> {
+  const stuck = await db.execute<{ report_id: string }>(sql`
+    SELECT rpj.report_id
+    FROM report_platform_jobs rpj
+    JOIN reports r ON r.id = rpj.report_id
+    WHERE r.status NOT IN ('completed', 'failed', 'cancelled')
+    GROUP BY rpj.report_id
+    HAVING
+      COUNT(*) > 0
+      AND COUNT(*) = COUNT(CASE WHEN rpj.status IN ('completed', 'failed') THEN 1 END)
+      AND COUNT(CASE WHEN rpj.status = 'completed' THEN 1 END) = 0
+      AND NOT EXISTS (SELECT 1 FROM synthesis_jobs sj WHERE sj.report_id = rpj.report_id)
+  `);
+
+  if (stuck.length === 0) return;
+
+  console.warn(`[recovery] Found ${stuck.length} all-failed report(s) stuck non-terminal; marking failed`);
+  for (const row of stuck) {
+    const reportId = row.report_id;
+    await db
+      .update(reports)
+      .set({
+        status: "failed",
+        stage: "failed",
+        partial: false,
+        error: "All platforms failed to fetch data",
+        updated_at: new Date(),
+      })
+      .where(and(eq(reports.id, reportId), notInArray(reports.status, ["completed", "failed", "cancelled"])));
+    await log(reportId, "error", "recovery", null, "Healed stuck all-failed report: all source jobs failed but report never moved to failed; marked failed");
   }
 }
