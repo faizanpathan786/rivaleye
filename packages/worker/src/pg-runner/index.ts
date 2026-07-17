@@ -35,8 +35,16 @@ import { processSynthesisJob } from "./synthesis-worker";
 import { recoverStaleJobs as recoverStaleJobsOnce } from "./recovery";
 import { pollPdfJobs } from "./pdf-worker";
 import { isShuttingDown, registerInFlight, unregisterInFlight, installSignalHandlers } from "./shutdown";
+import { withLlmContext } from "@rivaleye/shared";
 
 const log = pino({ name: "pg-runner" });
+
+// Per-report LLM token budget (prompt + completion, summed across the flow).
+// 0/unset disables the cap. Bounds runaway spend on a pathological scan.
+const LLM_BUDGET_TOKENS = (() => {
+  const n = parseInt(process.env.MAX_LLM_TOKENS_PER_REPORT ?? "", 10);
+  return Number.isNaN(n) || n <= 0 ? null : n;
+})();
 
 /**
  * Parse an env var as an integer, falling back to a default on NaN,
@@ -140,7 +148,9 @@ async function pollSourceJobs(config: WorkerConfig): Promise<void> {
       // Fire and forget — increment counter before async work starts
       activeJobs++;
       registerInFlight(job.id, "source");
-      processSourceJob(job, report, config.workerId)
+      withLlmContext({ reportId: job.report_id, budgetTokens: LLM_BUDGET_TOKENS }, () =>
+        processSourceJob(job, report, config.workerId),
+      )
         .then(() => {
           log.info({ jobId: job.id, platform: job.platform }, "Source job completed successfully");
         })
@@ -238,7 +248,9 @@ async function pollSynthesisJobs(config: WorkerConfig): Promise<void> {
       // Fire and forget — increment counter before async work starts
       activeJobs++;
       registerInFlight(job.id, "synthesis");
-      processSynthesisJob(job, report, config.workerId)
+      withLlmContext({ reportId: job.report_id, budgetTokens: LLM_BUDGET_TOKENS }, () =>
+        processSynthesisJob(job, report, config.workerId),
+      )
         .then(() => {
           log.info(
             { jobId: job.id, reportId: job.report_id },

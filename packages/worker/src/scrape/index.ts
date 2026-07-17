@@ -3,12 +3,14 @@ import { inngest } from "../inngest/client.js";
 import { scrapeFetch } from "./fetch.js";
 import { getPipelineEngine } from "../config.js";
 import { mainScrapeOnly } from "../pg-runner/index.js";
+import { registerLlmUsageSink } from "../llm-usage-sink.js";
 
 const port = Number(process.env.WORKER_SCRAPE_PORT ?? 4001);
 const engine = getPipelineEngine();
 
 if (engine === "postgres") {
   console.log("[worker-scrape] Starting in postgres mode (pg-runner scrape-only polling)");
+  registerLlmUsageSink();
   mainScrapeOnly().catch(err => console.error("[worker-scrape] Fatal error:", err));
 } else {
   console.log("[worker-scrape] Starting in inngest mode (scrape.fetch events)");

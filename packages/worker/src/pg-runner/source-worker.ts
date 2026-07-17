@@ -18,6 +18,7 @@ import {
   discoverCompetitorIdentifiers,
   createLlmClient,
   LlmSchemaError,
+  LlmBudgetError,
   type LlmClient,
   type DiscoveredIds,
 } from "@rivaleye/shared";
@@ -282,8 +283,10 @@ export async function processSourceJob(
       error: errorMsg,
     });
 
-    // Determine if we should retry or fail permanently
-    const isPermanent = err instanceof PermanentError;
+    // Determine if we should retry or fail permanently. A blown LLM token
+    // budget is permanent — retrying would just burn more spend on the same
+    // oversized report.
+    const isPermanent = err instanceof PermanentError || err instanceof LlmBudgetError;
     const canRetry = !isPermanent && job.attempt_count < job.max_attempts;
 
     if (canRetry) {

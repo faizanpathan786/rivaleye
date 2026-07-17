@@ -18,6 +18,7 @@ import { report_platform_jobs, synthesis_jobs, report_pipeline_checkpoints } fro
 import { emit } from "../events/emit";
 import { runPipeline } from "../pipeline/run";
 import { PermanentError } from "../errors";
+import { LlmBudgetError } from "@rivaleye/shared";
 import type { SynthesisJobRow } from "./types";
 
 const log = pino({ name: "synthesis-worker" });
@@ -297,7 +298,7 @@ export async function processSynthesisJob(
     });
 
     // Determine if we should retry or fail permanently
-    const isPermanent = err instanceof PermanentError;
+    const isPermanent = err instanceof PermanentError || err instanceof LlmBudgetError;
 
     if (!isPermanent && job.attempt_count < job.max_attempts) {
       // Retry: reset to queued with exponential backoff
