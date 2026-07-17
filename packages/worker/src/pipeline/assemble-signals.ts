@@ -189,7 +189,29 @@ export function assembleSignalPool(inputs: AssembleInput[]): MergedSignals {
     });
   }
 
-  const totalClusters =
+  // Cap each signal type to the strongest N clusters BEFORE they reach the
+  // synth/refine/role prompt builders (each JSON-dumps the whole pool). Without
+  // this, a high-volume competitor produces thousands of 1:1 clusters and
+  // 70k+-token prompts — blowing cost, latency, and context limits. We rank by
+  // frequency × confidence × strength so the most-evidenced, highest-severity
+  // signals survive; the long tail is dropped. Tunable via MAX_CLUSTERS_PER_TYPE.
+  const cap = Math.max(5, Number(process.env.MAX_CLUSTERS_PER_TYPE ?? 40));
+  const rank = (c: { frequency: number; confidence: number; strength_or_severity: number }) =>
+    c.frequency * (0.5 + c.confidence) * (0.5 + c.strength_or_severity);
+  const capType = <T extends { frequency: number; confidence: number; strength_or_severity: number }>(arr: T[]): T[] =>
+    arr.length <= cap ? arr : [...arr].sort((a, b) => rank(b) - rank(a)).slice(0, cap);
+
+  const capped = {
+    love: capType(love_clusters),
+    pain: capType(pain_clusters),
+    gap: capType(gap_clusters),
+    switch: capType(switch_clusters),
+    pricing: capType(pricing_clusters),
+    feature: capType(feature_clusters),
+    positioning: capType(positioning_clusters),
+  };
+
+  const totalInputSignals =
     love_clusters.length +
     pain_clusters.length +
     gap_clusters.length +
@@ -197,6 +219,24 @@ export function assembleSignalPool(inputs: AssembleInput[]): MergedSignals {
     pricing_clusters.length +
     feature_clusters.length +
     positioning_clusters.length;
+
+  const totalClusters =
+    capped.love.length +
+    capped.pain.length +
+    capped.gap.length +
+    capped.switch.length +
+    capped.pricing.length +
+    capped.feature.length +
+    capped.positioning.length;
+
+  // Keep only evidence referenced by a surviving cluster so the evidence_index
+  // doesn't reintroduce the unbounded payload we just capped.
+  const referencedEvidence = new Set<string>();
+  for (const list of Object.values(capped)) {
+    for (const c of list) for (const id of c.evidence_ids) referencedEvidence.add(id);
+  }
+  const fullEvidenceIndex = buildEvidenceIndex(inputs);
+  const evidenceIndex = fullEvidenceIndex.filter((e) => referencedEvidence.has(e.evidence_id));
 
   const source_coverage = inputs.map(({ platform: rawPlatform, extract }) => {
     const platform = rawPlatform as PoolPlatform;
@@ -212,19 +252,19 @@ export function assembleSignalPool(inputs: AssembleInput[]): MergedSignals {
   });
 
   return {
-    love_clusters,
-    pain_clusters,
-    gap_clusters,
-    switch_clusters,
-    pricing_clusters,
-    feature_clusters,
-    positioning_clusters,
+    love_clusters: capped.love,
+    pain_clusters: capped.pain,
+    gap_clusters: capped.gap,
+    switch_clusters: capped.switch,
+    pricing_clusters: capped.pricing,
+    feature_clusters: capped.feature,
+    positioning_clusters: capped.positioning,
     voice_top: buildVoiceTop(inputs),
     cross_platform_themes: [],
-    evidence_index: buildEvidenceIndex(inputs),
+    evidence_index: evidenceIndex,
     source_coverage,
     clustering_meta: {
-      total_input_signals: totalClusters,
+      total_input_signals: totalInputSignals,
       total_output_clusters: totalClusters,
       model: ASSEMBLE_MODEL,
       generated_at: new Date().toISOString(),
