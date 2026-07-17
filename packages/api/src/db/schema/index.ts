@@ -10,6 +10,7 @@ export * from "./pipeline-events";
 export * from "./report-role-sections";
 export * from "./outreach";
 export * from "./planned-actions";
+export * from "./ops";
 
 // Type exports from pipeline enums for cross-package use
 export type {

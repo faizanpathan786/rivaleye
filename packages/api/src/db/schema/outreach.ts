@@ -36,6 +36,7 @@ export const outreach_items = pgTable(
       t.title,
     ),
     index("outreach_items_owner_id_idx").on(t.owner_id),
+    index("outreach_items_report_id_idx").on(t.report_id),
   ],
 );
 

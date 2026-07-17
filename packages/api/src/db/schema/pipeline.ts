@@ -165,6 +165,7 @@ export const report_pdf_jobs = pgTable(
   (t) => [
     index("report_pdf_jobs_status_run_after_idx").on(t.status, t.run_after, t.created_at).where(sql`status = 'queued'`),
     index("report_pdf_jobs_owner_id_idx").on(t.owner_id),
+    index("report_pdf_jobs_report_id_idx").on(t.report_id),
     index("report_pdf_jobs_locked_at_idx").on(t.locked_at).where(sql`status = 'running'`),
   ],
 );

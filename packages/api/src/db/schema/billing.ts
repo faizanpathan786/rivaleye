@@ -1,4 +1,4 @@
-import { boolean, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { users } from "./users";
 
@@ -38,6 +38,11 @@ export const credit_transactions = pgTable(
     razorpayPaymentIdUnique: uniqueIndex("credit_transactions_razorpay_payment_id_key")
       .on(t.razorpay_payment_id)
       .where(sql`${t.razorpay_payment_id} is not null`),
+    // Backstop against double order-creation / duplicate webhook processing for one order.
+    razorpayOrderIdUnique: uniqueIndex("credit_transactions_razorpay_order_id_key")
+      .on(t.razorpay_order_id)
+      .where(sql`${t.razorpay_order_id} is not null`),
+    userIdIdx: index("credit_transactions_user_id_idx").on(t.user_id),
   }),
 );
 
