@@ -6,6 +6,12 @@ const AUTH_URL = process.env.BETTER_AUTH_URL || "http://localhost:4000";
 // The session cookie is owned by the auth/API origin, while the export page
 // loads from the web origin — so scope the forwarded cookies to BOTH via `url`
 // (never a hardcoded domain) so it works across split web/api deployments.
+//
+// `secure` must be set explicitly: Puppeteer/CDP does not infer it from the
+// url's scheme. better-auth issues `__Secure-`-prefixed cookies whenever its
+// baseURL is https, and Chrome rejects the entire Network.setCookies batch
+// ("Invalid cookie fields") if a `__Secure-`/`__Host-`-prefixed cookie is set
+// without secure=true — independent of which url it's paired with.
 function parseCookies(cookieHeader: string) {
   const pairs = cookieHeader
     .split(";")
@@ -16,7 +22,9 @@ function parseCookies(cookieHeader: string) {
       return { name: c.slice(0, eq), value: c.slice(eq + 1) };
     })
     .filter((c) => c.name);
-  return [WEB_URL, AUTH_URL].flatMap((url) => pairs.map((p) => ({ ...p, url })));
+  return [WEB_URL, AUTH_URL].flatMap((url) =>
+    pairs.map((p) => ({ ...p, url, secure: url.startsWith("https://") })),
+  );
 }
 
 /** Render the multi-lens scan report to a PDF via headless Chrome. */
