@@ -40,11 +40,11 @@ steps:
         SSH="gcloud compute ssh ${_VM} --zone=${_ZONE} --tunnel-through-iap --quiet"
         SCP="gcloud compute scp --zone=${_ZONE} --tunnel-through-iap --quiet"
 
-        $SSH --command="mkdir -p ~/${_STAGING}"
-        $SCP "/workspace/rivaleye-${COMMIT_SHA}.tar.gz" "${_VM}:~/${_STAGING}/rivaleye-${COMMIT_SHA}.tar.gz"
-        $SCP "/workspace/scripts/vm-bootstrap.sh" "${_VM}:~/${_STAGING}/vm-bootstrap.sh"
+        $$SSH --command="mkdir -p ~/${_STAGING}"
+        $$SCP "/workspace/rivaleye-${COMMIT_SHA}.tar.gz" "${_VM}:~/${_STAGING}/rivaleye-${COMMIT_SHA}.tar.gz"
+        $$SCP "/workspace/scripts/vm-bootstrap.sh" "${_VM}:~/${_STAGING}/vm-bootstrap.sh"
 
-        $SSH --command="bash -lc 'bash ~/${_STAGING}/vm-bootstrap.sh ${COMMIT_SHA} ~/${_STAGING}/rivaleye-${COMMIT_SHA}.tar.gz'"
+        $$SSH --command="bash -lc 'bash ~/${_STAGING}/vm-bootstrap.sh ${COMMIT_SHA} ~/${_STAGING}/rivaleye-${COMMIT_SHA}.tar.gz'"
 
 timeout: '7200s'
 
