@@ -4,7 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./packages/api/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -29,7 +29,7 @@ services:
     runtime: docker
     dockerfilePath: ./packages/worker/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
