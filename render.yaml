@@ -24,12 +24,13 @@ services:
       - key: OPENAI_API_KEY
         sync: false
 
-  - type: worker
+  - type: web
     name: rivaleye-worker
     runtime: docker
     dockerfilePath: ./packages/worker/Dockerfile
     dockerContext: .
     plan: free
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
