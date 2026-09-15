@@ -4,6 +4,7 @@ const port = Number(process.env.PORT ?? 10000);
 
 Bun.serve({
   port,
+  hostname: "0.0.0.0",
   fetch(req) {
     if (new URL(req.url).pathname === "/health") {
       return new Response(JSON.stringify({ ok: true }), {

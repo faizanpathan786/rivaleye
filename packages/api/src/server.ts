@@ -93,7 +93,7 @@ export const app = new Elysia()
     return { ok: true, db: "up", queue, oldest_queued_seconds, workers };
   })
   .use(controllers)
-  .listen(port);
+  .listen({ port, hostname: "0.0.0.0" });
 
 console.log(`RivalEye API listening on ${app.server?.hostname}:${app.server?.port}`);
 
