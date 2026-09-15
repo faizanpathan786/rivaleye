@@ -6,6 +6,15 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /health
+    buildFilter:
+      paths:
+        - packages/api/**
+        - packages/shared/**
+        - packages/scrapers/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - turbo.json
     envVars:
       - key: NODE_ENV
         value: production
@@ -31,6 +40,15 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /health
+    buildFilter:
+      paths:
+        - packages/worker/**
+        - packages/shared/**
+        - packages/scrapers/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - turbo.json
     envVars:
       - key: NODE_ENV
         value: production
