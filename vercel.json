@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @rivaleye/landing build && VITE_BASE_PATH=/app/ pnpm --filter @rivaleye/web build && rm -rf .vercel-merged && mkdir -p .vercel-merged/app && cp -r packages/landing/dist/. .vercel-merged/ && cp -r packages/web/dist/. .vercel-merged/app/",
+  "outputDirectory": ".vercel-merged",
+  "rewrites": [
+    { "source": "/app/:path*", "destination": "/app/index.html" }
+  ]
+}
